@@ -69,23 +69,26 @@ export function createAuth(options: CreateAuthOptions) {
             }
           },
           // Every user gets a personal organization, so the app never has to
-          // handle an account that owns nothing.
+          // handle an account that owns nothing. One transaction: an
+          // organization without its owner row would be unreachable forever.
           after: async (user) => {
             const organizationId = crypto.randomUUID();
 
-            await db.insert(schema.organization).values({
-              id: organizationId,
-              name: "Personal",
-              slug: `personal-${user.id.toLowerCase()}`,
-              createdAt: new Date(),
-            });
+            await db.transaction(async (tx) => {
+              await tx.insert(schema.organization).values({
+                id: organizationId,
+                name: "Personal",
+                slug: `personal-${user.id.toLowerCase()}`,
+                createdAt: new Date(),
+              });
 
-            await db.insert(schema.member).values({
-              id: crypto.randomUUID(),
-              organizationId,
-              userId: user.id,
-              role: "owner",
-              createdAt: new Date(),
+              await tx.insert(schema.member).values({
+                id: crypto.randomUUID(),
+                organizationId,
+                userId: user.id,
+                role: "owner",
+                createdAt: new Date(),
+              });
             });
           },
         },
