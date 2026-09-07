@@ -8,6 +8,9 @@
   },
   "scripts": {
     "dev:all": "turbo run dev --filter=@absqir/web --filter=@absqir/api --filter=@absqir/transactional",
+    "docs:dev": "pnpm --filter @absqir/docs dev",
+    "docs:build": "pnpm --filter @absqir/docs build",
+    "docs:preview": "pnpm --filter @absqir/docs preview",
     "build": "turbo run build",
     "build:node": "DEPLOY_TARGET=node turbo run build",
     "preview": "pnpm --filter @absqir/web preview",

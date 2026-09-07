@@ -157,6 +157,9 @@ before you push. The repo squash-merges pull requests.
 | Command              | Action                                              |
 | -------------------- | --------------------------------------------------- |
 | `pnpm dev:all`       | Web, API watcher, and the email preview             |
+| `pnpm docs:dev`      | The docs site with hot reload                       |
+| `pnpm docs:build`    | Build the static docs site                          |
+| `pnpm docs:preview`  | Serve the built docs site                           |
 | `pnpm build`         | Build every workspace for Cloudflare                |
 | `pnpm build:node`    | Build every workspace for the Node target           |
 | `pnpm preview`       | Serve the built Worker                              |
