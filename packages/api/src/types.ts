@@ -10,5 +10,7 @@ export interface AppEnv {
     auth: Auth;
     user: Session["user"] | null;
     session: Session["session"] | null;
+    /** Set by organizationGuard after it proves membership. */
+    organizationId?: string;
   };
 }

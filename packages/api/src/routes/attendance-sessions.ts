@@ -2,11 +2,12 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, desc, eq } from "drizzle-orm";
-import type { Context } from "hono";
+import { csvCell } from "@/lib/csv";
+import { organizationGuard, organizationIdOf } from "@/lib/org-access";
 import { createQrToken } from "@/lib/qr-token";
 import type { AppEnv } from "@/types";
 
-const { attendanceSession, attendanceRecord, member, session: sessionTable } = schema;
+const { attendanceSession, attendanceRecord } = schema;
 
 const sessionSchema = z.object({
   id: z.string(),
@@ -39,7 +40,7 @@ const unauthorized = {
 } as const;
 
 const forbidden = {
-  description: "No active organization, or not a member of it",
+  description: "No organization membership",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 
@@ -82,6 +83,23 @@ const createSessionRoute = createRoute({
     },
     401: unauthorized,
     403: forbidden,
+  },
+});
+
+const detailRoute = createRoute({
+  method: "get",
+  path: "/attendance-sessions/{id}",
+  tags: ["attendance"],
+  summary: "Read one attendance session",
+  request: { params: idParam },
+  responses: {
+    200: {
+      description: "The session",
+      content: { "application/json": { schema: sessionSchema } },
+    },
+    401: unauthorized,
+    403: forbidden,
+    404: notFound,
   },
 });
 
@@ -158,60 +176,7 @@ const recordsRoute = createRoute({
   },
 });
 
-type OrgAccess =
-  | { ok: true; organizationId: string }
-  | { ok: false; status: 401 | 403; error: string };
-
-/**
- * Resolves the caller's active organization and proves membership. When the
- * session carries no active organization, or a stale one the caller has left,
- * this falls back to the first membership and writes it back to the session,
- * so the account heals itself instead of erroring.
- */
-async function requireOrg(c: Context<AppEnv>): Promise<OrgAccess> {
-  const user = c.get("user");
-  const session = c.get("session");
-
-  if (!user || !session) {
-    return { ok: false, status: 401, error: "Unauthorized" };
-  }
-
-  const active = session.activeOrganizationId;
-
-  if (active) {
-    const memberships = await c.var.db
-      .select({ id: member.id })
-      .from(member)
-      .where(and(eq(member.userId, user.id), eq(member.organizationId, active)))
-      .limit(1);
-
-    if (memberships[0]) {
-      return { ok: true, organizationId: active };
-    }
-  }
-
-  const fallback = await c.var.db
-    .select({ organizationId: member.organizationId })
-    .from(member)
-    .where(eq(member.userId, user.id))
-    .orderBy(member.createdAt)
-    .limit(1);
-
-  const organizationId = fallback[0]?.organizationId;
-
-  if (!organizationId) {
-    return { ok: false, status: 403, error: "No organization membership" };
-  }
-
-  await c.var.db
-    .update(sessionTable)
-    .set({ activeOrganizationId: organizationId })
-    .where(eq(sessionTable.id, session.id));
-
-  return { ok: true, organizationId };
-}
-
-type OrgSession = typeof attendanceSession.$inferSelect;
+type SessionRow = typeof attendanceSession.$inferSelect;
 
 interface FindOrgSessionParams {
   db: Database;
@@ -219,7 +184,7 @@ interface FindOrgSessionParams {
   organizationId: string;
 }
 
-async function findOrgSession(params: FindOrgSessionParams): Promise<OrgSession | null> {
+async function findOrgSession(params: FindOrgSessionParams): Promise<SessionRow | null> {
   const rows = await params.db
     .select()
     .from(attendanceSession)
@@ -234,38 +199,66 @@ async function findOrgSession(params: FindOrgSessionParams): Promise<OrgSession 
   return rows[0] ?? null;
 }
 
-function csvCell(value: string): string {
-  return `"${value.replaceAll('"', '""')}"`;
+interface CountedSessionRow {
+  id: string;
+  title: string;
+  active: boolean;
+  createdAt: Date;
+  recordCount: number;
 }
 
-export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
-  .openapi(listRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
+function sessionsWithCount(db: Database) {
+  return db
+    .select({
+      id: attendanceSession.id,
+      title: attendanceSession.title,
+      active: attendanceSession.active,
+      createdAt: attendanceSession.createdAt,
+      recordCount: count(attendanceRecord.id),
+    })
+    .from(attendanceSession)
+    .leftJoin(attendanceRecord, eq(attendanceRecord.sessionId, attendanceSession.id))
+    .groupBy(attendanceSession.id);
+}
 
-    const rows = await c.var.db
-      .select({
-        id: attendanceSession.id,
-        title: attendanceSession.title,
-        active: attendanceSession.active,
-        createdAt: attendanceSession.createdAt,
-        recordCount: count(attendanceRecord.id),
-      })
-      .from(attendanceSession)
-      .leftJoin(attendanceRecord, eq(attendanceRecord.sessionId, attendanceSession.id))
-      .where(eq(attendanceSession.organizationId, org.organizationId))
-      .groupBy(attendanceSession.id)
+function toSessionJson(row: CountedSessionRow) {
+  return { ...row, createdAt: row.createdAt.toISOString() };
+}
+
+async function sessionRecords(db: Database, sessionId: string) {
+  const rows = await db
+    .select()
+    .from(attendanceRecord)
+    .where(eq(attendanceRecord.sessionId, sessionId))
+    .orderBy(desc(attendanceRecord.checkedInAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    identifier: row.identifier,
+    checkedInAt: row.checkedInAt.toISOString(),
+  }));
+}
+
+const app = new OpenAPIHono<AppEnv>();
+
+// Registered before the routes, off the chain: OpenAPIHono's use() returns a
+// plain Hono type and would hide openapi() from the rest of the chain.
+app.use("/attendance-sessions", organizationGuard());
+app.use("/attendance-sessions/*", organizationGuard());
+
+export const attendanceSessionRoutes = app
+  .openapi(listRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+
+    const rows = await sessionsWithCount(c.var.db)
+      .where(eq(attendanceSession.organizationId, organizationId))
       .orderBy(desc(attendanceSession.createdAt));
 
-    return c.json(
-      rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
-      200,
-    );
+    return c.json(rows.map(toSessionJson), 200);
   })
   .openapi(createSessionRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const { title } = c.req.valid("json");
 
     const secretBytes = crypto.getRandomValues(new Uint8Array(32));
@@ -273,30 +266,32 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
 
     const [created] = await c.var.db
       .insert(attendanceSession)
-      .values({ id: crypto.randomUUID(), title, secret, organizationId: org.organizationId })
+      .values({ id: crypto.randomUUID(), title, secret, organizationId })
       .returning();
 
     if (!created) throw new Error("Insert returned no row");
 
-    return c.json(
-      {
-        id: created.id,
-        title: created.title,
-        active: created.active,
-        createdAt: created.createdAt.toISOString(),
-        recordCount: 0,
-      },
-      201,
+    return c.json(toSessionJson({ ...created, recordCount: 0 }), 201);
+  })
+  .openapi(detailRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const { id } = c.req.valid("param");
+
+    const rows = await sessionsWithCount(c.var.db).where(
+      and(eq(attendanceSession.id, id), eq(attendanceSession.organizationId, organizationId)),
     );
+
+    const found = rows[0];
+    if (!found) return c.json({ error: "Not found" }, 404);
+
+    return c.json(toSessionJson(found), 200);
   })
   .openapi(toggleRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const { active } = c.req.valid("json");
 
-    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    const found = await findOrgSession({ db: c.var.db, id, organizationId });
     if (!found) return c.json({ error: "Not found" }, 404);
 
     const [updated] = await c.var.db
@@ -318,12 +313,10 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(removeRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
-    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    const found = await findOrgSession({ db: c.var.db, id, organizationId });
     if (!found) return c.json({ error: "Not found" }, 404);
 
     await c.var.db.delete(attendanceSession).where(eq(attendanceSession.id, id));
@@ -331,12 +324,10 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     return c.json({ deleted: true as const }, 200);
   })
   .openapi(qrTokenRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
-    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    const found = await findOrgSession({ db: c.var.db, id, organizationId });
     if (!found) return c.json({ error: "Not found" }, 404);
 
     const { token, expiresAt } = await createQrToken({ secret: found.secret, sessionId: id });
@@ -351,49 +342,27 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(recordsRoute, async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
-    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    const found = await findOrgSession({ db: c.var.db, id, organizationId });
     if (!found) return c.json({ error: "Not found" }, 404);
 
-    const rows = await c.var.db
-      .select()
-      .from(attendanceRecord)
-      .where(eq(attendanceRecord.sessionId, id))
-      .orderBy(desc(attendanceRecord.checkedInAt));
-
-    return c.json(
-      rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        identifier: row.identifier,
-        checkedInAt: row.checkedInAt.toISOString(),
-      })),
-      200,
-    );
+    return c.json(await sessionRecords(c.var.db, id), 200);
   })
   .get("/attendance-sessions/:id/records.csv", async (c) => {
-    const org = await requireOrg(c);
-    if (!org.ok) return c.json({ error: org.error }, org.status);
-
+    const organizationId = organizationIdOf(c);
     const id = c.req.param("id");
 
-    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    const found = await findOrgSession({ db: c.var.db, id, organizationId });
     if (!found) return c.json({ error: "Not found" }, 404);
 
-    const rows = await c.var.db
-      .select()
-      .from(attendanceRecord)
-      .where(eq(attendanceRecord.sessionId, id))
-      .orderBy(desc(attendanceRecord.checkedInAt));
+    const records = await sessionRecords(c.var.db, id);
 
     const lines = [
       "name,identifier,checked_in_at",
-      ...rows.map((row) =>
-        [csvCell(row.name), csvCell(row.identifier), row.checkedInAt.toISOString()].join(","),
+      ...records.map((row) =>
+        [csvCell(row.name), csvCell(row.identifier), row.checkedInAt].join(","),
       ),
     ];
 

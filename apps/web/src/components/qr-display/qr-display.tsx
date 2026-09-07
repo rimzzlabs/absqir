@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
-import { useAttendanceSessions } from "@/queries/use-attendance-sessions";
+import { useAttendanceSession } from "@/queries/use-attendance-session";
 import { useQrToken } from "@/queries/use-qr-token";
 
 export interface QrDisplayProps {
@@ -8,10 +8,10 @@ export interface QrDisplayProps {
 }
 
 function QrScreen(props: QrDisplayProps) {
-  const sessions = useAttendanceSessions();
+  const detail = useAttendanceSession(props.sessionId);
   const qr = useQrToken(props.sessionId);
 
-  const session = sessions.data?.find((row) => row.id === props.sessionId);
+  const session = detail.data;
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-10 text-center">
