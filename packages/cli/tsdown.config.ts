@@ -1,10 +1,10 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/schema.ts", "src/migrate.ts", "src/ops.ts"],
+  entry: ["src/index.ts"],
   format: "esm",
   platform: "node",
-  dts: true,
+  dts: false,
   fixedExtension: false,
   clean: true,
 });
