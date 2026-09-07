@@ -8,7 +8,9 @@ COPY . .
 # not need any dependency's postinstall: native binaries ship as optional deps.
 RUN pnpm install --frozen-lockfile --ignore-scripts
 ENV DEPLOY_TARGET=node
-RUN pnpm build
+# Build the web app and its workspace dependencies only. The docs site and
+# the CLI do not ship in this image.
+RUN pnpm exec turbo run build --filter=@absqir/web...
 # --legacy: pack workspace packages instead of requiring injected deps.
 RUN pnpm --filter @absqir/web deploy --legacy --prod --ignore-scripts /out
 

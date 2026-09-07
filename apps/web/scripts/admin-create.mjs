@@ -13,7 +13,9 @@ const { values } = parseArgs({
 });
 
 if (!values.email || !values.name || !values.password) {
-  console.error("Usage: node admin-create.mjs --email <email> --name <name> --password <pw>");
+  console.error(
+    "Usage: node scripts/admin-create.mjs --email <email> --name <name> --password <pw>",
+  );
   process.exit(1);
 }
 

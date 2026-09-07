@@ -11,7 +11,9 @@ const { values } = parseArgs({
 });
 
 if (!values.email || !values.org) {
-  console.error("Usage: node member-add.mjs --email <email> --org <slug> [--role member|admin]");
+  console.error(
+    "Usage: node scripts/member-add.mjs --email <email> --org <slug> [--role member|admin]",
+  );
   process.exit(1);
 }
 
