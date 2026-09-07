@@ -1,0 +1,30 @@
+{
+  "name": "@absqir/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./money": "./dist/money.js",
+    "./date": "./dist/date.js",
+    "./query-keys": "./dist/query-keys.js"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@mobily/ts-belt": "4.0.0-rc.5",
+    "date-fns": "^4.4.0",
+    "dinero.js": "^2.0.2",
+    "ts-pattern": "^5.9.0"
+  },
+  "devDependencies": {
+    "@absqir/config": "workspace:^",
+    "tsdown": "^0.23.0",
+    "vitest": "^5.0.0"
+  }
+}

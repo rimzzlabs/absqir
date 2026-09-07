@@ -1,0 +1,29 @@
+{
+  "name": "@absqir/transactional",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./emails/welcome": "./dist/emails/welcome.js"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "email dev --dir ./src/emails --port 3001",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "resend": "^6.26.0"
+  },
+  "devDependencies": {
+    "@absqir/config": "workspace:^",
+    "@react-email/ui": "^6.9.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "react-email": "^6.9.3",
+    "tsdown": "^0.23.0"
+  }
+}

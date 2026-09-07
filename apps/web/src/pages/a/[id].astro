@@ -1,0 +1,24 @@
+---
+import { CheckInForm } from "@/components/check-in/check-in-form";
+import Layout from "@/layouts/layout.astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+
+// The QR code carries the rotating token in the URL the camera opens.
+const token = Astro.url.searchParams.get("t");
+---
+
+<Layout title="Check in — absqir">
+  <main class="mx-auto max-w-md px-6 py-16">
+    <h1 class="font-serif text-3xl font-bold tracking-tight">Check in</h1>
+    <p class="text-muted-foreground mt-2 mb-8">
+      Fill in your name and ID. Your check-in appears on the organizer's screen at once.
+    </p>
+
+    <CheckInForm client:load sessionId={id} token={token} />
+  </main>
+</Layout>

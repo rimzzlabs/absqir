@@ -1,0 +1,22 @@
+{
+  "name": "@absqir/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@absqir/db": "workspace:^",
+    "better-auth": "^1.7.3"
+  },
+  "devDependencies": {
+    "@absqir/config": "workspace:^",
+    "tsdown": "^0.23.0"
+  }
+}

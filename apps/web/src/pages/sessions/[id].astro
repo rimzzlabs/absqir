@@ -1,0 +1,16 @@
+---
+import { SessionDetail } from "@/components/session-detail/session-detail";
+import Layout from "@/layouts/layout.astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+---
+
+<Layout title="Session — absqir">
+  <main class="mx-auto max-w-3xl px-6 py-16">
+    <SessionDetail client:load sessionId={id} />
+  </main>
+</Layout>

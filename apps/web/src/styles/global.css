@@ -1,0 +1,4 @@
+@import "@absqir/ui/styles.css";
+
+/* Tailwind also scans this app for class names. */
+@source "../";

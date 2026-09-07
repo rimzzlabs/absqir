@@ -1,0 +1,14 @@
+linkWorkspacePackages: true
+saveWorkspaceProtocol: rolling
+
+packages:
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - workerd
+  - "@biomejs/biome"
+  - "@tailwindcss/oxide"
+  - esbuild
+  - lefthook
+  - sharp

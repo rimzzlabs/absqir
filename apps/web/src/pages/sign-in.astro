@@ -1,0 +1,22 @@
+---
+import { SignInForm } from "@/components/auth/sign-in-form";
+import AuthLayout from "@/layouts/auth-layout.astro";
+
+const next = Astro.url.searchParams.get("next") ?? "/";
+// Only a path from this site, never an absolute URL a stranger supplied.
+const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+---
+
+<AuthLayout
+  title="Sign in — absqir"
+  heading="Sign in"
+  subheading="Use the email and password you signed up with."
+>
+  <SignInForm client:load next={safeNext} />
+
+  <p class="text-muted-foreground mt-6 text-sm">
+    No account yet? <a class="text-foreground underline underline-offset-4" href="/sign-up">
+      Create one</a
+    >.
+  </p>
+</AuthLayout>

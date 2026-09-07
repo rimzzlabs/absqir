@@ -1,0 +1,8 @@
+# Local overrides for `astro dev` and `wrangler dev`. Never commit .dev.vars.
+# Production values come from wrangler.jsonc vars and `pnpm cf:secret`.
+ENVIRONMENT="development"
+
+BETTER_AUTH_SECRET="replace-me-with-a-32-character-secret-value"
+
+# Optional. Leave empty to keep email verification off.
+RESEND_API_KEY=""

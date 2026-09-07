@@ -1,0 +1,18 @@
+---
+import { SignUpForm } from "@/components/auth/sign-up-form";
+import AuthLayout from "@/layouts/auth-layout.astro";
+---
+
+<AuthLayout
+  title="Create an account — absqir"
+  heading="Create an account"
+  subheading="It takes one step."
+>
+  <SignUpForm client:load />
+
+  <p class="text-muted-foreground mt-6 text-sm">
+    Already have one? <a class="text-foreground underline underline-offset-4" href="/sign-in">
+      Sign in</a
+    >.
+  </p>
+</AuthLayout>

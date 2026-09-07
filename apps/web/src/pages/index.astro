@@ -1,0 +1,27 @@
+---
+import { AccountPanel } from "@/components/account-panel";
+import { SessionTable } from "@/components/session-table/session-table";
+import Layout from "@/layouts/layout.astro";
+
+// src/middleware.ts already redirected a signed-out reader, so the user is set.
+const user = Astro.locals.user;
+
+if (!user) {
+  return Astro.redirect("/sign-in", 302);
+}
+---
+
+<Layout title="absqir">
+  <main class="mx-auto max-w-3xl px-6 py-16">
+    <h1 class="font-serif text-4xl font-bold tracking-tight">absqir</h1>
+    <p class="text-muted-foreground mt-2 mb-8">
+      QR attendance. Create a session, project its code, watch the check-ins arrive.
+    </p>
+
+    <SessionTable client:load />
+
+    <div class="mt-12">
+      <AccountPanel client:load initialName={user.name} initialEmail={user.email} />
+    </div>
+  </main>
+</Layout>

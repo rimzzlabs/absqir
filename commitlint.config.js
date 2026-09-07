@@ -1,0 +1,47 @@
+/** @type {import("cz-git").UserConfig} */
+export default {
+  extends: ["@commitlint/config-conventional"],
+  rules: {
+    "scope-enum": [
+      2,
+      "always",
+      ["web", "api", "auth", "db", "ui", "core", "email", "ci", "deps", "repo"],
+    ],
+    "subject-case": [2, "never", ["upper-case", "pascal-case", "start-case"]],
+    "body-max-line-length": [1, "always", 100],
+  },
+  prompt: {
+    alias: { f: "fix: ", b: "chore: bump dependencies" },
+    messages: {
+      type: "Select the change you are committing:",
+      scope: "Select the scope (optional):",
+      customScope: "Name the scope:",
+      subject: "Write a short imperative description:\n",
+      body: 'Write a longer description (optional). Use "|" for a line break:\n',
+      breaking: 'List any BREAKING CHANGES (optional). Use "|" for a line break:\n',
+      footerPrefixesSelect: "Select the issue relation (optional):",
+      customFooterPrefix: "Name the issue prefix:",
+      footer: "List the issues closed, for example #31, #34:\n",
+      confirmCommit: "Commit with the message above?",
+    },
+    types: [
+      { value: "feat", name: "feat:     a new feature" },
+      { value: "fix", name: "fix:      a bug fix" },
+      { value: "docs", name: "docs:     documentation only" },
+      { value: "refactor", name: "refactor: neither fixes a bug nor adds a feature" },
+      { value: "perf", name: "perf:     improves performance" },
+      { value: "test", name: "test:     adds or corrects tests" },
+      { value: "build", name: "build:    build system or dependencies" },
+      { value: "ci", name: "ci:       CI configuration" },
+      { value: "chore", name: "chore:    no source or test change" },
+      { value: "revert", name: "revert:   reverts an earlier commit" },
+    ],
+    useEmoji: false,
+    scopes: ["web", "api", "auth", "db", "ui", "core", "email", "ci", "deps", "repo"],
+    allowCustomScopes: false,
+    allowEmptyScopes: true,
+    upperCaseSubject: false,
+    markBreakingChangeMode: true,
+    allowBreakingChanges: ["feat", "fix", "refactor", "perf"],
+  },
+};

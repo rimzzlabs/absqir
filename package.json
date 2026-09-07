@@ -1,0 +1,54 @@
+{
+  "name": "absqir",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:all": "turbo run dev --filter=@absqir/web --filter=@absqir/api --filter=@absqir/transactional",
+    "build": "turbo run build",
+    "preview": "pnpm --filter @absqir/web preview",
+    "deploy": "turbo run build && pnpm --filter @absqir/web deploy",
+    "typecheck": "turbo run typecheck",
+    "check": "biome check .",
+    "fix": "biome check --write .",
+    "format": "prettier --write \"**/*.{md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{md,yml,yaml}\"",
+    "cf:types": "pnpm --filter @absqir/web cf-typegen",
+    "cf:hyperdrive": "pnpm --filter @absqir/web exec wrangler hyperdrive create absqir-db",
+    "cf:secret": "pnpm --filter @absqir/web exec wrangler secret put",
+    "db:generate": "pnpm --filter @absqir/db generate",
+    "db:migrate": "pnpm --filter @absqir/db migrate",
+    "db:push": "pnpm --filter @absqir/db push",
+    "db:studio": "pnpm --filter @absqir/db studio",
+    "prepare": "lefthook install && git config pull.rebase true && pnpm cf:types",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test -- --coverage",
+    "commit": "cz"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@types/node": "^26.5.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "commitizen": "^4.3.2",
+    "cz-git": "^1.14.0",
+    "lefthook": "^2.1.12",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.12",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0",
+    "wrangler": "^4.129.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "license": "MIT",
+  "version": "0.0.0"
+}

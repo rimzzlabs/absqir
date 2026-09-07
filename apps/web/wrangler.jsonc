@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "absqir",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Hyperdrive pools and caches Postgres connections for the Worker.
+  // Create one, then paste the id here:
+  //   pnpm cf:hyperdrive:create -- --connection-string="postgresql://..."
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "replace-with-your-hyperdrive-id",
+      "localConnectionString": "postgresql://rimzzlabs:postgres@localhost:5432/absqir"
+    }
+  ],
+
+  // Edge rate limit. namespace_id is any number unique inside this Worker.
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 120, "period": 60 }
+    }
+  ],
+
+  // Deployed values. `apps/web/.dev.vars` overrides these for local work.
+  "vars": {
+    "ENVIRONMENT": "production",
+    "EMAIL_FROM": "absqir <onboarding@resend.dev>"
+  }
+}

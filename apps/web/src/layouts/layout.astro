@@ -1,0 +1,51 @@
+---
+import { Font } from "astro:assets";
+import { ThemeToggle } from "@/components/theme-toggle";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-jetbrains-mono" />
+    <Font cssVariable="--font-merriweather" />
+    <script is:inline>
+      // Runs before first paint so the page never flashes the wrong theme.
+      (() => {
+        const root = document.documentElement;
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        const storedTheme = () => {
+          try {
+            const value = localStorage.getItem("theme");
+            return value === "dark" || value === "light" ? value : null;
+          } catch {
+            return null;
+          }
+        };
+        const apply = (dark) => root.classList.toggle("dark", dark);
+        const stored = storedTheme();
+        apply(stored ? stored === "dark" : media.matches);
+        // Follow the device while the user has no explicit choice.
+        media.addEventListener("change", (event) => {
+          if (storedTheme() === null) apply(event.matches);
+        });
+      })();
+    </script>
+  </head>
+  <body class="bg-background text-foreground font-sans antialiased">
+    <div class="fixed top-4 right-4 z-50">
+      <ThemeToggle client:load />
+    </div>
+    <slot />
+  </body>
+</html>
