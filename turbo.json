@@ -8,6 +8,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "!.astro/types.d.ts"]
     },
+    "@absqir/docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["docs/dist/**"]
+    },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,

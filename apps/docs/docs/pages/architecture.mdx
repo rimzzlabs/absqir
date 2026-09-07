@@ -1,0 +1,51 @@
+# Architecture
+
+## One origin, two targets
+
+absqir is one codebase that runs on two targets. Astro renders the pages,
+Hono serves the API under `/api`, and both share one origin — so there is
+no CORS and the session cookie stays `SameSite=Lax`. The Docker image runs
+it on Node.js against your Postgres. The same code deploys to Cloudflare
+Workers, which is how the hosted version will run.
+
+```
+Browser ── /            Astro pages (dashboard, QR screen, check-in)
+        ── /api/...     Hono API (attendance, auth, OpenAPI)
+                        └── Postgres
+```
+
+Platform access — the database connection, the rate limiter, environment —
+sits behind one small interface, picked per target at build time.
+
+## The rotating QR token
+
+The QR screen encodes `/a/{sessionId}?t={token}`. The token is an
+HMAC-SHA256 over the session id and the current 20-second time window,
+keyed by a per-session secret that never leaves the server.
+
+- The screen fetches a fresh token when the window ends, so a photo or
+  screenshot of the code expires within seconds.
+- The server accepts the current window and the one before it, so a scan
+  near a rotation still checks in.
+- One identifier checks in once per session: a unique index on
+  `(session_id, identifier)` answers the second try with 409.
+
+Attendance always requires the live screen. It does not require an account,
+an app install, or the reader's camera permission beyond the phone's own
+camera app.
+
+## Data model
+
+Better Auth owns `user`, `session`, `account`, `verification`, and the
+organization tables. absqir adds two tables: `attendance_session` (title,
+per-session secret, open/closed, organization) and `attendance_record`
+(name, identifier, time). Everything an organization owns cascades on
+delete.
+
+## Security posture
+
+- Strict security headers and a `default-src 'none'` CSP on the API.
+- Same-origin CSRF policy, 64 KB body limit, per-IP rate limit.
+- Sign-in and sign-up carry their own tighter rate limits.
+- Errors return a request id, never the internal message.
+- Sign-up closes after the first account unless the operator opens it.

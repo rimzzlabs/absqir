@@ -1,0 +1,67 @@
+# CLI reference
+
+The `absqir` package on npm drives the self-host lifecycle. Run every
+command from the instance directory — the one that holds `.env` and
+`docker-compose.yml`.
+
+## init
+
+```bash
+npx absqir@latest init [dir] [--force]
+```
+
+Writes `docker-compose.yml` and a `.env` with a fresh `BETTER_AUTH_SECRET`
+and Postgres password. Refuses to overwrite existing files without
+`--force`.
+
+## up · down · logs
+
+```bash
+npx absqir up      # docker compose up -d
+npx absqir down    # docker compose down
+npx absqir logs    # follow the app logs
+```
+
+## upgrade
+
+Pulls the configured `ABSQIR_TAG` again and recreates the app container.
+See [Upgrades](/upgrades).
+
+## migrate
+
+Applies database migrations in a one-off container and exits. Only needed
+with `SKIP_MIGRATIONS=true`; the app container migrates on start otherwise.
+
+## admin create
+
+```bash
+npx absqir admin create --email <email> --name <name> [--password <pw>]
+```
+
+Creates an account through the normal sign-up path, so password rules and
+the personal organization apply. Works while sign-up is closed. Without
+`--password`, the CLI generates one and prints it once.
+
+## member add
+
+```bash
+npx absqir member add --email <email> --org <slug> [--role member|admin]
+```
+
+Adds an existing account to an organization by slug.
+
+## config
+
+```bash
+npx absqir config get [KEY]
+npx absqir config set <KEY> <value>
+```
+
+Reads and edits the instance `.env`. `set` accepts: `PORT`,
+`SECURE_COOKIES`, `REGISTRATION_OPEN`, `ABSQIR_TAG`, `RESEND_API_KEY`,
+`EMAIL_FROM`. Apply a change with `absqir up`.
+
+## doctor
+
+Checks Docker, the instance files, the secret length, and the health
+endpoint. Exits non-zero when a check fails, so it fits in scripts.

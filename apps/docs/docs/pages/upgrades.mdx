@@ -1,0 +1,37 @@
+# Upgrades
+
+## Upgrade the app
+
+```bash
+npx absqir upgrade
+```
+
+This pulls the tag configured as `ABSQIR_TAG` and recreates the app
+container. The new container applies pending database migrations before it
+starts, so the schema and the code always match.
+
+`latest` follows every release. For reproducible deploys, pin a version and
+move it deliberately:
+
+```bash
+npx absqir config set ABSQIR_TAG v0.2.0
+npx absqir upgrade
+```
+
+## Run migrations by hand
+
+Automatic migrations fit most instances. To control the moment yourself, set
+`SKIP_MIGRATIONS=true` on the app service, then run:
+
+```bash
+npx absqir migrate
+```
+
+This applies the migrations in a one-off container and exits.
+
+## Roll back
+
+The app container is stateless, so rolling the image back is safe as long as
+the schema fits. Migrations only add tables and columns between patch
+releases; a release note says so when one does not. Back up the `db-data`
+volume before a major upgrade.

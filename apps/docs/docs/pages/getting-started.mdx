@@ -1,0 +1,55 @@
+# Getting started
+
+Self-host absqir with Docker in a few minutes.
+
+## Requirements
+
+- A machine with [Docker Engine](https://docs.docker.com/engine/install/) and Docker Compose.
+- Node.js 22 or newer on the machine you run the CLI from.
+- 1 GB of free memory for the app and its Postgres.
+
+## Install
+
+Create an instance directory. The CLI writes a compose file and a `.env` with
+fresh secrets.
+
+```bash
+npx absqir@latest init my-absqir
+cd my-absqir
+```
+
+Start the stack. The container applies the database migrations on start.
+
+```bash
+npx absqir up
+```
+
+Open `http://localhost:4321` and create the first account. This account is
+the operator's. Sign-up closes after it — see
+[Accounts and organizations](/accounts).
+
+Check the instance at any time:
+
+```bash
+npx absqir doctor
+```
+
+## Put it behind HTTPS
+
+Run absqir behind a reverse proxy (Caddy, nginx, Traefik) that terminates
+TLS and forwards to port 4321. The proxy must send `X-Forwarded-For` and
+`X-Forwarded-Proto`. Then turn Secure cookies on:
+
+```bash
+npx absqir config set SECURE_COOKIES true
+npx absqir up
+```
+
+Do not expose port 4321 to the internet directly. Without TLS, session
+cookies and passwords travel in plain text.
+
+## Where the data lives
+
+Postgres stores everything in the `db-data` Docker volume. Back that volume
+up. The app container itself is stateless: you can delete and recreate it at
+any time.

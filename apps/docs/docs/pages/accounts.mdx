@@ -1,0 +1,43 @@
+# Accounts and organizations
+
+## Bootstrap, then closed
+
+A fresh instance accepts exactly one sign-up: the first account belongs to
+the operator. After that, sign-up answers 403 and the operator adds accounts
+from the CLI:
+
+```bash
+npx absqir admin create --email guru@example.com --name "Guru"
+```
+
+Without `--password`, the CLI generates one and prints it once. Share it over
+a safe channel; the user can change it after sign-in.
+
+To open sign-up for everyone — for example inside a trusted network — set:
+
+```bash
+npx absqir config set REGISTRATION_OPEN true
+npx absqir up
+```
+
+## Organizations
+
+Every resource in absqir belongs to an organization, not to a user. Each
+account gets a personal organization at creation, and can create more from
+the dashboard. Attendance sessions, their QR screens, and their check-in
+lists are visible to the members of one organization only.
+
+Add a user to an organization by its slug:
+
+```bash
+npx absqir member add --email guru@example.com --org yayasan-x --role member
+```
+
+The slug appears in the organization switcher on the dashboard. Roles are
+`member`, `admin`, and `owner`.
+
+## Check-ins need no account
+
+The people who scan the QR code never sign in. The rotating token in the
+scanned URL proves they saw the live screen; they type a name and an ID and
+they are done.
