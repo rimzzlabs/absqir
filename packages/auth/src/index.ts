@@ -2,6 +2,9 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
+import { organization } from "better-auth/plugins";
+import { count, eq } from "drizzle-orm";
 
 const ONE_HOUR = 60 * 60;
 const ONE_DAY = ONE_HOUR * 24;
@@ -20,11 +23,17 @@ export interface CreateAuthOptions {
   useSecureCookies?: boolean;
   /** Omit to keep email verification off, for example in local development. */
   sendVerificationEmail?: (email: VerificationEmail) => Promise<unknown>;
+  /**
+   * When false, sign-up works only while the instance has zero users, so the
+   * first reader becomes the operator and the door closes behind them.
+   */
+  registrationOpen?: boolean;
 }
 
 export function createAuth(options: CreateAuthOptions) {
   const { db, secret, baseURL, trustedOrigins, sendVerificationEmail } = options;
   const useSecureCookies = options.useSecureCookies ?? false;
+  const registrationOpen = options.registrationOpen ?? false;
 
   return betterAuth({
     secret,
@@ -38,8 +47,67 @@ export function createAuth(options: CreateAuthOptions) {
         session: schema.session,
         account: schema.account,
         verification: schema.verification,
+        organization: schema.organization,
+        member: schema.member,
+        invitation: schema.invitation,
       },
     }),
+    plugins: [organization()],
+    databaseHooks: {
+      user: {
+        create: {
+          before: async () => {
+            if (registrationOpen) return;
+
+            const [row] = await db.select({ value: count() }).from(schema.user);
+
+            if ((row?.value ?? 0) > 0) {
+              throw new APIError("FORBIDDEN", {
+                message:
+                  "Registration is closed on this instance. Ask the operator for an account.",
+              });
+            }
+          },
+          // Every user gets a personal organization, so the app never has to
+          // handle an account that owns nothing.
+          after: async (user) => {
+            const organizationId = crypto.randomUUID();
+
+            await db.insert(schema.organization).values({
+              id: organizationId,
+              name: "Personal",
+              slug: `personal-${user.id.toLowerCase()}`,
+              createdAt: new Date(),
+            });
+
+            await db.insert(schema.member).values({
+              id: crypto.randomUUID(),
+              organizationId,
+              userId: user.id,
+              role: "owner",
+              createdAt: new Date(),
+            });
+          },
+        },
+      },
+      session: {
+        create: {
+          // A fresh sign-in lands on the first membership, so no page has to
+          // handle a session without an active organization.
+          before: async (session) => {
+            const memberships = await db
+              .select({ organizationId: schema.member.organizationId })
+              .from(schema.member)
+              .where(eq(schema.member.userId, session.userId))
+              .limit(1);
+
+            return {
+              data: { ...session, activeOrganizationId: memberships[0]?.organizationId ?? null },
+            };
+          },
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 12,

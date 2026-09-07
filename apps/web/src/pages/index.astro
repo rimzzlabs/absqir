@@ -1,5 +1,6 @@
 ---
 import { AccountPanel } from "@/components/account-panel";
+import { OrgSwitcher } from "@/components/org-switcher/org-switcher";
 import { SessionTable } from "@/components/session-table/session-table";
 import Layout from "@/layouts/layout.astro";
 
@@ -17,6 +18,10 @@ if (!user) {
     <p class="text-muted-foreground mt-2 mb-8">
       QR attendance. Create a session, project its code, watch the check-ins arrive.
     </p>
+
+    <div class="mb-6">
+      <OrgSwitcher client:load />
+    </div>
 
     <SessionTable client:load />
 

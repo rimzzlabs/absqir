@@ -11,6 +11,8 @@ function build(bindings: ApiBindings) {
       ENVIRONMENT: z.enum(["development", "preview", "production"]).default("development"),
       /** Serve the OpenAPI document and the Scalar page. Off in production. */
       ENABLE_DOCS: z.stringbool().optional(),
+      /** Keep sign-up open after the first user. Off by default on self-host. */
+      REGISTRATION_OPEN: z.stringbool().default(false),
     },
     runtimeEnv: {
       BETTER_AUTH_SECRET: bindings.BETTER_AUTH_SECRET,
@@ -18,6 +20,7 @@ function build(bindings: ApiBindings) {
       EMAIL_FROM: bindings.EMAIL_FROM,
       ENVIRONMENT: bindings.ENVIRONMENT,
       ENABLE_DOCS: bindings.ENABLE_DOCS,
+      REGISTRATION_OPEN: bindings.REGISTRATION_OPEN,
     },
     emptyStringAsUndefined: true,
   });

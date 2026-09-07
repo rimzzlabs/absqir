@@ -18,4 +18,5 @@ export interface ApiBindings {
   EMAIL_FROM?: string;
   ENVIRONMENT?: string;
   ENABLE_DOCS?: string;
+  REGISTRATION_OPEN?: string;
 }

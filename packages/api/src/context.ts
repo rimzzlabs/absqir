@@ -30,6 +30,7 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     baseURL: origin,
     trustedOrigins: [origin],
     useSecureCookies: isProduction(env),
+    registrationOpen: env.REGISTRATION_OPEN,
     sendVerificationEmail: mailer
       ? ({ user, url }) => mailer.sendWelcome(user.email, { name: user.name, verifyUrl: url })
       : undefined,

@@ -6,3 +6,7 @@ BETTER_AUTH_SECRET="replace-me-with-a-32-character-secret-value"
 
 # Optional. Leave empty to keep email verification off.
 RESEND_API_KEY=""
+
+# Sign-up stays open only while the instance has zero users. Set to "true"
+# to keep registration open for everyone.
+REGISTRATION_OPEN="false"

@@ -17,6 +17,17 @@ export const userKeys = {
   detail: (id: string) => [...userKeys.all, "detail", id] as const,
 };
 
+export const organizationKeys = {
+  all: ["organizations"] as const,
+  list: () => [...organizationKeys.all, "list"] as const,
+};
+
+export const organizationMutationKeys = {
+  all: ["organization-mutations"] as const,
+  create: () => [...organizationMutationKeys.all, "create"] as const,
+  setActive: () => [...organizationMutationKeys.all, "set-active"] as const,
+};
+
 export const attendanceKeys = {
   all: ["attendance"] as const,
   list: () => [...attendanceKeys.all, "list"] as const,

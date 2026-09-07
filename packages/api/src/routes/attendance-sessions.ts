@@ -2,10 +2,11 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, desc, eq } from "drizzle-orm";
+import type { Context } from "hono";
 import { createQrToken } from "@/lib/qr-token";
 import type { AppEnv } from "@/types";
 
-const { attendanceSession, attendanceRecord } = schema;
+const { attendanceSession, attendanceRecord, member, session: sessionTable } = schema;
 
 const sessionSchema = z.object({
   id: z.string(),
@@ -37,8 +38,13 @@ const unauthorized = {
   content: { "application/json": { schema: errorSchema } },
 } as const;
 
+const forbidden = {
+  description: "No active organization, or not a member of it",
+  content: { "application/json": { schema: errorSchema } },
+} as const;
+
 const notFound = {
-  description: "Not found, or owned by another user",
+  description: "Not found, or owned by another organization",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 
@@ -46,13 +52,14 @@ const listRoute = createRoute({
   method: "get",
   path: "/attendance-sessions",
   tags: ["attendance"],
-  summary: "List the signed-in user's attendance sessions",
+  summary: "List the active organization's attendance sessions",
   responses: {
     200: {
       description: "The sessions, newest first",
       content: { "application/json": { schema: z.array(sessionSchema) } },
     },
     401: unauthorized,
+    403: forbidden,
   },
 });
 
@@ -60,7 +67,7 @@ const createSessionRoute = createRoute({
   method: "post",
   path: "/attendance-sessions",
   tags: ["attendance"],
-  summary: "Create an attendance session",
+  summary: "Create an attendance session in the active organization",
   request: {
     body: {
       content: {
@@ -74,6 +81,7 @@ const createSessionRoute = createRoute({
       content: { "application/json": { schema: sessionSchema } },
     },
     401: unauthorized,
+    403: forbidden,
   },
 });
 
@@ -94,6 +102,7 @@ const toggleRoute = createRoute({
       content: { "application/json": { schema: sessionSchema.omit({ recordCount: true }) } },
     },
     401: unauthorized,
+    403: forbidden,
     404: notFound,
   },
 });
@@ -110,6 +119,7 @@ const removeRoute = createRoute({
       content: { "application/json": { schema: z.object({ deleted: z.literal(true) }) } },
     },
     401: unauthorized,
+    403: forbidden,
     404: notFound,
   },
 });
@@ -126,6 +136,7 @@ const qrTokenRoute = createRoute({
       content: { "application/json": { schema: qrTokenSchema } },
     },
     401: unauthorized,
+    403: forbidden,
     404: notFound,
   },
 });
@@ -142,23 +153,82 @@ const recordsRoute = createRoute({
       content: { "application/json": { schema: z.array(recordSchema) } },
     },
     401: unauthorized,
+    403: forbidden,
     404: notFound,
   },
 });
 
-type OwnedSession = typeof attendanceSession.$inferSelect;
+type OrgAccess =
+  | { ok: true; organizationId: string }
+  | { ok: false; status: 401 | 403; error: string };
 
-interface FindOwnedSessionParams {
-  db: Database;
-  id: string;
-  ownerId: string;
+/**
+ * Resolves the caller's active organization and proves membership. When the
+ * session carries no active organization, or a stale one the caller has left,
+ * this falls back to the first membership and writes it back to the session,
+ * so the account heals itself instead of erroring.
+ */
+async function requireOrg(c: Context<AppEnv>): Promise<OrgAccess> {
+  const user = c.get("user");
+  const session = c.get("session");
+
+  if (!user || !session) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+
+  const active = session.activeOrganizationId;
+
+  if (active) {
+    const memberships = await c.var.db
+      .select({ id: member.id })
+      .from(member)
+      .where(and(eq(member.userId, user.id), eq(member.organizationId, active)))
+      .limit(1);
+
+    if (memberships[0]) {
+      return { ok: true, organizationId: active };
+    }
+  }
+
+  const fallback = await c.var.db
+    .select({ organizationId: member.organizationId })
+    .from(member)
+    .where(eq(member.userId, user.id))
+    .orderBy(member.createdAt)
+    .limit(1);
+
+  const organizationId = fallback[0]?.organizationId;
+
+  if (!organizationId) {
+    return { ok: false, status: 403, error: "No organization membership" };
+  }
+
+  await c.var.db
+    .update(sessionTable)
+    .set({ activeOrganizationId: organizationId })
+    .where(eq(sessionTable.id, session.id));
+
+  return { ok: true, organizationId };
 }
 
-async function findOwnedSession(params: FindOwnedSessionParams): Promise<OwnedSession | null> {
+type OrgSession = typeof attendanceSession.$inferSelect;
+
+interface FindOrgSessionParams {
+  db: Database;
+  id: string;
+  organizationId: string;
+}
+
+async function findOrgSession(params: FindOrgSessionParams): Promise<OrgSession | null> {
   const rows = await params.db
     .select()
     .from(attendanceSession)
-    .where(and(eq(attendanceSession.id, params.id), eq(attendanceSession.ownerId, params.ownerId)))
+    .where(
+      and(
+        eq(attendanceSession.id, params.id),
+        eq(attendanceSession.organizationId, params.organizationId),
+      ),
+    )
     .limit(1);
 
   return rows[0] ?? null;
@@ -170,8 +240,8 @@ function csvCell(value: string): string {
 
 export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
   .openapi(listRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const rows = await c.var.db
       .select({
@@ -183,7 +253,7 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
       })
       .from(attendanceSession)
       .leftJoin(attendanceRecord, eq(attendanceRecord.sessionId, attendanceSession.id))
-      .where(eq(attendanceSession.ownerId, user.id))
+      .where(eq(attendanceSession.organizationId, org.organizationId))
       .groupBy(attendanceSession.id)
       .orderBy(desc(attendanceSession.createdAt));
 
@@ -193,8 +263,8 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(createSessionRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const { title } = c.req.valid("json");
 
@@ -203,7 +273,7 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
 
     const [created] = await c.var.db
       .insert(attendanceSession)
-      .values({ id: crypto.randomUUID(), title, secret, ownerId: user.id })
+      .values({ id: crypto.randomUUID(), title, secret, organizationId: org.organizationId })
       .returning();
 
     if (!created) throw new Error("Insert returned no row");
@@ -220,14 +290,14 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(toggleRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const { id } = c.req.valid("param");
     const { active } = c.req.valid("json");
 
-    const owned = await findOwnedSession({ db: c.var.db, id, ownerId: user.id });
-    if (!owned) return c.json({ error: "Not found" }, 404);
+    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    if (!found) return c.json({ error: "Not found" }, 404);
 
     const [updated] = await c.var.db
       .update(attendanceSession)
@@ -248,28 +318,28 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(removeRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const { id } = c.req.valid("param");
 
-    const owned = await findOwnedSession({ db: c.var.db, id, ownerId: user.id });
-    if (!owned) return c.json({ error: "Not found" }, 404);
+    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    if (!found) return c.json({ error: "Not found" }, 404);
 
     await c.var.db.delete(attendanceSession).where(eq(attendanceSession.id, id));
 
     return c.json({ deleted: true as const }, 200);
   })
   .openapi(qrTokenRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const { id } = c.req.valid("param");
 
-    const owned = await findOwnedSession({ db: c.var.db, id, ownerId: user.id });
-    if (!owned) return c.json({ error: "Not found" }, 404);
+    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    if (!found) return c.json({ error: "Not found" }, 404);
 
-    const { token, expiresAt } = await createQrToken({ secret: owned.secret, sessionId: id });
+    const { token, expiresAt } = await createQrToken({ secret: found.secret, sessionId: id });
 
     return c.json(
       {
@@ -281,13 +351,13 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .openapi(recordsRoute, async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const { id } = c.req.valid("param");
 
-    const owned = await findOwnedSession({ db: c.var.db, id, ownerId: user.id });
-    if (!owned) return c.json({ error: "Not found" }, 404);
+    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    if (!found) return c.json({ error: "Not found" }, 404);
 
     const rows = await c.var.db
       .select()
@@ -306,13 +376,13 @@ export const attendanceSessionRoutes = new OpenAPIHono<AppEnv>()
     );
   })
   .get("/attendance-sessions/:id/records.csv", async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    const org = await requireOrg(c);
+    if (!org.ok) return c.json({ error: org.error }, org.status);
 
     const id = c.req.param("id");
 
-    const owned = await findOwnedSession({ db: c.var.db, id, ownerId: user.id });
-    if (!owned) return c.json({ error: "Not found" }, 404);
+    const found = await findOrgSession({ db: c.var.db, id, organizationId: org.organizationId });
+    if (!found) return c.json({ error: "Not found" }, 404);
 
     const rows = await c.var.db
       .select()
