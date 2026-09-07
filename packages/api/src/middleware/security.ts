@@ -81,8 +81,16 @@ export function payloadLimit(): MiddlewareHandler<AppEnv> {
 }
 
 // Cloudflare sets CF-Connecting-IP at the edge, so a client cannot forge it.
+// On the Node target the reverse proxy sets X-Forwarded-For; the docs tell
+// operators not to expose the app port directly.
 function clientKey(c: Context<AppEnv>) {
-  return c.req.header("cf-connecting-ip") ?? "unknown";
+  const cfIp = c.req.header("cf-connecting-ip");
+  if (cfIp) return cfIp;
+
+  const forwarded = c.req.header("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "unknown";
+
+  return "unknown";
 }
 
 export function rateLimit(): MiddlewareHandler<AppEnv> {

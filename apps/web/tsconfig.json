@@ -5,7 +5,8 @@
     "jsxImportSource": "react",
     "verbatimModuleSyntax": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@app-runtime": ["./src/lib/runtime/runtime-cloudflare.ts"]
     }
   },
   "include": [".astro/types.d.ts", "env.d.ts", "worker-configuration.d.ts", "**/*"],

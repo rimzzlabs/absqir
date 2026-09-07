@@ -2,7 +2,7 @@ import { type Auth, createAuth } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
 import { createMailer } from "@absqir/transactional";
 import type { ApiBindings } from "@/bindings";
-import { isProduction, parseEnv } from "@/env";
+import { parseEnv, secureCookies } from "@/env";
 
 export interface RequestContext {
   db: Database;
@@ -29,7 +29,7 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     secret: env.BETTER_AUTH_SECRET,
     baseURL: origin,
     trustedOrigins: [origin],
-    useSecureCookies: isProduction(env),
+    useSecureCookies: secureCookies(env),
     registrationOpen: env.REGISTRATION_OPEN,
     sendVerificationEmail: mailer
       ? ({ user, url }) => mailer.sendWelcome(user.email, { name: user.name, verifyUrl: url })

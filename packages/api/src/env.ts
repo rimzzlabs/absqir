@@ -13,6 +13,12 @@ function build(bindings: ApiBindings) {
       ENABLE_DOCS: z.stringbool().optional(),
       /** Keep sign-up open after the first user. Off by default on self-host. */
       REGISTRATION_OPEN: z.stringbool().default(false),
+      /**
+       * Overrides the Secure flag on cookies. Defaults to on in production.
+       * A self-host without TLS must set this to false, or sign-in fails
+       * silently when the browser drops the cookie.
+       */
+      SECURE_COOKIES: z.stringbool().optional(),
     },
     runtimeEnv: {
       BETTER_AUTH_SECRET: bindings.BETTER_AUTH_SECRET,
@@ -21,6 +27,7 @@ function build(bindings: ApiBindings) {
       ENVIRONMENT: bindings.ENVIRONMENT,
       ENABLE_DOCS: bindings.ENABLE_DOCS,
       REGISTRATION_OPEN: bindings.REGISTRATION_OPEN,
+      SECURE_COOKIES: bindings.SECURE_COOKIES,
     },
     emptyStringAsUndefined: true,
   });
@@ -47,4 +54,8 @@ export function isProduction(env: ApiEnv) {
 
 export function docsEnabled(env: ApiEnv) {
   return env.ENABLE_DOCS ?? !isProduction(env);
+}
+
+export function secureCookies(env: ApiEnv) {
+  return env.SECURE_COOKIES ?? isProduction(env);
 }

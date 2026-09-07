@@ -1,0 +1,39 @@
+# Self-host stack: the app and its Postgres. Put the secrets in a .env file
+# next to this compose file. Generate the secret with: openssl rand -base64 32
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: absqir
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-absqir}
+      POSTGRES_DB: absqir
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U absqir -d absqir"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ghcr.io/absqir/absqir:latest
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT:-4321}:4321"
+    environment:
+      DATABASE_URL: postgresql://absqir:${POSTGRES_PASSWORD:-absqir}@db:5432/absqir
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
+      # Set to true when the instance is behind HTTPS. Over plain http the
+      # browser drops Secure cookies and sign-in fails silently.
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      # Sign-up closes after the first user unless this is true.
+      REGISTRATION_OPEN: ${REGISTRATION_OPEN:-false}
+      ENVIRONMENT: production
+
+volumes:
+  db-data:

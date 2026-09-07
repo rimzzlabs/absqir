@@ -12,9 +12,12 @@
     "typecheck": "astro check"
   },
   "dependencies": {
+    "@absqir/api": "workspace:^",
     "@absqir/core": "workspace:^",
+    "@absqir/db": "workspace:^",
     "@absqir/ui": "workspace:^",
     "@astrojs/cloudflare": "^14.3.0",
+    "@astrojs/node": "^11.1.5",
     "@astrojs/react": "^6.0.5",
     "@hookform/resolvers": "^5.9.1",
     "@phosphor-icons/react": "^2.1.10",
@@ -30,7 +33,6 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@absqir/api": "workspace:^",
     "@absqir/auth": "workspace:^",
     "@absqir/config": "workspace:^",
     "@astrojs/check": "^0.9.10",

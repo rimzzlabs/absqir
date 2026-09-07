@@ -1,0 +1,13 @@
+.git
+node_modules
+**/node_modules
+**/dist
+**/.astro
+**/.turbo
+.env
+.env.*
+!.env.example
+apps/web/.dev.vars
+apps/web/worker-configuration.d.ts
+.hallmark
+.claude

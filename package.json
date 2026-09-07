@@ -9,6 +9,7 @@
   "scripts": {
     "dev:all": "turbo run dev --filter=@absqir/web --filter=@absqir/api --filter=@absqir/transactional",
     "build": "turbo run build",
+    "build:node": "DEPLOY_TARGET=node turbo run build",
     "preview": "pnpm --filter @absqir/web preview",
     "deploy": "turbo run build && pnpm --filter @absqir/web deploy",
     "typecheck": "turbo run typecheck",

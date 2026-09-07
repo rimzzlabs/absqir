@@ -1,6 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
-import { env } from "cloudflare:workers";
 import { createRequestContext } from "@absqir/api";
+import { getRuntime } from "@app-runtime";
 
 /** Pages for signing in. A signed-in reader is sent back to the dashboard. */
 const AUTH_PATHS = new Set(["/sign-in", "/sign-up"]);
@@ -18,7 +18,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  const { auth, close } = createRequestContext(env, context.url.origin);
+  const runtime = getRuntime(context.locals);
+  const { auth, close } = createRequestContext(runtime.bindings, context.url.origin);
 
   try {
     // This call also renews a session that has passed its updateAge, which is
@@ -44,12 +45,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     return response;
   } finally {
-    const cf = context.locals.cfContext;
-
-    if (cf) {
-      cf.waitUntil(close());
-    } else {
-      await close();
-    }
+    runtime.executionCtx.waitUntil(close());
   }
 });
