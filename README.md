@@ -1,11 +1,33 @@
 # absqir
 
-QR attendance on one Cloudflare Worker. An organizer creates a session and
-projects its QR screen. A reader scans the code with a phone camera, fills in
-a name and an ID, and the check-in appears on the dashboard within seconds.
+Open-source QR attendance. An organizer creates a session and projects its
+QR screen. A reader scans the code with a phone camera, fills in a name and
+an ID, and the check-in appears on the dashboard within seconds. Readers
+never need an account or an app.
 
-The repo is a Turborepo monorepo built from the `halo` template. Astro serves
-the site, Hono serves the API at `/api`, and both run on the same origin.
+## Self-host
+
+One command writes the compose file and the secrets. One more starts the
+stack next to its own Postgres.
+
+```bash
+npx absqir@latest init my-absqir
+cd my-absqir
+npx absqir up
+```
+
+Open http://localhost:4321 and create the first account. Sign-up closes
+after it; the operator adds accounts with `npx absqir admin create`. The
+full guide — HTTPS, configuration, upgrades, accounts — lives in
+`apps/docs` and on the docs site.
+
+## About this repo
+
+A Turborepo monorepo that builds for two targets from one codebase: a Docker
+image on Node.js for self-hosting, and a Cloudflare Worker for the hosted
+version. Astro serves the site, Hono serves the API at `/api`, and both run
+on the same origin. Attendance always belongs to an organization: accounts
+join organizations, sessions live inside them.
 
 ## How the QR stays honest
 
@@ -23,20 +45,22 @@ and `packages/api/src/routes/check-in.ts` (public).
 
 ## Stack
 
-| Layer    | Tool                                                         |
-| -------- | ------------------------------------------------------------ |
-| Site     | Astro 7, React 19 islands, React Compiler                    |
-| UI       | shadcn CLI over Base UI, Tailwind v4, Motion, Phosphor icons |
-| API      | Hono with `@hono/zod-openapi` and Scalar                     |
-| Data     | ts-belt, ts-pattern, date-fns, Dinero.js on bigint           |
-| Database | Postgres through Drizzle ORM and Cloudflare Hyperdrive       |
-| Auth     | Better Auth, email and password                              |
-| Email    | Resend with React Email                                      |
-| Runtime  | Cloudflare Workers                                           |
-| Tests    | Vitest                                                       |
-| Lint     | Biome for code, Prettier for Markdown and YAML               |
-| Commits  | commitlint, cz-git, Lefthook                                 |
-| Release  | release-please, GitHub Actions                               |
+| Layer    | Tool                                                          |
+| -------- | ------------------------------------------------------------- |
+| Site     | Astro 7, React 19 islands, React Compiler                     |
+| UI       | shadcn CLI over Base UI, Tailwind v4, Motion, Phosphor icons  |
+| API      | Hono with `@hono/zod-openapi` and Scalar                      |
+| Data     | ts-belt, ts-pattern, date-fns, Dinero.js on bigint            |
+| Database | Postgres through Drizzle ORM (Hyperdrive on Workers)          |
+| Auth     | Better Auth with the organization plugin, email and password  |
+| Email    | Resend with React Email, optional                             |
+| Runtime  | Node.js in Docker for self-host, Cloudflare Workers for cloud |
+| Docs     | Vocs in `apps/docs`                                           |
+| CLI      | The `absqir` package in `packages/cli`                        |
+| Tests    | Vitest                                                        |
+| Lint     | Biome for code, Prettier for Markdown and YAML                |
+| Commits  | commitlint, cz-git, Lefthook                                  |
+| Release  | release-please, GitHub Actions, GHCR, npm                     |
 
 ## Layout
 
@@ -46,22 +70,26 @@ apps/
     src/
       components/      Islands. One folder per feature.
       layouts/         Astro shells
-      lib/             Clients, schemas, query client
-      mutations/       useSignIn, useSignUp, useSignOut
-      queries/         useHealth, useSession
-      pages/           index (private), sign-in, sign-up, api/[...path]
+      lib/             Clients, schemas, query client, runtime glue
+      mutations/       One hook per action
+      queries/         One hook per read
+      pages/           dashboard, sessions, QR display, /a check-in, api
       middleware.ts    Session into locals, plus the route guard
+    docker-entry.mjs   Container entrypoint: migrate, then serve
+  docs/                Vocs docs site and landing page
 packages/
   api/
     src/
+      lib/             The rotating QR token
       middleware/      Security, request context, session
       routes/          One file per resource
       context.ts       Shared by Hono and the Astro middleware
     tests/
-  auth/                Better Auth instance
+  auth/                Better Auth instance, organizations, sign-up policy
+  cli/                 The absqir operator CLI, published to npm
   config/              Shared tsconfig and vitest presets
   core/                Money on bigint, dates, query keys
-  db/                  Drizzle schema, client, migrations
+  db/                  Drizzle schema, client, migrations, operator ops
   transactional/       Resend mailer and React Email templates
   ui/                  Base UI primitives, Tailwind theme, motion
 
@@ -72,7 +100,7 @@ The site imports the API and mounts it in `src/pages/api/[...path].ts`. One
 build, one deploy, one origin. Same-origin removes CORS and keeps session
 cookies on `SameSite=Lax`.
 
-## First run
+## Develop
 
 1. Install the dependencies.
 
@@ -118,43 +146,19 @@ pnpm dev:all
 - API reference: http://localhost:4321/api/reference
 - Email preview: http://localhost:3001
 
-## Repository settings
+## Contributing
 
-GitHub copies files from a template, but not settings. After you create a
-repo from this template, run these two commands once. Replace `OWNER/REPO`.
-
-```bash
-gh api -X PATCH repos/OWNER/REPO \
-  -F allow_squash_merge=true \
-  -F allow_merge_commit=false \
-  -F allow_rebase_merge=false \
-  -f squash_merge_commit_title=PR_TITLE \
-  -f squash_merge_commit_message=COMMIT_MESSAGES \
-  -F has_projects=false
-
-gh api -X PUT repos/OWNER/REPO/actions/permissions/workflow \
-  -f default_workflow_permissions=read \
-  -F can_approve_pull_request_reviews=true
-```
-
-The first command allows only squash merges for pull requests. The squash
-commit takes its title from the PR title and its body from the PR commits.
-It also hides the Projects tab. The second command lets release-please open
-its release PR.
-
-Local merges rebase instead: `pnpm install` sets `git config pull.rebase
-true` for the clone through the `prepare` script.
-
-To hide the Packages section on the repo home page, open the gear icon next
-to "About" and clear the "Packages" checkbox. GitHub has no API for this
-switch.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). In short: small pull requests,
+conventional commits, and `pnpm check && pnpm typecheck && pnpm test` green
+before you push. The repo squash-merges pull requests.
 
 ## Scripts
 
 | Command              | Action                                              |
 | -------------------- | --------------------------------------------------- |
 | `pnpm dev:all`       | Web, API watcher, and the email preview             |
-| `pnpm build`         | Build every workspace                               |
+| `pnpm build`         | Build every workspace for Cloudflare                |
+| `pnpm build:node`    | Build every workspace for the Node target           |
 | `pnpm preview`       | Serve the built Worker                              |
 | `pnpm deploy`        | Build, then `wrangler deploy`                       |
 | `pnpm typecheck`     | `tsc` and `astro check`                             |
@@ -189,6 +193,9 @@ pnpm cf:secret BETTER_AUTH_SECRET
 ```
 
 ## Deploy
+
+Self-hosting runs the published Docker image — see the docs site. This
+section covers deploying your own Cloudflare Worker from source.
 
 1. Create a Hyperdrive config against your production Postgres.
 
@@ -339,19 +346,22 @@ release-please reads the commits on `main` and keeps a release pull request open
 with the next version and the changelog entries. Merge that pull request to cut
 a release.
 
-1. A pull request into `main` runs lint, format, types, tests, build, and the
-   commit message check.
+1. A pull request into `main` runs lint, format, types, tests, both target
+   builds, a Docker build, and the commit message check.
 2. Merging the release pull request tags the version and writes `CHANGELOG.md`.
-3. The tag runs the full check again, applies the database migrations, then
-   deploys to Cloudflare.
+3. The tag runs the full check again, then publishes the Docker image to
+   `ghcr.io` (amd64 and arm64) and the `absqir` CLI to npm.
+4. The Cloudflare deploy job stays off until the repository variable
+   `DEPLOY_CLOUDFLARE` is `true`.
 
 Set these repository secrets before the first release:
 
-| Secret                  | Used for                        |
-| ----------------------- | ------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | `wrangler deploy`               |
-| `CLOUDFLARE_ACCOUNT_ID` | `wrangler deploy`               |
-| `DATABASE_URL`          | `drizzle-kit migrate` on deploy |
+| Secret                  | Used for                                   |
+| ----------------------- | ------------------------------------------ |
+| `NPM_TOKEN`             | `npm publish` of the CLI                   |
+| `CLOUDFLARE_API_TOKEN`  | `wrangler deploy`, only with the flag on   |
+| `CLOUDFLARE_ACCOUNT_ID` | `wrangler deploy`, only with the flag on   |
+| `DATABASE_URL`          | `drizzle-kit migrate` on Cloudflare deploy |
 
 ## Pages and the session
 
