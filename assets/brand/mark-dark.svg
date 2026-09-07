@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><title>absqir</title>
+  <!-- absqir mark on dark grounds. -->
+  <path d="M36 9 H19 Q9 9 9 19 V45 Q9 55 19 55 H45 Q55 55 55 45 V28" fill="none" stroke="#e7ecf4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="43.5" y="9" width="12" height="12" rx="3.5" fill="#7ca9ff"/>
+  <rect x="25" y="25" width="14" height="14" rx="4" fill="#e7ecf4"/>
+</svg>

@@ -4,6 +4,11 @@ export default defineConfig({
   title: "absqir",
   description: "Open-source QR attendance. Project a rotating code, watch check-ins arrive.",
   rootDir: "docs",
+  iconUrl: { light: "/mark-light.svg", dark: "/mark-dark.svg" },
+  logoUrl: { light: "/mark-light.svg", dark: "/mark-dark.svg" },
+  theme: {
+    accentColor: { light: "#2563eb", dark: "#7ca9ff" },
+  },
   sidebar: [
     {
       text: "Self-host",
@@ -19,6 +24,7 @@ export default defineConfig({
       items: [
         { text: "CLI", link: "/cli" },
         { text: "Architecture", link: "/architecture" },
+        { text: "Brand", link: "/brand" },
       ],
     },
   ],

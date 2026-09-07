@@ -1,0 +1,45 @@
+# Brand
+
+The absqir mark is the product's own mechanism drawn small: a QR-shaped path,
+open at one corner, with a fresh module sliding into the gap — the rotating
+token replacing the one before it. The module in the center is the reader.
+
+<div style={{ display: "flex", gap: "12px", flexWrap: "wrap", margin: "24px 0" }}>
+  <div style={{ background: "#f6f8fb", border: "1px solid #dfe5ee", borderRadius: "12px", padding: "32px 48px" }}>
+    <img src="/mark-light.svg" alt="absqir mark on a light ground" width="96" height="96" />
+  </div>
+  <div style={{ background: "#10151e", border: "1px solid #232c3a", borderRadius: "12px", padding: "32px 48px" }}>
+    <img src="/mark-dark.svg" alt="absqir mark on a dark ground" width="96" height="96" />
+  </div>
+</div>
+
+## Color
+
+| Token | Light | Dark | Usage |
+| --- | --- | --- | --- |
+| Ink | `#131A26` | `#E7ECF4` | The mark's path and modules, headings |
+| Paper | `#F6F8FB` | `#10151E` | Grounds, tinted toward cobalt — never pure white or black |
+| Cobalt | `#2563EB` | `#7CA9FF` | The incoming module, links, focus, one accent per view |
+
+Cobalt marks the brand, not a state. Success, warning, and error keep their
+own semantic colors inside the app.
+
+## Typography
+
+- **Wordmark**: JetBrains Mono 600, always lowercase: `absqir`. Never
+  capitalize the name, in prose either.
+- **Text**: Inter. Both faces already ship with the app; the brand adds no
+  font.
+
+## Usage
+
+- Keep clear space around the mark of at least the center module's width.
+- Do not rotate, distort, outline, or add effects to the mark.
+- Do not recolor the mark outside ink and cobalt.
+- On photos or busy grounds, place the mark on a paper-colored tile first.
+
+## Assets
+
+Source files live in [`assets/brand/`](https://github.com/absqir/absqir/tree/main/assets/brand):
+`mark-light.svg`, `mark-dark.svg`, `favicon.svg` (theme-aware), and
+`avatar-512.png` for the GitHub organization.
