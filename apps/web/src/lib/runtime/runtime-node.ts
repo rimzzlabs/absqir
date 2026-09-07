@@ -1,4 +1,5 @@
 import type { ApiBindings, RateLimitBinding } from "@absqir/api";
+import { createDb } from "@absqir/db";
 import type { AppRuntime } from "@/lib/runtime/runtime-types";
 
 const WINDOW_MS = 60_000;
@@ -56,8 +57,16 @@ let cached: AppRuntime | undefined;
 export function getRuntime(_locals: App.Locals): AppRuntime {
   if (cached) return cached;
 
+  const connectionString = requireEnv("DATABASE_URL");
+
+  // One pool for the whole process. Workers must open a pool per invocation;
+  // a long-running Node server must not.
+  const poolMax = Number(process.env.DATABASE_POOL_MAX ?? "10");
+  const { db } = createDb({ connectionString, max: poolMax });
+
   const bindings: ApiBindings = {
-    HYPERDRIVE: { connectionString: requireEnv("DATABASE_URL") },
+    HYPERDRIVE: { connectionString },
+    SHARED_DB: db,
     BETTER_AUTH_SECRET: requireEnv("BETTER_AUTH_SECRET"),
     API_RATE_LIMIT: createMemoryRateLimit(),
     RESEND_API_KEY: process.env.RESEND_API_KEY,

@@ -1,3 +1,5 @@
+import type { Database } from "@absqir/db";
+
 /**
  * Worker bindings the API needs. The web app owns wrangler.jsonc, so this
  * describes only the subset the API reads. The generated Env satisfies it.
@@ -12,6 +14,13 @@ export interface RateLimitBinding {
 
 export interface ApiBindings {
   HYPERDRIVE: HyperdriveBinding;
+  /**
+   * A process-lifetime drizzle instance. The Node runtime sets it, so every
+   * request shares one pool. Workers cannot carry a connection across
+   * requests, so it stays unset there and each invocation opens its own
+   * short-lived pool through HYPERDRIVE.
+   */
+  SHARED_DB?: Database;
   API_RATE_LIMIT?: RateLimitBinding;
   BETTER_AUTH_SECRET: string;
   RESEND_API_KEY?: string;

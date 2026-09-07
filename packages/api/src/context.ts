@@ -18,7 +18,10 @@ export interface RequestContext {
  */
 export function createRequestContext(bindings: ApiBindings, origin: string): RequestContext {
   const env = parseEnv(bindings);
-  const { db, close } = createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
+
+  const { db, close } = bindings.SHARED_DB
+    ? { db: bindings.SHARED_DB, close: async () => {} }
+    : createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
 
   const mailer = env.RESEND_API_KEY
     ? createMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
