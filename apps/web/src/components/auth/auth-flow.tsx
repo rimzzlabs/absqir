@@ -23,7 +23,7 @@ export interface AuthFlowProps {
  */
 type Step =
   | { kind: "email" }
-  | { kind: "password"; email: string }
+  | { kind: "password"; email: string; password: string }
   | { kind: "code"; email: string; isNew: boolean }
   | { kind: "reset"; email: string }
   | { kind: "closed"; email: string };
@@ -36,14 +36,15 @@ function AuthSteps(props: AuthFlowProps) {
       <AuthEmailStep
         initialEmail={props.initialEmail ?? ""}
         eventId={props.eventId ?? null}
-        onKnownWithPassword={(email) => setStep({ kind: "password", email })}
+        onKnownWithPassword={(email, password) => setStep({ kind: "password", email, password })}
         onCodeSent={(email, isNew) => setStep({ kind: "code", email, isNew })}
         onClosed={(email) => setStep({ kind: "closed", email })}
       />
     ))
-    .with({ kind: "password" }, ({ email }) => (
+    .with({ kind: "password" }, ({ email, password }) => (
       <AuthPasswordStep
         email={email}
+        initialPassword={password}
         next={props.next}
         onBack={() => setStep({ kind: "email" })}
         onCodeSent={() => setStep({ kind: "reset", email })}
@@ -61,7 +62,7 @@ function AuthSteps(props: AuthFlowProps) {
       <AuthResetStep
         email={email}
         next={props.next}
-        onBack={() => setStep({ kind: "password", email })}
+        onBack={() => setStep({ kind: "password", email, password: "" })}
       />
     ))
     .with({ kind: "closed" }, ({ email }) => (

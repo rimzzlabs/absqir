@@ -13,6 +13,8 @@ import { useSignIn } from "@/mutations/use-sign-in";
 
 export interface AuthPasswordStepProps {
   email: string;
+  /** Filled by a password manager on the email step, empty otherwise. */
+  initialPassword: string;
   next: string;
   onBack: () => void;
   onCodeSent: () => void;
@@ -21,7 +23,7 @@ export interface AuthPasswordStepProps {
 export function AuthPasswordStep(props: AuthPasswordStepProps) {
   const form = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
-    defaultValues: { password: "", rememberMe: true },
+    defaultValues: { password: props.initialPassword, rememberMe: true },
   });
 
   const signIn = useSignIn({ redirectTo: props.next });
@@ -42,6 +44,21 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
         noValidate
       >
         <AuthHeading title="Welcome back" description={props.email} />
+
+        {/*
+          The email is not typed on this step, so the password manager reads
+          it from a hidden field and pairs the password with the right account.
+        */}
+        <input
+          type="email"
+          name="email"
+          value={props.email}
+          autoComplete="username"
+          readOnly
+          tabIndex={-1}
+          aria-hidden
+          className="sr-only"
+        />
 
         <FormField
           control={form.control}
