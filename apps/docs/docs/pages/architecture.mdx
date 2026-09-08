@@ -42,20 +42,28 @@ Better Auth owns `user`, `session`, `account`, `verification`,
   account, and links to the account when an invitation is accepted. Email
   and identifier are unique inside the organization.
 - `group` and `group_member` — teams, divisions, cohorts.
+- `schedule` and `schedule_group` — rules that spawn sessions.
+- `attendance_session` and `session_group` — one moment people are expected,
+  and which groups.
+- `attendance_record` — one row per person per session: status, method,
+  time, note. Absent rows are written when the session closes.
 
-Everything an organization owns cascades on delete. Sessions, schedules,
-attendance records, leave requests, and notifications arrive in the next
-phases.
+Everything an organization owns cascades on delete. Leave requests and
+notifications arrive in the next phases.
 
-## The rotating QR token
+## The rotating QR token and the pass
 
-Sessions come in the next phase, and the check-in token is ready for them.
-The QR screen will encode a token that is an HMAC-SHA256 over the session id
-and the current 20-second time window, keyed by a per-session secret that
-never leaves the server. The screen fetches a fresh token when the window
-ends, so a photo of the code expires within seconds, and the server accepts
-the current window and the one before it. Only a signed-in member can check
-in with it, so a shared photo and a borrowed identifier get nobody in.
+The room screen encodes a link carrying a token: an HMAC-SHA256 over the
+session id and the current 20-second time window, keyed by a per-session
+secret that never leaves the server. The screen fetches a fresh token when
+the window ends, so a photo of the code expires within seconds, and the
+server accepts the current window and the one before it. Only a signed-in
+member on the list can check in with it.
+
+The member's pass is the other direction: an HMAC over the session id and
+the person id with the same secret. The organizer's scanner reads it and the
+server checks the signature before it writes anything. See
+[Sessions and check-in](/sessions).
 
 ## Security posture
 

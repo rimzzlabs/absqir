@@ -1,18 +1,8 @@
 ---
-import { EmptyModule } from "@/components/shared/empty-module";
+import { MyHistoryPage } from "@/components/my/my-history-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 ---
 
 <DashboardLayout title="History">
-  <EmptyModule
-    icon="history"
-    title="History"
-    description="Your own record: present, late, excused, absent, session by session."
-    phase={2}
-    bullets={[
-      "Every past session with your status and the time you checked in.",
-      "Your attendance rate for the month and the year.",
-      "Nothing here is visible to other members.",
-    ]}
-  />
+  <MyHistoryPage client:load />
 </DashboardLayout>

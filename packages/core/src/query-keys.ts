@@ -71,6 +71,45 @@ export const groupMutationKeys = {
   setMembers: () => [...groupMutationKeys.all, "set-members"] as const,
 };
 
+export const sessionListKeys = {
+  all: ["sessions"] as const,
+  list: (scope = "upcoming") => [...sessionListKeys.all, "list", scope] as const,
+  detail: (id: string) => [...sessionListKeys.all, "detail", id] as const,
+  records: (id: string) => [...sessionListKeys.all, "records", id] as const,
+  qrToken: (id: string) => [...sessionListKeys.all, "qr-token", id] as const,
+};
+
+export const sessionMutationKeys = {
+  all: ["session-mutations"] as const,
+  create: () => [...sessionMutationKeys.all, "create"] as const,
+  update: () => [...sessionMutationKeys.all, "update"] as const,
+  remove: () => [...sessionMutationKeys.all, "remove"] as const,
+  open: () => [...sessionMutationKeys.all, "open"] as const,
+  close: () => [...sessionMutationKeys.all, "close"] as const,
+  setRecord: () => [...sessionMutationKeys.all, "set-record"] as const,
+  checkIn: () => [...sessionMutationKeys.all, "check-in"] as const,
+  scan: () => [...sessionMutationKeys.all, "scan"] as const,
+};
+
+export const scheduleKeys = {
+  all: ["schedules"] as const,
+  list: () => [...scheduleKeys.all, "list"] as const,
+};
+
+export const scheduleMutationKeys = {
+  all: ["schedule-mutations"] as const,
+  create: () => [...scheduleMutationKeys.all, "create"] as const,
+  update: () => [...scheduleMutationKeys.all, "update"] as const,
+  remove: () => [...scheduleMutationKeys.all, "remove"] as const,
+};
+
+export const myKeys = {
+  all: ["my"] as const,
+  sessions: () => [...myKeys.all, "sessions"] as const,
+  pass: (id: string) => [...myKeys.all, "pass", id] as const,
+  history: () => [...myKeys.all, "history"] as const,
+};
+
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */
 export const authMutationKeys = {
   all: ["auth"] as const,

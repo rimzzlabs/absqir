@@ -8,6 +8,13 @@
       "when": 1788864403858,
       "tag": "0000_perpetual_mach_iv",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788877233067,
+      "tag": "0001_useful_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }

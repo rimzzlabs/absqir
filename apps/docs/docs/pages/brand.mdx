@@ -5,21 +5,35 @@ open at one corner, with a fresh module sliding into the gap — the rotating
 token replacing the one before it. The module in the center is the reader.
 
 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", margin: "24px 0" }}>
-  <div style={{ background: "#f6f8fb", border: "1px solid #dfe5ee", borderRadius: "12px", padding: "32px 48px" }}>
+  <div
+    style={{
+      background: "#f6f8fb",
+      border: "1px solid #dfe5ee",
+      borderRadius: "12px",
+      padding: "32px 48px",
+    }}
+  >
     <img src="/mark-light.svg" alt="absqir mark on a light ground" width="96" height="96" />
   </div>
-  <div style={{ background: "#10151e", border: "1px solid #232c3a", borderRadius: "12px", padding: "32px 48px" }}>
+  <div
+    style={{
+      background: "#10151e",
+      border: "1px solid #232c3a",
+      borderRadius: "12px",
+      padding: "32px 48px",
+    }}
+  >
     <img src="/mark-dark.svg" alt="absqir mark on a dark ground" width="96" height="96" />
   </div>
 </div>
 
 ## Color
 
-| Token | Light | Dark | Usage |
-| --- | --- | --- | --- |
-| Ink | `#131A26` | `#E7ECF4` | The mark's path and modules, headings |
-| Paper | `#F6F8FB` | `#10151E` | Grounds, tinted toward cobalt — never pure white or black |
-| Cobalt | `#2563EB` | `#7CA9FF` | The incoming module, links, focus, one accent per view |
+| Token  | Light     | Dark      | Usage                                                     |
+| ------ | --------- | --------- | --------------------------------------------------------- |
+| Ink    | `#131A26` | `#E7ECF4` | The mark's path and modules, headings                     |
+| Paper  | `#F6F8FB` | `#10151E` | Grounds, tinted toward cobalt — never pure white or black |
+| Cobalt | `#2563EB` | `#7CA9FF` | The incoming module, links, focus, one accent per view    |
 
 Cobalt marks the brand, not a state. Success, warning, and error keep their
 own semantic colors inside the app.

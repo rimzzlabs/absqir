@@ -1,0 +1,68 @@
+# Sessions and check-in
+
+A session is one moment people are expected: a shift, a meeting, a
+workshop. It has a start, an end, a late threshold, and one or more groups.
+Everyone in those groups is on the list.
+
+## The session clock
+
+A session moves through three statuses on its own. Nothing is stored; the
+status is read from the timestamps every time.
+
+| Status      | When                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| `scheduled` | Before check-in opens.                                                                                              |
+| `running`   | From `opens before` minutes ahead of the start until the end, or from the moment an organizer presses **Open now**. |
+| `done`      | At the end, or when an organizer presses **Close now**.                                                             |
+
+When a session becomes done, every expected person without a record gets an
+`absent` record. That happens on the next read after the end, or at once on
+a manual close, so no cron job is required.
+
+## Statuses per person
+
+| Status    | How it happens                                                                |
+| --------- | ----------------------------------------------------------------------------- |
+| `present` | Checked in no later than `late after` minutes past the start.                 |
+| `late`    | Checked in after that, while the session still runs.                          |
+| `excused` | Set by an organizer by hand. Leave requests in the next phase set it as well. |
+| `absent`  | Written when the session closes, for everyone expected who never checked in.  |
+
+An organizer can change any status by hand from the session page. The record
+remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
+
+## Two ways to check in
+
+**The room screen.** The organizer opens the session's room screen on a
+projector or a tablet. It shows a QR code that encodes a link with a token.
+The token is an HMAC over the session id and the current 20 second window,
+keyed by a per-session secret that never leaves the server, so a photo of
+the code expires within seconds. A member scans it with the phone camera,
+signs in if the phone asks, and is checked in. Only a signed-in member of
+the organization can use the link, and only if they are on the list, unless
+the session allows walk-ins.
+
+**The scanner at the door.** Each member has a pass for the session on
+**My sessions**: a QR code signed with the session secret and bound to that
+person. The organizer opens the scanner page, points the camera at the pass,
+and the person is in. A pass can be pasted as text when the camera is not
+available.
+
+Either way, the clock decides present or late. A second scan of the same
+person changes nothing and says so.
+
+## Schedules
+
+A schedule is a rule: every weekday at 09:00 for 60 minutes, or every
+Tuesday at 19:00. It carries its own late threshold, opening margin, groups,
+and timezone, and spawns sessions two weeks ahead. The sessions appear when
+anyone lists them, so a fresh rule shows its first sessions at once. Editing
+a rule replaces the future sessions nobody has touched; the ones that ran
+stay as they were.
+
+## For members
+
+**My sessions** lists what expects you, from yesterday on, with your record
+once you have one and your pass while the session runs. **History** lists
+every closed session with your status and an attendance rate. Nobody else
+in the organization sees your history page.

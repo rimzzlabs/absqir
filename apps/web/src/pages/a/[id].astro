@@ -1,0 +1,18 @@
+---
+import { CheckInPage } from "@/components/check-in/check-in-page";
+import AuthLayout from "@/layouts/auth-layout.astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+
+// The QR code carries the rotating token in the URL the camera opens. The
+// middleware already made sure the reader is signed in.
+const token = Astro.url.searchParams.get("t");
+---
+
+<AuthLayout title="Check in — absqir">
+  <CheckInPage client:load sessionId={id} token={token} />
+</AuthLayout>

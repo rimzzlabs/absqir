@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   index,
+  integer,
   pgTable,
   primaryKey,
   text,
@@ -17,6 +18,17 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export function isOnboardingStep(value: unknown): value is OnboardingStep {
   return typeof value === "string" && (ONBOARDING_STEPS as readonly string[]).includes(value);
 }
+
+/** What a record says about one person at one session. */
+export const ATTENDANCE_STATUSES = ["present", "late", "excused", "absent"] as const;
+export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
+
+/** How a record came to be. */
+export const ATTENDANCE_METHODS = ["screen", "scanner", "manual", "auto"] as const;
+export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
+
+export const SCHEDULE_FREQUENCIES = ["daily", "weekly"] as const;
+export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
 
 /** Organization roles, most powerful first. Keep in sync with packages/auth/src/roles.ts. */
 export const ORGANIZATION_ROLES = ["owner", "admin", "organizer", "member"] as const;
@@ -186,6 +198,139 @@ export const groupMember = pgTable(
   (table) => [
     primaryKey({ columns: [table.groupId, table.personId] }),
     index("group_member_person_idx").on(table.personId),
+  ],
+);
+
+/**
+ * A rule that creates sessions ahead of time: every weekday at nine, every
+ * Tuesday evening. Times are wall-clock in `timezone`; the sessions it
+ * spawns carry absolute instants.
+ */
+export const schedule = pgTable(
+  "schedule",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    frequency: text("frequency").$type<ScheduleFrequency>().notNull().default("weekly"),
+    /** 0 = Sunday … 6 = Saturday. Empty for daily. */
+    weekdays: integer("weekdays").array().notNull().default([]),
+    /** "HH:mm" wall-clock start. */
+    startTime: text("start_time").notNull(),
+    durationMinutes: integer("duration_minutes").notNull().default(60),
+    lateAfterMinutes: integer("late_after_minutes").notNull().default(15),
+    opensBeforeMinutes: integer("opens_before_minutes").notNull().default(15),
+    /** IANA name, for example Asia/Jakarta. */
+    timezone: text("timezone").notNull(),
+    /** "yyyy-MM-dd" in the schedule's timezone. */
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    active: boolean("active").notNull().default(true),
+    allowWalkIns: boolean("allow_walk_ins").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("schedule_organization_idx").on(table.organizationId)],
+);
+
+export const scheduleGroup = pgTable(
+  "schedule_group",
+  {
+    scheduleId: text("schedule_id")
+      .notNull()
+      .references(() => schedule.id, { onDelete: "cascade" }),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.scheduleId, table.groupId] })],
+);
+
+/**
+ * One moment people are expected: a shift, a meeting, a workshop. The
+ * status is derived from the timestamps, never stored:
+ * closedAt set → done; openedAt set or now past startsAt → running;
+ * otherwise scheduled. Closing writes an absent record for every expected
+ * person without one, so reports never depend on later group changes.
+ */
+export const attendanceSession = pgTable(
+  "attendance_session",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    scheduleId: text("schedule_id").references(() => schedule.id, { onDelete: "set null" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    /** A check-in later than startsAt + this is late. */
+    lateAfterMinutes: integer("late_after_minutes").notNull().default(15),
+    /** Check-in opens this long before startsAt. */
+    opensBeforeMinutes: integer("opens_before_minutes").notNull().default(15),
+    /** Someone outside the expected groups may still check in. */
+    allowWalkIns: boolean("allow_walk_ins").notNull().default(false),
+    /** Set when an organizer opens check-in ahead of the window. */
+    openedAt: timestamp("opened_at", { withTimezone: true }),
+    /** Set when the session closed, by hand or by the clock. */
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    /** HMAC key for the rotating QR token and the member passes. Never leaves the server. */
+    secret: text("secret").notNull(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("attendance_session_organization_starts_idx").on(table.organizationId, table.startsAt),
+    uniqueIndex("attendance_session_schedule_starts_idx")
+      .on(table.scheduleId, table.startsAt)
+      .where(sql`${table.scheduleId} is not null`),
+  ],
+);
+
+export const sessionGroup = pgTable(
+  "session_group",
+  {
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.sessionId, table.groupId] }),
+    index("session_group_group_idx").on(table.groupId),
+  ],
+);
+
+/** One person at one session. Absent rows are written when the session closes. */
+export const attendanceRecord = pgTable(
+  "attendance_record",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+    personId: text("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    status: text("status").$type<AttendanceStatus>().notNull(),
+    method: text("method").$type<AttendanceMethod>().notNull(),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    note: text("note"),
+    /** The organizer who marked it by hand, when method is manual. */
+    markedBy: text("marked_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("attendance_record_session_person_idx").on(table.sessionId, table.personId),
+    index("attendance_record_person_idx").on(table.personId),
   ],
 );
 

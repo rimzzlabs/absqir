@@ -1,5 +1,5 @@
 ---
-import { EmptyModule } from "@/components/shared/empty-module";
+import { SessionsPage } from "@/components/sessions/sessions-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
 const role = Astro.locals.activeMembership?.role ?? "member";
@@ -10,16 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Sessions">
-  <EmptyModule
-    icon="sessions"
-    title="Sessions"
-    description="One session is one moment people are expected: a shift, a meeting, a workshop, an event."
-    phase={2}
-    bullets={[
-      "Start, end, and a late threshold. The session opens and closes itself.",
-      "A group is expected. Whoever does not check in is marked absent.",
-      "A QR screen for the room, and a scanner page for the door.",
-      "Present, late, excused, absent per person, with a CSV of the day.",
-    ]}
-  />
+  <SessionsPage client:load role={role} />
 </DashboardLayout>

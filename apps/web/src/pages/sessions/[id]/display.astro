@@ -1,0 +1,19 @@
+---
+import { QrDisplay } from "@/components/sessions/qr-display";
+import Layout from "@/layouts/layout.astro";
+
+const { id } = Astro.params;
+const role = Astro.locals.activeMembership?.role ?? "member";
+
+if (!id) {
+  return Astro.redirect("/sessions", 302);
+}
+
+if (role === "member") {
+  return Astro.redirect("/my/sessions", 302);
+}
+---
+
+<Layout title="Room screen — absqir">
+  <QrDisplay client:load sessionId={id} />
+</Layout>

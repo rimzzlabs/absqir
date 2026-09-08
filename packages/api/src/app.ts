@@ -10,9 +10,12 @@ import { mountDocs } from "@/routes/docs";
 import { groupRoutes } from "@/routes/groups";
 import { healthRoutes } from "@/routes/health";
 import { meRoutes } from "@/routes/me";
+import { myRoutes } from "@/routes/my";
 import { onboardingRoutes } from "@/routes/onboarding";
 import { organizationRoutes } from "@/routes/organizations";
 import { peopleRoutes } from "@/routes/people";
+import { scheduleRoutes } from "@/routes/schedules";
+import { sessionRoutes } from "@/routes/sessions";
 import type { AppEnv } from "@/types";
 
 const app = new OpenAPIHono<AppEnv>({
@@ -39,7 +42,10 @@ const routes = app
   .route("/", onboardingRoutes)
   .route("/", organizationRoutes)
   .route("/", peopleRoutes)
-  .route("/", groupRoutes);
+  .route("/", groupRoutes)
+  .route("/", sessionRoutes)
+  .route("/", scheduleRoutes)
+  .route("/", myRoutes);
 
 mountDocs(app);
 

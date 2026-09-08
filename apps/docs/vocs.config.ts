@@ -16,6 +16,7 @@ export default defineConfig({
         { text: "Getting started", link: "/getting-started" },
         { text: "Configuration", link: "/configuration" },
         { text: "Accounts and organizations", link: "/accounts" },
+        { text: "Sessions and check-in", link: "/sessions" },
         { text: "Upgrades", link: "/upgrades" },
       ],
     },

@@ -34,10 +34,14 @@ directory and the groups live inside them.
 
 ## Where the build stands
 
-This is phase 1 of four: the foundation. One-door sign-in with email codes,
+Phases 1 and 2 of four are built. One-door sign-in with email codes,
 onboarding, organizations and roles, the people directory with CSV import
-and invitations, and groups. The dashboard shows every planned module; the
-ones that are not built yet say so and name the phase that brings them.
+and invitations, groups, and now sessions: a start, an end, a late
+threshold, groups that are expected, a rotating QR room screen, a scanner
+for the door, per-person statuses, schedules that spawn sessions, and the
+member's own sessions and history. The dashboard shows every planned
+module; the ones that are not built yet say so and name the phase that
+brings them.
 
 | Phase | Delivers                                                                    |
 | ----- | --------------------------------------------------------------------------- |
@@ -46,16 +50,19 @@ ones that are not built yet say so and name the phase that brings them.
 | 3     | Public registration for events, leave requests                              |
 | 4     | Reports, CSV export, calendar, notifications and reminders                  |
 
-## How the QR will stay honest
+## How the QR stays honest
 
-The rotating token is already written and tested in
-`packages/api/src/lib/qr-token.ts`. It is an HMAC over the session id and the
-current 20 second time window, keyed by a per-session secret that never
-leaves the server. The screen fetches a fresh token when the window ends, so
-a photo of the code stops working almost at once. The server accepts the
-current window and the one before it, so a scan near a rotation still checks
-in. Only a signed-in member checks in with it, so a borrowed identifier gets
-nobody in.
+The room screen's token, in `packages/api/src/lib/qr-token.ts`, is an HMAC
+over the session id and the current 20 second time window, keyed by a
+per-session secret that never leaves the server. The screen fetches a fresh
+token when the window ends, so a photo of the code stops working almost at
+once. The server accepts the current window and the one before it, so a scan
+near a rotation still checks in. Only a signed-in member on the list checks
+in with it, so a borrowed identifier gets nobody in.
+
+The member's pass, in `packages/api/src/lib/member-pass.ts`, goes the other
+way: an HMAC over the session id and the person id, shown as a QR code on
+the member's phone and read by the organizer's scanner.
 
 ## Stack
 
@@ -83,7 +90,8 @@ apps/
   web/
     src/
       components/      Islands. One folder per feature: auth, onboarding,
-                       app-shell, people, groups, settings, home, shared
+                       app-shell, people, groups, sessions, schedules,
+                       check-in, my, settings, home, shared
       layouts/         Astro shells: auth, dashboard
       lib/             Clients, schemas, query client, runtime glue
       mutations/       One hook per action
@@ -96,10 +104,11 @@ apps/
 packages/
   api/
     src/
-      lib/             The rotating QR token, org access, slugs, CSV
+      lib/             QR token, member pass, session clock, schedules,
+                       org access, slugs, CSV
       middleware/      Security, request context, session
       routes/          One file per resource: auth-flow, onboarding, me,
-                       organizations, people, groups
+                       organizations, people, groups, sessions, schedules, my
       context.ts       Shared by Hono and the Astro middleware
     tests/
   auth/                Better Auth instance, email codes, organizations,

@@ -1,0 +1,114 @@
+import { formatDate, formatRange } from "@absqir/core/date";
+import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
+import { Skeleton } from "@absqir/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
+import { match, P } from "ts-pattern";
+import { Providers } from "@/components/providers";
+import { FormError } from "@/components/shared/form-error";
+import { PageHeader } from "@/components/shared/page-header";
+import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { type HistoryRow, useMyHistory } from "@/queries/use-my";
+
+function Summary(props: { rows: HistoryRow[] }) {
+  const total = props.rows.length;
+  const on = props.rows.filter((row) => row.status === "present" || row.status === "late").length;
+  const late = props.rows.filter((row) => row.status === "late").length;
+  const rate = total === 0 ? 0 : Math.round((on / total) * 100);
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      <Card size="sm">
+        <CardHeader>
+          <CardDescription>Attendance</CardDescription>
+          <CardTitle className="text-2xl tabular-nums">{rate}%</CardTitle>
+        </CardHeader>
+      </Card>
+      <Card size="sm">
+        <CardHeader>
+          <CardDescription>Sessions</CardDescription>
+          <CardTitle className="text-2xl tabular-nums">{total}</CardTitle>
+        </CardHeader>
+      </Card>
+      <Card size="sm">
+        <CardHeader>
+          <CardDescription>Late</CardDescription>
+          <CardTitle className="text-2xl tabular-nums">{late}</CardTitle>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+function HistoryBody() {
+  const history = useMyHistory();
+
+  return (
+    <>
+      <PageHeader
+        title="History"
+        description="Your own record, session by session. Nobody else in the organization sees this page."
+      />
+
+      {match(history)
+        .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
+        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ data: P.select(P.nonNullable) }, (rows) =>
+          rows.length === 0 ? (
+            <Empty className="border-border rounded-xl border border-dashed py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ClockCounterClockwiseIcon />
+                </EmptyMedia>
+                <EmptyTitle>No record yet</EmptyTitle>
+                <EmptyDescription>Your first closed session shows up here.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <>
+              <Summary rows={rows} />
+              <div className="border-border overflow-x-auto rounded-xl border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Session</TableHead>
+                      <TableHead>When</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Checked in</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row) => (
+                      <TableRow key={row.sessionId}>
+                        <TableCell className="font-medium">{row.title}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
+                        </TableCell>
+                        <TableCell>
+                          <AttendanceStatusBadge status={row.status} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">
+                          {row.checkedInAt ? formatDate(new Date(row.checkedInAt), "time") : "—"}
+                          {row.note ? ` · ${row.note}` : ""}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          ),
+        )
+        .otherwise(() => null)}
+    </>
+  );
+}
+
+export function MyHistoryPage() {
+  return (
+    <Providers>
+      <HistoryBody />
+    </Providers>
+  );
+}

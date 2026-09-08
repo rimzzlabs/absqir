@@ -1,0 +1,304 @@
+import { Button } from "@absqir/ui/button";
+import { Checkbox } from "@absqir/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@absqir/ui/dialog";
+import { Field, FieldContent, FieldError, FieldLabel } from "@absqir/ui/field";
+import { Form, FormField } from "@absqir/ui/form";
+import { Input } from "@absqir/ui/input";
+import { Label } from "@absqir/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { FormError } from "@/components/shared/form-error";
+import { GroupPicker } from "@/components/shared/group-picker";
+import { browserTimezone, type ScheduleValues, scheduleSchema } from "@/lib/session-schemas";
+import { useCreateSchedule } from "@/mutations/use-create-schedule";
+import { useUpdateSchedule } from "@/mutations/use-update-schedule";
+import type { Schedule } from "@/queries/use-schedules";
+
+export interface ScheduleDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  schedule: Schedule | null;
+}
+
+const WEEKDAYS = [
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+  { value: 0, label: "Sun" },
+];
+
+function today(): string {
+  const date = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function defaults(schedule: Schedule | null): ScheduleValues {
+  if (schedule) {
+    return {
+      title: schedule.title,
+      description: schedule.description ?? "",
+      frequency: schedule.frequency,
+      weekdays: schedule.weekdays,
+      startTime: schedule.startTime,
+      durationMinutes: String(schedule.durationMinutes),
+      lateAfterMinutes: String(schedule.lateAfterMinutes),
+      opensBeforeMinutes: String(schedule.opensBeforeMinutes),
+      startsOn: schedule.startsOn,
+      endsOn: schedule.endsOn ?? "",
+      active: schedule.active,
+      allowWalkIns: schedule.allowWalkIns,
+      groupIds: schedule.groups.map((group) => group.id),
+    };
+  }
+
+  return {
+    title: "",
+    description: "",
+    frequency: "weekly",
+    weekdays: [1, 2, 3, 4, 5],
+    startTime: "09:00",
+    durationMinutes: "60",
+    lateAfterMinutes: "15",
+    opensBeforeMinutes: "15",
+    startsOn: today(),
+    endsOn: "",
+    active: true,
+    allowWalkIns: false,
+    groupIds: [],
+  };
+}
+
+export function ScheduleDialog(props: ScheduleDialogProps) {
+  const editing = props.schedule !== null;
+  const form = useForm<ScheduleValues>({
+    resolver: zodResolver(scheduleSchema),
+    defaultValues: defaults(props.schedule),
+  });
+
+  const create = useCreateSchedule();
+  const update = useUpdateSchedule();
+  const pending = create.isPending || update.isPending;
+  const timezone = props.schedule?.timezone ?? browserTimezone();
+
+  useEffect(() => {
+    if (props.open) form.reset(defaults(props.schedule));
+  }, [props.open, props.schedule, form]);
+
+  const onSubmit = (values: ScheduleValues) => {
+    const payload = {
+      title: values.title,
+      description: values.description || null,
+      frequency: values.frequency,
+      weekdays: values.frequency === "weekly" ? values.weekdays : [],
+      startTime: values.startTime,
+      durationMinutes: Number(values.durationMinutes),
+      lateAfterMinutes: Number(values.lateAfterMinutes),
+      opensBeforeMinutes: Number(values.opensBeforeMinutes),
+      timezone,
+      startsOn: values.startsOn,
+      endsOn: values.endsOn || null,
+      active: values.active,
+      allowWalkIns: values.allowWalkIns,
+      groupIds: values.groupIds,
+    };
+
+    if (props.schedule) {
+      update.mutate(
+        { id: props.schedule.id, ...payload },
+        { onSuccess: () => props.onOpenChange(false) },
+      );
+      return;
+    }
+
+    create.mutate(payload, { onSuccess: () => props.onOpenChange(false) });
+  };
+
+  const frequency = form.watch("frequency");
+  const weekdayError = form.formState.errors.weekdays;
+
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Edit schedule" : "New schedule"}</DialogTitle>
+          <DialogDescription>
+            A rule that creates sessions on its own, two weeks ahead. Times are in {timezone}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <FormField
+              control={form.control}
+              name="title"
+              label="Title"
+              render={(field) => (
+                <Input {...field} id="schedule-title" placeholder="Morning shift" autoFocus />
+              )}
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="schedule-frequency">Repeats</FieldLabel>
+                <FieldContent>
+                  <Select
+                    items={[
+                      { value: "weekly", label: "Weekly, on chosen days" },
+                      { value: "daily", label: "Every day" },
+                    ]}
+                    value={frequency}
+                    onValueChange={(value) => {
+                      if (value === "weekly" || value === "daily")
+                        form.setValue("frequency", value);
+                    }}
+                  >
+                    <SelectTrigger id="schedule-frequency" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Weekly, on chosen days</SelectItem>
+                      <SelectItem value="daily">Every day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+              </Field>
+              <FormField
+                control={form.control}
+                name="startTime"
+                label="Starts at"
+                render={(field) => <Input {...field} id="schedule-start-time" type="time" />}
+              />
+            </div>
+
+            {frequency === "weekly" ? (
+              <Field data-invalid={weekdayError ? true : undefined}>
+                <FieldLabel>On</FieldLabel>
+                <FieldContent>
+                  <ToggleGroup
+                    multiple
+                    value={form.watch("weekdays").map(String)}
+                    onValueChange={(value) =>
+                      form.setValue("weekdays", value.map(Number), { shouldValidate: true })
+                    }
+                    variant="outline"
+                    className="flex-wrap"
+                  >
+                    {WEEKDAYS.map((day) => (
+                      <ToggleGroupItem key={day.value} value={String(day.value)}>
+                        {day.label}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                  <FieldError errors={[weekdayError]} />
+                </FieldContent>
+              </Field>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="durationMinutes"
+                label="Length (min)"
+                render={(field) => (
+                  <Input
+                    {...field}
+                    id="schedule-duration"
+                    type="number"
+                    min={5}
+                    inputMode="numeric"
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lateAfterMinutes"
+                label="Late after (min)"
+                render={(field) => (
+                  <Input {...field} id="schedule-late" type="number" min={0} inputMode="numeric" />
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="opensBeforeMinutes"
+                label="Opens before (min)"
+                render={(field) => (
+                  <Input {...field} id="schedule-opens" type="number" min={0} inputMode="numeric" />
+                )}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="startsOn"
+                label="From"
+                render={(field) => <Input {...field} id="schedule-starts-on" type="date" />}
+              />
+              <FormField
+                control={form.control}
+                name="endsOn"
+                label="Until"
+                description="Leave empty to keep going."
+                render={(field) => <Input {...field} id="schedule-ends-on" type="date" />}
+              />
+            </div>
+
+            <Field>
+              <FieldLabel>Expected groups</FieldLabel>
+              <FieldContent>
+                <GroupPicker
+                  value={form.watch("groupIds")}
+                  onChange={(value) => form.setValue("groupIds", value, { shouldDirty: true })}
+                />
+              </FieldContent>
+            </Field>
+
+            <div className="flex flex-wrap gap-6">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="schedule-active"
+                  checked={form.watch("active")}
+                  onCheckedChange={(checked) => form.setValue("active", checked === true)}
+                />
+                <Label htmlFor="schedule-active">Active</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="schedule-walk-ins"
+                  checked={form.watch("allowWalkIns")}
+                  onCheckedChange={(checked) => form.setValue("allowWalkIns", checked === true)}
+                />
+                <Label htmlFor="schedule-walk-ins">Allow walk-ins</Label>
+              </div>
+            </div>
+
+            <FormError error={create.error ?? update.error} />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending ? "Saving…" : editing ? "Save" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
