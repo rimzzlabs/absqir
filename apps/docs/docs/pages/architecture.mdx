@@ -42,12 +42,12 @@ Better Auth owns `user`, `session`, `account`, `verification`,
   account, and links to the account when an invitation is accepted. Email
   and identifier are unique inside the organization.
 - `group` and `group_member` — teams, divisions, cohorts.
-- `schedule` and `schedule_group` — rules that spawn sessions.
+- `schedule` and `schedule_group` — rules that spawn events.
 - `attendance_session` and `session_group` — one moment people are expected,
   and which groups.
-- `attendance_record` — one row per person per session: status, method,
-  time, note. Absent rows are written when the session closes.
-- `session_registration` — who signed up through a session's public page.
+- `attendance_record` — one row per person per event: status, method,
+  time, note. Absent rows are written when the event closes.
+- `session_registration` — who signed up through an event's public page.
 - `leave_request` — a member asks to be excused; an approval writes an
   excused record.
 - `notification` — what one person is told, with a key that makes a repeat
@@ -67,7 +67,7 @@ member on the list can check in with it.
 The member's pass is the other direction: an HMAC over the session id and
 the person id with the same secret. The organizer's scanner reads it and the
 server checks the signature before it writes anything. See
-[Sessions and check-in](/sessions).
+[Events and check-in](/sessions).
 
 ## Security posture
 

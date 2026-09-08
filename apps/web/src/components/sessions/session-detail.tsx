@@ -64,7 +64,7 @@ function Header(props: { session: Session; role: RoleName }) {
   return (
     <header className="space-y-4">
       <a href="/sessions" className="text-muted-foreground hover:text-foreground text-sm">
-        ← Sessions
+        ← Events
       </a>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -169,7 +169,7 @@ function Header(props: { session: Session; role: RoleName }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {session.title}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Every record of this session goes with it. There is no undo.
+              Every record of this event goes with it. There is no undo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

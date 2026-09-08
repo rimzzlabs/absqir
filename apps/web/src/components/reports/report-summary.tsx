@@ -61,7 +61,7 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Sessions"
+          label="Events"
           value={String(summary.sessions)}
           hint={`${summary.closedSessions} closed, so their absent rows are written`}
         />

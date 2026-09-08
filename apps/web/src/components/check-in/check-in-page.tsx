@@ -38,7 +38,7 @@ function CheckInBody(props: CheckInPageProps) {
           href="/my/sessions"
           className={buttonVariants({ variant: "outline", className: "w-full" })}
         >
-          My sessions
+          My events
         </a>
       </div>
     );
@@ -56,7 +56,7 @@ function CheckInBody(props: CheckInPageProps) {
           href="/my/sessions"
           className={buttonVariants({ variant: "ghost", className: "w-full" })}
         >
-          My sessions
+          My events
         </a>
       </div>
     ))
@@ -79,7 +79,7 @@ function CheckInBody(props: CheckInPageProps) {
           href="/my/sessions"
           className={buttonVariants({ variant: "outline", className: "w-full" })}
         >
-          My sessions
+          My events
         </a>
       </Reveal>
     ))

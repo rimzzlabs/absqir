@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const ROLE_OPTIONS = [
-  { value: "member", label: "Member", hint: "Sees their own sessions and history." },
-  { value: "organizer", label: "Organizer", hint: "Runs sessions and scans at the door." },
+  { value: "member", label: "Member", hint: "Sees their own events and history." },
+  { value: "organizer", label: "Organizer", hint: "Runs events and scans at the door." },
   { value: "admin", label: "Admin", hint: "Manages people, groups, and settings." },
 ] as const;
 

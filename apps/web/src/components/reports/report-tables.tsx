@@ -81,7 +81,7 @@ export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
       empty={
         <NothingHere
           title="No records in this range"
-          description="Records appear once a session in the range has closed, or someone checked in."
+          description="Records appear once an event in the range has closed, or someone checked in."
         />
       }
       render={(rows) => (
@@ -127,7 +127,7 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
       empty={
         <NothingHere
           title="No groups yet"
-          description="Put people in a group, and a session can expect the whole group at once."
+          description="Put people in a group, and an event can expect the whole group at once."
         />
       }
       render={(rows) => (
@@ -167,8 +167,8 @@ export function SessionReportTable(props: { query: Query<SessionReportRow> }) {
       query={props.query}
       empty={
         <NothingHere
-          title="No sessions in this range"
-          description="Pick a wider range, or create a session."
+          title="No events in this range"
+          description="Pick a wider range, or create an event."
         />
       }
       render={(rows) => (
@@ -176,7 +176,7 @@ export function SessionReportTable(props: { query: Query<SessionReportRow> }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Session</TableHead>
+                <TableHead>Event</TableHead>
                 <TableHead>Present</TableHead>
                 <TableHead>Late</TableHead>
                 <TableHead>Excused</TableHead>

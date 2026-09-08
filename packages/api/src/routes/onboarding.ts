@@ -420,12 +420,12 @@ export const onboardingRoutes = app
 
     const found = await findPublicSession(c.var.db, sessionId);
     if (!found?.session.registrationOpen) {
-      return c.json({ error: "This session does not take registrations." }, 404);
+      return c.json({ error: "This event does not take registrations." }, 404);
     }
 
     const result = await registerForSession(c.var.db, { session: found.session, user: current });
     if (!result.ok) {
-      const message = result.reason === "full" ? "This session is full." : "This session is over.";
+      const message = result.reason === "full" ? "This event is full." : "This event is over.";
       return c.json({ error: message }, 409);
     }
 

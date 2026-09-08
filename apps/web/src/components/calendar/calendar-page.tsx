@@ -105,11 +105,11 @@ function CalendarBody() {
     <>
       <PageHeader
         title="Calendar"
-        description="Every session on one grid, with the ones your schedules still owe."
+        description="Every event on one grid, with the ones your schedules still owe."
         actions={
           <Button size="sm" onClick={() => setNewSessionDay(new Date())}>
             <PlusIcon />
-            New session
+            New event
           </Button>
         }
       />

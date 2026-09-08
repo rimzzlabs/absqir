@@ -30,14 +30,14 @@ export function useSessions(filter: SessionListFilter) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the sessions.");
+      if (!response.ok) throw await apiError(response, "Could not load the events.");
 
       return response.json();
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     // While the reader types, the old page stays instead of a skeleton.
     placeholderData: keepPreviousData,
-    // A running session moves through its statuses on the clock.
+    // A running event moves through its statuses on the clock.
     refetchInterval: 60_000,
   });
 }
@@ -51,7 +51,7 @@ export function useSession(id: string) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the session.");
+      if (!response.ok) throw await apiError(response, "Could not load the event.");
 
       return response.json();
     },

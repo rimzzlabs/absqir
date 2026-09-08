@@ -1,7 +1,7 @@
 import { formatDate } from "@absqir/core/date";
 import type { CalendarSession, ProjectedSession } from "@/queries/use-calendar";
 
-/** One line in a day cell: a real session, or one a schedule still owes. */
+/** One line in a day cell: a real event, or one a schedule still owes. */
 export type CalendarEntry =
   | { kind: "session"; key: string; startsAt: Date; endsAt: Date; session: CalendarSession }
   | { kind: "projected"; key: string; startsAt: Date; endsAt: Date; title: string };

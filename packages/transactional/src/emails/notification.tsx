@@ -15,7 +15,7 @@ export interface NotificationEmailProps {
   organizationName: string;
   /** Where the reader goes to act on it. Absolute. */
   url: string;
-  /** The label on the button, for example "Open the session". */
+  /** The label on the button, for example "Open the event". */
   action: string;
 }
 
@@ -58,7 +58,7 @@ NotificationEmail.PreviewProps = {
   body: "Tue 9 Sep, 09:00 to 10:00. Check in from the room screen, or show your pass.",
   organizationName: "Yayasan Contoh",
   url: "http://localhost:4321/my/sessions",
-  action: "Open my sessions",
+  action: "Open my events",
 } satisfies NotificationEmailProps;
 
 export default NotificationEmail;

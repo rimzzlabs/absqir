@@ -115,7 +115,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
         <FieldContent>
           <Select
             items={[
-              { value: ALL_GROUPS, label: "Every session" },
+              { value: ALL_GROUPS, label: "Every event" },
               ...props.groups.map((group) => ({ value: group.id, label: group.name })),
             ]}
             value={props.range.groupId ?? ALL_GROUPS}
@@ -133,7 +133,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value={ALL_GROUPS}>Every session</SelectItem>
+                <SelectItem value={ALL_GROUPS}>Every event</SelectItem>
               </SelectGroup>
               {props.groups.length > 0 ? (
                 <SelectGroup>

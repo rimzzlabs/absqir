@@ -78,7 +78,7 @@ function NothingHere(props: { scope: NotificationScope }) {
         <EmptyDescription>
           {props.scope === "unread"
             ? "You have read everything."
-            : "Reminders before a session, leave requests, and closings land here."}
+            : "Reminders before an event, leave requests, and closings land here."}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

@@ -40,7 +40,7 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
           </ItemActions>
         </Item>
         {!data.open ? (
-          <p className="text-muted-foreground text-sm">This session no longer takes people.</p>
+          <p className="text-muted-foreground text-sm">This event no longer takes people.</p>
         ) : data.seatsLeft === 0 ? (
           <p className="text-muted-foreground text-sm">Every seat is taken.</p>
         ) : null}

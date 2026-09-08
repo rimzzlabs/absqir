@@ -16,13 +16,13 @@ a minute.
 
 | Type              | Who gets it                    | When                                                    |
 | ----------------- | ------------------------------ | ------------------------------------------------------- |
-| Session reminder  | Everyone expected, with an account | The day before, and again within the hour before the start. |
+| Event reminder    | Everyone expected, with an account | The day before, and again within the hour before the start, worded in the reader's own time zone. |
 | Leave requested   | Organizers, admins, owners     | A member asks to be excused.                            |
 | Leave decided     | The member who asked           | An organizer approves or declines.                      |
-| Session closed    | Organizers, admins, owners     | A session closes, with the counts. Not for a session created after it ended. |
+| Event closed      | Organizers, admins, owners     | An event closes, with the counts. Not for an event created after it ended.   |
 
 A person without an account gets nothing: a directory row on its own has
-nowhere to receive. A session created less than two hours before it starts
+nowhere to receive. An event created less than two hours before it starts
 sends the hour reminder only, never both at once.
 
 Each notification is written once. The row carries a key made of what it is
@@ -59,7 +59,7 @@ a reminder sent by the heartbeat has no request to read an origin from.
 
 ## The heartbeat
 
-Three jobs run on the clock: schedules spawn their sessions, ended sessions
+Three jobs run on the clock: schedules spawn their events, ended events
 close and write their absent rows, and reminders go out.
 
 Reading a page settles the organization it belongs to, so a small instance

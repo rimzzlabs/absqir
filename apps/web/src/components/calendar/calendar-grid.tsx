@@ -107,7 +107,7 @@ export function CalendarGrid(props: CalendarGridProps) {
                 <button
                   type="button"
                   onClick={() => props.onNewSession(day)}
-                  aria-label={`New session on ${formatDate(day, "date")}`}
+                  aria-label={`New event on ${formatDate(day, "date")}`}
                   className="text-muted-foreground hover:bg-muted rounded p-0.5 opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100"
                 >
                   <PlusIcon className="size-3.5" />

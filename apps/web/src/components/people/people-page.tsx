@@ -46,7 +46,7 @@ function PeopleTable(props: { rows: Person[]; canManage: boolean }) {
           </EmptyMedia>
           <EmptyTitle>Nobody here yet</EmptyTitle>
           <EmptyDescription>
-            Add the people you expect at your sessions. Each one can get an invitation to sign in.
+            Add the people you expect at your events. Each one can get an invitation to sign in.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

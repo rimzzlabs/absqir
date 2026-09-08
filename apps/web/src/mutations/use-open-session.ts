@@ -10,7 +10,7 @@ export function useOpenSession() {
     mutationFn: async (id: string) => {
       const response = await api.sessions[":id"].open.$post({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not open the session.");
+      if (!response.ok) throw await apiError(response, "Could not open the event.");
 
       return response.json();
     },

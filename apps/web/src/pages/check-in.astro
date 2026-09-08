@@ -2,7 +2,7 @@
 import { MemberCheckInPage } from "@/components/check-in/member-check-in-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
-// Organizers scan people, not screens. They have the scanner on each session.
+// Organizers scan people, not screens. They have the scanner on each event.
 const role = Astro.locals.activeMembership?.role ?? "member";
 
 if (role !== "member") {

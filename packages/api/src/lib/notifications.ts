@@ -29,8 +29,8 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
 ]);
 
 const ACTIONS: Record<NotificationType, string> = {
-  "session-reminder": "Open my sessions",
-  "session-closed": "Open the session",
+  "session-reminder": "Open my events",
+  "session-closed": "Open the event",
   "leave-requested": "Open the queue",
   "leave-decided": "Open my leave",
 };

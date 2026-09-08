@@ -9,8 +9,8 @@ if (!id) {
   return Astro.redirect("/", 302);
 }
 
-// The public face of a session. Works signed out; the cookie lets a stranger
-// create an account through this session's door.
+// The public face of an event. Works signed out; the cookie lets a stranger
+// create an account through this event's door.
 setEventCookie(Astro.cookies, id);
 ---
 

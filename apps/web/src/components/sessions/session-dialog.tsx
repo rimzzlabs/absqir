@@ -29,9 +29,9 @@ import type { Session } from "@/queries/use-sessions";
 export interface SessionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Null creates, a session edits. */
+  /** Null creates, an event edits. */
   session: Session | null;
-  /** The day a new session starts on, when the calendar opened the dialog. */
+  /** The day a new event starts on, when the calendar opened the dialog. */
   initialStart?: Date | null;
 }
 
@@ -128,7 +128,7 @@ export function SessionDialog(props: SessionDialogProps) {
   };
 
   const groupError = form.formState.errors.groupIds;
-  // A done session always ends in the past; only a session still ahead of
+  // A done event always ends in the past; only an event still ahead of
   // its close needs the warning.
   const backfill =
     (props.session === null || props.session.status !== "done") &&
@@ -138,10 +138,10 @@ export function SessionDialog(props: SessionDialogProps) {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit session" : "New session"}</DialogTitle>
+          <DialogTitle>{editing ? "Edit event" : "New event"}</DialogTitle>
           <DialogDescription>
             {editing
-              ? "Times and groups can change until the session closes."
+              ? "Times and groups can change until the event closes."
               : "One moment people are expected. Everyone in the ticked groups is on the list."}
           </DialogDescription>
         </DialogHeader>
@@ -183,11 +183,11 @@ export function SessionDialog(props: SessionDialogProps) {
             {backfill ? (
               <Alert>
                 <ClockCounterClockwiseIcon />
-                <AlertTitle>This session is already over</AlertTitle>
+                <AlertTitle>This event is already over</AlertTitle>
                 <AlertDescription>
                   {editing
                     ? "It closes as soon as you save, and everyone expected without a record is marked absent."
-                    : "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record a session that already happened."}
+                    : "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record an event that already happened."}
                 </AlertDescription>
               </Alert>
             ) : null}

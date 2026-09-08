@@ -36,7 +36,7 @@ type ReportTab = "people" | "groups" | "sessions";
 const TABS: { value: ReportTab; label: string }[] = [
   { value: "people", label: "By person" },
   { value: "groups", label: "By group" },
-  { value: "sessions", label: "By session" },
+  { value: "sessions", label: "By event" },
 ];
 
 const PARAMS = {

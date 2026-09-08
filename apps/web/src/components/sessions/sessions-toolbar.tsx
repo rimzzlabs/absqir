@@ -34,7 +34,7 @@ export function SessionsToolbar(props: SessionsToolbarProps) {
         </InputGroupAddon>
         <InputGroupInput
           type="search"
-          aria-label="Search sessions by title"
+          aria-label="Search events by title"
           placeholder="Search by title"
           value={props.q}
           onChange={(event) => props.onQChange(event.target.value)}

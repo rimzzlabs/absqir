@@ -88,7 +88,7 @@ export function SessionRecords(props: SessionRecordsProps) {
         .with({ data: P.select(P.nonNullable) }, (rows) =>
           rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Nobody is expected. Tick a group on the session, or let walk-ins in.
+              Nobody is expected. Tick a group on the event, or let walk-ins in.
             </p>
           ) : (
             <div className="border-border overflow-x-auto rounded-xl border">

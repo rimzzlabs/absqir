@@ -72,7 +72,7 @@ export function DaySheet(props: DaySheetProps) {
                   {formatDate(entry.startsAt, "time")} to {formatDate(entry.endsAt, "time")}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  The schedule creates this session a fortnight ahead. Nothing to do now.
+                  The schedule creates this event a fortnight ahead. Nothing to do now.
                 </p>
               </div>
             ),
@@ -84,7 +84,7 @@ export function DaySheet(props: DaySheetProps) {
             onClick={() => props.day && props.onNewSession(props.day)}
           >
             <PlusIcon />
-            New session on this day
+            New event on this day
           </Button>
         </div>
       </SheetContent>

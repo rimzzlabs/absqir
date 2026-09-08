@@ -45,10 +45,10 @@ function Actions(props: EventPageProps & { event: PublicEvent }) {
           You are registered
         </div>
         <p className="text-muted-foreground text-sm">
-          When the session runs, scan the screen in the room, or show your pass at the door.
+          When the event runs, scan the screen in the room, or show your pass at the door.
         </p>
         <a href="/my/sessions" className={buttonVariants({ className: "w-full" })}>
-          My sessions
+          My events
         </a>
         {event.status === "scheduled" ? (
           <Button
@@ -69,7 +69,7 @@ function Actions(props: EventPageProps & { event: PublicEvent }) {
   if (!event.open) {
     return (
       <p className="text-muted-foreground text-sm">
-        {event.status === "done" ? "This session is over." : "Registration is closed."}
+        {event.status === "done" ? "This event is over." : "Registration is closed."}
       </p>
     );
   }
@@ -105,7 +105,7 @@ function Actions(props: EventPageProps & { event: PublicEvent }) {
         {register.isPending ? "Registering…" : "Register"}
       </Button>
       <p className="text-muted-foreground text-sm">
-        You join {event.organizationName} as a member, and this session expects you.
+        You join {event.organizationName} as a member, and this event expects you.
       </p>
       <FormError error={register.error} />
     </div>
@@ -121,7 +121,7 @@ function EventBody(props: EventPageProps) {
       <div className="space-y-5">
         <AuthHeading
           title="Nothing to register for"
-          description="This link does not point to an open session. Ask the organizer for a fresh one."
+          description="This link does not point to an open event. Ask the organizer for a fresh one."
         />
         <FormError error={error} />
       </div>

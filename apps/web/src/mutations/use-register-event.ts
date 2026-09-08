@@ -2,7 +2,7 @@ import { eventKeys, eventMutationKeys, myKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
-/** Puts the signed-in reader on an open session's list. */
+/** Puts the signed-in reader on an open event's list. */
 export function useRegisterEvent() {
   const queryClient = useQueryClient();
 

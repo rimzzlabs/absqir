@@ -66,7 +66,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
           </DialogTitle>
           <DialogDescription>
             {approving
-              ? "The record for this session shows excused instead of absent."
+              ? "The record for this event shows excused instead of absent."
               : "The record stays as it is. The member sees your note."}
           </DialogDescription>
         </DialogHeader>
@@ -123,7 +123,7 @@ function Queue(props: {
           </EmptyTitle>
           <EmptyDescription>
             {props.scope === "pending"
-              ? "A member who cannot make a session asks here. You approve or decline."
+              ? "A member who cannot make an event asks here. You approve or decline."
               : "Approved and declined requests land here."}
           </EmptyDescription>
         </EmptyHeader>
@@ -137,7 +137,7 @@ function Queue(props: {
         <TableHeader>
           <TableRow>
             <TableHead>Person</TableHead>
-            <TableHead>Session</TableHead>
+            <TableHead>Event</TableHead>
             <TableHead>Reason</TableHead>
             <TableHead>Asked</TableHead>
             <TableHead>Status</TableHead>
@@ -212,7 +212,7 @@ function LeaveBody() {
     <>
       <PageHeader
         title="Leave requests"
-        description="A member asks to be excused before a session. Approve, and the record shows excused instead of absent."
+        description="A member asks to be excused before an event. Approve, and the record shows excused instead of absent."
       />
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>

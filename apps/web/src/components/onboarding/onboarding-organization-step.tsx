@@ -51,7 +51,7 @@ export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProp
         title="Join an organization"
         description={
           hasEvent
-            ? "Register for the session, and you join its organization as a member."
+            ? "Register for the event, and you join its organization as a member."
             : hasInvitations
               ? "You have been invited. Accept to get started."
               : status.canCreateOrganizations

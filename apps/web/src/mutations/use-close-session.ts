@@ -10,7 +10,7 @@ export function useCloseSession() {
     mutationFn: async (id: string) => {
       const response = await api.sessions[":id"].close.$post({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not close the session.");
+      if (!response.ok) throw await apiError(response, "Could not close the event.");
 
       return response.json();
     },

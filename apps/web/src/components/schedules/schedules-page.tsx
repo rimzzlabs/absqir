@@ -87,7 +87,7 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {schedule.title}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Future sessions it created and nobody touched go with it. Past ones stay.
+              Future events it created and nobody touched go with it. Past ones stay.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FormError error={remove.error} />
@@ -116,7 +116,7 @@ function SchedulesBody(props: SchedulesPageProps) {
     <>
       <PageHeader
         title="Schedules"
-        description="Rules that create sessions on their own. Each spawns two weeks ahead and keeps going."
+        description="Rules that create events on their own. Each spawns two weeks ahead and keeps going."
         actions={
           canManage ? (
             <Button onClick={() => setCreating(true)}>
@@ -139,7 +139,7 @@ function SchedulesBody(props: SchedulesPageProps) {
                 </EmptyMedia>
                 <EmptyTitle>No schedule yet</EmptyTitle>
                 <EmptyDescription>
-                  Every weekday at nine, every Tuesday evening: set the rule once and the sessions
+                  Every weekday at nine, every Tuesday evening: set the rule once and the events
                   appear by themselves.
                 </EmptyDescription>
               </EmptyHeader>

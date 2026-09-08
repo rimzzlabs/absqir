@@ -11,7 +11,7 @@ export function useUpdateSession() {
     mutationFn: async ({ id, ...values }: SessionInput & { id: string }) => {
       const response = await api.sessions[":id"].$patch({ param: { id }, json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the session.");
+      if (!response.ok) throw await apiError(response, "Could not save the event.");
 
       return response.json();
     },

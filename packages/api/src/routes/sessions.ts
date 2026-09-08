@@ -429,7 +429,7 @@ export const sessionRoutes = app
     const endsAt = new Date(body.endsAt);
 
     if (!validTimes(startsAt, endsAt)) {
-      return c.json({ error: "The session must end after it starts." }, 400);
+      return c.json({ error: "The event must end after it starts." }, 400);
     }
 
     const groupIds = await validGroupIds(c, body.groupIds);
@@ -491,7 +491,7 @@ export const sessionRoutes = app
     const endsAt = body.endsAt ? new Date(body.endsAt) : found.endsAt;
 
     if (!validTimes(startsAt, endsAt)) {
-      return c.json({ error: "The session must end after it starts." }, 400);
+      return c.json({ error: "The event must end after it starts." }, 400);
     }
 
     const groupIds = body.groupIds ? await validGroupIds(c, body.groupIds) : null;
@@ -562,7 +562,7 @@ export const sessionRoutes = app
     const found = await findSession(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
     if (statusOf(found, now) === "done") {
-      return c.json({ error: "This session is over." }, 409);
+      return c.json({ error: "This event is over." }, 409);
     }
 
     if (!found.openedAt) {
@@ -701,7 +701,7 @@ export const sessionRoutes = app
     if (!valid) return c.json({ error: "The QR code expired. Scan the screen again." }, 401);
 
     if (!acceptsCheckIns(found, now)) {
-      return c.json({ error: "Check-in is not open for this session." }, 410);
+      return c.json({ error: "Check-in is not open for this event." }, 410);
     }
 
     const me = await personForUser(c.var.db, found.organizationId, user.id);
@@ -709,7 +709,7 @@ export const sessionRoutes = app
 
     const expected = await isExpected(c.var.db, id, me.id);
     if (!expected && !found.allowWalkIns) {
-      return c.json({ error: "You are not on the list for this session." }, 403);
+      return c.json({ error: "You are not on the list for this event." }, 403);
     }
 
     const current = await existingRecord(c.var.db, id, me.id);
@@ -758,13 +758,13 @@ export const sessionRoutes = app
 
     const pass = parsePass(code.trim());
     if (!pass) return c.json({ error: "That is not an absqir pass." }, 400);
-    if (pass.sessionId !== id) return c.json({ error: "This pass is for another session." }, 400);
+    if (pass.sessionId !== id) return c.json({ error: "This pass is for another event." }, 400);
     if (!(await verifyPass(found.secret, pass))) {
       return c.json({ error: "This pass does not check out." }, 400);
     }
 
     if (!acceptsCheckIns(found, now)) {
-      return c.json({ error: "Check-in is not open for this session." }, 410);
+      return c.json({ error: "Check-in is not open for this event." }, 410);
     }
 
     const people = await c.var.db

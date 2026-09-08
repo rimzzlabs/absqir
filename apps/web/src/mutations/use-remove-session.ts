@@ -15,7 +15,7 @@ export function useRemoveSession() {
     mutationFn: async (id: string) => {
       const response = await api.sessions[":id"].$delete({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not delete the session.");
+      if (!response.ok) throw await apiError(response, "Could not delete the event.");
 
       return response.json();
     },

@@ -48,8 +48,8 @@ function SessionGrid(props: { rows: Session[]; scope: ListScope; filtered: boole
             {props.filtered
               ? "Try another title, or every group."
               : props.scope === "past"
-                ? "Closed sessions land here with their records."
-                : "Create a session, or set up a schedule that creates them for you."}
+                ? "Closed events land here with their records."
+                : "Create an event, or set up a schedule that creates them for you."}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -79,13 +79,13 @@ function SessionsBody(props: SessionsPageProps) {
   return (
     <>
       <PageHeader
-        title="Sessions"
-        description="One session is one moment people are expected. It opens and closes on its own clock."
+        title="Events"
+        description="One event is one moment people are expected. It opens and closes on its own clock."
         actions={
           canCreate ? (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
-              New session
+              New event
             </Button>
           ) : null
         }

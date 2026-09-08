@@ -49,13 +49,13 @@ function QrScreen(props: QrDisplayProps) {
       {data?.status === "scheduled" ? (
         <p role="status" className="text-muted-foreground max-w-sm text-sm">
           Check-in opens {data.opensBeforeMinutes} minutes before the start. The code below works
-          only while the session runs.
+          only while the event runs.
         </p>
       ) : null}
 
       {data?.status === "done" ? (
         <p role="status" className="text-destructive text-sm font-medium">
-          This session is closed.
+          This event is closed.
         </p>
       ) : null}
 

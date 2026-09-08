@@ -27,7 +27,7 @@ function GroupCards(props: { rows: Group[]; onOpen: (id: string) => void }) {
           </EmptyMedia>
           <EmptyTitle>No groups yet</EmptyTitle>
           <EmptyDescription>
-            A group is a team, a division, a class, or a cohort. A session expects a group, and
+            A group is a team, a division, a class, or a cohort. An event expects a group, and
             everyone in it who does not check in is marked absent.
           </EmptyDescription>
         </EmptyHeader>
@@ -69,7 +69,7 @@ function GroupsBody(props: GroupsPageProps) {
     <>
       <PageHeader
         title="Groups"
-        description="Who is expected where. Sessions in the next phase invite a whole group at once."
+        description="Who is expected where. Events in the next phase invite a whole group at once."
         actions={
           canManage ? (
             <Button onClick={() => setCreating(true)}>

@@ -1,7 +1,7 @@
 # absqir
 
 Open-source attendance for offices and communities. An organization keeps a
-directory of people and groups them into teams or cohorts. A session
+directory of people and groups them into teams or cohorts. An event
 expects a group, or anyone who registered on its public page: the room
 shows a rotating QR screen, the door has a scanner, and whoever does not
 check in is marked absent unless their leave was approved. Everyone signs
@@ -37,20 +37,21 @@ directory and the groups live inside them.
 
 All four phases are built. One-door sign-in with email codes, onboarding,
 organizations and roles, the people directory with CSV import and
-invitations, groups, sessions with a start, an end, a late threshold,
+invitations, groups, events with a start, an end, a late threshold,
 groups that are expected, a rotating QR room screen, a scanner for the
-door, per-person statuses, schedules that spawn sessions, the member's own
-sessions and history, a public registration page per session that also
+door, per-person statuses, schedules that spawn events, the member's own
+events and history, a public registration page per event that also
 creates accounts, leave requests that organizers approve or decline, and
 now attendance reports with CSV export, a month and week calendar, and
-notifications with reminders before a session.
+notifications with reminders before an event, worded in each reader's
+own time zone.
 
-| Phase | Delivers                                                                    |
-| ----- | --------------------------------------------------------------------------- |
-| 1     | Accounts, onboarding, organizations, roles, people, groups, invitations     |
-| 2     | Sessions with a start, an end, a late threshold, statuses, two-way check-in |
-| 3     | Public registration for events, leave requests                              |
-| 4     | Reports, CSV export, calendar, notifications and reminders                  |
+| Phase | Delivers                                                                  |
+| ----- | ------------------------------------------------------------------------- |
+| 1     | Accounts, onboarding, organizations, roles, people, groups, invitations   |
+| 2     | Events with a start, an end, a late threshold, statuses, two-way check-in |
+| 3     | Public registration for events, leave requests                            |
+| 4     | Reports, CSV export, calendar, notifications and reminders                |
 
 Next: the first public release. See `CONTRIBUTING.md` to build it locally.
 

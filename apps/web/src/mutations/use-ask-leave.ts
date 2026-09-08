@@ -7,7 +7,7 @@ export interface AskLeaveInput {
   reason: string;
 }
 
-/** A member asks to be excused from a session. */
+/** A member asks to be excused from an event. */
 export function useAskLeave() {
   const queryClient = useQueryClient();
 

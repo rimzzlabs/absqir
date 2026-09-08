@@ -12,7 +12,7 @@ export interface AuthFlowProps {
   next: string;
   /** Prefilled when the reader arrived from an invitation. */
   initialEmail?: string;
-  /** The open session whose public page sent the reader here. */
+  /** The open event whose public page sent the reader here. */
   eventId?: string | null;
 }
 

@@ -5,7 +5,7 @@ import { api, apiError } from "@/lib/api";
 export interface ReportRange {
   from: Date;
   to: Date;
-  /** Only sessions that expect this group. Null means every session. */
+  /** Only events that expect this group. Null means every event. */
   groupId: string | null;
 }
 
@@ -87,7 +87,7 @@ export function useReportSessions(range: ReportRange) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the session report.");
+      if (!response.ok) throw await apiError(response, "Could not load the event report.");
 
       return response.json();
     },

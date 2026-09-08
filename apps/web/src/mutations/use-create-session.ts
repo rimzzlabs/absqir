@@ -28,7 +28,7 @@ export function useCreateSession() {
     mutationFn: async (values: SessionInput) => {
       const response = await api.sessions.$post({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not create the session.");
+      if (!response.ok) throw await apiError(response, "Could not create the event.");
 
       return response.json();
     },

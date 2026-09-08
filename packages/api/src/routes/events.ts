@@ -139,7 +139,7 @@ export const eventRoutes = new OpenAPIHono<AppEnv>()
     const found = await findPublicSession(c.var.db, id);
     if (!found?.session.registrationOpen) return c.json({ error: "Not found" }, 404);
     if (statusOf(found.session) !== "scheduled") {
-      return c.json({ error: "The session already started." }, 409);
+      return c.json({ error: "The event already started." }, 409);
     }
 
     const me = await personForUser(c.var.db, found.session.organizationId, user.id);
