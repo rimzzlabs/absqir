@@ -63,9 +63,10 @@ function DatePicker({
         <CalendarBlankIcon className="text-muted-foreground" />
         {value ? format(value, displayFormat) : placeholder}
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-fit p-0" align="start">
         <Calendar
           mode="single"
+          className="[--cell-size:--spacing(8)]"
           selected={value ?? undefined}
           defaultMonth={value ?? undefined}
           disabled={[
@@ -163,7 +164,7 @@ function TimeField({
   };
 
   return (
-    <InputGroup className={className} data-slot="time-field">
+    <InputGroup className={cn("min-w-0", className)} data-slot="time-field">
       <InputGroupAddon>
         <ClockIcon />
       </InputGroupAddon>
@@ -175,6 +176,10 @@ function TimeField({
         inputMode="numeric"
         autoComplete="off"
         maxLength={5}
+        // A text input is 20 characters wide by default, which would drag a
+        // popover wider than the calendar above it.
+        size={6}
+        className="min-w-0"
         aria-invalid={props["aria-invalid"]}
         aria-label={props["aria-label"]}
         onChange={(event) => setDraft(event.target.value)}
@@ -260,9 +265,10 @@ function DateTimePicker({
         <CalendarBlankIcon className="text-muted-foreground" />
         <span className="truncate">{value ? format(value, displayFormat) : placeholder}</span>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-fit gap-0 p-0" align="start">
         <Calendar
           mode="single"
+          className="[--cell-size:--spacing(8)]"
           selected={value ?? undefined}
           defaultMonth={value ?? undefined}
           disabled={[
