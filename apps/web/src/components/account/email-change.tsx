@@ -1,5 +1,4 @@
 import { Button } from "@absqir/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,11 +11,7 @@ import { type CodeValues, codeSchema } from "@/lib/auth-schemas";
 import { useConfirmEmailChange } from "@/mutations/use-confirm-email-change";
 import { useRequestEmailChange } from "@/mutations/use-request-email-change";
 
-export interface EmailCardProps {
-  email: string;
-}
-
-function AddressStep(props: { current: string; onSent: (email: string) => void }) {
+function AddressStep(props: { onSent: (email: string) => void; onCancel: () => void }) {
   const request = useRequestEmailChange();
   const form = useForm<NewEmailValues>({
     resolver: zodResolver(newEmailSchema),
@@ -29,24 +24,37 @@ function AddressStep(props: { current: string; onSent: (email: string) => void }
         onSubmit={form.handleSubmit((values) =>
           request.mutate(values.email, { onSuccess: () => props.onSent(values.email) }),
         )}
-        className="space-y-5"
+        className="space-y-4"
         noValidate
       >
         <FormField
           control={form.control}
           name="email"
           label="New email"
-          description={`Signed in as ${props.current}. A code goes to the new address. Nothing changes until you enter it.`}
+          description="A code goes to the new address. Nothing changes until you enter it."
           render={(field) => (
-            <Input {...field} id="email" type="email" autoComplete="email" inputMode="email" />
+            <Input
+              {...field}
+              id="email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              autoFocus
+              className="max-w-sm"
+            />
           )}
         />
 
         <FormError error={request.error} />
 
-        <Button type="submit" disabled={request.isPending}>
-          {request.isPending ? "Sending…" : "Send the code"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="submit" disabled={request.isPending}>
+            {request.isPending ? "Sending…" : "Send the code"}
+          </Button>
+          <Button type="button" variant="ghost" onClick={props.onCancel}>
+            Cancel
+          </Button>
+        </div>
       </form>
     </Form>
   );
@@ -66,7 +74,7 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={submit} className="space-y-5" noValidate>
+      <form onSubmit={submit} className="space-y-4" noValidate>
         <FormField
           control={form.control}
           name="code"
@@ -109,22 +117,17 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
   );
 }
 
-export function EmailCard(props: EmailCardProps) {
+export interface EmailChangeProps {
+  onCancel: () => void;
+}
+
+/** The two steps of a new address: where to send the code, then the code. */
+export function EmailChange(props: EmailChangeProps) {
   const [pending, setPending] = useState<string | null>(null);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Email</CardTitle>
-        <CardDescription>Where you sign in and where reminders go.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {pending ? (
-          <CodeStep newEmail={pending} onBack={() => setPending(null)} />
-        ) : (
-          <AddressStep current={props.email} onSent={setPending} />
-        )}
-      </CardContent>
-    </Card>
+  return pending ? (
+    <CodeStep newEmail={pending} onBack={() => setPending(null)} />
+  ) : (
+    <AddressStep onSent={setPending} onCancel={props.onCancel} />
   );
 }

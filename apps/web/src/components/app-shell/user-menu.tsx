@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
-import { SignOutIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { SignOutIcon, SlidersHorizontalIcon, UserCircleIcon } from "@phosphor-icons/react";
 import type { ShellUser } from "@/components/app-shell/app-shell";
 import { initialsOf } from "@/lib/avatar";
 import { useSignOut } from "@/mutations/use-sign-out";
@@ -42,9 +42,13 @@ export function UserMenu(props: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<a href="/settings?tab=account" />}>
+          <DropdownMenuItem render={<a href="/settings?tab=profile" />}>
             <UserCircleIcon />
-            Account
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<a href="/settings?tab=preferences" />}>
+            <SlidersHorizontalIcon />
+            Preferences
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

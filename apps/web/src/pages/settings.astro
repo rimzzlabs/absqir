@@ -1,4 +1,5 @@
 ---
+import { isNotificationChannel } from "@absqir/db/schema";
 import { SettingsPage } from "@/components/settings/settings-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
@@ -16,7 +17,15 @@ const organization = {
   slug: activeMembership.slug,
 };
 
-const shellUser = { name: user.name, email: user.email, image: user.image ?? null };
+const shellUser = {
+  name: user.name,
+  email: user.email,
+  image: user.image ?? null,
+  createdAt: new Date(user.createdAt).toISOString(),
+  notificationChannel: isNotificationChannel(user.notificationChannel)
+    ? user.notificationChannel
+    : "all",
+};
 ---
 
 <DashboardLayout title="Settings">
@@ -26,5 +35,6 @@ const shellUser = { name: user.name, email: user.email, image: user.image ?? nul
     organization={organization}
     currentUserId={user.id}
     user={shellUser}
+    requestedTab={Astro.url.searchParams.get("tab")}
   />
 </DashboardLayout>

@@ -1,45 +1,133 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@absqir/ui/tabs";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { AccountPanel } from "@/components/account/account-panel";
+import type { NotificationChannel } from "@absqir/db/schema";
+import { Reveal } from "@absqir/ui/reveal";
+import {
+  BellIcon,
+  BuildingsIcon,
+  EnvelopeSimpleIcon,
+  ShieldCheckIcon,
+  SlidersHorizontalIcon,
+  UserCircleIcon,
+  UsersThreeIcon,
+} from "@phosphor-icons/react";
+import { parseAsString, useQueryState } from "nuqs";
+import type { ReactNode } from "react";
+import { NotificationsPanel } from "@/components/account/notifications-panel";
+import { ProfilePanel } from "@/components/account/profile-panel";
+import { SecurityPanel } from "@/components/account/security-panel";
 import { Providers } from "@/components/providers";
 import { InvitationsPanel } from "@/components/settings/invitations-panel";
 import { MembersTable } from "@/components/settings/members-table";
 import { OrganizationSettings } from "@/components/settings/organization-settings";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
+import { SettingsNav, type SettingsNavGroup } from "@/components/settings/settings-nav";
+import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shared/page-header";
 import type { RoleName } from "@/components/shared/role-badge";
 
 export interface SettingsPageProps {
   role: RoleName;
+  /** The `tab` in the address, read on the server so the first paint is right. */
+  requestedTab: string | null;
   organization: { id: string; name: string; slug: string };
   currentUserId: string;
-  user: { name: string; email: string; image: string | null };
+  user: {
+    name: string;
+    email: string;
+    image: string | null;
+    /** When the account was made, as an ISO instant. */
+    createdAt: string;
+    notificationChannel: NotificationChannel;
+  };
 }
 
 const ORGANIZATION_TABS = ["members", "invitations", "organization"] as const;
-const PERSONAL_TABS = ["account", "preferences"] as const;
+const PERSONAL_TABS = ["profile", "preferences", "notifications", "security"] as const;
 type SettingsTab = (typeof ORGANIZATION_TABS)[number] | (typeof PERSONAL_TABS)[number];
 
-const TAB = parseAsStringLiteral<SettingsTab>([...ORGANIZATION_TABS, ...PERSONAL_TABS]);
+/** Old links say `account`. They land on the profile. */
+const ALIASES: Record<string, SettingsTab> = { account: "profile" };
 
-const LABELS: Record<SettingsTab, string> = {
-  members: "Members",
-  invitations: "Invitations",
-  organization: "Organization",
-  account: "Account",
-  preferences: "Preferences",
+const ORGANIZATION_GROUP: SettingsNavGroup<SettingsTab> = {
+  label: "Organization",
+  items: [
+    { value: "members", label: "Members", icon: UsersThreeIcon },
+    { value: "invitations", label: "Invitations", icon: EnvelopeSimpleIcon },
+    { value: "organization", label: "Organization", icon: BuildingsIcon },
+  ],
 };
+
+const PERSONAL_GROUP: SettingsNavGroup<SettingsTab> = {
+  label: "You",
+  items: [
+    { value: "profile", label: "Profile", icon: UserCircleIcon },
+    { value: "preferences", label: "Preferences", icon: SlidersHorizontalIcon },
+    { value: "notifications", label: "Notifications", icon: BellIcon },
+    { value: "security", label: "Security", icon: ShieldCheckIcon },
+  ],
+};
+
+function isTab(value: string, allowed: readonly SettingsTab[]): value is SettingsTab {
+  return (allowed as readonly string[]).includes(value);
+}
 
 function SettingsBody(props: SettingsPageProps) {
   const runsOrganization = props.role === "owner" || props.role === "admin";
-  const tabs: SettingsTab[] = runsOrganization
+  const groups = runsOrganization ? [ORGANIZATION_GROUP, PERSONAL_GROUP] : [PERSONAL_GROUP];
+  const allowed: readonly SettingsTab[] = runsOrganization
     ? [...ORGANIZATION_TABS, ...PERSONAL_TABS]
-    : [...PERSONAL_TABS];
-  const [requested, setTab] = useQueryState("tab", TAB);
+    : PERSONAL_TABS;
 
-  // A member who follows an admin's link lands on their own first tab.
-  const tab: SettingsTab =
-    requested && tabs.includes(requested) ? requested : (tabs[0] ?? "account");
+  const [fromAddress, setTab] = useQueryState("tab", parseAsString);
+  const requested = fromAddress ?? props.requestedTab;
+
+  // A member who follows an admin's link lands on their own first section.
+  const wanted = requested ? (ALIASES[requested] ?? requested) : null;
+  const tab: SettingsTab = wanted && isTab(wanted, allowed) ? wanted : (allowed[0] ?? "profile");
+
+  const content = {
+    members: (
+      <SettingsSection
+        title="Members"
+        description="Everyone with an account in the organization, and what each one can do."
+      >
+        <div className="pt-6">
+          <MembersTable role={props.role} currentUserId={props.currentUserId} />
+        </div>
+      </SettingsSection>
+    ),
+    invitations: (
+      <SettingsSection
+        title="Invitations"
+        description="Bring someone in by email. The link works for seven days."
+      >
+        <div className="pt-6">
+          <InvitationsPanel />
+        </div>
+      </SettingsSection>
+    ),
+    organization: (
+      <SettingsSection
+        title="Organization"
+        description="The name people see, and the slug that appears in links."
+      >
+        <div className="pt-6">
+          <OrganizationSettings role={props.role} organization={props.organization} />
+        </div>
+      </SettingsSection>
+    ),
+    profile: (
+      <ProfilePanel
+        name={props.user.name}
+        email={props.user.email}
+        image={props.user.image}
+        createdAt={props.user.createdAt}
+        role={props.role}
+      />
+    ),
+    preferences: <PreferencesPanel />,
+    notifications: <NotificationsPanel channel={props.user.notificationChannel} />,
+    security: <SecurityPanel />,
+  } satisfies Record<SettingsTab, ReactNode>;
 
   return (
     <>
@@ -52,35 +140,13 @@ function SettingsBody(props: SettingsPageProps) {
         }
       />
 
-      <Tabs value={tab} onValueChange={(value) => void setTab(value as SettingsTab)}>
-        <TabsList>
-          {tabs.map((value) => (
-            <TabsTrigger key={value} value={value}>
-              {LABELS[value]}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
+        <SettingsNav groups={groups} value={tab} onChange={(value) => void setTab(value)} />
 
-        {runsOrganization ? (
-          <>
-            <TabsContent value="members" className="pt-4">
-              <MembersTable role={props.role} currentUserId={props.currentUserId} />
-            </TabsContent>
-            <TabsContent value="invitations" className="pt-4">
-              <InvitationsPanel />
-            </TabsContent>
-            <TabsContent value="organization" className="pt-4">
-              <OrganizationSettings role={props.role} organization={props.organization} />
-            </TabsContent>
-          </>
-        ) : null}
-        <TabsContent value="account" className="pt-4">
-          <AccountPanel name={props.user.name} email={props.user.email} image={props.user.image} />
-        </TabsContent>
-        <TabsContent value="preferences" className="pt-4">
-          <PreferencesPanel />
-        </TabsContent>
-      </Tabs>
+        <div className="min-w-0">
+          <Reveal key={tab}>{content[tab]}</Reveal>
+        </div>
+      </div>
     </>
   );
 }
