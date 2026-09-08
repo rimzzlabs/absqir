@@ -58,6 +58,13 @@ function NavEntry(props: { item: NavItem; currentPath: string }) {
   );
 }
 
+/**
+ * In the icon rail the solid block reads as a blob next to the ghost entries,
+ * so the tile turns into a tinted cobalt square and only fills when active.
+ */
+const COLLAPSED_CHECK_IN =
+  "group-data-[collapsible=icon]:bg-primary/10 group-data-[collapsible=icon]:text-primary group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:hover:bg-primary/15 group-data-[collapsible=icon]:hover:text-primary group-data-[collapsible=icon]:active:bg-primary/20 group-data-[collapsible=icon]:active:text-primary group-data-[collapsible=icon]:data-active:bg-primary group-data-[collapsible=icon]:data-active:text-primary-foreground group-data-[collapsible=icon]:data-active:hover:bg-primary/90 group-data-[collapsible=icon]:data-active:hover:text-primary-foreground";
+
 /** A member's one action, filled in the brand color so it never hides in the list. */
 function CheckInEntry(props: { currentPath: string }) {
   return (
@@ -67,7 +74,10 @@ function CheckInEntry(props: { currentPath: string }) {
           isActive={isActivePath(CHECK_IN.href, props.currentPath)}
           tooltip={CHECK_IN.label}
           render={<a href={CHECK_IN.href} />}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-active:bg-primary/90 data-active:text-primary-foreground justify-center font-medium shadow-sm [&_svg]:size-4"
+          className={cn(
+            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-active:bg-primary/90 data-active:text-primary-foreground justify-center font-medium shadow-sm [&_svg]:size-4",
+            COLLAPSED_CHECK_IN,
+          )}
         >
           <CHECK_IN.icon weight="bold" />
           <span>{CHECK_IN.label}</span>
