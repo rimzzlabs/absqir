@@ -311,7 +311,15 @@ import { Reveal } from "@absqir/ui/reveal";
 - **Icons** come from `@phosphor-icons/react`. Import the `*Icon` name, such as
   `XIcon`. The bare name is deprecated.
 - **Motion** comes from `motion`. Wrap an animated island in `MotionProvider`
-  and build entrances with `Reveal`.
+  and build entrances with `Reveal`. Every popup in `packages/ui` (dialog,
+  sheet, popover, tooltip, menu, select, combobox) animates through
+  `popup-motion.tsx`, not CSS keyframes. The root hands Base UI an
+  `actionsRef` and `MotionPopup` unmounts the popup after the exit completes.
+  Drawer, toast, accordion, and collapsible keep Base UI's own transitions,
+  because Base UI measures or swipes those itself.
+- **shadcn refresh**: `shadcn add --overwrite` rewrites a component from the
+  registry and drops the `render` props that hook Motion in. After an
+  overwrite, diff the file against git and restore the `MotionPopup` render.
 - **Reduced motion** is honoured twice: `MotionConfig reducedMotion="user"` for
   React animation, and a `prefers-reduced-motion` block in `globals.css` for
   every CSS transition and keyframe. You do not opt in per component.
