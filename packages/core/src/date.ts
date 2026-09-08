@@ -12,6 +12,10 @@ const PATTERNS = {
   date: "d MMM yyyy",
   dateTime: "d MMM yyyy, HH:mm",
   weekdayDateTime: "EEE d MMM, HH:mm",
+  /** "September 2026", for a calendar header. */
+  monthYear: "MMMM yyyy",
+  /** "8 Sep", for one end of a week label. */
+  dayMonth: "d MMM",
   /** "Mon 8 Sep", for a day heading. */
   weekdayDate: "EEE d MMM",
   /** "8", for the big number in an agenda. */
@@ -44,9 +48,36 @@ export function displayTimezone(): string | null {
   return resolveTimezone();
 }
 
-function inDisplayZone(value: Date): Date {
+/**
+ * The same instant, read in the display zone. date-fns keeps the zone
+ * through startOfDay, addDays and the rest, so calendar arithmetic that
+ * starts here stays in it.
+ */
+export function inDisplayZone(value: Date): Date {
   const zone = resolveTimezone();
   return zone ? new TZDate(value, zone) : value;
+}
+
+/** Now, in the display zone. */
+export function nowInDisplayZone(): Date {
+  return inDisplayZone(new Date());
+}
+
+const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Midnight of a "yyyy-MM-dd" day in the display zone, or null for anything else. */
+export function parseDisplayDay(value: string): Date | null {
+  const match = ISO_DAY.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const zone = resolveTimezone();
+  const date = zone ? new TZDate(year, month, day, zone) : new Date(year, month, day);
+
+  // A 40th of a month rolls over instead of failing; the round trip catches it.
+  return Number.isNaN(date.getTime()) || format(date, PATTERNS.iso) !== value ? null : date;
 }
 
 export function formatDate(value: Date, intent: DateIntent = "date"): string {

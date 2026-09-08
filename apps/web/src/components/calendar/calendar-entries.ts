@@ -10,7 +10,7 @@ export function entryTitle(entry: CalendarEntry): string {
   return entry.kind === "session" ? entry.session.title : entry.title;
 }
 
-/** The map key for a day. Local time, so a cell holds the reader's own day. */
+/** The map key for a day, in the display zone, so a cell holds the account's own day. */
 export function dayKey(date: Date): string {
   return formatDate(date, "iso");
 }

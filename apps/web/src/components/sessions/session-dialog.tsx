@@ -1,3 +1,4 @@
+import { inDisplayZone } from "@absqir/core/date";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
@@ -43,12 +44,12 @@ function nextRoundHour(): Date {
   return date;
 }
 
-/** Nine in the morning on the given day, the hour a day usually starts. */
+/** Nine in the morning on the given day, in the display zone. */
 function morningOf(day: Date): Date {
-  const start = new Date(day);
+  const start = inDisplayZone(day);
   start.setHours(9, 0, 0, 0);
 
-  return start;
+  return new Date(start.getTime());
 }
 
 function defaults(session: Session | null, initialStart?: Date | null): SessionValues {

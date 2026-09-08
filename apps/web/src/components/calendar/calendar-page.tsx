@@ -5,6 +5,9 @@ import {
   endOfDay,
   endOfMonth,
   endOfWeek,
+  formatDate,
+  inDisplayZone,
+  nowInDisplayZone,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -46,13 +49,12 @@ function visibleRange(view: CalendarView, cursor: Date) {
 }
 
 function headerLabel(view: CalendarView, cursor: Date): string {
-  const month = cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-  if (view === "month") return month;
+  if (view === "month") return formatDate(cursor, "monthYear");
 
   const from = startOfWeek(cursor, WEEK_OPTIONS);
   const to = endOfWeek(cursor, WEEK_OPTIONS);
 
-  return `${from.toLocaleDateString(undefined, { day: "numeric", month: "short" })} to ${to.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
+  return `${formatDate(from, "dayMonth")} to ${formatDate(to, "date")}`;
 }
 
 const PARAMS = {
@@ -62,8 +64,14 @@ const PARAMS = {
   date: parseAsLocalDate,
 };
 
+/**
+ * Midnight today in the display zone. Every day the grid draws descends
+ * from this date or from the one in the URL, and date-fns keeps the zone
+ * through the arithmetic, so a cell holds the account's day, not the
+ * browser's.
+ */
 function today() {
-  return startOfDay(new Date());
+  return startOfDay(nowInDisplayZone());
 }
 
 function CalendarBody() {
@@ -98,7 +106,7 @@ function CalendarBody() {
       return;
     }
 
-    setOpenDay(startOfDay(entry.startsAt));
+    setOpenDay(startOfDay(inDisplayZone(entry.startsAt)));
   };
 
   return (
@@ -122,7 +130,7 @@ function CalendarBody() {
           <Button variant="outline" size="icon" aria-label="Next" onClick={() => step(1)}>
             <CaretRightIcon />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>
+          <Button variant="outline" size="sm" onClick={() => setCursor(today())}>
             Today
           </Button>
           <h2 className="font-heading ml-2 text-lg font-semibold">{headerLabel(view, cursor)}</h2>

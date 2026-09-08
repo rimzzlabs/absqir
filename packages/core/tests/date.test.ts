@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { displayTimezone, formatDate, formatRange, setDisplayTimezoneResolver } from "@/date";
+import {
+  displayTimezone,
+  formatDate,
+  formatRange,
+  inDisplayZone,
+  parseDisplayDay,
+  setDisplayTimezoneResolver,
+  startOfDay,
+} from "@/date";
 
 const noon = new Date("2026-09-09T12:00:00Z");
 
@@ -41,5 +49,30 @@ describe("formatRange", () => {
     // 12:00Z is Wednesday 21:00 in Tokyo, 18:00Z is Thursday 03:00.
     setDisplayTimezoneResolver(() => "Asia/Tokyo");
     expect(formatRange(noon, end)).toBe("Wed 9 Sep, 21:00 to Thu 10 Sep, 03:00");
+  });
+});
+
+describe("parseDisplayDay", () => {
+  it("reads midnight in the display zone", () => {
+    setDisplayTimezoneResolver(() => "Asia/Tokyo");
+    expect(parseDisplayDay("2026-09-09")?.getTime()).toBe(Date.parse("2026-09-08T15:00:00Z"));
+    expect(formatDate(parseDisplayDay("2026-09-09") ?? noon, "iso")).toBe("2026-09-09");
+  });
+
+  it("rejects what is not a day", () => {
+    expect(parseDisplayDay("2026-9-9")).toBeNull();
+    expect(parseDisplayDay("2026-13-40")).toBeNull();
+    expect(parseDisplayDay("2026-02-30")).toBeNull();
+  });
+});
+
+describe("inDisplayZone", () => {
+  it("keeps the zone through date-fns arithmetic", () => {
+    setDisplayTimezoneResolver(() => "America/New_York");
+    // 03:00Z on the 9th is still the 8th in New York.
+    const start = startOfDay(inDisplayZone(new Date("2026-09-09T03:00:00Z")));
+
+    expect(start.getTime()).toBe(Date.parse("2026-09-08T04:00:00Z"));
+    expect(formatDate(start, "iso")).toBe("2026-09-08");
   });
 });
