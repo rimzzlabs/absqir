@@ -1,9 +1,9 @@
-import { buttonVariants } from "@absqir/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@absqir/ui/hover-card";
-import { cn } from "@absqir/ui/lib/utils";
+import { Button } from "@absqir/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
 import { BellIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { NotificationPreview } from "@/components/app-shell/notification-preview";
+import { useCanHover } from "@/lib/use-can-hover";
 import { useNotificationStream } from "@/queries/use-notification-stream";
 import { useUnreadCount } from "@/queries/use-notifications";
 
@@ -12,25 +12,31 @@ const OPEN_DELAY_MS = 150;
 const CLOSE_DELAY_MS = 200;
 
 /**
- * The bell in the header. It is a link to the full list, so a tap on a phone
- * lands there; a pointer that rests on it, or keyboard focus, opens a card
- * with the newest few. The stream that keeps the badge live lives here too,
- * because the bell is the one thing mounted on every page.
+ * The bell in the header. A click opens the popover everywhere; with a mouse
+ * a pointer that rests on it opens it as well. The stream that keeps the
+ * badge live lives here too, because the bell is on every page.
  */
 export function NotificationBell() {
   useNotificationStream();
   const unread = useUnreadCount();
   const count = unread.data?.count ?? 0;
+  const canHover = useCanHover();
   const [open, setOpen] = useState(false);
 
   return (
-    <HoverCard open={open} onOpenChange={setOpen}>
-      <HoverCardTrigger
-        href="/notifications"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        openOnHover={canHover}
         delay={OPEN_DELAY_MS}
         closeDelay={CLOSE_DELAY_MS}
-        aria-label={count === 0 ? "Notifications" : `Notifications, ${count} unread`}
-        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            aria-label={count === 0 ? "Notifications" : `Notifications, ${count} unread`}
+          />
+        }
       >
         <BellIcon />
         {count > 0 ? (
@@ -38,11 +44,11 @@ export function NotificationBell() {
             {count > MAX_SHOWN ? `${MAX_SHOWN}+` : count}
           </span>
         ) : null}
-      </HoverCardTrigger>
+      </PopoverTrigger>
 
-      <HoverCardContent align="end" sideOffset={8} className="w-80 p-0">
+      <PopoverContent align="end" sideOffset={8} className="w-80 gap-0 p-0">
         <NotificationPreview open={open} unread={count} />
-      </HoverCardContent>
-    </HoverCard>
+      </PopoverContent>
+    </Popover>
   );
 }
