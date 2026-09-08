@@ -16,6 +16,7 @@ import { myRoutes } from "@/routes/my";
 import { onboardingRoutes } from "@/routes/onboarding";
 import { organizationRoutes } from "@/routes/organizations";
 import { peopleRoutes } from "@/routes/people";
+import { reportRoutes } from "@/routes/reports";
 import { scheduleRoutes } from "@/routes/schedules";
 import { sessionRoutes } from "@/routes/sessions";
 import type { AppEnv } from "@/types";
@@ -49,7 +50,8 @@ const routes = app
   .route("/", scheduleRoutes)
   .route("/", myRoutes)
   .route("/", eventRoutes)
-  .route("/", leaveRoutes);
+  .route("/", leaveRoutes)
+  .route("/", reportRoutes);
 
 mountDocs(app);
 

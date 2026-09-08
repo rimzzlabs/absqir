@@ -46,3 +46,23 @@ export function formatRange(start: Date, end: Date): string {
 export function minutesBetween(start: Date, end: Date): number {
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60_000));
 }
+
+/**
+ * The calendar arithmetic the app needs, from one place. Only `@absqir/core`
+ * depends on date-fns, so a page never reaches past its own dependencies.
+ */
+export {
+  addDays,
+  addMonths,
+  eachDayOfInterval,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "date-fns";

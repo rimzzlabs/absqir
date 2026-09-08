@@ -134,6 +134,31 @@ export const leaveMutationKeys = {
   decide: () => [...leaveMutationKeys.all, "decide"] as const,
 };
 
+export const reportKeys = {
+  all: ["reports"] as const,
+  summary: (range: string) => [...reportKeys.all, "summary", range] as const,
+  people: (range: string) => [...reportKeys.all, "people", range] as const,
+  groups: (range: string) => [...reportKeys.all, "groups", range] as const,
+  sessions: (range: string) => [...reportKeys.all, "sessions", range] as const,
+};
+
+export const calendarKeys = {
+  all: ["calendar"] as const,
+  range: (from: string, to: string) => [...calendarKeys.all, "range", from, to] as const,
+};
+
+export const notificationKeys = {
+  all: ["notifications"] as const,
+  list: (scope = "all") => [...notificationKeys.all, "list", scope] as const,
+  unread: () => [...notificationKeys.all, "unread"] as const,
+};
+
+export const notificationMutationKeys = {
+  all: ["notification-mutations"] as const,
+  read: () => [...notificationMutationKeys.all, "read"] as const,
+  readAll: () => [...notificationMutationKeys.all, "read-all"] as const,
+};
+
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */
 export const authMutationKeys = {
   all: ["auth"] as const,
