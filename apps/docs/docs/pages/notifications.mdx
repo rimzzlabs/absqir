@@ -29,11 +29,30 @@ Each notification is written once. The row carries a key made of what it is
 about, so a heartbeat that runs every minute still sends one reminder, not
 sixty.
 
+## Where they go
+
+Each account chooses where notifications reach it, in **Settings**, under
+**Notifications**:
+
+| Choice        | The bell and the list | Email                     |
+| ------------- | --------------------- | ------------------------- |
+| App and email | Yes                   | Reminders and leave       |
+| App only      | Yes                   | No                        |
+| Email only    | No                    | Reminders and leave       |
+| Off           | No                    | No                        |
+
+The default is app and email. The choice applies to what is written from
+then on: each row copies it at write time, so a later change never
+rewrites history. An email-only row is still written, so the dedupe key
+still holds and one reminder stays one reminder. It just never shows in the
+app. With **Off**, nothing is written at all.
+
 ## Email
 
-In-app is always on. Email goes out as well when the instance has a
-`RESEND_API_KEY`, for reminders, leave requests and leave decisions. A
-closing stays in the app, where the organizer is already looking.
+Email goes out when the instance has a `RESEND_API_KEY`, for reminders,
+leave requests and leave decisions, and only to accounts whose choice
+includes email. A closing stays in the app, where the organizer is already
+looking.
 
 Set `APP_URL` to the address people type. Links in an email point there, and
 a reminder sent by the heartbeat has no request to read an origin from.
