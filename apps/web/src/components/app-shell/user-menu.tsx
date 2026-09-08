@@ -28,7 +28,7 @@ export function UserMenu(props: UserMenuProps) {
       >
         <Avatar>
           {props.user.image ? <AvatarImage src={props.user.image} alt="" /> : null}
-          <AvatarFallback>{initialsOf(props.user.name)}</AvatarFallback>
+          <AvatarFallback name={props.user.name}>{initialsOf(props.user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 

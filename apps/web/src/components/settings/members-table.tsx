@@ -51,7 +51,7 @@ function MemberRow(props: { member: Member; viewerRole: RoleName; isSelf: boolea
         <div className="flex items-center gap-3">
           <Avatar>
             {member.user.image ? <AvatarImage src={member.user.image} alt="" /> : null}
-            <AvatarFallback>{initialsOf(member.user.name)}</AvatarFallback>
+            <AvatarFallback name={member.user.name}>{initialsOf(member.user.name)}</AvatarFallback>
           </Avatar>
           <div>
             <p className="font-medium">

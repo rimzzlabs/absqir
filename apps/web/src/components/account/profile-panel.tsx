@@ -46,7 +46,7 @@ function Identity(props: ProfilePanelProps) {
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
       <Avatar size="lg" className="size-24">
         {props.image ? <AvatarImage src={props.image} alt="" /> : null}
-        <AvatarFallback className="text-2xl font-medium tracking-wide">
+        <AvatarFallback name={props.name} className="text-2xl font-medium tracking-wide">
           {initialsOf(props.name)}
         </AvatarFallback>
       </Avatar>

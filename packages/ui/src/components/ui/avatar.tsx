@@ -32,14 +32,44 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   );
 }
 
-function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
+/**
+ * A stable hue from a name, so the same person always gets the same color.
+ * The hash is the classic string hash; only the spread over 360 matters.
+ */
+export function hueOf(name: string): number {
+  const hash = [...name.trim().toLowerCase()].reduce(
+    (total, char) => (total * 31 + (char.codePointAt(0) ?? 0)) >>> 0,
+    0,
+  );
+
+  return hash % 360;
+}
+
+/**
+ * Fixed OKLCH lightness and chroma per theme, so every hue reads the same
+ * and the letters keep a contrast above 7:1 on their circle.
+ */
+const TINTED =
+  "bg-[oklch(0.92_0.07_var(--avatar-hue))] text-[oklch(0.38_0.13_var(--avatar-hue))] dark:bg-[oklch(0.32_0.09_var(--avatar-hue))] dark:text-[oklch(0.90_0.07_var(--avatar-hue))]";
+
+function AvatarFallback({
+  className,
+  name,
+  style,
+  ...props
+}: AvatarPrimitive.Fallback.Props & {
+  /** Colors the circle from the name. Without it the circle is neutral. */
+  name?: string;
+}) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs",
+        "flex size-full items-center justify-center rounded-full text-sm font-medium group-data-[size=sm]/avatar:text-xs",
+        name ? TINTED : "bg-muted text-muted-foreground",
         className,
       )}
+      style={name ? ({ ...style, "--avatar-hue": hueOf(name) } as React.CSSProperties) : style}
       {...props}
     />
   );

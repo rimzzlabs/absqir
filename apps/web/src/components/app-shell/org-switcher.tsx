@@ -38,7 +38,9 @@ function OrgAvatar(props: { membership: ShellMembership; size?: "sm" | "default"
   return (
     <Avatar size={props.size} className="rounded-md after:rounded-md">
       {props.membership.logo ? <AvatarImage src={props.membership.logo} alt="" /> : null}
-      <AvatarFallback className="rounded-md">{initialsOf(props.membership.name)}</AvatarFallback>
+      <AvatarFallback name={props.membership.name} className="rounded-md">
+        {initialsOf(props.membership.name)}
+      </AvatarFallback>
     </Avatar>
   );
 }

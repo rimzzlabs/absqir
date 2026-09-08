@@ -39,7 +39,9 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
       <div className="flex items-center gap-5">
         <Avatar size="lg" className="size-20">
           {image ? <AvatarImage src={image} alt="" /> : null}
-          <AvatarFallback className="text-lg">{initialsOf(props.status.name)}</AvatarFallback>
+          <AvatarFallback name={props.status.name} className="text-lg">
+            {initialsOf(props.status.name)}
+          </AvatarFallback>
         </Avatar>
 
         <div className="space-y-2">
