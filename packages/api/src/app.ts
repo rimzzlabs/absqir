@@ -6,6 +6,7 @@ import { csrfPolicy, payloadLimit, rateLimit, securityHeaders } from "@/middlewa
 import { currentSession, requestContext } from "@/middleware/session";
 import { authRoutes } from "@/routes/auth";
 import { authFlowRoutes } from "@/routes/auth-flow";
+import { calendarRoutes } from "@/routes/calendar";
 import { mountDocs } from "@/routes/docs";
 import { eventRoutes } from "@/routes/events";
 import { groupRoutes } from "@/routes/groups";
@@ -51,7 +52,8 @@ const routes = app
   .route("/", myRoutes)
   .route("/", eventRoutes)
   .route("/", leaveRoutes)
-  .route("/", reportRoutes);
+  .route("/", reportRoutes)
+  .route("/", calendarRoutes);
 
 mountDocs(app);
 

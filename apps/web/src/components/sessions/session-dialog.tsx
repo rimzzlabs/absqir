@@ -29,6 +29,8 @@ export interface SessionDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Null creates, a session edits. */
   session: Session | null;
+  /** The day a new session starts on, when the calendar opened the dialog. */
+  initialStart?: Date | null;
 }
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -39,7 +41,15 @@ function nextRoundHour(): Date {
   return date;
 }
 
-function defaults(session: Session | null): SessionValues {
+/** Nine in the morning on the given day, the hour a day usually starts. */
+function morningOf(day: Date): Date {
+  const start = new Date(day);
+  start.setHours(9, 0, 0, 0);
+
+  return start;
+}
+
+function defaults(session: Session | null, initialStart?: Date | null): SessionValues {
   if (session) {
     return {
       title: session.title,
@@ -56,7 +66,7 @@ function defaults(session: Session | null): SessionValues {
     };
   }
 
-  const start = nextRoundHour();
+  const start = initialStart ? morningOf(initialStart) : nextRoundHour();
 
   return {
     title: "",
@@ -76,7 +86,7 @@ export function SessionDialog(props: SessionDialogProps) {
   const editing = props.session !== null;
   const form = useForm<SessionValues>({
     resolver: zodResolver(sessionSchema),
-    defaultValues: defaults(props.session),
+    defaultValues: defaults(props.session, props.initialStart),
   });
 
   const create = useCreateSession();
@@ -84,8 +94,8 @@ export function SessionDialog(props: SessionDialogProps) {
   const pending = create.isPending || update.isPending;
 
   useEffect(() => {
-    if (props.open) form.reset(defaults(props.session));
-  }, [props.open, props.session, form]);
+    if (props.open) form.reset(defaults(props.session, props.initialStart));
+  }, [props.open, props.session, props.initialStart, form]);
 
   const onSubmit = (values: SessionValues) => {
     const payload = {

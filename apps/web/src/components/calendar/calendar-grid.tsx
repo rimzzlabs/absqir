@@ -1,0 +1,137 @@
+import { formatDate, isSameMonth, isToday } from "@absqir/core/date";
+import { cn } from "@absqir/ui/lib/utils";
+import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
+import { type CalendarEntry, dayKey, entryTitle } from "@/components/calendar/calendar-entries";
+
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** How many entries a month cell shows before it says how many are left. */
+const MONTH_CELL_LIMIT = 3;
+
+const STATUS_DOT: Record<string, string> = {
+  scheduled: "bg-muted-foreground",
+  running: "bg-emerald-500",
+  done: "bg-border",
+};
+
+function EntryLine(props: { entry: CalendarEntry; onOpen: (entry: CalendarEntry) => void }) {
+  const { entry } = props;
+  const projected = entry.kind === "projected";
+
+  return (
+    <button
+      type="button"
+      onClick={() => props.onOpen(entry)}
+      title={projected ? "A schedule will create this one" : undefined}
+      className={cn(
+        "hover:bg-muted flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-xs",
+        projected && "text-muted-foreground",
+      )}
+    >
+      {projected ? (
+        <RepeatIcon className="size-3 shrink-0" />
+      ) : (
+        <span
+          aria-hidden
+          className={cn(
+            "size-1.5 shrink-0 rounded-full",
+            STATUS_DOT[entry.session.status] ?? "bg-muted-foreground",
+          )}
+        />
+      )}
+      <span className="tabular-nums">{formatDate(entry.startsAt, "time")}</span>
+      <span className="truncate">{entryTitle(entry)}</span>
+    </button>
+  );
+}
+
+export interface CalendarGridProps {
+  days: Date[];
+  /** The month the header names. Days outside it read as quiet. */
+  month: Date;
+  view: "month" | "week";
+  entries: Map<string, CalendarEntry[]>;
+  onOpenDay: (day: Date) => void;
+  onNewSession: (day: Date) => void;
+  onOpenEntry: (entry: CalendarEntry) => void;
+}
+
+/**
+ * Seven columns, one row per week. The month view caps each cell and says
+ * how many entries it hid; the week view has the height to show them all.
+ */
+export function CalendarGrid(props: CalendarGridProps) {
+  const limit = props.view === "month" ? MONTH_CELL_LIMIT : Number.POSITIVE_INFINITY;
+
+  return (
+    <div className="border-border overflow-hidden rounded-xl border">
+      <div className="bg-muted/40 text-muted-foreground border-border grid grid-cols-7 border-b text-xs font-medium">
+        {WEEKDAY_LABELS.map((label) => (
+          <div key={label} className="px-2 py-2 text-center">
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div className="divide-border grid grid-cols-7 divide-x divide-y">
+        {props.days.map((day) => {
+          const list = props.entries.get(dayKey(day)) ?? [];
+          const outside = props.view === "month" && !isSameMonth(day, props.month);
+          const shown = list.slice(0, limit);
+
+          return (
+            <div
+              key={day.toISOString()}
+              className={cn(
+                "group/day flex flex-col gap-1 p-1.5",
+                props.view === "month" ? "min-h-28" : "min-h-72",
+                outside && "bg-muted/20",
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => props.onOpenDay(day)}
+                  aria-label={`What happens on ${formatDate(day, "date")}`}
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
+                    isToday(day)
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "hover:bg-muted",
+                    outside && "text-muted-foreground",
+                  )}
+                >
+                  {day.getDate()}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => props.onNewSession(day)}
+                  aria-label={`New session on ${formatDate(day, "date")}`}
+                  className="text-muted-foreground hover:bg-muted rounded p-0.5 opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100"
+                >
+                  <PlusIcon className="size-3.5" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-0.5">
+                {shown.map((entry) => (
+                  <EntryLine key={entry.key} entry={entry} onOpen={props.onOpenEntry} />
+                ))}
+                {list.length > shown.length ? (
+                  <button
+                    type="button"
+                    onClick={() => props.onOpenDay(day)}
+                    className="text-muted-foreground hover:text-foreground px-1 text-left text-xs"
+                  >
+                    {list.length - shown.length} more
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

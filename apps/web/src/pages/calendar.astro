@@ -1,5 +1,5 @@
 ---
-import { EmptyModule } from "@/components/shared/empty-module";
+import { CalendarPage } from "@/components/calendar/calendar-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
 const role = Astro.locals.activeMembership?.role ?? "member";
@@ -10,15 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Calendar">
-  <EmptyModule
-    icon="calendar"
-    title="Calendar"
-    description="Every session on a month and a week view, with the schedules that generate them."
-    phase={4}
-    bullets={[
-      "Month and week views across all groups.",
-      "Click a day to create a session there.",
-      "Public holidays and closures, so a schedule skips them.",
-    ]}
-  />
+  <CalendarPage client:load />
 </DashboardLayout>
