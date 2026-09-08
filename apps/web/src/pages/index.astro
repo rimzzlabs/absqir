@@ -10,7 +10,12 @@ const isMember = activeMembership?.role === "member";
 <DashboardLayout title="Home">
   {
     isMember ? (
-      <MemberHomePage client:load userName={user?.name ?? ""} />
+      <MemberHomePage
+        client:load
+        userName={user?.name ?? ""}
+        organizationName={activeMembership?.name ?? ""}
+        timezone={user?.timezone ?? null}
+      />
     ) : (
       <HomePage client:load userName={user?.name ?? ""} />
     )

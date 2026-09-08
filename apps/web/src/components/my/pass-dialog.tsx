@@ -16,7 +16,7 @@ export interface PassDialogProps {
   onClose: () => void;
 }
 
-/** The member's own QR code for one session, to show at the door. */
+/** The member's own QR code for one event, to show at the door. */
 export function PassDialog(props: PassDialogProps) {
   const pass = useMyPass(props.sessionId);
 

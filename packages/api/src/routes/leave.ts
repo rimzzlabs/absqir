@@ -1,7 +1,8 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
+import { decodeCursor, pageOf } from "@/lib/cursor";
 import { deliver } from "@/lib/notifications";
 import { notifyLeaveDecided, notifyLeaveRequested } from "@/lib/notify";
 import { organizationGuard, organizationIdOf, roleBelow } from "@/lib/org-access";
@@ -28,8 +29,17 @@ const leaveSchema = z.object({
   createdAt: z.string(),
 });
 
+const leavePage = z.object({
+  items: z.array(leaveSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+});
+
 const errorSchema = z.object({ error: z.string() });
 const idParam = z.object({ id: z.string() });
+
+const PAGE_SIZE = 12;
+const MAX_PAGE_SIZE = 50;
 
 const unauthorized = {
   description: "No active session",
@@ -48,11 +58,20 @@ const mineRoute = createRoute({
   method: "get",
   path: "/my/leave",
   tags: ["leave"],
-  summary: "My leave requests, newest first",
+  summary: "My leave requests, newest first, one page at a time",
+  description:
+    "`pending` waits for a decision, `decided` has one. The page walks the (created_at, id) index, not an offset.",
+  request: {
+    query: z.object({
+      status: z.enum(["pending", "decided", "all"]).optional(),
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    }),
+  },
   responses: {
     200: {
-      description: "Requests",
-      content: { "application/json": { schema: z.array(leaveSchema) } },
+      description: "One page of requests",
+      content: { "application/json": { schema: leavePage } },
     },
     401: unauthorized,
     403: forbidden,
@@ -185,9 +204,23 @@ base.use("/my/leave/*", organizationGuard());
 base.use("/leave", organizationGuard());
 base.use("/leave/*", organizationGuard());
 
+/** Postgres keeps microseconds, so the cursor carries the column as text. */
+const createdAtText = sql<string>`${leaveRequest.createdAt}::text`;
+
+const byScope = {
+  pending: eq(leaveRequest.status, "pending"),
+  decided: ne(leaveRequest.status, "pending"),
+  all: undefined,
+};
+
 function rows(c: Context<AppEnv>) {
   return c.var.db
-    .select({ request: leaveRequest, session: attendanceSession, personName: person.name })
+    .select({
+      request: leaveRequest,
+      session: attendanceSession,
+      personName: person.name,
+      at: createdAtText,
+    })
     .from(leaveRequest)
     .innerJoin(attendanceSession, eq(attendanceSession.id, leaveRequest.sessionId))
     .innerJoin(person, eq(person.id, leaveRequest.personId));
@@ -202,11 +235,35 @@ export const leaveRoutes = base
     const me = await personForUser(c.var.db, organizationId, user.id);
     if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
 
-    const list = await rows(c)
-      .where(and(eq(leaveRequest.organizationId, organizationId), eq(leaveRequest.personId, me.id)))
-      .orderBy(desc(leaveRequest.createdAt));
+    const query = c.req.valid("query");
+    const limit = query.limit ?? PAGE_SIZE;
+    const cursor = decodeCursor(query.cursor);
 
-    return c.json(list.map(toJson), 200);
+    const after = cursor
+      ? or(
+          lt(leaveRequest.createdAt, sql`${cursor.at}::timestamptz`),
+          and(
+            eq(leaveRequest.createdAt, sql`${cursor.at}::timestamptz`),
+            lt(leaveRequest.id, cursor.id),
+          ),
+        )
+      : undefined;
+
+    const list = await rows(c)
+      .where(
+        and(
+          eq(leaveRequest.organizationId, organizationId),
+          eq(leaveRequest.personId, me.id),
+          byScope[query.status ?? "all"],
+          after,
+        ),
+      )
+      .orderBy(desc(leaveRequest.createdAt), desc(leaveRequest.id))
+      .limit(limit + 1);
+
+    const page = pageOf(list, limit, (row) => ({ at: row.at, id: row.request.id }));
+
+    return c.json({ items: page.items.map(toJson), nextCursor: page.nextCursor }, 200);
   })
   .openapi(askRoute, async (c) => {
     const organizationId = organizationIdOf(c);
@@ -219,9 +276,9 @@ export const leaveRoutes = base
 
     const session = await findSession(c.var.db, organizationId, sessionId);
     if (!session) return c.json({ error: "Not found" }, 404);
-    if (statusOf(session) === "done") return c.json({ error: "This session is over." }, 409);
+    if (statusOf(session) === "done") return c.json({ error: "This event is over." }, 409);
     if (!(await isExpected(c.var.db, sessionId, me.id))) {
-      return c.json({ error: "You are not expected at this session." }, 409);
+      return c.json({ error: "You are not expected at this event." }, 409);
     }
 
     const existing = await c.var.db
@@ -230,7 +287,7 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.sessionId, sessionId), eq(leaveRequest.personId, me.id)))
       .limit(1);
     if (existing[0]) {
-      return c.json({ error: "You already asked for leave from this session." }, 409);
+      return c.json({ error: "You already asked for leave from this event." }, 409);
     }
 
     const id = crypto.randomUUID();
@@ -290,14 +347,8 @@ export const leaveRoutes = base
     const { status } = c.req.valid("query");
     const scope = status ?? "pending";
 
-    const byScope = {
-      pending: eq(leaveRequest.status, "pending"),
-      decided: ne(leaveRequest.status, "pending"),
-      all: undefined,
-    }[scope];
-
     const list = await rows(c)
-      .where(and(eq(leaveRequest.organizationId, organizationId), byScope))
+      .where(and(eq(leaveRequest.organizationId, organizationId), byScope[scope]))
       .orderBy(desc(leaveRequest.createdAt));
 
     return c.json(list.map(toJson), 200);

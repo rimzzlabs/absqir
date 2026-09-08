@@ -52,13 +52,13 @@ function Checklist(props: { organization: Organization }) {
     {
       done: counts.groups > 0,
       label: "Put them in groups",
-      hint: "Teams, divisions, cohorts. A session will invite a whole group at once.",
+      hint: "Teams, divisions, cohorts. An event will invite a whole group at once.",
       href: "/groups",
     },
     {
       done: counts.members > 1 || counts.pendingInvitations > 0,
       label: "Invite an organizer or two",
-      hint: "They run sessions and scan at the door. Admins also manage people.",
+      hint: "They run events and scan at the door. Admins also manage people.",
       href: "/settings",
     },
   ];
@@ -67,7 +67,7 @@ function Checklist(props: { organization: Organization }) {
     <Card>
       <CardHeader>
         <CardTitle>Set up {props.organization.name}</CardTitle>
-        <CardDescription>Three steps before the first session.</CardDescription>
+        <CardDescription>Three steps before the first event.</CardDescription>
       </CardHeader>
       <CardContent>
         <ol className="space-y-3">
@@ -101,11 +101,11 @@ function UpcomingSessions() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCodeIcon />
-          Next sessions
+          Next events
         </CardTitle>
         <CardDescription>
           {rows.length === 0
-            ? "Nothing is planned. Create a session, or a schedule that creates them for you."
+            ? "Nothing is planned. Create an event, or a schedule that creates them for you."
             : "Soonest first. Running ones accept check-ins now."}
         </CardDescription>
       </CardHeader>
@@ -133,7 +133,7 @@ function UpcomingSessions() {
         ) : null}
         <div className="flex gap-2">
           <a href="/sessions" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            All sessions
+            All events
           </a>
           <a href="/schedules" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             Schedules

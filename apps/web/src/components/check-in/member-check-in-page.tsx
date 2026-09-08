@@ -151,6 +151,7 @@ function PassRow(props: { session: MySession; onPass: (id: string) => void }) {
 
 function Passes() {
   const sessions = useMySessions();
+  const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
   const [passFor, setPassFor] = useState<string | null>(null);
 
   return (
@@ -158,7 +159,7 @@ function Passes() {
       <CardHeader>
         <CardTitle>Show my pass</CardTitle>
         <CardDescription>
-          When the organizer scans instead, show them this. One pass per session.
+          When the organizer scans instead, show them this. One pass per event.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -167,7 +168,7 @@ function Passes() {
           .with({ isError: true, error: P.select() }, (error) => (
             <p className="text-destructive text-sm">{error.message}</p>
           ))
-          .with({ data: P.select(P.nonNullable) }, (rows) => {
+          .with({ data: P.nonNullable }, () => {
             const running = rows.filter((row) => row.status === "running");
             const next = rows.find((row) => row.status === "scheduled");
 

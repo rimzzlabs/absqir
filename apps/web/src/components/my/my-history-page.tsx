@@ -27,7 +27,7 @@ function Summary(props: { rows: HistoryRow[] }) {
       </Card>
       <Card size="sm">
         <CardHeader>
-          <CardDescription>Sessions</CardDescription>
+          <CardDescription>Events</CardDescription>
           <CardTitle className="text-2xl tabular-nums">{total}</CardTitle>
         </CardHeader>
       </Card>
@@ -48,7 +48,7 @@ function HistoryBody() {
     <>
       <PageHeader
         title="History"
-        description="Your own record, session by session. Nobody else in the organization sees this page."
+        description="Your own record, event by event. Nobody else in the organization sees this page."
       />
 
       {match(history)
@@ -62,7 +62,7 @@ function HistoryBody() {
                   <ClockCounterClockwiseIcon />
                 </EmptyMedia>
                 <EmptyTitle>No record yet</EmptyTitle>
-                <EmptyDescription>Your first closed session shows up here.</EmptyDescription>
+                <EmptyDescription>Your first closed event shows up here.</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
@@ -72,7 +72,7 @@ function HistoryBody() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Session</TableHead>
+                      <TableHead>Event</TableHead>
                       <TableHead>When</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Checked in</TableHead>

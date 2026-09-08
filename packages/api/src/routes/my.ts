@@ -1,14 +1,23 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { createPass } from "@/lib/member-pass";
 import { organizationGuard, organizationIdOf } from "@/lib/org-access";
 import { statusOf } from "@/lib/session-status";
-import { findSession, isPast, personForUser, settle, toSessionJson } from "@/lib/sessions";
+import {
+  findSession,
+  isPast,
+  listSessions,
+  personForUser,
+  settle,
+  toSessionJson,
+} from "@/lib/sessions";
 import type { AppEnv } from "@/types";
 
-const { attendanceSession, sessionGroup, sessionRegistration, groupMember, attendanceRecord } =
-  schema;
+const { attendanceSession, attendanceRecord } = schema;
+
+const PAGE_SIZE = 12;
+const MAX_PAGE_SIZE = 50;
 
 const attendanceEnum = z.enum(["present", "late", "excused", "absent"]);
 
@@ -43,6 +52,12 @@ const historySchema = z.object({
   note: z.string().nullable(),
 });
 
+const mySessionPage = z.object({
+  items: z.array(mySessionSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+});
+
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
@@ -58,11 +73,20 @@ const sessionsRoute = createRoute({
   method: "get",
   path: "/my/sessions",
   tags: ["me"],
-  summary: "The sessions that expect me, from yesterday on",
+  summary: "The sessions that expect me, one page at a time",
+  description:
+    "Through a group or a registration. `upcoming` runs soonest first, `past` newest first. The page walks the (starts_at, id) index, not an offset.",
+  request: {
+    query: z.object({
+      scope: z.enum(["upcoming", "past"]).optional(),
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    }),
+  },
   responses: {
     200: {
-      description: "Soonest first",
-      content: { "application/json": { schema: z.array(mySessionSchema) } },
+      description: "One page of sessions with my record on each",
+      content: { "application/json": { schema: mySessionPage } },
     },
     401: unauthorized,
     403: forbidden,
@@ -108,7 +132,6 @@ const historyRoute = createRoute({
   },
 });
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const HISTORY_LIMIT = 200;
 
 const app = new OpenAPIHono<AppEnv>();
@@ -125,44 +148,19 @@ export const myRoutes = app
     const me = await personForUser(c.var.db, organizationId, user.id);
     if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
 
+    const query = c.req.valid("query");
     const now = new Date();
     await settle(c.var.db, organizationId, now);
 
-    const since = new Date(now.getTime() - DAY_MS);
-
-    // Expected through a group, or registered on the public page.
-    const [fromGroups, fromRegistrations] = await Promise.all([
-      c.var.db
-        .selectDistinct({ session: attendanceSession })
-        .from(attendanceSession)
-        .innerJoin(sessionGroup, eq(sessionGroup.sessionId, attendanceSession.id))
-        .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-        .where(
-          and(
-            eq(attendanceSession.organizationId, organizationId),
-            eq(groupMember.personId, me.id),
-            gte(attendanceSession.endsAt, since),
-          ),
-        ),
-      c.var.db
-        .select({ session: attendanceSession })
-        .from(attendanceSession)
-        .innerJoin(sessionRegistration, eq(sessionRegistration.sessionId, attendanceSession.id))
-        .where(
-          and(
-            eq(attendanceSession.organizationId, organizationId),
-            eq(sessionRegistration.personId, me.id),
-            gte(attendanceSession.endsAt, since),
-          ),
-        ),
-    ]);
-
-    const seen = new Set<string>();
-    const sessions = [...fromGroups, ...fromRegistrations]
-      .map((row) => row.session)
-      .filter((row) => (seen.has(row.id) ? false : seen.add(row.id)))
-      .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-    const ids = sessions.map((row) => row.id);
+    const page = await listSessions(c.var.db, {
+      organizationId,
+      scope: query.scope ?? "upcoming",
+      expectedPersonId: me.id,
+      cursor: query.cursor,
+      limit: query.limit ?? PAGE_SIZE,
+      now,
+    });
+    const ids = page.items.map((row) => row.id);
 
     const records = ids.length
       ? await c.var.db
@@ -174,31 +172,34 @@ export const myRoutes = app
       : [];
     const byId = new Map(records.map((row) => [row.sessionId, row]));
 
-    const json = await toSessionJson(c.var.db, sessions, now);
+    const json = await toSessionJson(c.var.db, page.items, now);
 
     return c.json(
-      json.map((row) => {
-        const record = byId.get(row.id);
+      {
+        items: json.map((row) => {
+          const record = byId.get(row.id);
 
-        return {
-          id: row.id,
-          title: row.title,
-          description: row.description,
-          startsAt: row.startsAt,
-          endsAt: row.endsAt,
-          lateAfterMinutes: row.lateAfterMinutes,
-          opensBeforeMinutes: row.opensBeforeMinutes,
-          status: row.status,
-          groups: row.groups,
-          record: record
-            ? {
-                status: record.status,
-                checkedInAt: record.checkedInAt?.toISOString() ?? null,
-                method: record.method,
-              }
-            : null,
-        };
-      }),
+          return {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            startsAt: row.startsAt,
+            endsAt: row.endsAt,
+            lateAfterMinutes: row.lateAfterMinutes,
+            opensBeforeMinutes: row.opensBeforeMinutes,
+            status: row.status,
+            groups: row.groups,
+            record: record
+              ? {
+                  status: record.status,
+                  checkedInAt: record.checkedInAt?.toISOString() ?? null,
+                  method: record.method,
+                }
+              : null,
+          };
+        }),
+        nextCursor: page.nextCursor,
+      },
       200,
     );
   })
@@ -213,7 +214,7 @@ export const myRoutes = app
 
     const found = await findSession(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
-    if (statusOf(found) === "done") return c.json({ error: "This session is over." }, 404);
+    if (statusOf(found) === "done") return c.json({ error: "This event is over." }, 404);
 
     const code = await createPass({ secret: found.secret, sessionId: id, personId: me.id });
 

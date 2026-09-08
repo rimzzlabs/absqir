@@ -1,5 +1,5 @@
 import { leaveKeys } from "@absqir/core/query-keys";
-import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
+import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 export type LeaveScope = "pending" | "decided" | "all";
@@ -22,17 +22,34 @@ export function useLeaveQueue(scope: LeaveScope = "pending") {
   });
 }
 
-/** The member's own requests. */
-export function useMyLeave() {
-  return useQuery({
-    queryKey: leaveKeys.mine(),
-    queryFn: async (ctx: QueryFunctionContext) => {
-      const response = await api.my.leave.$get(undefined, { init: { signal: ctx.signal } });
+export interface MyLeaveFilter {
+  scope: LeaveScope;
+  /** Rows per page. The server's default when absent. */
+  limit?: number;
+}
+
+/** The member's own requests, newest first, one page at a time. */
+export function useMyLeave(filter: MyLeaveFilter = { scope: "all" }) {
+  return useInfiniteQuery({
+    queryKey: leaveKeys.minePage(filter.scope, filter.limit ?? null),
+    initialPageParam: null as string | null,
+    queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
+      const response = await api.my.leave.$get(
+        {
+          query: {
+            status: filter.scope,
+            limit: filter.limit === undefined ? undefined : String(filter.limit),
+            cursor: ctx.pageParam ?? undefined,
+          },
+        },
+        { init: { signal: ctx.signal } },
+      );
 
       if (!response.ok) throw await apiError(response, "Could not load your leave requests.");
 
       return response.json();
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 }
 

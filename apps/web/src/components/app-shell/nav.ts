@@ -44,7 +44,7 @@ export const MANAGER_NAV: NavGroup[] = [
   {
     label: "Attendance",
     items: [
-      { href: "/sessions", label: "Sessions", icon: QrCodeIcon, minimum: "organizer" },
+      { href: "/sessions", label: "Events", icon: QrCodeIcon, minimum: "organizer" },
       { href: "/calendar", label: "Calendar", icon: CalendarBlankIcon, minimum: "organizer" },
       { href: "/schedules", label: "Schedules", icon: RepeatIcon, minimum: "organizer" },
     ],
@@ -69,6 +69,14 @@ export const MANAGER_NAV: NavGroup[] = [
   },
 ];
 
+/** A member's one action. It sits above the list, not in it. */
+export const CHECK_IN: NavItem = {
+  href: "/check-in",
+  label: "Check in",
+  icon: ScanIcon,
+  minimum: "member",
+};
+
 /** What a member sees. */
 export const MEMBER_NAV: NavGroup[] = [
   {
@@ -78,8 +86,7 @@ export const MEMBER_NAV: NavGroup[] = [
   {
     label: "Me",
     items: [
-      { href: "/check-in", label: "Check in", icon: ScanIcon, minimum: "member" },
-      { href: "/my/sessions", label: "My sessions", icon: QrCodeIcon, minimum: "member" },
+      { href: "/my/sessions", label: "My events", icon: QrCodeIcon, minimum: "member" },
       { href: "/my/history", label: "History", icon: ClockCounterClockwiseIcon, minimum: "member" },
       { href: "/my/leave", label: "My leave", icon: NotePencilIcon, minimum: "member" },
     ],

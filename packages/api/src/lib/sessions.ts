@@ -278,10 +278,33 @@ export interface ListSessionsParams {
   q?: string;
   /** Only sessions that expect this group. */
   groupId?: string;
+  /** Only sessions that expect this person, through a group or a registration. */
+  expectedPersonId?: string;
   /** Where the previous page ended, from the previous answer. */
   cursor?: string;
   limit: number;
   now?: Date;
+}
+
+/** The sessions one person is expected at: in one of their groups, or registered. */
+function expects(db: Database, personId: string) {
+  return or(
+    inArray(
+      attendanceSession.id,
+      db
+        .select({ id: sessionGroup.sessionId })
+        .from(sessionGroup)
+        .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
+        .where(eq(groupMember.personId, personId)),
+    ),
+    inArray(
+      attendanceSession.id,
+      db
+        .select({ id: sessionRegistration.sessionId })
+        .from(sessionRegistration)
+        .where(eq(sessionRegistration.personId, personId)),
+    ),
+  );
 }
 
 /** A session belongs to the past once it closed, by hand or by the clock. */
@@ -333,6 +356,7 @@ export async function listSessions(db: Database, params: ListSessionsParams) {
                 .where(eq(sessionGroup.groupId, params.groupId)),
             )
           : undefined,
+        params.expectedPersonId ? expects(db, params.expectedPersonId) : undefined,
         after,
       ),
     )

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export interface PageHeaderProps {
   title: string;
-  description?: string;
+  description?: ReactNode;
   /** Buttons that act on the whole page. */
   actions?: ReactNode;
 }

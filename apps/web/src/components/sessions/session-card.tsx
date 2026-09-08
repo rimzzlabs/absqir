@@ -23,12 +23,12 @@ function Counts(props: { session: Session }) {
   );
 }
 
-/** One session as a card. The whole card is the link. */
+/** One event as a card. The whole card is the link. */
 export function SessionCard(props: { session: Session }) {
   const { session } = props;
   const startsAt = new Date(session.startsAt);
   const endsAt = new Date(session.endsAt);
-  const sameDay = startsAt.toDateString() === endsAt.toDateString();
+  const sameDay = formatDate(startsAt, "iso") === formatDate(endsAt, "iso");
 
   return (
     <li className="min-w-0">
@@ -47,7 +47,7 @@ export function SessionCard(props: { session: Session }) {
         <div className="min-w-0">
           <p className="line-clamp-2 text-sm font-medium leading-snug">{session.title}</p>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            {formatDate(startsAt, "weekdayDateTime").replace(/, .*$/, "")}
+            {formatDate(startsAt, "weekdayDate")}
           </p>
         </div>
 
