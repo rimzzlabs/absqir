@@ -1,4 +1,4 @@
-import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@absqir/db/schema";
+import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@absqir/core/notification-channel";
 import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";

@@ -1,4 +1,4 @@
-import type { NotificationChannel } from "@absqir/db/schema";
+import type { NotificationChannel } from "@absqir/core/notification-channel";
 import { Reveal } from "@absqir/ui/reveal";
 import {
   BellIcon,

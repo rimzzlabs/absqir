@@ -36,17 +36,14 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-/**
- * Where a person wants to be told. `all` is the app and email, `none` is
- * silence. The choice lives on the account and copies onto every
- * notification at write time, so a later change never rewrites history.
- */
-export const NOTIFICATION_CHANNELS = ["all", "in-app", "email", "none"] as const;
-export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+import type { NotificationChannel } from "@absqir/core/notification-channel";
 
-export function isNotificationChannel(value: unknown): value is NotificationChannel {
-  return typeof value === "string" && (NOTIFICATION_CHANNELS as readonly string[]).includes(value);
-}
+// The channel list lives in core so a browser island can import it without drizzle.
+export {
+  isNotificationChannel,
+  NOTIFICATION_CHANNELS,
+  type NotificationChannel,
+} from "@absqir/core/notification-channel";
 
 export const LEAVE_STATUSES = ["pending", "approved", "declined"] as const;
 export type LeaveStatus = (typeof LEAVE_STATUSES)[number];

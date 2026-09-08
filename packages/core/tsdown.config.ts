@@ -8,6 +8,7 @@ export default defineConfig({
     "src/query-keys.ts",
     "src/user-agent.ts",
     "src/check-in-link.ts",
+    "src/notification-channel.ts",
   ],
   format: "esm",
   platform: "neutral",

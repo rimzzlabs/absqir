@@ -20,11 +20,11 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@absqir/core": "workspace:^",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.23.0"
   },
   "devDependencies": {
-    "@absqir/core": "workspace:^",
     "@absqir/config": "workspace:^",
     "@t3-oss/env-core": "^0.13.11",
     "@types/pg": "^8.23.1",

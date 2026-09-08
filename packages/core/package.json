@@ -9,7 +9,8 @@
     "./date": "./dist/date.js",
     "./query-keys": "./dist/query-keys.js",
     "./user-agent": "./dist/user-agent.js",
-    "./check-in-link": "./dist/check-in-link.js"
+    "./check-in-link": "./dist/check-in-link.js",
+    "./notification-channel": "./dist/notification-channel.js"
   },
   "scripts": {
     "build": "tsdown",
