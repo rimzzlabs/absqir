@@ -10,6 +10,7 @@ import {
   PlusIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
+import { parseAsString, useQueryState } from "nuqs";
 import { useDeferredValue, useState } from "react";
 import { match, P } from "ts-pattern";
 import { ImportDialog } from "@/components/people/import-dialog";
@@ -101,7 +102,7 @@ function PeopleTable(props: { rows: Person[]; canManage: boolean }) {
 }
 
 function PeopleBody(props: PeoplePageProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useQueryState("q", parseAsString.withDefault(""));
   const deferred = useDeferredValue(query.trim());
   const people = usePeople(deferred);
   const [adding, setAdding] = useState(false);
@@ -137,7 +138,7 @@ function PeopleBody(props: PeoplePageProps) {
           aria-label="Search people"
           className="pl-8"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => void setQuery(event.target.value || null)}
         />
       </div>
 

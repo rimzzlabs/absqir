@@ -13,6 +13,7 @@ import { Button } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
+import { parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { type CalendarEntry, entriesByDay } from "@/components/calendar/calendar-entries";
@@ -22,6 +23,7 @@ import { Providers } from "@/components/providers";
 import { SessionDialog } from "@/components/sessions/session-dialog";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { parseAsLocalDate } from "@/lib/url-state";
 import { useCalendar } from "@/queries/use-calendar";
 
 type CalendarView = "month" | "week";
@@ -53,9 +55,23 @@ function headerLabel(view: CalendarView, cursor: Date): string {
   return `${from.toLocaleDateString(undefined, { day: "numeric", month: "short" })} to ${to.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
 }
 
+const PARAMS = {
+  view: parseAsStringLiteral(["month", "week"] as const satisfies CalendarView[]).withDefault(
+    "month",
+  ),
+  date: parseAsLocalDate,
+};
+
+function today() {
+  return startOfDay(new Date());
+}
+
 function CalendarBody() {
-  const [view, setView] = useState<CalendarView>("month");
-  const [cursor, setCursor] = useState(() => new Date());
+  const [params, setParams] = useQueryStates(PARAMS);
+  const view = params.view;
+  const cursor = params.date ?? today();
+  const setView = (next: CalendarView) => void setParams({ view: next });
+  const setCursor = (next: Date) => void setParams({ date: next });
   const [openDay, setOpenDay] = useState<Date | null>(null);
   const [newSessionDay, setNewSessionDay] = useState<Date | null>(null);
 
@@ -73,9 +89,7 @@ function CalendarBody() {
   );
 
   const step = (direction: 1 | -1) => {
-    setCursor((current) =>
-      view === "month" ? addMonths(current, direction) : addDays(current, direction * 7),
-    );
+    setCursor(view === "month" ? addMonths(cursor, direction) : addDays(cursor, direction * 7));
   };
 
   const openEntry = (entry: CalendarEntry) => {

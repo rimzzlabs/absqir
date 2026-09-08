@@ -113,6 +113,9 @@ importers:
       jsqr:
         specifier: ^1.4.0
         version: 1.4.0
+      nuqs:
+        specifier: 2.10.1
+        version: 2.10.1(next@16.3.0(@babel/core@7.29.7)(@types/node@26.5.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-router@7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4

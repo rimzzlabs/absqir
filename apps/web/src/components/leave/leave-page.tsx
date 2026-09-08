@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NotePencilIcon } from "@phosphor-icons/react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
@@ -194,8 +195,16 @@ function Queue(props: {
   );
 }
 
+/** The two tabs. The API also knows "all", which the queue never asks for. */
+type QueueScope = Extract<LeaveScope, "pending" | "decided">;
+
+const SCOPE = parseAsStringLiteral([
+  "pending",
+  "decided",
+] as const satisfies QueueScope[]).withDefault("pending");
+
 function LeaveBody() {
-  const [scope, setScope] = useState<LeaveScope>("pending");
+  const [scope, setScope] = useQueryState("status", SCOPE);
   const queue = useLeaveQueue(scope);
   const [pending, setPending] = useState<Decision>(null);
 
@@ -206,7 +215,7 @@ function LeaveBody() {
         description="A member asks to be excused before a session. Approve, and the record shows excused instead of absent."
       />
 
-      <Tabs value={scope} onValueChange={(value) => setScope(value as LeaveScope)}>
+      <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>
         <TabsList>
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="decided">Decided</TabsTrigger>

@@ -5,6 +5,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@a
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { CaretRightIcon, PlusIcon, QrCodeIcon } from "@phosphor-icons/react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
@@ -88,8 +89,15 @@ function SessionList(props: { rows: Session[]; scope: SessionScope }) {
   );
 }
 
+/** The two tabs. The API also knows "all", which the list never asks for. */
+type ListScope = Extract<SessionScope, "upcoming" | "past">;
+
+const SCOPE = parseAsStringLiteral(["upcoming", "past"] as const satisfies ListScope[]).withDefault(
+  "upcoming",
+);
+
 function SessionsBody(props: SessionsPageProps) {
-  const [scope, setScope] = useState<SessionScope>("upcoming");
+  const [scope, setScope] = useQueryState("scope", SCOPE);
   const sessions = useSessions(scope);
   const [creating, setCreating] = useState(false);
   const canCreate = props.role !== "member";
@@ -109,7 +117,7 @@ function SessionsBody(props: SessionsPageProps) {
         }
       />
 
-      <Tabs value={scope} onValueChange={(value) => setScope(value as SessionScope)}>
+      <Tabs value={scope} onValueChange={(value) => void setScope(value as ListScope)}>
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="past">Past</TabsTrigger>

@@ -5,7 +5,7 @@ import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { BellIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { match, P } from "ts-pattern";
 import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
 import { Providers } from "@/components/providers";
@@ -85,8 +85,13 @@ function NothingHere(props: { scope: NotificationScope }) {
   );
 }
 
+const SCOPE = parseAsStringLiteral([
+  "all",
+  "unread",
+] as const satisfies NotificationScope[]).withDefault("all");
+
 function NotificationsBody() {
-  const [scope, setScope] = useState<NotificationScope>("all");
+  const [scope, setScope] = useQueryState("scope", SCOPE);
   const notifications = useNotifications(scope);
   const markRead = useMarkRead();
 
@@ -111,7 +116,7 @@ function NotificationsBody() {
         }
       />
 
-      <Tabs value={scope} onValueChange={(value) => setScope(value as NotificationScope)}>
+      <Tabs value={scope} onValueChange={(value) => void setScope(value as NotificationScope)}>
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="unread">Unread</TabsTrigger>
