@@ -78,9 +78,9 @@ export const MEMBER_NAV: NavGroup[] = [
   },
 ];
 
-/** Pinned to the bottom for everyone who qualifies. Notifications live in the header bell. */
+/** Pinned to the bottom. Settings holds the account and preferences for everyone. */
 export const FOOTER_NAV: NavItem[] = [
-  { href: "/settings", label: "Settings", icon: GearIcon, minimum: "admin" },
+  { href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" },
 ];
 
 export function navFor(role: RoleName): NavGroup[] {

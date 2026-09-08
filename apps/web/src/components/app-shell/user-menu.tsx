@@ -42,7 +42,7 @@ export function UserMenu(props: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<a href="/account" />}>
+          <DropdownMenuItem render={<a href="/settings?tab=account" />}>
             <UserCircleIcon />
             Account
           </DropdownMenuItem>

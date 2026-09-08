@@ -144,14 +144,28 @@
  * ones Base UI and tw-animate-css drive through data attributes.
  */
 /* biome-ignore-start lint/complexity/noImportantStyles: an accessibility override has to beat utility classes and third-party keyframes */
+/*
+ * Animation off: the operating system asks for it, unless the reader chose
+ * "on" in preferences (html.motion-on); or the reader chose "off"
+ * (html.motion-off) whatever the system says.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not(.motion-on) *,
+  html:not(.motion-on) *::before,
+  html:not(.motion-on) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+html.motion-off *,
+html.motion-off *::before,
+html.motion-off *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: end of the reduced motion override */

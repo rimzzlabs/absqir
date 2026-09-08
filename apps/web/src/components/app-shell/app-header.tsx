@@ -3,7 +3,6 @@ import { SidebarTrigger } from "@absqir/ui/sidebar";
 import type { ShellUser } from "@/components/app-shell/app-shell";
 import { NotificationBell } from "@/components/app-shell/notification-bell";
 import { UserMenu } from "@/components/app-shell/user-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export interface AppHeaderProps {
   title: string;
@@ -18,7 +17,6 @@ export function AppHeader(props: AppHeaderProps) {
       <p className="text-sm font-medium">{props.title}</p>
       <div className="ml-auto flex items-center gap-1">
         <NotificationBell />
-        <ThemeToggle />
         <UserMenu user={props.user} />
       </div>
     </header>

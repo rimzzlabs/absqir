@@ -35,6 +35,12 @@ const { title } = Astro.props;
         const apply = (dark) => root.classList.toggle("dark", dark);
         const stored = storedTheme();
         apply(stored ? stored === "dark" : media.matches);
+        // The animation choice from preferences, same idea.
+        try {
+          const motion = localStorage.getItem("motion");
+          root.classList.toggle("motion-on", motion === "on");
+          root.classList.toggle("motion-off", motion === "off");
+        } catch {}
         // Follow the device while the user has no explicit choice.
         media.addEventListener("change", (event) => {
           if (storedTheme() === null) apply(event.matches);

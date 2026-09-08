@@ -2,10 +2,11 @@
 import { SettingsPage } from "@/components/settings/settings-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
+// Everyone has an account and preferences here. The organization tabs show
+// for owners and admins only; the page decides from the role.
 const { user, activeMembership } = Astro.locals;
-const role = activeMembership?.role ?? "member";
 
-if (!user || !activeMembership || (role !== "owner" && role !== "admin")) {
+if (!user || !activeMembership) {
   return Astro.redirect("/", 302);
 }
 
@@ -14,8 +15,16 @@ const organization = {
   name: activeMembership.name,
   slug: activeMembership.slug,
 };
+
+const shellUser = { name: user.name, email: user.email, image: user.image ?? null };
 ---
 
 <DashboardLayout title="Settings">
-  <SettingsPage client:load role={role} organization={organization} currentUserId={user.id} />
+  <SettingsPage
+    client:load
+    role={activeMembership.role}
+    organization={organization}
+    currentUserId={user.id}
+    user={shellUser}
+  />
 </DashboardLayout>
