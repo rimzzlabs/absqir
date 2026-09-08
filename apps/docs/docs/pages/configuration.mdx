@@ -13,6 +13,7 @@ with `absqir up`.
 | `PORT`               | `4321`                           | The published port on the host machine.                                                                                          |
 | `SECURE_COOKIES`     | `false`                          | Marks cookies `Secure`. Set to `true` behind HTTPS. Over plain http the browser drops Secure cookies and sign-in fails silently. |
 | `REGISTRATION_OPEN`  | `false`                          | Lets any email register and create organizations. Off means invitations only, plus the first account.                            |
+| `APP_URL`            | `http://localhost:4321`          | Where this instance answers. Links in a reminder email point here, so set it to the address people type.                         |
 | `ABSQIR_TAG`         | `latest`                         | The image tag `absqir upgrade` pulls. Pin a version for reproducible deploys.                                                    |
 
 Two more variables exist on the container itself, outside `.env`:
@@ -21,6 +22,7 @@ Two more variables exist on the container itself, outside `.env`:
 | ----------------- | ------------ | ------------------------------------------------------------------------------------------------ |
 | `SKIP_MIGRATIONS` | `false`      | Skips the automatic migrations on start. Use with `absqir migrate` when you want manual control. |
 | `ENVIRONMENT`     | `production` | Turns on HSTS, hides the API docs page, and requires `RESEND_API_KEY`.                           |
+| `CRON_SECRET`     | empty        | Turns on `POST /api/tick` for a scheduler outside the app. See [the heartbeat](/notifications#the-heartbeat). Docker and Node run the same work on a timer, so a self-host can leave it empty. |
 
 ## Email in development
 

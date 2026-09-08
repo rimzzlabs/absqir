@@ -14,12 +14,14 @@ import { healthRoutes } from "@/routes/health";
 import { leaveRoutes } from "@/routes/leave";
 import { meRoutes } from "@/routes/me";
 import { myRoutes } from "@/routes/my";
+import { notificationRoutes } from "@/routes/notifications";
 import { onboardingRoutes } from "@/routes/onboarding";
 import { organizationRoutes } from "@/routes/organizations";
 import { peopleRoutes } from "@/routes/people";
 import { reportRoutes } from "@/routes/reports";
 import { scheduleRoutes } from "@/routes/schedules";
 import { sessionRoutes } from "@/routes/sessions";
+import { tickRoutes } from "@/routes/tick";
 import type { AppEnv } from "@/types";
 
 const app = new OpenAPIHono<AppEnv>({
@@ -53,7 +55,9 @@ const routes = app
   .route("/", eventRoutes)
   .route("/", leaveRoutes)
   .route("/", reportRoutes)
-  .route("/", calendarRoutes);
+  .route("/", calendarRoutes)
+  .route("/", notificationRoutes)
+  .route("/", tickRoutes);
 
 mountDocs(app);
 

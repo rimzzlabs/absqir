@@ -35,6 +35,7 @@ services:
       REGISTRATION_OPEN: \${REGISTRATION_OPEN:-false}
       RESEND_API_KEY: \${RESEND_API_KEY:?Set RESEND_API_KEY in .env, sign-up codes travel by email}
       EMAIL_FROM: \${EMAIL_FROM:-absqir <onboarding@resend.dev>}
+      APP_URL: \${APP_URL:-http://localhost:4321}
       ENVIRONMENT: production
 
 volumes:
@@ -63,6 +64,10 @@ EMAIL_FROM="absqir <onboarding@resend.dev>"
 # account and accounts promoted with \`absqir admin promote\` can. Joining
 # through an invitation never needs this.
 REGISTRATION_OPEN="false"
+
+# Where this instance answers. Links in a reminder email point here, so set
+# it to the address people type, with the scheme.
+APP_URL="http://localhost:4321"
 
 # Image tag to run. \`absqir upgrade\` pulls this tag again.
 ABSQIR_TAG="latest"

@@ -29,4 +29,6 @@ export interface ApiBindings {
   ENABLE_DOCS?: string;
   REGISTRATION_OPEN?: string;
   SECURE_COOKIES?: string;
+  CRON_SECRET?: string;
+  APP_URL?: string;
 }

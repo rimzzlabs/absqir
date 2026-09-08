@@ -27,6 +27,15 @@ export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 export const ATTENDANCE_METHODS = ["screen", "scanner", "manual", "auto"] as const;
 export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
 
+/** What a notification is about. The web app renders one icon per type. */
+export const NOTIFICATION_TYPES = [
+  "session-reminder",
+  "session-closed",
+  "leave-requested",
+  "leave-decided",
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
 export const LEAVE_STATUSES = ["pending", "approved", "declined"] as const;
 export type LeaveStatus = (typeof LEAVE_STATUSES)[number];
 
@@ -387,6 +396,42 @@ export const attendanceRecord = pgTable(
   (table) => [
     uniqueIndex("attendance_record_session_person_idx").on(table.sessionId, table.personId),
     index("attendance_record_person_idx").on(table.personId),
+  ],
+);
+
+/**
+ * Something that happened that concerns one person: a session starts soon,
+ * a leave request waits for a decision, a session closed. In-app always;
+ * email as well when the instance has a mailer.
+ */
+export const notification = pgTable(
+  "notification",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").$type<NotificationType>().notNull(),
+    title: text("title").notNull(),
+    body: text("body"),
+    /** Where the notification takes the reader. */
+    href: text("href"),
+    /**
+     * Makes a repeated write a no-op: a reminder is one row per person per
+     * session per kind, however often the tick runs.
+     */
+    dedupeKey: text("dedupe_key"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("notification_user_created_idx").on(table.userId, table.createdAt),
+    uniqueIndex("notification_user_dedupe_idx")
+      .on(table.userId, table.dedupeKey)
+      .where(sql`${table.dedupeKey} is not null`),
   ],
 );
 

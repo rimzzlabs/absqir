@@ -1,0 +1,62 @@
+# Notifications and reminders
+
+Everything that concerns a person lands in one list, at **Notifications**.
+The bell in the header says how many wait.
+
+## What absqir sends
+
+| Type              | Who gets it                    | When                                                    |
+| ----------------- | ------------------------------ | ------------------------------------------------------- |
+| Session reminder  | Everyone expected, with an account | The day before, and again within the hour before the start. |
+| Leave requested   | Organizers, admins, owners     | A member asks to be excused.                            |
+| Leave decided     | The member who asked           | An organizer approves or declines.                      |
+| Session closed    | Organizers, admins, owners     | A session closes, with the counts.                      |
+
+A person without an account gets nothing: a directory row on its own has
+nowhere to receive. A session created less than two hours before it starts
+sends the hour reminder only, never both at once.
+
+Each notification is written once. The row carries a key made of what it is
+about, so a heartbeat that runs every minute still sends one reminder, not
+sixty.
+
+## Email
+
+In-app is always on. Email goes out as well when the instance has a
+`RESEND_API_KEY`, for reminders, leave requests and leave decisions. A
+closing stays in the app, where the organizer is already looking.
+
+Set `APP_URL` to the address people type. Links in an email point there, and
+a reminder sent by the heartbeat has no request to read an origin from.
+
+## The heartbeat
+
+Three jobs run on the clock: schedules spawn their sessions, ended sessions
+close and write their absent rows, and reminders go out.
+
+Reading a page settles the organization it belongs to, so a small instance
+needs no cron at all. The heartbeat only makes the work eager, so a reminder
+arrives while nobody is looking.
+
+**Docker and Node.** The server runs the heartbeat itself, once a minute.
+Nothing to configure.
+
+**Cloudflare Workers.** A Worker holds no timer between requests, so an
+outside scheduler calls the endpoint. Set `CRON_SECRET` to a long random
+string, then call it:
+
+```bash
+curl -X POST https://absqir.example.com/api/tick \
+  -H "authorization: Bearer $CRON_SECRET" \
+  -H "content-type: application/json" \
+  -d '{}'
+```
+
+The `content-type` header matters: without it the site treats the call as a
+cross-site form post and refuses it. The route answers `404` while
+`CRON_SECRET` is unset, and `401` when the token is wrong. The answer says
+how many organizations it settled and how many notifications it wrote.
+
+Any scheduler works: a Cloudflare Cron Trigger, a cron entry on a server, a
+systemd timer. Once a minute is plenty; once every five minutes still puts
+the hour reminder inside its window.

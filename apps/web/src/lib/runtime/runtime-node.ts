@@ -1,4 +1,4 @@
-import type { ApiBindings, RateLimitBinding } from "@absqir/api";
+import { type ApiBindings, type RateLimitBinding, startTickerFor } from "@absqir/api";
 import { createDb } from "@absqir/db";
 import type { AppRuntime } from "@/lib/runtime/runtime-types";
 
@@ -75,6 +75,8 @@ export function getRuntime(_locals: App.Locals): AppRuntime {
     ENABLE_DOCS: process.env.ENABLE_DOCS,
     REGISTRATION_OPEN: process.env.REGISTRATION_OPEN,
     SECURE_COOKIES: process.env.SECURE_COOKIES,
+    CRON_SECRET: process.env.CRON_SECRET,
+    APP_URL: process.env.APP_URL,
   };
 
   const runtime: AppRuntime = {
@@ -89,6 +91,10 @@ export function getRuntime(_locals: App.Locals): AppRuntime {
   };
 
   cached = runtime;
+
+  // One process, one heartbeat: schedules spawn, ended sessions close, and
+  // reminders go out without anyone opening a page.
+  startTickerFor(bindings, db);
 
   return runtime;
 }

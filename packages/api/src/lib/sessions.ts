@@ -2,6 +2,8 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { AttendanceStatus } from "@absqir/db/schema";
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
+import { expectedPersonIds, registeredPersonIds, type SessionRow } from "@/lib/expected";
+import { notifyDueReminders, notifySessionClosed } from "@/lib/notify";
 import { materializeSchedules } from "@/lib/schedule";
 import { needsFinalising, type SessionStatus, statusOf } from "@/lib/session-status";
 
@@ -15,8 +17,9 @@ const {
   attendanceRecord,
 } = schema;
 
-export type SessionRow = typeof attendanceSession.$inferSelect;
 export type RecordRow = typeof attendanceRecord.$inferSelect;
+
+export { expectedPersonIds, registeredPersonIds, type SessionRow };
 
 export interface SessionCounts {
   expected: number;
@@ -66,32 +69,6 @@ export async function findSession(db: Database, organizationId: string, id: stri
   return rows[0] ?? null;
 }
 
-/** Everyone in the session's groups, plus everyone who registered, once. */
-export async function expectedPersonIds(db: Database, sessionId: string): Promise<string[]> {
-  const [fromGroups, registered] = await Promise.all([
-    db
-      .selectDistinct({ personId: groupMember.personId })
-      .from(sessionGroup)
-      .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-      .where(eq(sessionGroup.sessionId, sessionId)),
-    db
-      .select({ personId: sessionRegistration.personId })
-      .from(sessionRegistration)
-      .where(eq(sessionRegistration.sessionId, sessionId)),
-  ]);
-
-  return [...new Set([...fromGroups, ...registered].map((row) => row.personId))];
-}
-
-export async function registeredPersonIds(db: Database, sessionId: string): Promise<string[]> {
-  const rows = await db
-    .select({ personId: sessionRegistration.personId })
-    .from(sessionRegistration)
-    .where(eq(sessionRegistration.sessionId, sessionId));
-
-  return rows.map((row) => row.personId);
-}
-
 /**
  * Writes the absent rows for everyone expected who never checked in, and
  * stamps closedAt. Idempotent. `at` is the close instant: the end time when
@@ -100,7 +77,7 @@ export async function registeredPersonIds(db: Database, sessionId: string): Prom
 export async function finalizeSession(db: Database, session: SessionRow, at: Date): Promise<void> {
   const expected = await expectedPersonIds(db, session.id);
 
-  await db.transaction(async (tx) => {
+  const closed = await db.transaction(async (tx) => {
     if (expected.length) {
       await tx
         .insert(attendanceRecord)
@@ -116,11 +93,26 @@ export async function finalizeSession(db: Database, session: SessionRow, at: Dat
         .onConflictDoNothing({ target: [attendanceRecord.sessionId, attendanceRecord.personId] });
     }
 
-    await tx
+    return tx
       .update(attendanceSession)
       .set({ closedAt: at, updatedAt: new Date() })
-      .where(and(eq(attendanceSession.id, session.id), isNull(attendanceSession.closedAt)));
+      .where(and(eq(attendanceSession.id, session.id), isNull(attendanceSession.closedAt)))
+      .returning({ id: attendanceSession.id });
   });
+
+  // Only the close that wins the race tells the organizers.
+  if (closed.length === 0) return;
+
+  const rows = await db
+    .select({ status: attendanceRecord.status, value: sql<number>`count(*)`.mapWith(Number) })
+    .from(attendanceRecord)
+    .where(eq(attendanceRecord.sessionId, session.id))
+    .groupBy(attendanceRecord.status);
+
+  const counts = { present: 0, late: 0, excused: 0, absent: 0 };
+  for (const row of rows) counts[row.status] = row.value;
+
+  await notifySessionClosed(db, session, counts);
 }
 
 /** Closes every session of the organization the clock has ended. */
@@ -145,10 +137,21 @@ export async function finalizeDueSessions(
   }
 }
 
-/** Keeps the organization's sessions honest before any read. */
+/**
+ * Keeps the organization's sessions honest before any read, and sends the
+ * reminders that fell due. A deployment without a cron still notifies,
+ * because somebody reads a page far more often than a session starts.
+ */
 export async function settle(db: Database, organizationId: string, now: Date = new Date()) {
   await materializeSchedules(db, organizationId, now);
   await finalizeDueSessions(db, organizationId, now);
+
+  try {
+    await notifyDueReminders(db, organizationId, now);
+  } catch (error) {
+    // A reminder is never worth failing the page the reader asked for.
+    console.error({ message: "reminders failed", organizationId, error });
+  }
 }
 
 async function groupsBySession(db: Database, sessionIds: string[]) {

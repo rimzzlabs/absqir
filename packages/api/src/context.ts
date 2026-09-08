@@ -1,14 +1,26 @@
 import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
-import { createMailer } from "@absqir/transactional";
+import { createMailer, type Mailer } from "@absqir/transactional";
 import type { ApiBindings } from "@/bindings";
-import { parseEnv, secureCookies } from "@/env";
+import { type ApiEnv, parseEnv, secureCookies } from "@/env";
 
 export interface RequestContext {
   db: Database;
   auth: Auth;
+  /** Null when the instance has no RESEND_API_KEY. Then nothing is emailed. */
+  mailer: Mailer | null;
   /** Pass to ctx.waitUntil so the pool is released after the response. */
   close: () => Promise<void>;
+}
+
+/**
+ * Outside production the mailer is optional: codes and links go to the
+ * server log instead, which is what a developer wants on a laptop.
+ */
+export function createMailerFor(env: ApiEnv): Mailer | null {
+  return env.RESEND_API_KEY
+    ? createMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
+    : null;
 }
 
 /**
@@ -23,11 +35,7 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     ? { db: bindings.SHARED_DB, close: async () => {} }
     : createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
 
-  // Outside production the mailer is optional: codes and links go to the
-  // server log instead, which is what a developer wants on a laptop.
-  const mailer = env.RESEND_API_KEY
-    ? createMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
-    : null;
+  const mailer = createMailerFor(env);
 
   const auth = createAuth({
     db,
@@ -66,5 +74,5 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     },
   });
 
-  return { db, auth, close };
+  return { db, auth, mailer, close };
 }

@@ -33,6 +33,8 @@ services:
       SECURE_COOKIES: ${SECURE_COOKIES:-false}
       # Sign-up closes after the first user unless this is true.
       REGISTRATION_OPEN: ${REGISTRATION_OPEN:-false}
+      # Where this instance answers. Links in a reminder email point here.
+      APP_URL: ${APP_URL:-http://localhost:4321}
       ENVIRONMENT: production
 
 volumes:

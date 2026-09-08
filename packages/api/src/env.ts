@@ -23,6 +23,16 @@ const schema = z
      * silently when the browser drops the cookie.
      */
     SECURE_COOKIES: z.stringbool().optional(),
+    /**
+     * Turns on POST /api/tick for a scheduler outside the app. Unset, the
+     * route answers 404 and only the in-process timer runs the heartbeat.
+     */
+    CRON_SECRET: z.string().min(16).optional(),
+    /**
+     * Where a link in an email points when no request supplies an origin,
+     * as in the heartbeat. Set it on every deployment that sends email.
+     */
+    APP_URL: z.url().optional(),
   })
   .check((ctx) => {
     if (ctx.value.ENVIRONMENT === "production" && !ctx.value.RESEND_API_KEY) {
@@ -46,6 +56,8 @@ function build(bindings: ApiBindings) {
       ENABLE_DOCS: bindings.ENABLE_DOCS,
       REGISTRATION_OPEN: bindings.REGISTRATION_OPEN,
       SECURE_COOKIES: bindings.SECURE_COOKIES,
+      CRON_SECRET: bindings.CRON_SECRET,
+      APP_URL: bindings.APP_URL,
     },
     emptyStringAsUndefined: true,
     createFinalSchema: () => schema,

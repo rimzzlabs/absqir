@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { InvitationEmail, type InvitationEmailProps } from "@/emails/invitation";
+import { NotificationEmail, type NotificationEmailProps } from "@/emails/notification";
 import { OtpEmail, type OtpEmailProps, type OtpEmailPurpose } from "@/emails/otp";
 
 export interface CreateMailerOptions {
@@ -36,6 +37,9 @@ export function createMailer(options: CreateMailerOptions) {
     sendInvitation(to: string, props: InvitationEmailProps) {
       return send(to, `Join ${props.organizationName} on absqir`, InvitationEmail(props));
     },
+    sendNotification(to: string, props: NotificationEmailProps) {
+      return send(to, props.title, NotificationEmail(props));
+    },
   };
 }
 
@@ -43,6 +47,8 @@ export type Mailer = ReturnType<typeof createMailer>;
 export {
   InvitationEmail,
   type InvitationEmailProps,
+  NotificationEmail,
+  type NotificationEmailProps,
   OtpEmail,
   type OtpEmailProps,
   type OtpEmailPurpose,

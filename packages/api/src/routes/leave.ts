@@ -2,6 +2,8 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, ne } from "drizzle-orm";
 import type { Context } from "hono";
+import { deliver } from "@/lib/notifications";
+import { notifyLeaveDecided, notifyLeaveRequested } from "@/lib/notify";
 import { organizationGuard, organizationIdOf, roleBelow } from "@/lib/org-access";
 import { statusOf } from "@/lib/session-status";
 import { findSession, isExpected, personForUser, upsertRecord } from "@/lib/sessions";
@@ -244,6 +246,17 @@ export const leaveRoutes = base
     const [created] = await rows(c).where(eq(leaveRequest.id, id)).limit(1);
     if (!created) throw new Error("Insert returned no row");
 
+    deliver(
+      c,
+      await notifyLeaveRequested(c.var.db, {
+        organizationId,
+        requestId: id,
+        personName: me.name,
+        sessionTitle: session.title,
+        reason,
+      }),
+    );
+
     return c.json(toJson(created), 201);
   })
   .openapi(withdrawRoute, async (c) => {
@@ -333,6 +346,24 @@ export const leaveRoutes = base
 
     const [updated] = await rows(c).where(eq(leaveRequest.id, id)).limit(1);
     if (!updated) throw new Error("Update returned no row");
+
+    const asker = await c.var.db
+      .select({ userId: person.userId })
+      .from(person)
+      .where(eq(person.id, row.request.personId))
+      .limit(1);
+
+    deliver(
+      c,
+      await notifyLeaveDecided(c.var.db, {
+        organizationId,
+        requestId: id,
+        userId: asker[0]?.userId ?? null,
+        sessionTitle: row.session.title,
+        decision,
+        note: note ?? null,
+      }),
+    );
 
     return c.json(toJson(updated), 200);
   });

@@ -1,0 +1,51 @@
+# Reports and calendar
+
+Two ways to look at what happened, and at what comes next.
+
+## Reports
+
+**Reports** counts the records of every session that starts inside a range.
+Pick a range with the presets or the two date fields, and narrow it to one
+group. The page then shows:
+
+- totals for the range: how many sessions, how many closed, how many people
+  turned up, and the split between present, late, excused and absent,
+- one row per person, per group, or per session, with the rate for each.
+
+Two rates appear:
+
+| Rate       | How it is counted                                                                |
+| ---------- | -------------------------------------------------------------------------------- |
+| Attendance | Present plus late, over everyone judged. An excused person is left out entirely. |
+| On time    | Present, over the people who turned up. It says how often somebody beat the late mark. |
+
+A dash means nothing was judged yet, so no rate exists. Excused never counts
+for the rate and never against it: leave is neither presence nor absence.
+
+Absent records are written when a session closes. A session that is still
+open therefore shows the people who arrived, and nobody as absent. The
+totals say how many sessions in the range have closed, so the numbers are
+easy to read.
+
+## CSV export
+
+**Download CSV** takes the table you are looking at, with the same range and
+the same group filter. The file holds the counts and the rates for every
+row. A single session also exports its own list from the session page.
+
+Each cell that starts with `=`, `+`, `-` or `@` is prefixed with an
+apostrophe, so a spreadsheet reads it as text and never as a formula.
+
+## Calendar
+
+**Calendar** puts every session on a month or a week grid, Monday first. A
+dot marks the status: grey for scheduled, green for running, faint for done.
+
+A schedule only creates sessions a fortnight ahead. Browsing a later month
+still shows what those rules will produce, marked with a repeat icon and
+greyed out. Nothing is written for a projection; it appears as a real
+session once the schedule reaches it.
+
+Click a day number to open that day in full, with counts and groups. Click
+the plus in a cell, or **New session on this day** in the panel, to create a
+session that starts at nine that morning.

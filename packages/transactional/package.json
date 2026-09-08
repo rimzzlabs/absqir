@@ -6,7 +6,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./emails/otp": "./dist/emails/otp.js",
-    "./emails/invitation": "./dist/emails/invitation.js"
+    "./emails/invitation": "./dist/emails/invitation.js",
+    "./emails/notification": "./dist/emails/notification.js"
   },
   "scripts": {
     "build": "tsdown",

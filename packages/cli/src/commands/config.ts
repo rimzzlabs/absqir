@@ -9,6 +9,7 @@ const ALLOWED_KEYS = new Set([
   "ABSQIR_TAG",
   "RESEND_API_KEY",
   "EMAIL_FROM",
+  "APP_URL",
 ]);
 
 const ENV_PATH = ".env";

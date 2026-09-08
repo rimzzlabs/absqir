@@ -17,6 +17,8 @@ export default defineConfig({
         { text: "Configuration", link: "/configuration" },
         { text: "Accounts and organizations", link: "/accounts" },
         { text: "Sessions and check-in", link: "/sessions" },
+        { text: "Reports and calendar", link: "/reports" },
+        { text: "Notifications and reminders", link: "/notifications" },
         { text: "Upgrades", link: "/upgrades" },
       ],
     },
