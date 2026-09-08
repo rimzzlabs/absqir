@@ -63,6 +63,30 @@ export function AttendanceStatusBadge(props: { status: AttendanceStatus | null }
   );
 }
 
+export type LeaveStatus = "pending" | "approved" | "declined";
+
+const LEAVE: Record<LeaveStatus, { label: string; className: string }> = {
+  pending: {
+    label: "Pending",
+    className: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  },
+  approved: {
+    label: "Approved",
+    className: "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  },
+  declined: { label: "Declined", className: "text-muted-foreground" },
+};
+
+export function LeaveStatusBadge(props: { status: LeaveStatus }) {
+  const item = LEAVE[props.status];
+
+  return (
+    <Badge variant="outline" className={cn(item.className)}>
+      {item.label}
+    </Badge>
+  );
+}
+
 export function attendanceLabel(status: AttendanceStatus): string {
   return ATTENDANCE[status].label;
 }

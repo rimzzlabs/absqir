@@ -49,6 +49,9 @@ function defaults(session: Session | null): SessionValues {
       lateAfterMinutes: String(session.lateAfterMinutes),
       opensBeforeMinutes: String(session.opensBeforeMinutes),
       allowWalkIns: session.allowWalkIns,
+      registrationOpen: session.registrationOpen,
+      registrationLimit:
+        session.registrationLimit === null ? "" : String(session.registrationLimit),
       groupIds: session.groups.map((group) => group.id),
     };
   }
@@ -63,6 +66,8 @@ function defaults(session: Session | null): SessionValues {
     lateAfterMinutes: "15",
     opensBeforeMinutes: "15",
     allowWalkIns: false,
+    registrationOpen: false,
+    registrationLimit: "",
     groupIds: [],
   };
 }
@@ -91,6 +96,11 @@ export function SessionDialog(props: SessionDialogProps) {
       lateAfterMinutes: Number(values.lateAfterMinutes),
       opensBeforeMinutes: Number(values.opensBeforeMinutes),
       allowWalkIns: values.allowWalkIns,
+      registrationOpen: values.registrationOpen,
+      registrationLimit:
+        values.registrationOpen && values.registrationLimit !== ""
+          ? Number(values.registrationLimit)
+          : null,
       groupIds: values.groupIds,
     };
 
@@ -195,6 +205,38 @@ export function SessionDialog(props: SessionDialogProps) {
                 Let members outside these groups check in too
               </Label>
             </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="session-registration"
+                checked={form.watch("registrationOpen")}
+                onCheckedChange={(checked) =>
+                  form.setValue("registrationOpen", checked === true, { shouldDirty: true })
+                }
+              />
+              <Label htmlFor="session-registration">
+                Open a public page where anyone can register
+              </Label>
+            </div>
+
+            {form.watch("registrationOpen") ? (
+              <FormField
+                control={form.control}
+                name="registrationLimit"
+                label="Seats"
+                description="Leave empty for no limit. Someone who registers joins as a member."
+                render={(field) => (
+                  <Input
+                    {...field}
+                    id="session-seats"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    placeholder="No limit"
+                  />
+                )}
+              />
+            ) : null}
 
             <FormField
               control={form.control}

@@ -21,12 +21,12 @@ a manual close, so no cron job is required.
 
 ## Statuses per person
 
-| Status    | How it happens                                                                |
-| --------- | ----------------------------------------------------------------------------- |
-| `present` | Checked in no later than `late after` minutes past the start.                 |
-| `late`    | Checked in after that, while the session still runs.                          |
-| `excused` | Set by an organizer by hand. Leave requests in the next phase set it as well. |
-| `absent`  | Written when the session closes, for everyone expected who never checked in.  |
+| Status    | How it happens                                                               |
+| --------- | ---------------------------------------------------------------------------- |
+| `present` | Checked in no later than `late after` minutes past the start.                |
+| `late`    | Checked in after that, while the session still runs.                         |
+| `excused` | Set by an organizer by hand, or written when a leave request is approved.    |
+| `absent`  | Written when the session closes, for everyone expected who never checked in. |
 
 An organizer can change any status by hand from the session page. The record
 remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
@@ -60,9 +60,48 @@ anyone lists them, so a fresh rule shows its first sessions at once. Editing
 a rule replaces the future sessions nobody has touched; the ones that ran
 stay as they were.
 
+## Public registration
+
+A session can open a public page. Tick **Open a public page where anyone
+can register** on the session, set a seat limit or leave it empty, and copy
+the link from the session page. The link looks like `/e/<session id>`.
+
+The page works signed out. It shows the title, the times, the organization,
+and how many seats are taken. A visitor who registers:
+
+- signs in, or creates an account with a code sent to their email,
+- joins the organization as a `member` if they are not one yet, with a
+  directory row,
+- lands on the session's list, so the session expects them like anyone in
+  a group.
+
+A stranger can create an account through this page even when
+`REGISTRATION_OPEN` is off. The page sets a short-lived cookie with the
+session id, and the sign-up door accepts a new email only while that cookie
+names a session that still takes people. A session takes people until it
+ends, or until an organizer unticks the box.
+
+A registered person can withdraw before the session opens. On the session
+page, registered people carry a **Registered** label. The expected count
+and the absent records at close include them.
+
+## Leave requests
+
+A member who cannot make a session asks for leave on **My leave** before
+the session ends: pick the session, give a reason, send. One request per
+session. A pending request can be withdrawn.
+
+Organizers, admins, and owners see the queue on **Leave requests**. An
+approval writes an `excused` record for that session with the note, so the
+close does not mark the person absent. A decline leaves the record as it
+is. Either way, the member sees the decision and the note on **My leave**.
+A decided request cannot be changed; an organizer who changes their mind
+sets the status by hand on the session page.
+
 ## For members
 
-**My sessions** lists what expects you, from yesterday on, with your record
-once you have one and your pass while the session runs. **History** lists
-every closed session with your status and an attendance rate. Nobody else
-in the organization sees your history page.
+**My sessions** lists what expects you, from yesterday on, whether through
+a group or a registration, with your record once you have one and your
+pass while the session runs. **History** lists every closed session with
+your status and an attendance rate. Nobody else in the organization sees
+your history page.

@@ -4,9 +4,13 @@ import { and, count, eq, gt } from "drizzle-orm";
 import { parseEnv } from "@/env";
 import type { AppEnv } from "@/types";
 
-const { user, account, invitation } = schema;
+const { user, account, invitation, attendanceSession } = schema;
 
-const lookupBody = z.object({ email: z.email().max(254) });
+const lookupBody = z.object({
+  email: z.email().max(254),
+  /** The open session whose public page sent the visitor here. */
+  eventId: z.string().max(64).optional(),
+});
 
 const lookupResult = z.object({
   /** An account with this email exists. */
@@ -34,7 +38,8 @@ const lookupRoute = createRoute({
 });
 
 export const authFlowRoutes = new OpenAPIHono<AppEnv>().openapi(lookupRoute, async (c) => {
-  const email = c.req.valid("json").email.trim().toLowerCase();
+  const body = c.req.valid("json");
+  const email = body.email.trim().toLowerCase();
   const db = c.var.db;
   const env = parseEnv(c.env);
 
@@ -59,6 +64,24 @@ export const authFlowRoutes = new OpenAPIHono<AppEnv>().openapi(lookupRoute, asy
 
   if ((total?.value ?? 0) === 0) {
     return c.json({ exists: false, hasPassword: false, canRegister: true }, 200);
+  }
+
+  if (body.eventId) {
+    const open = await db
+      .select({ id: attendanceSession.id })
+      .from(attendanceSession)
+      .where(
+        and(
+          eq(attendanceSession.id, body.eventId),
+          eq(attendanceSession.registrationOpen, true),
+          gt(attendanceSession.endsAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    if (open.length > 0) {
+      return c.json({ exists: false, hasPassword: false, canRegister: true }, 200);
+    }
   }
 
   const invited = await db

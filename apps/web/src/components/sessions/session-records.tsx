@@ -108,7 +108,11 @@ export function SessionRecords(props: SessionRecordsProps) {
                     <TableRow key={row.personId}>
                       <TableCell className="font-medium">
                         {row.name}
-                        {row.expected ? null : (
+                        {row.registered ? (
+                          <Badge variant="secondary" className="ml-2">
+                            Registered
+                          </Badge>
+                        ) : row.expected ? null : (
                           <Badge variant="secondary" className="ml-2">
                             Walk-in
                           </Badge>

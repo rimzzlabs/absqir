@@ -1,13 +1,21 @@
 ---
 import { AuthFlow } from "@/components/auth/auth-flow";
 import AuthLayout from "@/layouts/auth-layout.astro";
+import { setEventCookie } from "@/lib/event-cookie";
 
 const next = Astro.url.searchParams.get("next") ?? "/";
 // Only a path from this site, never an absolute URL a stranger supplied.
 const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
 const email = Astro.url.searchParams.get("email") ?? "";
+// The public event page sends its id along, so a stranger can create an
+// account through it. The cookie is what the sign-up door checks.
+const eventId = Astro.url.searchParams.get("event");
+
+if (eventId) {
+  setEventCookie(Astro.cookies, eventId);
+}
 ---
 
 <AuthLayout title="Sign in — absqir">
-  <AuthFlow client:load next={safeNext} initialEmail={email} />
+  <AuthFlow client:load next={safeNext} initialEmail={email} eventId={eventId} />
 </AuthLayout>

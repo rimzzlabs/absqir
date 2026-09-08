@@ -1,24 +1,14 @@
 ---
-import { EmptyModule } from "@/components/shared/empty-module";
+import { LeavePage } from "@/components/leave/leave-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
 const role = Astro.locals.activeMembership?.role ?? "member";
 
 if (role === "member") {
-  return Astro.redirect("/my/sessions", 302);
+  return Astro.redirect("/my/leave", 302);
 }
 ---
 
 <DashboardLayout title="Leave requests">
-  <EmptyModule
-    icon="leave"
-    title="Leave requests"
-    description="A member asks to be excused from a session. An admin decides. The record shows excused instead of absent."
-    phase={3}
-    bullets={[
-      "A queue of pending requests with the reason and the session.",
-      "Approve or decline with a note; the member is notified.",
-      "Admins can also mark someone excused without a request.",
-    ]}
-  />
+  <LeavePage client:load />
 </DashboardLayout>

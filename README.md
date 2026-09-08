@@ -1,10 +1,11 @@
 # absqir
 
 Open-source attendance for offices and communities. An organization keeps a
-directory of people and groups them into teams or cohorts. In the next
-phase, a session expects a group: the room shows a rotating QR screen, the
-door has a scanner, and whoever does not check in is marked absent. Everyone
-signs in through one door with an email address and a 6 digit code.
+directory of people and groups them into teams or cohorts. A session
+expects a group, or anyone who registered on its public page: the room
+shows a rotating QR screen, the door has a scanner, and whoever does not
+check in is marked absent unless their leave was approved. Everyone signs
+in through one door with an email address and a 6 digit code.
 
 ## Self-host
 
@@ -34,14 +35,15 @@ directory and the groups live inside them.
 
 ## Where the build stands
 
-Phases 1 and 2 of four are built. One-door sign-in with email codes,
+Phases 1 to 3 of four are built. One-door sign-in with email codes,
 onboarding, organizations and roles, the people directory with CSV import
-and invitations, groups, and now sessions: a start, an end, a late
-threshold, groups that are expected, a rotating QR room screen, a scanner
-for the door, per-person statuses, schedules that spawn sessions, and the
-member's own sessions and history. The dashboard shows every planned
-module; the ones that are not built yet say so and name the phase that
-brings them.
+and invitations, groups, sessions with a start, an end, a late threshold,
+groups that are expected, a rotating QR room screen, a scanner for the
+door, per-person statuses, schedules that spawn sessions, the member's own
+sessions and history, and now a public registration page per session that
+also creates accounts, plus leave requests that organizers approve or
+decline. The dashboard shows every planned module; the ones that are not
+built yet say so and name the phase that brings them.
 
 | Phase | Delivers                                                                    |
 | ----- | --------------------------------------------------------------------------- |

@@ -1,0 +1,338 @@
+import { schema } from "@absqir/db";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { and, desc, eq, ne } from "drizzle-orm";
+import type { Context } from "hono";
+import { organizationGuard, organizationIdOf, roleBelow } from "@/lib/org-access";
+import { statusOf } from "@/lib/session-status";
+import { findSession, isExpected, personForUser, upsertRecord } from "@/lib/sessions";
+import type { AppEnv } from "@/types";
+
+const { leaveRequest, attendanceSession, person } = schema;
+
+const leaveStatus = z.enum(["pending", "approved", "declined"]);
+
+const leaveSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  sessionTitle: z.string(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  personId: z.string(),
+  personName: z.string(),
+  reason: z.string(),
+  status: leaveStatus,
+  decisionNote: z.string().nullable(),
+  decidedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+const errorSchema = z.object({ error: z.string() });
+const idParam = z.object({ id: z.string() });
+
+const unauthorized = {
+  description: "No active session",
+  content: { "application/json": { schema: errorSchema } },
+} as const;
+const forbidden = {
+  description: "Not a member, not in the directory, or the role is too low",
+  content: { "application/json": { schema: errorSchema } },
+} as const;
+const notFound = {
+  description: "Not found",
+  content: { "application/json": { schema: errorSchema } },
+} as const;
+
+const mineRoute = createRoute({
+  method: "get",
+  path: "/my/leave",
+  tags: ["leave"],
+  summary: "My leave requests, newest first",
+  responses: {
+    200: {
+      description: "Requests",
+      content: { "application/json": { schema: z.array(leaveSchema) } },
+    },
+    401: unauthorized,
+    403: forbidden,
+  },
+});
+
+const askRoute = createRoute({
+  method: "post",
+  path: "/my/leave",
+  tags: ["leave"],
+  summary: "Ask to be excused from a session that expects me",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            sessionId: z.string().min(1),
+            reason: z.string().trim().min(1).max(500),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    201: { description: "The request", content: { "application/json": { schema: leaveSchema } } },
+    401: unauthorized,
+    403: forbidden,
+    404: notFound,
+    409: {
+      description: "The session is over, I am not expected, or a request exists",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const withdrawRoute = createRoute({
+  method: "delete",
+  path: "/my/leave/{id}",
+  tags: ["leave"],
+  summary: "Withdraw a pending request",
+  request: { params: idParam },
+  responses: {
+    200: {
+      description: "Gone",
+      content: { "application/json": { schema: z.object({ deleted: z.literal(true) }) } },
+    },
+    401: unauthorized,
+    403: forbidden,
+    404: notFound,
+    409: {
+      description: "Already decided",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const queueRoute = createRoute({
+  method: "get",
+  path: "/leave",
+  tags: ["leave"],
+  summary: "Leave requests of the organization",
+  request: { query: z.object({ status: z.enum(["pending", "decided", "all"]).optional() }) },
+  responses: {
+    200: {
+      description: "Requests",
+      content: { "application/json": { schema: z.array(leaveSchema) } },
+    },
+    401: unauthorized,
+    403: forbidden,
+  },
+});
+
+const decideRoute = createRoute({
+  method: "post",
+  path: "/leave/{id}/decide",
+  tags: ["leave"],
+  summary: "Approve or decline. An approval writes an excused record",
+  request: {
+    params: idParam,
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            decision: z.enum(["approved", "declined"]),
+            note: z.string().trim().max(500).nullable().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "The request", content: { "application/json": { schema: leaveSchema } } },
+    401: unauthorized,
+    403: forbidden,
+    404: notFound,
+    409: {
+      description: "Already decided",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+type Row = {
+  request: typeof leaveRequest.$inferSelect;
+  session: typeof attendanceSession.$inferSelect;
+  personName: string;
+};
+
+function toJson(row: Row) {
+  return {
+    id: row.request.id,
+    sessionId: row.session.id,
+    sessionTitle: row.session.title,
+    startsAt: row.session.startsAt.toISOString(),
+    endsAt: row.session.endsAt.toISOString(),
+    personId: row.request.personId,
+    personName: row.personName,
+    reason: row.request.reason,
+    status: row.request.status,
+    decisionNote: row.request.decisionNote ?? null,
+    decidedAt: row.request.decidedAt?.toISOString() ?? null,
+    createdAt: row.request.createdAt.toISOString(),
+  };
+}
+
+const base = new OpenAPIHono<AppEnv>();
+
+base.use("/my/leave", organizationGuard());
+base.use("/my/leave/*", organizationGuard());
+base.use("/leave", organizationGuard());
+base.use("/leave/*", organizationGuard());
+
+function rows(c: Context<AppEnv>) {
+  return c.var.db
+    .select({ request: leaveRequest, session: attendanceSession, personName: person.name })
+    .from(leaveRequest)
+    .innerJoin(attendanceSession, eq(attendanceSession.id, leaveRequest.sessionId))
+    .innerJoin(person, eq(person.id, leaveRequest.personId));
+}
+
+export const leaveRoutes = base
+  .openapi(mineRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+    const me = await personForUser(c.var.db, organizationId, user.id);
+    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+
+    const list = await rows(c)
+      .where(and(eq(leaveRequest.organizationId, organizationId), eq(leaveRequest.personId, me.id)))
+      .orderBy(desc(leaveRequest.createdAt));
+
+    return c.json(list.map(toJson), 200);
+  })
+  .openapi(askRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    const { sessionId, reason } = c.req.valid("json");
+    if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+    const me = await personForUser(c.var.db, organizationId, user.id);
+    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+
+    const session = await findSession(c.var.db, organizationId, sessionId);
+    if (!session) return c.json({ error: "Not found" }, 404);
+    if (statusOf(session) === "done") return c.json({ error: "This session is over." }, 409);
+    if (!(await isExpected(c.var.db, sessionId, me.id))) {
+      return c.json({ error: "You are not expected at this session." }, 409);
+    }
+
+    const existing = await c.var.db
+      .select({ id: leaveRequest.id })
+      .from(leaveRequest)
+      .where(and(eq(leaveRequest.sessionId, sessionId), eq(leaveRequest.personId, me.id)))
+      .limit(1);
+    if (existing[0]) {
+      return c.json({ error: "You already asked for leave from this session." }, 409);
+    }
+
+    const id = crypto.randomUUID();
+
+    await c.var.db.insert(leaveRequest).values({
+      id,
+      organizationId,
+      sessionId,
+      personId: me.id,
+      reason,
+    });
+
+    const [created] = await rows(c).where(eq(leaveRequest.id, id)).limit(1);
+    if (!created) throw new Error("Insert returned no row");
+
+    return c.json(toJson(created), 201);
+  })
+  .openapi(withdrawRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    const { id } = c.req.valid("param");
+    if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+    const me = await personForUser(c.var.db, organizationId, user.id);
+    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+
+    const found = await c.var.db
+      .select()
+      .from(leaveRequest)
+      .where(and(eq(leaveRequest.id, id), eq(leaveRequest.personId, me.id)))
+      .limit(1);
+    const request = found[0];
+    if (!request) return c.json({ error: "Not found" }, 404);
+    if (request.status !== "pending") return c.json({ error: "Already decided." }, 409);
+
+    await c.var.db.delete(leaveRequest).where(eq(leaveRequest.id, id));
+
+    return c.json({ deleted: true as const }, 200);
+  })
+  .openapi(queueRoute, async (c) => {
+    if (roleBelow(c, "organizer")) {
+      return c.json({ error: "This needs the organizer role or higher" }, 403);
+    }
+
+    const organizationId = organizationIdOf(c);
+    const { status } = c.req.valid("query");
+    const scope = status ?? "pending";
+
+    const byScope = {
+      pending: eq(leaveRequest.status, "pending"),
+      decided: ne(leaveRequest.status, "pending"),
+      all: undefined,
+    }[scope];
+
+    const list = await rows(c)
+      .where(and(eq(leaveRequest.organizationId, organizationId), byScope))
+      .orderBy(desc(leaveRequest.createdAt));
+
+    return c.json(list.map(toJson), 200);
+  })
+  .openapi(decideRoute, async (c) => {
+    if (roleBelow(c, "organizer")) {
+      return c.json({ error: "This needs the organizer role or higher" }, 403);
+    }
+
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    const { id } = c.req.valid("param");
+    const { decision, note } = c.req.valid("json");
+
+    const found = await rows(c)
+      .where(and(eq(leaveRequest.id, id), eq(leaveRequest.organizationId, organizationId)))
+      .limit(1);
+    const row = found[0];
+    if (!row) return c.json({ error: "Not found" }, 404);
+    if (row.request.status !== "pending") return c.json({ error: "Already decided." }, 409);
+
+    const now = new Date();
+
+    await c.var.db
+      .update(leaveRequest)
+      .set({
+        status: decision,
+        decisionNote: note ?? null,
+        decidedBy: user?.id ?? null,
+        decidedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(leaveRequest.id, id));
+
+    if (decision === "approved") {
+      await upsertRecord(c.var.db, {
+        sessionId: row.session.id,
+        personId: row.request.personId,
+        status: "excused",
+        method: "manual",
+        checkedInAt: null,
+        note: note ?? `Leave approved: ${row.request.reason}`,
+        markedBy: user?.id ?? null,
+      });
+    }
+
+    const [updated] = await rows(c).where(eq(leaveRequest.id, id)).limit(1);
+    if (!updated) throw new Error("Update returned no row");
+
+    return c.json(toJson(updated), 200);
+  });

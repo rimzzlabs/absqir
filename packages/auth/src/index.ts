@@ -5,7 +5,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { emailOTP, organization } from "better-auth/plugins";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, gt } from "drizzle-orm";
 import { ac, roles } from "@/roles";
 
 const ONE_MINUTE = 60;
@@ -29,6 +29,20 @@ export interface InvitationEmail {
   organizationName: string;
   inviterName: string;
   role: string;
+}
+
+/** The cookie the public event page sets before it sends a visitor to sign in. */
+export const EVENT_COOKIE = "absqir-event";
+
+function cookieValue(header: string | null | undefined, name: string): string | null {
+  if (!header) return null;
+
+  for (const part of header.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return decodeURIComponent(rest.join("="));
+  }
+
+  return null;
 }
 
 export interface CreateAuthOptions {
@@ -151,7 +165,7 @@ export function createAuth(options: CreateAuthOptions) {
           // The sign-up door. The first account is the operator. After that,
           // an account needs an invitation unless the operator opened
           // registration. The operator gets the "create organization" right.
-          before: async (user) => {
+          before: async (user, context) => {
             const [row] = await db.select({ value: count() }).from(schema.user);
             const firstUser = (row?.value ?? 0) === 0;
 
@@ -160,6 +174,26 @@ export function createAuth(options: CreateAuthOptions) {
             }
 
             if (registrationOpen) return;
+
+            // The third door: an open session's public page. The page sets a
+            // cookie with the session id; the session must still take people.
+            const eventId = cookieValue(context?.headers?.get("cookie"), EVENT_COOKIE);
+
+            if (eventId) {
+              const open = await db
+                .select({ id: schema.attendanceSession.id })
+                .from(schema.attendanceSession)
+                .where(
+                  and(
+                    eq(schema.attendanceSession.id, eventId),
+                    eq(schema.attendanceSession.registrationOpen, true),
+                    gt(schema.attendanceSession.endsAt, new Date()),
+                  ),
+                )
+                .limit(1);
+
+              if (open[0]) return;
+            }
 
             const invited = await db
               .select({ id: schema.invitation.id })

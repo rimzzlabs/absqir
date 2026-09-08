@@ -15,6 +15,8 @@ export interface SessionInput {
   lateAfterMinutes: number;
   opensBeforeMinutes: number;
   allowWalkIns: boolean;
+  registrationOpen: boolean;
+  registrationLimit: number | null;
   groupIds: string[];
 }
 

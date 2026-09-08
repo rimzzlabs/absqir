@@ -18,6 +18,13 @@ export const sessionSchema = z
     lateAfterMinutes: minutes(24 * 60),
     opensBeforeMinutes: minutes(24 * 60),
     allowWalkIns: z.boolean(),
+    registrationOpen: z.boolean(),
+    /** Empty means no limit. */
+    registrationLimit: z
+      .string()
+      .trim()
+      .regex(/^\d*$/, "Whole numbers only.")
+      .refine((value) => value === "" || Number(value) >= 1, "At least 1."),
     groupIds: z.array(z.string()),
   })
   .refine((values) => values.endsAt > values.startsAt, {

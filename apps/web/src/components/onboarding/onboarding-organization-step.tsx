@@ -9,6 +9,7 @@ import {
 } from "@absqir/ui/item";
 import { Separator } from "@absqir/ui/separator";
 import { AuthHeading } from "@/components/auth/auth-heading";
+import { OnboardingEventCard } from "@/components/onboarding/onboarding-event-card";
 import { FormError } from "@/components/shared/form-error";
 import { OrganizationForm } from "@/components/shared/organization-form";
 import { roleLabel } from "@/components/shared/role-badge";
@@ -20,6 +21,7 @@ import type { OnboardingStatus } from "@/queries/use-onboarding";
 export interface OnboardingOrganizationStepProps {
   status: OnboardingStatus;
   invitationId: string | null;
+  eventId: string | null;
 }
 
 function asRole(role: string) {
@@ -41,19 +43,24 @@ export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProp
     a.id === props.invitationId ? -1 : b.id === props.invitationId ? 1 : 0,
   );
   const hasInvitations = invitations.length > 0;
+  const hasEvent = props.eventId !== null;
 
   return (
     <div className="space-y-6">
       <AuthHeading
         title="Join an organization"
         description={
-          hasInvitations
-            ? "You have been invited. Accept to get started."
-            : status.canCreateOrganizations
-              ? "Create the organization you will run attendance for."
-              : "You need an invitation from an organizer."
+          hasEvent
+            ? "Register for the session, and you join its organization as a member."
+            : hasInvitations
+              ? "You have been invited. Accept to get started."
+              : status.canCreateOrganizations
+                ? "Create the organization you will run attendance for."
+                : "You need an invitation from an organizer."
         }
       />
+
+      {props.eventId ? <OnboardingEventCard eventId={props.eventId} /> : null}
 
       {hasInvitations ? (
         <ItemGroup>
@@ -88,7 +95,7 @@ export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProp
         </>
       ) : null}
 
-      {!hasInvitations && !status.canCreateOrganizations ? (
+      {!hasInvitations && !status.canCreateOrganizations && !hasEvent ? (
         <p className="text-muted-foreground text-sm">
           Ask an organizer to invite {status.email}. When the invitation arrives, open its link and
           you land in the organization at once.

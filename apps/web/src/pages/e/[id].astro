@@ -1,0 +1,19 @@
+---
+import { EventPage } from "@/components/events/event-page";
+import AuthLayout from "@/layouts/auth-layout.astro";
+import { setEventCookie } from "@/lib/event-cookie";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+
+// The public face of a session. Works signed out; the cookie lets a stranger
+// create an account through this session's door.
+setEventCookie(Astro.cookies, id);
+---
+
+<AuthLayout title="Register — absqir">
+  <EventPage client:load eventId={id} signedIn={Astro.locals.user !== null} />
+</AuthLayout>

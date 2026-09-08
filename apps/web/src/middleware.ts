@@ -11,12 +11,28 @@ const SIGN_IN_PATH = "/sign-in";
 
 /** Reachable without a session. */
 function isPublicPath(path: string): boolean {
-  return path === SIGN_IN_PATH || path === "/sign-up" || path.startsWith("/invite/");
+  return (
+    path === SIGN_IN_PATH ||
+    path === "/sign-up" ||
+    path.startsWith("/invite/") ||
+    path.startsWith("/e/")
+  );
 }
 
 /** Reachable by a signed-in reader who has no organization yet. */
 function isOrgFreePath(path: string): boolean {
-  return path === "/no-organization" || path === "/onboarding" || path.startsWith("/invite/");
+  return (
+    path === "/no-organization" ||
+    path === "/onboarding" ||
+    path.startsWith("/invite/") ||
+    path.startsWith("/e/")
+  );
+}
+
+/** The session id in a public event path, or null. */
+function eventIdOf(path: string): string | null {
+  const match = /^\/e\/([^/]+)$/.exec(path);
+  return match?.[1] ?? null;
 }
 
 function safeNext(url: URL): string {
@@ -95,8 +111,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     // Onboarding first. The invitation id rides along so step 3 can accept it.
+    // A public event page sends its own id, so step 3 registers instead.
     if (onboardingStep !== "done" && path !== "/onboarding" && !path.startsWith("/invite/")) {
-      return context.redirect(`/onboarding${context.url.search}`, 302);
+      const eventId = eventIdOf(path);
+      const search = eventId ? `?event=${encodeURIComponent(eventId)}` : context.url.search;
+
+      return context.redirect(`/onboarding${search}`, 302);
     }
 
     if (onboardingStep === "done" && path === "/onboarding") {

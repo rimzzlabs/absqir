@@ -21,7 +21,9 @@ production. See [Configuration](/configuration).
 The first account on a fresh instance is the operator. It can create
 organizations. After that, an email can register only when:
 
-- an organizer invited it (the invitation email carries the link), or
+- an organizer invited it (the invitation email carries the link),
+- it arrived from the public page of a session that takes registrations
+  (see [Sessions](/sessions#public-registration)), or
 - the operator set `REGISTRATION_OPEN=true`, which lets any email register
   and create organizations.
 
@@ -33,12 +35,12 @@ invitations and, when allowed, a form to create an organization.
 Every resource belongs to an organization. An account can belong to several
 and switches between them in the sidebar. Each membership carries one role:
 
-| Role        | What it can do                                                        |
-| ----------- | --------------------------------------------------------------------- |
-| `owner`     | Everything, including deleting the organization and naming owners.    |
-| `admin`     | Manage people, groups, invitations, members, and settings.            |
-| `organizer` | Read the directory, run sessions, and scan at the door (next phase).  |
-| `member`    | See their own sessions and history, and ask for leave (later phases). |
+| Role        | What it can do                                                       |
+| ----------- | -------------------------------------------------------------------- |
+| `owner`     | Everything, including deleting the organization and naming owners.   |
+| `admin`     | Manage people, groups, invitations, members, and settings.           |
+| `organizer` | Read the directory, run sessions, scan at the door, decide on leave. |
+| `member`    | See their own sessions and history, and ask for leave.               |
 
 ## People and groups
 
@@ -48,9 +50,8 @@ person exists before they have an account: add them by hand, or import a
 CSV with `name`, `email`, and `identifier` columns. A person with an email
 can be invited; when they accept, their account links to that directory row.
 
-Groups collect people: a team, a division, a class, a cohort. A session in
-the next phase expects a group, and whoever does not check in is marked
-absent.
+Groups collect people: a team, a division, a class, a cohort. A session
+expects a group, and whoever does not check in is marked absent.
 
 ## From the CLI
 

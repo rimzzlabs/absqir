@@ -11,6 +11,7 @@ import { useSendCode } from "@/mutations/use-send-code";
 
 export interface AuthEmailStepProps {
   initialEmail: string;
+  eventId: string | null;
   onKnownWithPassword: (email: string) => void;
   onCodeSent: (email: string, isNew: boolean) => void;
   onClosed: (email: string) => void;
@@ -28,7 +29,7 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
 
   const onSubmit = async ({ email }: EmailValues) => {
     const normalized = email.trim().toLowerCase();
-    const result = await lookup.mutateAsync(normalized);
+    const result = await lookup.mutateAsync({ email: normalized, eventId: props.eventId });
 
     if (result.exists && result.hasPassword) {
       props.onKnownWithPassword(normalized);

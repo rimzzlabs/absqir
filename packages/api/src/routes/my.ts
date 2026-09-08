@@ -7,7 +7,8 @@ import { statusOf } from "@/lib/session-status";
 import { findSession, isPast, personForUser, settle, toSessionJson } from "@/lib/sessions";
 import type { AppEnv } from "@/types";
 
-const { attendanceSession, sessionGroup, groupMember, attendanceRecord } = schema;
+const { attendanceSession, sessionGroup, sessionRegistration, groupMember, attendanceRecord } =
+  schema;
 
 const attendanceEnum = z.enum(["present", "late", "excused", "absent"]);
 
@@ -129,21 +130,37 @@ export const myRoutes = app
 
     const since = new Date(now.getTime() - DAY_MS);
 
-    const rows = await c.var.db
-      .selectDistinct({ session: attendanceSession })
-      .from(attendanceSession)
-      .innerJoin(sessionGroup, eq(sessionGroup.sessionId, attendanceSession.id))
-      .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-      .where(
-        and(
-          eq(attendanceSession.organizationId, organizationId),
-          eq(groupMember.personId, me.id),
-          gte(attendanceSession.endsAt, since),
+    // Expected through a group, or registered on the public page.
+    const [fromGroups, fromRegistrations] = await Promise.all([
+      c.var.db
+        .selectDistinct({ session: attendanceSession })
+        .from(attendanceSession)
+        .innerJoin(sessionGroup, eq(sessionGroup.sessionId, attendanceSession.id))
+        .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
+        .where(
+          and(
+            eq(attendanceSession.organizationId, organizationId),
+            eq(groupMember.personId, me.id),
+            gte(attendanceSession.endsAt, since),
+          ),
         ),
-      );
+      c.var.db
+        .select({ session: attendanceSession })
+        .from(attendanceSession)
+        .innerJoin(sessionRegistration, eq(sessionRegistration.sessionId, attendanceSession.id))
+        .where(
+          and(
+            eq(attendanceSession.organizationId, organizationId),
+            eq(sessionRegistration.personId, me.id),
+            gte(attendanceSession.endsAt, since),
+          ),
+        ),
+    ]);
 
-    const sessions = rows
+    const seen = new Set<string>();
+    const sessions = [...fromGroups, ...fromRegistrations]
       .map((row) => row.session)
+      .filter((row) => (seen.has(row.id) ? false : seen.add(row.id)))
       .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
     const ids = sessions.map((row) => row.id);
 

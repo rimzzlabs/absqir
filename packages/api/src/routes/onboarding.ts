@@ -5,6 +5,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "@/lib/auth-forward";
+import { findPublicSession, registerForSession } from "@/lib/events";
 import { isSlug } from "@/lib/slug";
 import type { AppEnv } from "@/types";
 
@@ -159,6 +160,36 @@ const acceptRoute = createRoute({
     401: unauthorized,
     404: {
       description: "No such invitation",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const eventRoute = createRoute({
+  method: "post",
+  path: "/onboarding/event",
+  tags: ["onboarding"],
+  summary: "Step 3d: join through an open session's public page",
+  description: "Joins the organization as a member, registers for the session, and finishes.",
+  request: {
+    body: {
+      content: { "application/json": { schema: z.object({ sessionId: z.string().min(1) }) } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Done. The organization is active",
+      content: {
+        "application/json": { schema: stepResult.extend({ organizationId: z.string() }) },
+      },
+    },
+    401: unauthorized,
+    404: {
+      description: "No such open session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+    409: {
+      description: "The session is over or full",
       content: { "application/json": { schema: errorSchema } },
     },
   },
@@ -384,6 +415,26 @@ export const onboardingRoutes = app
     await setStep(c, current.id, "done");
 
     return c.json({ step: "done" as const, organizationId: found.organizationId }, 200);
+  })
+  .openapi(eventRoute, async (c) => {
+    const current = userOf(c);
+    const { sessionId } = c.req.valid("json");
+
+    const found = await findPublicSession(c.var.db, sessionId);
+    if (!found?.session.registrationOpen) {
+      return c.json({ error: "This session does not take registrations." }, 404);
+    }
+
+    const result = await registerForSession(c.var.db, { session: found.session, user: current });
+    if (!result.ok) {
+      const message = result.reason === "full" ? "This session is full." : "This session is over.";
+      return c.json({ error: message }, 409);
+    }
+
+    await activate(c, found.session.organizationId);
+    await setStep(c, current.id, "done");
+
+    return c.json({ step: "done" as const, organizationId: found.session.organizationId }, 200);
   })
   .openapi(finishRoute, async (c) => {
     const current = userOf(c);

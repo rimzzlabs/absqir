@@ -25,6 +25,7 @@ import {
 import { useState } from "react";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
+import { PublicLink } from "@/components/sessions/public-link";
 import { SessionDialog } from "@/components/sessions/session-dialog";
 import { SessionRecords } from "@/components/sessions/session-records";
 import { FormError } from "@/components/shared/form-error";
@@ -151,6 +152,8 @@ function Header(props: { session: Session; role: RoleName }) {
       </div>
 
       <FormError error={open.error ?? close.error ?? remove.error} />
+
+      {session.registrationOpen ? <PublicLink session={session} /> : null}
 
       {session.closedAt ? (
         <p className="text-muted-foreground text-xs">

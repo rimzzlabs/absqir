@@ -12,6 +12,8 @@ export interface AuthFlowProps {
   next: string;
   /** Prefilled when the reader arrived from an invitation. */
   initialEmail?: string;
+  /** The open session whose public page sent the reader here. */
+  eventId?: string | null;
 }
 
 /**
@@ -33,6 +35,7 @@ function AuthSteps(props: AuthFlowProps) {
     .with({ kind: "email" }, () => (
       <AuthEmailStep
         initialEmail={props.initialEmail ?? ""}
+        eventId={props.eventId ?? null}
         onKnownWithPassword={(email) => setStep({ kind: "password", email })}
         onCodeSent={(email, isNew) => setStep({ kind: "code", email, isNew })}
         onClosed={(email) => setStep({ kind: "closed", email })}

@@ -11,6 +11,8 @@ import { useOnboarding } from "@/queries/use-onboarding";
 export interface OnboardingFlowProps {
   /** From the invitation link, so step 3 can offer that organization first. */
   invitationId: string | null;
+  /** From a public event page, so step 3 registers for it. */
+  eventId: string | null;
 }
 
 function OnboardingBody(props: OnboardingFlowProps) {
@@ -31,7 +33,11 @@ function OnboardingBody(props: OnboardingFlowProps) {
           .with("profile", () => <OnboardingProfileStep status={data} />)
           .with("avatar", () => <OnboardingAvatarStep status={data} />)
           .with("organization", () => (
-            <OnboardingOrganizationStep status={data} invitationId={props.invitationId} />
+            <OnboardingOrganizationStep
+              status={data}
+              invitationId={props.invitationId}
+              eventId={props.eventId}
+            />
           ))
           .with("done", () => <p className="text-muted-foreground text-sm">All set. One moment…</p>)
           .exhaustive()}

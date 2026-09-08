@@ -7,8 +7,10 @@ import { currentSession, requestContext } from "@/middleware/session";
 import { authRoutes } from "@/routes/auth";
 import { authFlowRoutes } from "@/routes/auth-flow";
 import { mountDocs } from "@/routes/docs";
+import { eventRoutes } from "@/routes/events";
 import { groupRoutes } from "@/routes/groups";
 import { healthRoutes } from "@/routes/health";
+import { leaveRoutes } from "@/routes/leave";
 import { meRoutes } from "@/routes/me";
 import { myRoutes } from "@/routes/my";
 import { onboardingRoutes } from "@/routes/onboarding";
@@ -45,7 +47,9 @@ const routes = app
   .route("/", groupRoutes)
   .route("/", sessionRoutes)
   .route("/", scheduleRoutes)
-  .route("/", myRoutes);
+  .route("/", myRoutes)
+  .route("/", eventRoutes)
+  .route("/", leaveRoutes);
 
 mountDocs(app);
 

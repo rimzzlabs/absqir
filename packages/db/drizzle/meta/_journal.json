@@ -15,6 +15,13 @@
       "when": 1788877233067,
       "tag": "0001_useful_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788880699158,
+      "tag": "0002_faithful_silvermane",
+      "breakpoints": true
     }
   ]
 }

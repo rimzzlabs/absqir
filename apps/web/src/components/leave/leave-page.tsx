@@ -1,0 +1,235 @@
+import { formatDate, formatRange } from "@absqir/core/date";
+import { Button } from "@absqir/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@absqir/ui/dialog";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
+import { Form, FormField } from "@absqir/ui/form";
+import { Skeleton } from "@absqir/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
+import { Textarea } from "@absqir/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { NotePencilIcon } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
+import { Providers } from "@/components/providers";
+import { FormError } from "@/components/shared/form-error";
+import { PageHeader } from "@/components/shared/page-header";
+import { LeaveStatusBadge } from "@/components/shared/status-badge";
+import { type DecideLeaveValues, decideLeaveSchema } from "@/lib/leave-schemas";
+import { useDecideLeave } from "@/mutations/use-decide-leave";
+import { type LeaveRequest, type LeaveScope, useLeaveQueue } from "@/queries/use-leave";
+
+type Decision = { request: LeaveRequest; decision: "approved" | "declined" } | null;
+
+function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
+  const decide = useDecideLeave();
+  const form = useForm<DecideLeaveValues>({
+    resolver: zodResolver(decideLeaveSchema),
+    defaultValues: { note: "" },
+  });
+  const open = props.pending !== null;
+
+  useEffect(() => {
+    if (open) form.reset({ note: "" });
+  }, [open, form]);
+
+  const approving = props.pending?.decision === "approved";
+
+  const onSubmit = (values: DecideLeaveValues) => {
+    if (!props.pending) return;
+
+    decide.mutate(
+      {
+        id: props.pending.request.id,
+        decision: props.pending.decision,
+        note: values.note || null,
+      },
+      { onSuccess: props.onClose },
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && props.onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {approving ? "Approve" : "Decline"} {props.pending?.request.personName}
+          </DialogTitle>
+          <DialogDescription>
+            {approving
+              ? "The record for this session shows excused instead of absent."
+              : "The record stays as it is. The member sees your note."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <p className="text-muted-foreground text-sm">
+              <span className="text-foreground font-medium">
+                {props.pending?.request.sessionTitle}
+              </span>
+              {" · "}
+              {props.pending?.request.reason}
+            </p>
+            <FormField
+              control={form.control}
+              name="note"
+              label="Note"
+              description="Optional. The member sees it."
+              render={(field) => <Textarea {...field} id="leave-note" rows={2} autoFocus />}
+            />
+            <FormError error={decide.error} />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={props.onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant={approving ? "default" : "destructive"}
+                disabled={decide.isPending}
+              >
+                {decide.isPending ? "Saving…" : approving ? "Approve" : "Decline"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Queue(props: {
+  rows: LeaveRequest[];
+  scope: LeaveScope;
+  onDecide: (d: Decision) => void;
+}) {
+  if (props.rows.length === 0) {
+    return (
+      <Empty className="border-border rounded-xl border border-dashed py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <NotePencilIcon />
+          </EmptyMedia>
+          <EmptyTitle>
+            {props.scope === "pending" ? "Nothing to decide" : "Nothing decided yet"}
+          </EmptyTitle>
+          <EmptyDescription>
+            {props.scope === "pending"
+              ? "A member who cannot make a session asks here. You approve or decline."
+              : "Approved and declined requests land here."}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  return (
+    <div className="border-border overflow-x-auto rounded-xl border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Person</TableHead>
+            <TableHead>Session</TableHead>
+            <TableHead>Reason</TableHead>
+            <TableHead>Asked</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="w-44" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {props.rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell className="font-medium">{row.personName}</TableCell>
+              <TableCell>
+                <a href={`/sessions/${row.sessionId}`} className="hover:underline">
+                  {row.sessionTitle}
+                </a>
+                <p className="text-muted-foreground text-xs">
+                  {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
+                </p>
+              </TableCell>
+              <TableCell className="max-w-xs whitespace-normal">
+                {row.reason}
+                {row.decisionNote ? (
+                  <p className="text-muted-foreground text-xs">Note: {row.decisionNote}</p>
+                ) : null}
+              </TableCell>
+              <TableCell className="text-muted-foreground tabular-nums">
+                {formatDate(new Date(row.createdAt), "date")}
+              </TableCell>
+              <TableCell>
+                <LeaveStatusBadge status={row.status} />
+              </TableCell>
+              <TableCell>
+                {row.status === "pending" ? (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => props.onDecide({ request: row, decision: "declined" })}
+                    >
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => props.onDecide({ request: row, decision: "approved" })}
+                    >
+                      Approve
+                    </Button>
+                  </div>
+                ) : null}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function LeaveBody() {
+  const [scope, setScope] = useState<LeaveScope>("pending");
+  const queue = useLeaveQueue(scope);
+  const [pending, setPending] = useState<Decision>(null);
+
+  return (
+    <>
+      <PageHeader
+        title="Leave requests"
+        description="A member asks to be excused before a session. Approve, and the record shows excused instead of absent."
+      />
+
+      <Tabs value={scope} onValueChange={(value) => setScope(value as LeaveScope)}>
+        <TabsList>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="decided">Decided</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {match(queue)
+        .with({ isPending: true }, () => <Skeleton className="h-48 rounded-xl" />)
+        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ data: P.select(P.nonNullable) }, (rows) => (
+          <Queue rows={rows} scope={scope} onDecide={setPending} />
+        ))
+        .otherwise(() => null)}
+
+      <DecisionDialog pending={pending} onClose={() => setPending(null)} />
+    </>
+  );
+}
+
+export function LeavePage() {
+  return (
+    <Providers>
+      <LeaveBody />
+    </Providers>
+  );
+}

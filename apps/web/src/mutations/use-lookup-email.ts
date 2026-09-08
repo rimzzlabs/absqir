@@ -6,8 +6,10 @@ import { api, apiError } from "@/lib/api";
 export function useLookupEmail() {
   return useMutation({
     mutationKey: authMutationKeys.lookup(),
-    mutationFn: async (email: string) => {
-      const response = await api["auth-flow"].lookup.$post({ json: { email } });
+    mutationFn: async (input: { email: string; eventId: string | null }) => {
+      const response = await api["auth-flow"].lookup.$post({
+        json: { email: input.email, ...(input.eventId ? { eventId: input.eventId } : {}) },
+      });
 
       if (!response.ok) throw await apiError(response, "Could not check that email.");
 

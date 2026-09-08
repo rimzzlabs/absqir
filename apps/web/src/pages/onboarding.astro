@@ -3,8 +3,9 @@ import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import AuthLayout from "@/layouts/auth-layout.astro";
 
 const invitationId = Astro.url.searchParams.get("invitation");
+const eventId = Astro.url.searchParams.get("event");
 ---
 
 <AuthLayout title="Welcome — absqir">
-  <OnboardingFlow client:load invitationId={invitationId} />
+  <OnboardingFlow client:load invitationId={invitationId} eventId={eventId} />
 </AuthLayout>

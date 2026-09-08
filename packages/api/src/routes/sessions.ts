@@ -30,6 +30,7 @@ const groupRef = z.object({ id: z.string(), name: z.string() });
 
 const countsSchema = z.object({
   expected: z.number(),
+  registered: z.number(),
   present: z.number(),
   late: z.number(),
   excused: z.number(),
@@ -45,6 +46,9 @@ const sessionSchema = z.object({
   lateAfterMinutes: z.number(),
   opensBeforeMinutes: z.number(),
   allowWalkIns: z.boolean(),
+  registrationOpen: z.boolean(),
+  registrationLimit: z.number().nullable(),
+  registrationCount: z.number(),
   openedAt: z.string().nullable(),
   closedAt: z.string().nullable(),
   scheduleId: z.string().nullable(),
@@ -59,6 +63,7 @@ const recordSchema = z.object({
   email: z.string().nullable(),
   identifier: z.string().nullable(),
   expected: z.boolean(),
+  registered: z.boolean(),
   status: attendanceEnum.nullable(),
   method: z.string().nullable(),
   checkedInAt: z.string().nullable(),
@@ -92,6 +97,8 @@ const sessionInput = z.object({
     .max(24 * 60)
     .optional(),
   allowWalkIns: z.boolean().optional(),
+  registrationOpen: z.boolean().optional(),
+  registrationLimit: z.number().int().min(1).max(100_000).nullable().optional(),
   groupIds: z.array(z.string()).max(100),
 });
 
@@ -409,6 +416,8 @@ export const sessionRoutes = app
         lateAfterMinutes: body.lateAfterMinutes ?? 15,
         opensBeforeMinutes: body.opensBeforeMinutes ?? 15,
         allowWalkIns: body.allowWalkIns ?? false,
+        registrationOpen: body.registrationOpen ?? false,
+        registrationLimit: body.registrationLimit ?? null,
         secret: randomSecret(),
         createdBy: user?.id ?? null,
       });
@@ -474,6 +483,12 @@ export const sessionRoutes = app
             ? { opensBeforeMinutes: body.opensBeforeMinutes }
             : {}),
           ...(body.allowWalkIns !== undefined ? { allowWalkIns: body.allowWalkIns } : {}),
+          ...(body.registrationOpen !== undefined
+            ? { registrationOpen: body.registrationOpen }
+            : {}),
+          ...(body.registrationLimit !== undefined
+            ? { registrationLimit: body.registrationLimit }
+            : {}),
           updatedAt: new Date(),
         })
         .where(eq(attendanceSession.id, id));

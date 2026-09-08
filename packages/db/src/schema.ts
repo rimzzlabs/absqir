@@ -27,6 +27,9 @@ export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 export const ATTENDANCE_METHODS = ["screen", "scanner", "manual", "auto"] as const;
 export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
 
+export const LEAVE_STATUSES = ["pending", "approved", "declined"] as const;
+export type LeaveStatus = (typeof LEAVE_STATUSES)[number];
+
 export const SCHEDULE_FREQUENCIES = ["daily", "weekly"] as const;
 export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
 
@@ -274,6 +277,10 @@ export const attendanceSession = pgTable(
     opensBeforeMinutes: integer("opens_before_minutes").notNull().default(15),
     /** Someone outside the expected groups may still check in. */
     allowWalkIns: boolean("allow_walk_ins").notNull().default(false),
+    /** Anyone with the public link can register, and so join the organization. */
+    registrationOpen: boolean("registration_open").notNull().default(false),
+    /** Seats. Null means no limit. */
+    registrationLimit: integer("registration_limit"),
     /** Set when an organizer opens check-in ahead of the window. */
     openedAt: timestamp("opened_at", { withTimezone: true }),
     /** Set when the session closed, by hand or by the clock. */
@@ -305,6 +312,55 @@ export const sessionGroup = pgTable(
   (table) => [
     primaryKey({ columns: [table.sessionId, table.groupId] }),
     index("session_group_group_idx").on(table.groupId),
+  ],
+);
+
+/** Someone who signed up for an open session through its public page. */
+export const sessionRegistration = pgTable(
+  "session_registration",
+  {
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+    personId: text("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.sessionId, table.personId] }),
+    index("session_registration_person_idx").on(table.personId),
+  ],
+);
+
+/**
+ * A member asks to be excused from a session. An approval writes an excused
+ * record; a decline leaves the record alone.
+ */
+export const leaveRequest = pgTable(
+  "leave_request",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+    personId: text("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    status: text("status").$type<LeaveStatus>().notNull().default("pending"),
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decisionNote: text("decision_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("leave_request_session_person_idx").on(table.sessionId, table.personId),
+    index("leave_request_organization_status_idx").on(table.organizationId, table.status),
   ],
 );
 

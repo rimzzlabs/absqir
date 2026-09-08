@@ -5,13 +5,22 @@ import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql }
 import { materializeSchedules } from "@/lib/schedule";
 import { needsFinalising, type SessionStatus, statusOf } from "@/lib/session-status";
 
-const { attendanceSession, sessionGroup, group, groupMember, person, attendanceRecord } = schema;
+const {
+  attendanceSession,
+  sessionGroup,
+  sessionRegistration,
+  group,
+  groupMember,
+  person,
+  attendanceRecord,
+} = schema;
 
 export type SessionRow = typeof attendanceSession.$inferSelect;
 export type RecordRow = typeof attendanceRecord.$inferSelect;
 
 export interface SessionCounts {
   expected: number;
+  registered: number;
   present: number;
   late: number;
   excused: number;
@@ -27,6 +36,9 @@ export interface SessionJson {
   lateAfterMinutes: number;
   opensBeforeMinutes: number;
   allowWalkIns: boolean;
+  registrationOpen: boolean;
+  registrationLimit: number | null;
+  registrationCount: number;
   openedAt: string | null;
   closedAt: string | null;
   scheduleId: string | null;
@@ -35,7 +47,14 @@ export interface SessionJson {
   counts: SessionCounts;
 }
 
-const EMPTY_COUNTS: SessionCounts = { expected: 0, present: 0, late: 0, excused: 0, absent: 0 };
+const EMPTY_COUNTS: SessionCounts = {
+  expected: 0,
+  registered: 0,
+  present: 0,
+  late: 0,
+  excused: 0,
+  absent: 0,
+};
 
 export async function findSession(db: Database, organizationId: string, id: string) {
   const rows = await db
@@ -47,13 +66,28 @@ export async function findSession(db: Database, organizationId: string, id: stri
   return rows[0] ?? null;
 }
 
-/** Every person in any of the session's groups, once. */
+/** Everyone in the session's groups, plus everyone who registered, once. */
 export async function expectedPersonIds(db: Database, sessionId: string): Promise<string[]> {
+  const [fromGroups, registered] = await Promise.all([
+    db
+      .selectDistinct({ personId: groupMember.personId })
+      .from(sessionGroup)
+      .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
+      .where(eq(sessionGroup.sessionId, sessionId)),
+    db
+      .select({ personId: sessionRegistration.personId })
+      .from(sessionRegistration)
+      .where(eq(sessionRegistration.sessionId, sessionId)),
+  ]);
+
+  return [...new Set([...fromGroups, ...registered].map((row) => row.personId))];
+}
+
+export async function registeredPersonIds(db: Database, sessionId: string): Promise<string[]> {
   const rows = await db
-    .selectDistinct({ personId: groupMember.personId })
-    .from(sessionGroup)
-    .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-    .where(eq(sessionGroup.sessionId, sessionId));
+    .select({ personId: sessionRegistration.personId })
+    .from(sessionRegistration)
+    .where(eq(sessionRegistration.sessionId, sessionId));
 
   return rows.map((row) => row.personId);
 }
@@ -141,16 +175,16 @@ async function countsBySession(db: Database, sessionIds: string[]) {
   const map = new Map<string, SessionCounts>();
   if (sessionIds.length === 0) return map;
 
-  const [expected, records] = await Promise.all([
+  const [fromGroups, registrations, records] = await Promise.all([
     db
-      .select({
-        sessionId: sessionGroup.sessionId,
-        value: sql<number>`count(distinct ${groupMember.personId})`.mapWith(Number),
-      })
+      .select({ sessionId: sessionGroup.sessionId, personId: groupMember.personId })
       .from(sessionGroup)
       .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-      .where(inArray(sessionGroup.sessionId, sessionIds))
-      .groupBy(sessionGroup.sessionId),
+      .where(inArray(sessionGroup.sessionId, sessionIds)),
+    db
+      .select({ sessionId: sessionRegistration.sessionId, personId: sessionRegistration.personId })
+      .from(sessionRegistration)
+      .where(inArray(sessionRegistration.sessionId, sessionIds)),
     db
       .select({
         sessionId: attendanceRecord.sessionId,
@@ -163,9 +197,20 @@ async function countsBySession(db: Database, sessionIds: string[]) {
   ]);
 
   for (const id of sessionIds) map.set(id, { ...EMPTY_COUNTS });
-  for (const row of expected) {
+
+  const expectedSets = new Map<string, Set<string>>();
+  for (const row of [...fromGroups, ...registrations]) {
+    const set = expectedSets.get(row.sessionId) ?? new Set<string>();
+    set.add(row.personId);
+    expectedSets.set(row.sessionId, set);
+  }
+  for (const [id, set] of expectedSets) {
+    const counts = map.get(id);
+    if (counts) counts.expected = set.size;
+  }
+  for (const row of registrations) {
     const counts = map.get(row.sessionId);
-    if (counts) counts.expected = row.value;
+    if (counts) counts.registered += 1;
   }
   for (const row of records) {
     const counts = map.get(row.sessionId);
@@ -192,6 +237,9 @@ export async function toSessionJson(
     lateAfterMinutes: row.lateAfterMinutes,
     opensBeforeMinutes: row.opensBeforeMinutes,
     allowWalkIns: row.allowWalkIns,
+    registrationOpen: row.registrationOpen,
+    registrationLimit: row.registrationLimit ?? null,
+    registrationCount: counts.get(row.id)?.registered ?? 0,
     openedAt: row.openedAt?.toISOString() ?? null,
     closedAt: row.closedAt?.toISOString() ?? null,
     scheduleId: row.scheduleId ?? null,
@@ -248,8 +296,10 @@ export interface RecordJson {
   name: string;
   email: string | null;
   identifier: string | null;
-  /** In one of the session's groups. A walk-in is not. */
+  /** In one of the session's groups, or registered. A walk-in is neither. */
   expected: boolean;
+  /** Came through the public registration page. */
+  registered: boolean;
   status: AttendanceStatus | null;
   method: string | null;
   checkedInAt: string | null;
@@ -258,12 +308,14 @@ export interface RecordJson {
 
 /** Everyone expected, plus anyone with a record, with what the record says. */
 export async function sessionRecords(db: Database, sessionId: string): Promise<RecordJson[]> {
-  const [expected, records] = await Promise.all([
+  const [expected, registered, records] = await Promise.all([
     expectedPersonIds(db, sessionId),
+    registeredPersonIds(db, sessionId),
     db.select().from(attendanceRecord).where(eq(attendanceRecord.sessionId, sessionId)),
   ]);
 
   const expectedSet = new Set(expected);
+  const registeredSet = new Set(registered);
   const ids = [...new Set([...expected, ...records.map((row) => row.personId)])];
   if (ids.length === 0) return [];
 
@@ -289,6 +341,7 @@ export async function sessionRecords(db: Database, sessionId: string): Promise<R
       email: row.email ?? null,
       identifier: row.identifier ?? null,
       expected: expectedSet.has(row.id),
+      registered: registeredSet.has(row.id),
       status: record?.status ?? null,
       method: record?.method ?? null,
       checkedInAt: record?.checkedInAt?.toISOString() ?? null,
@@ -361,12 +414,24 @@ export async function personForUser(db: Database, organizationId: string, userId
 }
 
 export async function isExpected(db: Database, sessionId: string, personId: string) {
-  const rows = await db
-    .select({ personId: groupMember.personId })
-    .from(sessionGroup)
-    .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-    .where(and(eq(sessionGroup.sessionId, sessionId), eq(groupMember.personId, personId)))
-    .limit(1);
+  const [inGroup, registered] = await Promise.all([
+    db
+      .select({ personId: groupMember.personId })
+      .from(sessionGroup)
+      .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
+      .where(and(eq(sessionGroup.sessionId, sessionId), eq(groupMember.personId, personId)))
+      .limit(1),
+    db
+      .select({ personId: sessionRegistration.personId })
+      .from(sessionRegistration)
+      .where(
+        and(
+          eq(sessionRegistration.sessionId, sessionId),
+          eq(sessionRegistration.personId, personId),
+        ),
+      )
+      .limit(1),
+  ]);
 
-  return rows.length > 0;
+  return inGroup.length > 0 || registered.length > 0;
 }

@@ -110,6 +110,30 @@ export const myKeys = {
   history: () => [...myKeys.all, "history"] as const,
 };
 
+export const eventKeys = {
+  all: ["events"] as const,
+  detail: (id: string) => [...eventKeys.all, "detail", id] as const,
+};
+
+export const eventMutationKeys = {
+  all: ["event-mutations"] as const,
+  register: () => [...eventMutationKeys.all, "register"] as const,
+  withdraw: () => [...eventMutationKeys.all, "withdraw"] as const,
+};
+
+export const leaveKeys = {
+  all: ["leave"] as const,
+  queue: (status = "pending") => [...leaveKeys.all, "queue", status] as const,
+  mine: () => [...leaveKeys.all, "mine"] as const,
+};
+
+export const leaveMutationKeys = {
+  all: ["leave-mutations"] as const,
+  ask: () => [...leaveMutationKeys.all, "ask"] as const,
+  withdraw: () => [...leaveMutationKeys.all, "withdraw"] as const,
+  decide: () => [...leaveMutationKeys.all, "decide"] as const,
+};
+
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */
 export const authMutationKeys = {
   all: ["auth"] as const,
