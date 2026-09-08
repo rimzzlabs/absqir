@@ -1,5 +1,6 @@
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
 import { PlusIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Providers } from "@/components/providers";
@@ -40,19 +41,25 @@ function OrgControls() {
         Organization
       </label>
 
-      <select
-        id="org-switcher"
-        className="border-border bg-background focus-visible:ring-ring rounded-md border px-2 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
+      <Select
+        items={rows.map((org) => ({ value: org.id, label: org.name }))}
         value={activeId}
         disabled={organizations.isPending || setActive.isPending}
-        onChange={(event) => setActive.mutate(event.target.value)}
+        onValueChange={(value) => {
+          if (value !== null) setActive.mutate(value);
+        }}
       >
-        {rows.map((org) => (
-          <option key={org.id} value={org.id}>
-            {org.name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger id="org-switcher" className="min-w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {rows.map((org) => (
+            <SelectItem key={org.id} value={org.id}>
+              {org.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {creating ? (
         <>
