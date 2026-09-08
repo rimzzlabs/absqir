@@ -10,6 +10,44 @@ import { defineConfig, fontProviders } from "astro/config";
 // glue (bindings, execution context) per target at build time.
 const deployTarget = process.env.DEPLOY_TARGET === "node" ? "node" : "cloudflare";
 
+// The Base UI parts the design system reaches for. Listed once, bundled once.
+const BASE_UI_PARTS = [
+  "accordion",
+  "alert-dialog",
+  "avatar",
+  "button",
+  "checkbox",
+  "collapsible",
+  "dialog",
+  "input",
+  "menu",
+  "merge-props",
+  "popover",
+  "radio",
+  "radio-group",
+  "scroll-area",
+  "select",
+  "separator",
+  "switch",
+  "tabs",
+  "toast",
+  "toggle",
+  "toggle-group",
+  "tooltip",
+  "use-render",
+];
+
+const UI_DEPS = [
+  ...BASE_UI_PARTS.map((part) => `@absqir/ui > @base-ui/react/${part}`),
+  "@absqir/ui > @base-ui/react",
+  "@absqir/ui > @base-ui/react/types",
+  "@absqir/ui > class-variance-authority",
+  "@absqir/ui > cn",
+  "@absqir/ui > cmdk",
+  "@absqir/ui > input-otp",
+  "@absqir/ui > motion/react",
+];
+
 // Every page depends on the reader's session, so the whole site renders per
 // request. One server serves the assets, the pages, and the Hono API from a
 // single origin.
@@ -74,15 +112,9 @@ export default defineConfig({
         "react-hook-form",
         "@hookform/resolvers/zod",
         "zod",
-        "qrcode",
         "ts-pattern",
-        "@absqir/ui > @base-ui/react/button",
-        "@absqir/ui > @base-ui/react/input",
-        "@absqir/ui > @base-ui/react/select",
-        "@absqir/ui > @base-ui/react/separator",
-        "@absqir/ui > class-variance-authority",
-        "@absqir/ui > cn",
-        "@absqir/ui > motion/react",
+        "input-otp",
+        ...UI_DEPS,
         "@absqir/core > date-fns",
       ],
     },
@@ -98,7 +130,6 @@ export default defineConfig({
           "react-hook-form",
           "@hookform/resolvers/zod",
           "zod",
-          "qrcode",
           "ts-pattern",
           "hono/body-limit",
           "hono/csrf",
@@ -118,13 +149,8 @@ export default defineConfig({
           "@absqir/db > pg",
           "@absqir/api > @absqir/transactional > @react-email/components",
           "@absqir/api > @absqir/transactional > resend",
-          "@absqir/ui > @base-ui/react/button",
-          "@absqir/ui > @base-ui/react/input",
-          "@absqir/ui > @base-ui/react/select",
-          "@absqir/ui > @base-ui/react/separator",
-          "@absqir/ui > class-variance-authority",
-          "@absqir/ui > cn",
-          "@absqir/ui > motion/react",
+          "input-otp",
+          ...UI_DEPS,
           "@absqir/core > date-fns",
         ],
       },

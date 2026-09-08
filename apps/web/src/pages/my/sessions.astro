@@ -1,0 +1,18 @@
+---
+import { EmptyModule } from "@/components/shared/empty-module";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+---
+
+<DashboardLayout title="My sessions">
+  <EmptyModule
+    icon="sessions"
+    title="My sessions"
+    description="The sessions that expect you, and the button to check in when one is running."
+    phase={2}
+    bullets={[
+      "Upcoming sessions from every group you belong to.",
+      "A QR code on your phone the organizer can scan at the door.",
+      "Scan the screen in the room to check yourself in.",
+    ]}
+  />
+</DashboardLayout>

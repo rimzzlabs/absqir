@@ -1,0 +1,14 @@
+---
+import { GroupsPage } from "@/components/groups/groups-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const role = Astro.locals.activeMembership?.role ?? "member";
+
+if (role === "member") {
+  return Astro.redirect("/my/sessions", 302);
+}
+---
+
+<DashboardLayout title="Groups">
+  <GroupsPage client:load role={role} />
+</DashboardLayout>

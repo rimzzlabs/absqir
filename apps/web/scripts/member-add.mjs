@@ -2,6 +2,8 @@
 import { parseArgs } from "node:util";
 import { addMember } from "@absqir/db/ops";
 
+const ROLES = ["owner", "admin", "organizer", "member"];
+
 const { values } = parseArgs({
   options: {
     email: { type: "string" },
@@ -10,9 +12,9 @@ const { values } = parseArgs({
   },
 });
 
-if (!values.email || !values.org) {
+if (!values.email || !values.org || !ROLES.includes(values.role)) {
   console.error(
-    "Usage: node scripts/member-add.mjs --email <email> --org <slug> [--role member|admin]",
+    "Usage: node scripts/member-add.mjs --email <email> --org <slug> [--role owner|admin|organizer|member]",
   );
   process.exit(1);
 }

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { createDb } from "@/index";
-import { member, organization, user } from "@/schema";
+import { ensurePersonForUser } from "@/people";
+import { member, type OnboardingStep, type OrganizationRole, organization, user } from "@/schema";
 
 /**
  * Operator actions the CLI triggers inside a one-off container. They live
@@ -16,7 +17,7 @@ export interface AddMemberOptions {
   connectionString: string;
   email: string;
   organizationSlug: string;
-  role: string;
+  role: OrganizationRole;
 }
 
 export async function addMember(options: AddMemberOptions): Promise<AddMemberResult> {
@@ -50,7 +51,47 @@ export async function addMember(options: AddMemberOptions): Promise<AddMemberRes
       createdAt: new Date(),
     });
 
+    await ensurePersonForUser(db, {
+      organizationId: foundOrg.id,
+      userId: foundUser.id,
+      name: foundUser.name,
+      email: foundUser.email,
+    });
+
     return { ok: true };
+  } finally {
+    await close();
+  }
+}
+
+export type MarkUserResult = { ok: true } | { ok: false; reason: "user-not-found" };
+
+export interface MarkUserOptions {
+  connectionString: string;
+  email: string;
+  /** Skip onboarding for an account the operator created with a password. */
+  onboardingStep?: OnboardingStep;
+  canCreateOrganizations?: boolean;
+}
+
+/** Sets the operator-only flags on an account. */
+export async function markUser(options: MarkUserOptions): Promise<MarkUserResult> {
+  const { db, close } = createDb({ connectionString: options.connectionString, max: 1 });
+
+  try {
+    const [updated] = await db
+      .update(user)
+      .set({
+        ...(options.onboardingStep ? { onboardingStep: options.onboardingStep } : {}),
+        ...(options.canCreateOrganizations === undefined
+          ? {}
+          : { canCreateOrganizations: options.canCreateOrganizations }),
+        updatedAt: new Date(),
+      })
+      .where(eq(user.email, options.email))
+      .returning({ id: user.id });
+
+    return updated ? { ok: true } : { ok: false, reason: "user-not-found" };
   } finally {
     await close();
   }

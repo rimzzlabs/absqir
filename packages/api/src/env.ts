@@ -2,24 +2,42 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import type { ApiBindings } from "@/bindings";
 
+const schema = z
+  .object({
+    BETTER_AUTH_SECRET: z.string().min(32),
+    /** Required in production: sign-up and invitations travel by email. */
+    RESEND_API_KEY: z.string().min(1).optional(),
+    EMAIL_FROM: z.string().min(1).default("absqir <onboarding@resend.dev>"),
+    ENVIRONMENT: z.enum(["development", "preview", "production"]).default("development"),
+    /** Serve the OpenAPI document and the Scalar page. Off in production. */
+    ENABLE_DOCS: z.stringbool().optional(),
+    /**
+     * Opens the "create an organization" door for every account. Off by
+     * default: only the operator and promoted accounts create organizations.
+     * Joining through an invitation never needs this.
+     */
+    REGISTRATION_OPEN: z.stringbool().default(false),
+    /**
+     * Overrides the Secure flag on cookies. Defaults to on in production.
+     * A self-host without TLS must set this to false, or sign-in fails
+     * silently when the browser drops the cookie.
+     */
+    SECURE_COOKIES: z.stringbool().optional(),
+  })
+  .check((ctx) => {
+    if (ctx.value.ENVIRONMENT === "production" && !ctx.value.RESEND_API_KEY) {
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value.RESEND_API_KEY,
+        path: ["RESEND_API_KEY"],
+        message: "RESEND_API_KEY is required in production: sign-up codes travel by email.",
+      });
+    }
+  });
+
 function build(bindings: ApiBindings) {
   return createEnv({
-    server: {
-      BETTER_AUTH_SECRET: z.string().min(32),
-      RESEND_API_KEY: z.string().min(1).optional(),
-      EMAIL_FROM: z.string().min(1).default("absqir <onboarding@resend.dev>"),
-      ENVIRONMENT: z.enum(["development", "preview", "production"]).default("development"),
-      /** Serve the OpenAPI document and the Scalar page. Off in production. */
-      ENABLE_DOCS: z.stringbool().optional(),
-      /** Keep sign-up open after the first user. Off by default on self-host. */
-      REGISTRATION_OPEN: z.stringbool().default(false),
-      /**
-       * Overrides the Secure flag on cookies. Defaults to on in production.
-       * A self-host without TLS must set this to false, or sign-in fails
-       * silently when the browser drops the cookie.
-       */
-      SECURE_COOKIES: z.stringbool().optional(),
-    },
+    server: schema.shape,
     runtimeEnv: {
       BETTER_AUTH_SECRET: bindings.BETTER_AUTH_SECRET,
       RESEND_API_KEY: bindings.RESEND_API_KEY,
@@ -30,6 +48,7 @@ function build(bindings: ApiBindings) {
       SECURE_COOKIES: bindings.SECURE_COOKIES,
     },
     emptyStringAsUndefined: true,
+    createFinalSchema: () => schema,
   });
 }
 

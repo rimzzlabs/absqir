@@ -1,0 +1,18 @@
+---
+import { EmptyModule } from "@/components/shared/empty-module";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+---
+
+<DashboardLayout title="My leave">
+  <EmptyModule
+    icon="leave"
+    title="My leave"
+    description="Ask to be excused from a session before it happens, and see what was decided."
+    phase={3}
+    bullets={[
+      "Pick a session, give a reason, send it to the admins.",
+      "Pending, approved, and declined requests in one list.",
+      "An approved request turns absent into excused on your record.",
+    ]}
+  />
+</DashboardLayout>

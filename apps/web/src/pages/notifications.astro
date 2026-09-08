@@ -1,0 +1,18 @@
+---
+import { EmptyModule } from "@/components/shared/empty-module";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+---
+
+<DashboardLayout title="Notifications">
+  <EmptyModule
+    icon="notifications"
+    title="Notifications"
+    description="Everything that happened that concerns you, in one list, with email when the instance has it."
+    phase={4}
+    bullets={[
+      "Invitations, session reminders an hour before and the day before.",
+      "Leave requests waiting for you, and decisions on yours.",
+      "A session closed with its absent list, for the organizer.",
+    ]}
+  />
+</DashboardLayout>

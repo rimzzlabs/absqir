@@ -1,9 +1,10 @@
 # absqir
 
-Open-source QR attendance. An organizer creates a session and projects its
-QR screen. A reader scans the code with a phone camera, fills in a name and
-an ID, and the check-in appears on the dashboard within seconds. Readers
-never need an account or an app.
+Open-source attendance for offices and communities. An organization keeps a
+directory of people and groups them into teams or cohorts. In the next
+phase, a session expects a group: the room shows a rotating QR screen, the
+door has a scanner, and whoever does not check in is marked absent. Everyone
+signs in through one door with an email address and a 6 digit code.
 
 ## Self-host
 
@@ -16,32 +17,45 @@ cd my-absqir
 npx absqir up
 ```
 
-Open http://localhost:4321 and create the first account. Sign-up closes
-after it; the operator adds accounts with `npx absqir admin create`. The
-full guide — HTTPS, configuration, upgrades, accounts — lives in
-`apps/docs` and on the docs site.
+Set `RESEND_API_KEY` in the generated `.env`, then open
+http://localhost:4321 and enter your email. The code that arrives creates
+the first account, the operator's. After that, people join through
+invitations. The full guide — HTTPS, configuration, upgrades, accounts —
+lives in `apps/docs` and on the docs site.
 
 ## About this repo
 
 A Turborepo monorepo that builds for two targets from one codebase: a Docker
 image on Node.js for self-hosting, and a Cloudflare Worker for the hosted
 version. Astro serves the site, Hono serves the API at `/api`, and both run
-on the same origin. Attendance always belongs to an organization: accounts
-join organizations, sessions live inside them.
+on the same origin. Everything belongs to an organization: accounts join
+organizations with a role (`owner`, `admin`, `organizer`, `member`), the
+directory and the groups live inside them.
 
-## How the QR stays honest
+## Where the build stands
 
-The QR code encodes `/a/{sessionId}?t={token}`. The token is an HMAC over the
-session id and the current 20 second time window, keyed by a per-session
-secret that never leaves the server. The screen fetches a fresh token when
-the window ends, so a photo of the code stops working almost at once. The
-server accepts the current window and the one before it, so a scan near a
-rotation still checks in. One identifier can check in once per session: a
-unique index on `(session_id, identifier)` rejects the second try with a 409.
+This is phase 1 of four: the foundation. One-door sign-in with email codes,
+onboarding, organizations and roles, the people directory with CSV import
+and invitations, and groups. The dashboard shows every planned module; the
+ones that are not built yet say so and name the phase that brings them.
 
-The token code lives in `packages/api/src/lib/qr-token.ts`. The attendance
-routes live in `packages/api/src/routes/attendance-sessions.ts` (owner only)
-and `packages/api/src/routes/check-in.ts` (public).
+| Phase | Delivers                                                                    |
+| ----- | --------------------------------------------------------------------------- |
+| 1     | Accounts, onboarding, organizations, roles, people, groups, invitations     |
+| 2     | Sessions with a start, an end, a late threshold, statuses, two-way check-in |
+| 3     | Public registration for events, leave requests                              |
+| 4     | Reports, CSV export, calendar, notifications and reminders                  |
+
+## How the QR will stay honest
+
+The rotating token is already written and tested in
+`packages/api/src/lib/qr-token.ts`. It is an HMAC over the session id and the
+current 20 second time window, keyed by a per-session secret that never
+leaves the server. The screen fetches a fresh token when the window ends, so
+a photo of the code stops working almost at once. The server accepts the
+current window and the one before it, so a scan near a rotation still checks
+in. Only a signed-in member checks in with it, so a borrowed identifier gets
+nobody in.
 
 ## Stack
 
@@ -68,29 +82,33 @@ and `packages/api/src/routes/check-in.ts` (public).
 apps/
   web/
     src/
-      components/      Islands. One folder per feature.
-      layouts/         Astro shells
+      components/      Islands. One folder per feature: auth, onboarding,
+                       app-shell, people, groups, settings, home, shared
+      layouts/         Astro shells: auth, dashboard
       lib/             Clients, schemas, query client, runtime glue
       mutations/       One hook per action
       queries/         One hook per read
-      pages/           dashboard, sessions, QR display, /a check-in, api
-      middleware.ts    Session into locals, plus the route guard
+      pages/           sign-in, onboarding, invite, the dashboard modules, api
+      middleware.ts    Session, memberships, and onboarding into locals, plus
+                       the route guards
     docker-entry.mjs   Container entrypoint: migrate, then serve
   docs/                Vocs docs site and landing page
 packages/
   api/
     src/
-      lib/             The rotating QR token
+      lib/             The rotating QR token, org access, slugs, CSV
       middleware/      Security, request context, session
-      routes/          One file per resource
+      routes/          One file per resource: auth-flow, onboarding, me,
+                       organizations, people, groups
       context.ts       Shared by Hono and the Astro middleware
     tests/
-  auth/                Better Auth instance, organizations, sign-up policy
+  auth/                Better Auth instance, email codes, organizations,
+                       roles, the sign-up door
   cli/                 The absqir operator CLI, published to npm
   config/              Shared tsconfig and vitest presets
   core/                Money on bigint, dates, query keys
   db/                  Drizzle schema, client, migrations, operator ops
-  transactional/       Resend mailer and React Email templates
+  transactional/       Resend mailer, the code and invitation templates
   ui/                  Base UI primitives, Tailwind theme, motion
 
 Tests live in a `tests/` folder beside `src/`, never mixed into it.
@@ -145,6 +163,9 @@ pnpm dev:all
 - Site and API: http://localhost:4321
 - API reference: http://localhost:4321/api/reference
 - Email preview: http://localhost:3001
+
+Without `RESEND_API_KEY` the server prints every sign-in code and invitation
+link to its log, so you can sign up on a laptop with no mail account.
 
 ## Contributing
 
@@ -234,8 +255,9 @@ The API applies these on every request:
 - **Body limit**: 64 KB.
 - **Rate limit**: the Cloudflare rate limit binding, keyed on
   `CF-Connecting-IP`. The edge sets that header, so a client cannot forge it.
-- **Auth**: Better Auth adds its own limits, 5 sign-ins per minute and 10
-  sign-ups per hour. Passwords are 12 characters or more.
+- **Auth**: Better Auth adds its own limits, 5 sign-ins per minute, 3 codes
+  per minute, 5 code checks per minute. Passwords are 12 characters or more.
+  These limits are off while `ENVIRONMENT` is `development`.
 - **Cookies**: `HttpOnly` always. `Secure` when `ENVIRONMENT` is `production`.
 - **Errors**: the handler returns a request id, never the internal message.
 
@@ -250,9 +272,11 @@ work:
 
 ## Email
 
-Email verification stays off until `RESEND_API_KEY` is set. The stack runs with
-no Resend account. Add the key and Better Auth sends the welcome template from
-`packages/transactional/src/emails/welcome.tsx`.
+Sign-in codes and invitations travel by email. `RESEND_API_KEY` is required
+when `ENVIRONMENT` is `production`; the request fails with a clear message
+without it. Outside production the mailer is optional and the server logs
+what it would have sent. The templates live in
+`packages/transactional/src/emails/`.
 
 ## Conventions
 

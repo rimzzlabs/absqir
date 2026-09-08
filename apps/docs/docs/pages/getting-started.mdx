@@ -7,6 +7,8 @@ Self-host absqir with Docker in a few minutes.
 - A machine with [Docker Engine](https://docs.docker.com/engine/install/) and Docker Compose.
 - Node.js 22 or newer on the machine you run the CLI from.
 - 1 GB of free memory for the app and its Postgres.
+- A [Resend](https://resend.com) API key. Sign-in codes and invitations
+  travel by email.
 
 ## Install
 
@@ -16,6 +18,8 @@ fresh secrets.
 ```bash
 npx absqir@latest init my-absqir
 cd my-absqir
+npx absqir config set RESEND_API_KEY re_xxxxxxxx
+npx absqir config set EMAIL_FROM "absqir <no-reply@your-domain.example>"
 ```
 
 Start the stack. The container applies the database migrations on start.
@@ -24,9 +28,10 @@ Start the stack. The container applies the database migrations on start.
 npx absqir up
 ```
 
-Open `http://localhost:4321` and create the first account. This account is
-the operator's. Sign-up closes after it — see
-[Accounts and organizations](/accounts).
+Open `http://localhost:4321` and enter your email. The code that arrives
+creates the first account: the operator's. Onboarding asks for a name, a
+password, an optional picture, and the first organization. See
+[Accounts and organizations](/accounts) for who can register after that.
 
 Check the instance at any time:
 

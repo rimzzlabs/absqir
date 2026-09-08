@@ -1,0 +1,24 @@
+---
+import { EmptyModule } from "@/components/shared/empty-module";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const role = Astro.locals.activeMembership?.role ?? "member";
+
+if (role === "member") {
+  return Astro.redirect("/my/sessions", 302);
+}
+---
+
+<DashboardLayout title="Schedules">
+  <EmptyModule
+    icon="schedules"
+    title="Schedules"
+    description="A rule that creates sessions on its own: every weekday at nine, every Tuesday evening."
+    phase={2}
+    bullets={[
+      "Daily, weekly, and custom repeats with a start and an end date.",
+      "Each rule points at a group and carries its own late threshold.",
+      "Sessions appear ahead of time, so reminders can go out.",
+    ]}
+  />
+</DashboardLayout>

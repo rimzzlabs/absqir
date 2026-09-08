@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./emails/welcome": "./dist/emails/welcome.js"
+    "./emails/otp": "./dist/emails/otp.js",
+    "./emails/invitation": "./dist/emails/invitation.js"
   },
   "scripts": {
     "build": "tsdown",

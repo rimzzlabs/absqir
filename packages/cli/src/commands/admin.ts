@@ -9,11 +9,14 @@ export async function adminCreate(argv: string[]): Promise<number> {
       email: { type: "string" },
       name: { type: "string" },
       password: { type: "string" },
+      "create-orgs": { type: "boolean", default: false },
     },
   });
 
   if (!values.email || !values.name) {
-    console.error("Usage: absqir admin create --email <email> --name <name> [--password <pw>]");
+    console.error(
+      "Usage: absqir admin create --email <email> --name <name> [--password <pw>] [--create-orgs]",
+    );
     return 1;
   }
 
@@ -36,6 +39,7 @@ export async function adminCreate(argv: string[]): Promise<number> {
       values.name,
       "--password",
       password,
+      ...(values["create-orgs"] ? ["--create-orgs"] : []),
     ],
   });
 
@@ -48,6 +52,34 @@ export async function adminCreate(argv: string[]): Promise<number> {
   return code;
 }
 
+export async function adminPromote(argv: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      email: { type: "string" },
+      revoke: { type: "boolean", default: false },
+    },
+  });
+
+  if (!values.email) {
+    console.error("Usage: absqir admin promote --email <email> [--revoke]");
+    return 1;
+  }
+
+  return runCompose({
+    args: [
+      "run",
+      "--rm",
+      "app",
+      "node",
+      "scripts/admin-promote.mjs",
+      "--email",
+      values.email,
+      ...(values.revoke ? ["--revoke"] : []),
+    ],
+  });
+}
+
 export async function memberAdd(argv: string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv,
@@ -58,8 +90,12 @@ export async function memberAdd(argv: string[]): Promise<number> {
     },
   });
 
-  if (!values.email || !values.org) {
-    console.error("Usage: absqir member add --email <email> --org <slug> [--role member|admin]");
+  const roles = ["owner", "admin", "organizer", "member"];
+
+  if (!values.email || !values.org || !roles.includes(values.role)) {
+    console.error(
+      "Usage: absqir member add --email <email> --org <slug> [--role owner|admin|organizer|member]",
+    );
     return 1;
   }
 

@@ -1,4 +1,26 @@
-import { bigint, boolean, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  bigint,
+  boolean,
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+/** The step a user still has to complete. `done` means the account is ready. */
+export const ONBOARDING_STEPS = ["profile", "avatar", "organization", "done"] as const;
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+export function isOnboardingStep(value: unknown): value is OnboardingStep {
+  return typeof value === "string" && (ONBOARDING_STEPS as readonly string[]).includes(value);
+}
+
+/** Organization roles, most powerful first. Keep in sync with packages/auth/src/roles.ts. */
+export const ORGANIZATION_ROLES = ["owner", "admin", "organizer", "member"] as const;
+export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
 
 // Tables required by Better Auth. Keep the property names in sync with the
 // Better Auth field names: the Drizzle adapter looks columns up by property.
@@ -8,6 +30,10 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  /** Where onboarding resumes. Set by the API, never by the client. */
+  onboardingStep: text("onboarding_step").$type<OnboardingStep>().notNull().default("profile"),
+  /** The operator and anyone they promote can open the "create org" door. */
+  canCreateOrganizations: boolean("can_create_organizations").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -44,6 +70,15 @@ export const account = pgTable("account", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Tables required by the Better Auth organization plugin.
 export const organization = pgTable("organization", {
   id: text("id").primaryKey(),
@@ -54,17 +89,21 @@ export const organization = pgTable("organization", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const member = pgTable("member", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  role: text("role").notNull().default("member"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const member = pgTable(
+  "member",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: text("role").$type<OrganizationRole>().notNull().default("member"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("member_organization_user_idx").on(table.organizationId, table.userId)],
+);
 
 export const invitation = pgTable("invitation", {
   id: text("id").primaryKey(),
@@ -81,41 +120,72 @@ export const invitation = pgTable("invitation", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const verification = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const attendanceSession = pgTable("attendance_session", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  /** HMAC key for the rotating QR token. Never leaves the server. */
-  secret: text("secret").notNull(),
-  active: boolean("active").notNull().default(true),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const attendanceRecord = pgTable(
-  "attendance_record",
+/**
+ * The directory. A person is someone the organization expects to see:
+ * an employee, a volunteer, a participant. The row can exist before the
+ * person has an account (CSV import, invitation) and links to the user
+ * once they accept. Membership and role live on `member`; identity lives here.
+ */
+export const person = pgTable(
+  "person",
   {
     id: text("id").primaryKey(),
-    sessionId: text("session_id")
+    organizationId: text("organization_id")
       .notNull()
-      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Null until the person accepts an invitation or registers. */
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     name: text("name").notNull(),
-    /** Student or employee number. One check-in per identifier per session. */
-    identifier: text("identifier").notNull(),
-    checkedInAt: timestamp("checked_in_at", { withTimezone: true }).notNull().defaultNow(),
+    email: text("email"),
+    /** Employee or member number. Free text, unique inside the organization. */
+    identifier: text("identifier"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("attendance_record_session_identifier_idx").on(table.sessionId, table.identifier),
+    uniqueIndex("person_organization_user_idx")
+      .on(table.organizationId, table.userId)
+      .where(sql`${table.userId} is not null`),
+    uniqueIndex("person_organization_email_idx")
+      .on(table.organizationId, table.email)
+      .where(sql`${table.email} is not null`),
+    uniqueIndex("person_organization_identifier_idx")
+      .on(table.organizationId, table.identifier)
+      .where(sql`${table.identifier} is not null`),
+    index("person_organization_name_idx").on(table.organizationId, table.name),
+  ],
+);
+
+/** A team, a division, a class, a cohort. Sessions expect a group to show up. */
+export const group = pgTable(
+  "group",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("group_organization_name_idx").on(table.organizationId, table.name)],
+);
+
+export const groupMember = pgTable(
+  "group_member",
+  {
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    personId: text("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.groupId, table.personId] }),
+    index("group_member_person_idx").on(table.personId),
   ],
 );
 

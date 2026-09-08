@@ -1,0 +1,20 @@
+---
+import { InviteAccept } from "@/components/invite/invite-accept";
+import AuthLayout from "@/layouts/auth-layout.astro";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/", 302);
+}
+
+// An unfinished account sets up its profile first; step 3 then offers this
+// invitation before anything else.
+if (Astro.locals.user && Astro.locals.onboardingStep !== "done") {
+  return Astro.redirect(`/onboarding?invitation=${encodeURIComponent(id)}`, 302);
+}
+---
+
+<AuthLayout title="Invitation — absqir">
+  <InviteAccept client:load invitationId={id} userEmail={Astro.locals.user?.email ?? null} />
+</AuthLayout>

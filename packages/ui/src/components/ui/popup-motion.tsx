@@ -38,6 +38,9 @@ export const DURATION = {
   slow: 0.24,
 } as const;
 
+/** Added to the transition before the fallback unmount fires. */
+const UNMOUNT_GRACE_MS = 60;
+
 /** Base UI reports these when a transition would fight the interaction. */
 const INSTANT_KINDS = new Set(["delay", "focus", "trigger-change", "group"]);
 
@@ -189,14 +192,31 @@ export function PopupActionsProvider({ actionsRef, children }: PopupActionsProvi
   return <PopupActionsContext.Provider value={actionsRef}>{children}</PopupActionsContext.Provider>;
 }
 
-/** Unmounts the closed popup once its exit animation completes. */
-function usePopupUnmount(open: boolean) {
+/**
+ * Unmounts the closed popup once its exit animation completes. Motion skips
+ * the animation and its completion callback while the tab is hidden, so a
+ * timer the length of the transition is the second line: without it a
+ * dialog closed in a background tab would stay mounted, invisible, and eat
+ * every click.
+ */
+function usePopupUnmount(open: boolean, durationSeconds: number) {
   const actions = useContext(PopupActionsContext);
   const openRef = useRef(open);
 
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  useEffect(() => {
+    if (open) return;
+
+    const timer = setTimeout(
+      () => actions?.current?.unmount(),
+      durationSeconds * 1000 + UNMOUNT_GRACE_MS,
+    );
+
+    return () => clearTimeout(timer);
+  }, [open, durationSeconds, actions]);
 
   // A popup removed while closed, for example by a consumer's own condition,
   // must still release Base UI's mounted state.
@@ -223,7 +243,8 @@ export interface MotionPopupProps extends HTMLProps {
  */
 export function MotionPopup({ state, options, ...props }: MotionPopupProps) {
   const preset = usePopupMotion(state, options);
-  const onAnimationComplete = usePopupUnmount(state.open);
+  const duration = typeof preset.transition.duration === "number" ? preset.transition.duration : 0;
+  const onAnimationComplete = usePopupUnmount(state.open, duration);
 
   return (
     <motion.div {...toMotionProps(props)} {...preset} onAnimationComplete={onAnimationComplete} />

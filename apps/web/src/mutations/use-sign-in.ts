@@ -1,7 +1,12 @@
 import { authMutationKeys, sessionKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
-import type { SignInValues } from "@/lib/auth-schemas";
+
+export interface SignInInput {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
 
 export interface UseSignInOptions {
   /** Where to send the reader after a successful sign in. */
@@ -14,7 +19,7 @@ export function useSignIn(options: UseSignInOptions = {}) {
 
   return useMutation({
     mutationKey: authMutationKeys.signIn(),
-    mutationFn: async (values: SignInValues) => {
+    mutationFn: async (values: SignInInput) => {
       const { error } = await authClient.signIn.email({
         email: values.email,
         password: values.password,
@@ -23,7 +28,7 @@ export function useSignIn(options: UseSignInOptions = {}) {
       });
 
       if (error) {
-        throw new Error(error.message ?? "Those details did not match an account.");
+        throw new Error(error.message ?? "That password did not match.");
       }
     },
     onSuccess: async () => {

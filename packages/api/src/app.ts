@@ -4,12 +4,15 @@ import { requestId } from "hono/request-id";
 import { match, P } from "ts-pattern";
 import { csrfPolicy, payloadLimit, rateLimit, securityHeaders } from "@/middleware/security";
 import { currentSession, requestContext } from "@/middleware/session";
-import { attendanceSessionRoutes } from "@/routes/attendance-sessions";
 import { authRoutes } from "@/routes/auth";
-import { checkInRoutes } from "@/routes/check-in";
+import { authFlowRoutes } from "@/routes/auth-flow";
 import { mountDocs } from "@/routes/docs";
+import { groupRoutes } from "@/routes/groups";
 import { healthRoutes } from "@/routes/health";
 import { meRoutes } from "@/routes/me";
+import { onboardingRoutes } from "@/routes/onboarding";
+import { organizationRoutes } from "@/routes/organizations";
+import { peopleRoutes } from "@/routes/people";
 import type { AppEnv } from "@/types";
 
 const app = new OpenAPIHono<AppEnv>({
@@ -30,10 +33,13 @@ app.use("*", currentSession());
 
 const routes = app
   .route("/", authRoutes)
+  .route("/", authFlowRoutes)
   .route("/", healthRoutes)
   .route("/", meRoutes)
-  .route("/", attendanceSessionRoutes)
-  .route("/", checkInRoutes);
+  .route("/", onboardingRoutes)
+  .route("/", organizationRoutes)
+  .route("/", peopleRoutes)
+  .route("/", groupRoutes);
 
 mountDocs(app);
 

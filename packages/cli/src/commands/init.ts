@@ -33,6 +33,8 @@ services:
       BETTER_AUTH_SECRET: \${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
       SECURE_COOKIES: \${SECURE_COOKIES:-false}
       REGISTRATION_OPEN: \${REGISTRATION_OPEN:-false}
+      RESEND_API_KEY: \${RESEND_API_KEY:?Set RESEND_API_KEY in .env, sign-up codes travel by email}
+      EMAIL_FROM: \${EMAIL_FROM:-absqir <onboarding@resend.dev>}
       ENVIRONMENT: production
 
 volumes:
@@ -51,7 +53,15 @@ PORT="4321"
 # drops Secure cookies and sign-in fails silently.
 SECURE_COOKIES="false"
 
-# Sign-up closes after the first user. Set to true to keep it open.
+# Required. Sign-in codes and invitations travel by email through Resend.
+# Get a key at https://resend.com, then set the From address to a domain
+# you verified there.
+RESEND_API_KEY=""
+EMAIL_FROM="absqir <onboarding@resend.dev>"
+
+# Lets every account create organizations. Off by default: only the first
+# account and accounts promoted with \`absqir admin promote\` can. Joining
+# through an invitation never needs this.
 REGISTRATION_OPEN="false"
 
 # Image tag to run. \`absqir upgrade\` pulls this tag again.
@@ -87,9 +97,10 @@ export async function init(argv: string[]): Promise<number> {
   console.log(`Wrote ${envPath} (secrets generated)`);
   console.log("");
   console.log("Next steps:");
-  console.log("  1. absqir up          start the stack");
-  console.log("  2. open http://localhost:4321 and create the first account");
-  console.log("  3. absqir doctor      check the instance");
+  console.log("  1. absqir config set RESEND_API_KEY re_...   codes and invitations go by email");
+  console.log("  2. absqir up                                 start the stack");
+  console.log("  3. open http://localhost:4321, enter your email, and create the first account");
+  console.log("  4. absqir doctor                             check the instance");
 
   return 0;
 }

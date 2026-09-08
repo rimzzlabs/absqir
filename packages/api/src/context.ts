@@ -1,4 +1,4 @@
-import { type Auth, createAuth } from "@absqir/auth";
+import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
 import { createMailer } from "@absqir/transactional";
 import type { ApiBindings } from "@/bindings";
@@ -23,6 +23,8 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     ? { db: bindings.SHARED_DB, close: async () => {} }
     : createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
 
+  // Outside production the mailer is optional: codes and links go to the
+  // server log instead, which is what a developer wants on a laptop.
   const mailer = env.RESEND_API_KEY
     ? createMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
     : null;
@@ -34,9 +36,34 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     trustedOrigins: [origin],
     useSecureCookies: secureCookies(env),
     registrationOpen: env.REGISTRATION_OPEN,
-    sendVerificationEmail: mailer
-      ? ({ user, url }) => mailer.sendWelcome(user.email, { name: user.name, verifyUrl: url })
-      : undefined,
+    enforceRateLimit: env.ENVIRONMENT !== "development",
+    sendOtp: async ({ email, otp, type }) => {
+      if (!mailer) {
+        console.log(`[absqir mail] code for ${email} (${type}): ${otp}`);
+        return;
+      }
+
+      await mailer.sendOtp(email, {
+        code: otp,
+        purpose: type,
+        expiresInMinutes: OTP_EXPIRES_IN_SECONDS / 60,
+      });
+    },
+    sendInvitation: async (invitation) => {
+      const acceptUrl = `${origin}/invite/${invitation.invitationId}`;
+
+      if (!mailer) {
+        console.log(`[absqir mail] invitation for ${invitation.email}: ${acceptUrl}`);
+        return;
+      }
+
+      await mailer.sendInvitation(invitation.email, {
+        organizationName: invitation.organizationName,
+        inviterName: invitation.inviterName,
+        role: invitation.role,
+        acceptUrl,
+      });
+    },
   });
 
   return { db, auth, close };

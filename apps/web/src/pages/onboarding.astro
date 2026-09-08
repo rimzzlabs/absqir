@@ -1,0 +1,10 @@
+---
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import AuthLayout from "@/layouts/auth-layout.astro";
+
+const invitationId = Astro.url.searchParams.get("invitation");
+---
+
+<AuthLayout title="Welcome — absqir">
+  <OnboardingFlow client:load invitationId={invitationId} />
+</AuthLayout>

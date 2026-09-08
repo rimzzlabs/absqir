@@ -12,7 +12,7 @@ npx absqir@latest init [dir] [--force]
 
 Writes `docker-compose.yml` and a `.env` with a fresh `BETTER_AUTH_SECRET`
 and Postgres password. Refuses to overwrite existing files without
-`--force`.
+`--force`. Set `RESEND_API_KEY` before the first `up`.
 
 ## up · down · logs
 
@@ -35,20 +35,29 @@ with `SKIP_MIGRATIONS=true`; the app container migrates on start otherwise.
 ## admin create
 
 ```bash
-npx absqir admin create --email <email> --name <name> [--password <pw>]
+npx absqir admin create --email <email> --name <name> [--password <pw>] [--create-orgs]
 ```
 
-Creates an account through the normal sign-up path, so password rules and
-the personal organization apply. Works while sign-up is closed. Without
-`--password`, the CLI generates one and prints it once.
+Creates an account through the normal sign-up path, so password rules
+apply. The account skips onboarding. With `--create-orgs` it may create
+organizations. Without `--password`, the CLI generates one and prints it
+once.
+
+## admin promote
+
+```bash
+npx absqir admin promote --email <email> [--revoke]
+```
+
+Lets an existing account create organizations, or takes that right back.
 
 ## member add
 
 ```bash
-npx absqir member add --email <email> --org <slug> [--role member|admin]
+npx absqir member add --email <email> --org <slug> [--role owner|admin|organizer|member]
 ```
 
-Adds an existing account to an organization by slug.
+Adds an existing account to an organization by slug, and to its directory.
 
 ## config
 
@@ -63,5 +72,5 @@ Reads and edits the instance `.env`. `set` accepts: `PORT`,
 
 ## doctor
 
-Checks Docker, the instance files, the secret length, and the health
-endpoint. Exits non-zero when a check fails, so it fits in scripts.
+Checks Docker, the instance files, the secret length, the mail key, and the
+health endpoint. Exits non-zero when a check fails, so it fits in scripts.

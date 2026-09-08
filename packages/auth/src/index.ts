@@ -1,17 +1,34 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import { ensurePersonForUser } from "@absqir/db/people";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
-import { organization } from "better-auth/plugins";
-import { count, eq } from "drizzle-orm";
+import { emailOTP, organization } from "better-auth/plugins";
+import { and, count, eq } from "drizzle-orm";
+import { ac, roles } from "@/roles";
 
-const ONE_HOUR = 60 * 60;
+const ONE_MINUTE = 60;
+const ONE_HOUR = ONE_MINUTE * 60;
 const ONE_DAY = ONE_HOUR * 24;
 
-export interface VerificationEmail {
-  user: { email: string; name: string };
-  url: string;
+export const OTP_LENGTH = 6;
+export const OTP_EXPIRES_IN_SECONDS = 10 * ONE_MINUTE;
+
+export type OtpPurpose = "sign-in" | "email-verification" | "forget-password" | "change-email";
+
+export interface OtpEmail {
+  email: string;
+  otp: string;
+  type: OtpPurpose;
+}
+
+export interface InvitationEmail {
+  email: string;
+  invitationId: string;
+  organizationName: string;
+  inviterName: string;
+  role: string;
 }
 
 export interface CreateAuthOptions {
@@ -21,19 +38,28 @@ export interface CreateAuthOptions {
   trustedOrigins: string[];
   /** Turn on for https deployments. Cross-site cookies need Secure to be set. */
   useSecureCookies?: boolean;
-  /** Omit to keep email verification off, for example in local development. */
-  sendVerificationEmail?: (email: VerificationEmail) => Promise<unknown>;
   /**
-   * When false, sign-up works only while the instance has zero users, so the
-   * first reader becomes the operator and the door closes behind them.
+   * The "create an organization" door. When false, only the first account and
+   * accounts the operator promoted can create organizations. Sign-up itself
+   * stays open for anyone who holds an invitation.
    */
   registrationOpen?: boolean;
+  /** Delivers the 6 digit code. Required: sign-up cannot finish without it. */
+  sendOtp: (email: OtpEmail) => Promise<void>;
+  /** Delivers the invitation link. */
+  sendInvitation: (email: InvitationEmail) => Promise<void>;
+  /**
+   * Per-IP limits on sign-in and code endpoints. Off in local development,
+   * where every request shares one bucket and a test run trips it.
+   */
+  enforceRateLimit?: boolean;
 }
 
 export function createAuth(options: CreateAuthOptions) {
-  const { db, secret, baseURL, trustedOrigins, sendVerificationEmail } = options;
+  const { db, secret, baseURL, trustedOrigins, sendOtp, sendInvitation } = options;
   const useSecureCookies = options.useSecureCookies ?? false;
   const registrationOpen = options.registrationOpen ?? false;
+  const enforceRateLimit = options.enforceRateLimit ?? true;
 
   return betterAuth({
     secret,
@@ -52,44 +78,105 @@ export function createAuth(options: CreateAuthOptions) {
         invitation: schema.invitation,
       },
     }),
-    plugins: [organization()],
+    user: {
+      additionalFields: {
+        onboardingStep: {
+          type: "string",
+          required: false,
+          defaultValue: "profile",
+          input: false,
+        },
+        canCreateOrganizations: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          input: false,
+        },
+      },
+    },
+    plugins: [
+      organization({
+        ac,
+        roles,
+        creatorRole: "owner",
+        invitationExpiresIn: ONE_DAY * 7,
+        cancelPendingInvitationsOnReInvite: true,
+        allowUserToCreateOrganization: (user) =>
+          registrationOpen || user.canCreateOrganizations === true,
+        sendInvitationEmail: async (data) => {
+          await sendInvitation({
+            email: data.email,
+            invitationId: data.id,
+            organizationName: data.organization.name,
+            inviterName: data.inviter.user.name,
+            role: data.role,
+          });
+        },
+        organizationHooks: {
+          // Every member is also a person in the directory. An imported or
+          // invited row under the same email is claimed here.
+          afterAcceptInvitation: async ({ organization: org, user }) => {
+            await ensurePersonForUser(db, {
+              organizationId: org.id,
+              userId: user.id,
+              name: user.name,
+              email: user.email,
+            });
+          },
+          afterCreateOrganization: async ({ organization: org, user }) => {
+            await ensurePersonForUser(db, {
+              organizationId: org.id,
+              userId: user.id,
+              name: user.name,
+              email: user.email,
+            });
+          },
+        },
+      }),
+      emailOTP({
+        otpLength: OTP_LENGTH,
+        expiresIn: OTP_EXPIRES_IN_SECONDS,
+        allowedAttempts: 5,
+        // The one-door flow verifies every new email with a code, so the
+        // link-based verification email is never sent.
+        overrideDefaultEmailVerification: true,
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          await sendOtp({ email, otp, type });
+        },
+      }),
+    ],
     databaseHooks: {
       user: {
         create: {
-          before: async () => {
+          // The sign-up door. The first account is the operator. After that,
+          // an account needs an invitation unless the operator opened
+          // registration. The operator gets the "create organization" right.
+          before: async (user) => {
+            const [row] = await db.select({ value: count() }).from(schema.user);
+            const firstUser = (row?.value ?? 0) === 0;
+
+            if (firstUser) {
+              return { data: { ...user, canCreateOrganizations: true } };
+            }
+
             if (registrationOpen) return;
 
-            const [row] = await db.select({ value: count() }).from(schema.user);
+            const invited = await db
+              .select({ id: schema.invitation.id })
+              .from(schema.invitation)
+              .where(
+                and(
+                  eq(schema.invitation.email, user.email.toLowerCase()),
+                  eq(schema.invitation.status, "pending"),
+                ),
+              )
+              .limit(1);
 
-            if ((row?.value ?? 0) > 0) {
+            if (!invited[0]) {
               throw new APIError("FORBIDDEN", {
-                message:
-                  "Registration is closed on this instance. Ask the operator for an account.",
+                message: "This email has no invitation. Ask an organizer to invite you.",
               });
             }
-          },
-          // Every user gets a personal organization, so the app never has to
-          // handle an account that owns nothing. One transaction: an
-          // organization without its owner row would be unreachable forever.
-          after: async (user) => {
-            const organizationId = crypto.randomUUID();
-
-            await db.transaction(async (tx) => {
-              await tx.insert(schema.organization).values({
-                id: organizationId,
-                name: "Personal",
-                slug: `personal-${user.id.toLowerCase()}`,
-                createdAt: new Date(),
-              });
-
-              await tx.insert(schema.member).values({
-                id: crypto.randomUUID(),
-                organizationId,
-                userId: user.id,
-                role: "owner",
-                createdAt: new Date(),
-              });
-            });
           },
         },
       },
@@ -102,6 +189,7 @@ export function createAuth(options: CreateAuthOptions) {
               .select({ organizationId: schema.member.organizationId })
               .from(schema.member)
               .where(eq(schema.member.userId, session.userId))
+              .orderBy(schema.member.createdAt)
               .limit(1);
 
             return {
@@ -115,17 +203,9 @@ export function createAuth(options: CreateAuthOptions) {
       enabled: true,
       minPasswordLength: 12,
       maxPasswordLength: 128,
-      requireEmailVerification: sendVerificationEmail !== undefined,
+      // New accounts prove their email with the code before they exist.
+      requireEmailVerification: false,
     },
-    emailVerification: sendVerificationEmail
-      ? {
-          sendOnSignUp: true,
-          autoSignInAfterVerification: true,
-          sendVerificationEmail: async ({ user, url }) => {
-            await sendVerificationEmail({ user: { email: user.email, name: user.name }, url });
-          },
-        }
-      : undefined,
     /*
      * Rolling session. There is no separate refresh token: the session cookie
      * is the credential, and reading it renews it.
@@ -143,20 +223,26 @@ export function createAuth(options: CreateAuthOptions) {
       updateAge: ONE_DAY,
       freshAge: ONE_HOUR,
       // Signed cookie cache: most reads skip the database entirely.
-      cookieCache: { enabled: true, maxAge: 5 * 60 },
+      cookieCache: { enabled: true, maxAge: 5 * ONE_MINUTE },
     },
-    // Blocks credential stuffing. Better Auth counts per IP and per path.
+    // Blocks credential stuffing and code guessing. Per IP and per path.
     rateLimit: {
-      enabled: true,
-      window: 60,
+      enabled: enforceRateLimit,
+      window: ONE_MINUTE,
       max: 100,
       customRules: {
-        "/sign-in/email": { window: 60, max: 5 },
+        "/sign-in/email": { window: ONE_MINUTE, max: 5 },
         "/sign-up/email": { window: ONE_HOUR, max: 10 },
+        "/email-otp/send-verification-otp": { window: ONE_MINUTE, max: 3 },
+        "/sign-in/email-otp": { window: ONE_MINUTE, max: 5 },
+        "/email-otp/reset-password": { window: ONE_MINUTE, max: 5 },
         "/forget-password": { window: ONE_HOUR, max: 5 },
       },
     },
     advanced: {
+      // Cloudflare sets the first header at the edge; a reverse proxy in
+      // front of the Node image sets the second.
+      ipAddress: { ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"] },
       useSecureCookies,
       defaultCookieAttributes: useSecureCookies
         ? { httpOnly: true, secure: true, sameSite: "none", partitioned: true }
@@ -167,3 +253,15 @@ export function createAuth(options: CreateAuthOptions) {
 
 export type Auth = ReturnType<typeof createAuth>;
 export type Session = Auth["$Infer"]["Session"];
+
+/** The status and message Better Auth attached, or null for any other error. */
+export function authErrorOf(error: unknown): { status: number; message: string } | null {
+  if (!(error instanceof APIError)) return null;
+
+  const status = typeof error.statusCode === "number" ? error.statusCode : 400;
+  const message = error.body?.message ?? error.message;
+
+  return { status, message };
+}
+
+export { ac, isRoleName, ROLE_NAMES, type RoleName, roleAtLeast, roles } from "@/roles";

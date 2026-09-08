@@ -1,4 +1,4 @@
-import type { Auth, Session } from "@absqir/auth";
+import type { Auth, RoleName, Session } from "@absqir/auth";
 import type { Database } from "@absqir/db";
 import type { RequestIdVariables } from "hono/request-id";
 import type { ApiBindings } from "@/bindings";
@@ -12,5 +12,7 @@ export interface AppEnv {
     session: Session["session"] | null;
     /** Set by organizationGuard after it proves membership. */
     organizationId?: string;
+    /** The caller's role in that organization. */
+    role?: RoleName;
   };
 }

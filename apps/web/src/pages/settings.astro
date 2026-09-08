@@ -1,0 +1,21 @@
+---
+import { SettingsPage } from "@/components/settings/settings-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { user, activeMembership } = Astro.locals;
+const role = activeMembership?.role ?? "member";
+
+if (!user || !activeMembership || (role !== "owner" && role !== "admin")) {
+  return Astro.redirect("/", 302);
+}
+
+const organization = {
+  id: activeMembership.organizationId,
+  name: activeMembership.name,
+  slug: activeMembership.slug,
+};
+---
+
+<DashboardLayout title="Settings">
+  <SettingsPage client:load role={role} organization={organization} currentUserId={user.id} />
+</DashboardLayout>

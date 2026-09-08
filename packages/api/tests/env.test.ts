@@ -12,6 +12,11 @@ function bindings(overrides: Partial<ApiBindings> = {}): ApiBindings {
   };
 }
 
+/** Production needs a mail provider, so every production case sets one. */
+function production(overrides: Partial<ApiBindings> = {}): ApiBindings {
+  return bindings({ ENVIRONMENT: "production", RESEND_API_KEY: "re_test", ...overrides });
+}
+
 describe("parseEnv", () => {
   it("rejects a secret shorter than 32 characters", () => {
     expect(() => parseEnv(bindings({ BETTER_AUTH_SECRET: "too-short" }))).toThrow();
@@ -38,13 +43,18 @@ describe("parseEnv", () => {
 
   it("serves docs off production and hides them on production", () => {
     expect(docsEnabled(parseEnv(bindings()))).toBe(true);
-    expect(docsEnabled(parseEnv(bindings({ ENVIRONMENT: "production" })))).toBe(false);
+    expect(docsEnabled(parseEnv(production()))).toBe(false);
   });
 
   it("lets ENABLE_DOCS override production", () => {
-    const env = parseEnv(bindings({ ENVIRONMENT: "production", ENABLE_DOCS: "true" }));
+    const env = parseEnv(production({ ENABLE_DOCS: "true" }));
 
     expect(docsEnabled(env)).toBe(true);
+  });
+
+  it("requires a mail provider in production", () => {
+    expect(() => parseEnv(bindings({ ENVIRONMENT: "production" }))).toThrow();
+    expect(() => parseEnv(production())).not.toThrow();
   });
 
   it("caches the parse per bindings object", () => {

@@ -54,6 +54,15 @@ export async function doctor(): Promise<number> {
     });
   }
 
+  if (hasEnv) {
+    const mailKey = readEnvValue(".env", "RESEND_API_KEY") ?? "";
+    results.push({
+      label: "RESEND_API_KEY is set",
+      ok: mailKey.length > 0,
+      hint: "Sign-in codes travel by email. Set it: absqir config set RESEND_API_KEY re_...",
+    });
+  }
+
   const port = (hasEnv ? readEnvValue(".env", "PORT") : null) ?? "4321";
   results.push({
     label: `the app answers on http://localhost:${port}/api/health`,

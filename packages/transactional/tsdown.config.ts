@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/emails/welcome.tsx"],
+  entry: ["src/index.ts", "src/emails/otp.tsx", "src/emails/invitation.tsx"],
   format: "esm",
   platform: "node",
   dts: true,

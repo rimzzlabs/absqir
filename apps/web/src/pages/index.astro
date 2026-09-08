@@ -1,32 +1,15 @@
 ---
-import { AccountPanel } from "@/components/account-panel";
-import { OrgSwitcher } from "@/components/org-switcher/org-switcher";
-import { SessionTable } from "@/components/session-table/session-table";
-import Layout from "@/layouts/layout.astro";
+import { HomePage } from "@/components/home/home-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
-// src/middleware.ts already redirected a signed-out reader, so the user is set.
-const user = Astro.locals.user;
+const { user, activeMembership } = Astro.locals;
 
-if (!user) {
-  return Astro.redirect("/sign-in", 302);
+// A member has no overview; their home is their own sessions.
+if (activeMembership?.role === "member") {
+  return Astro.redirect("/my/sessions", 302);
 }
 ---
 
-<Layout title="absqir">
-  <main class="mx-auto max-w-3xl px-6 py-16">
-    <h1 class="font-serif text-4xl font-bold tracking-tight">absqir</h1>
-    <p class="text-muted-foreground mt-2 mb-8">
-      QR attendance. Create a session, project its code, watch the check-ins arrive.
-    </p>
-
-    <div class="mb-6">
-      <OrgSwitcher client:load />
-    </div>
-
-    <SessionTable client:load />
-
-    <div class="mt-12">
-      <AccountPanel client:load initialName={user.name} initialEmail={user.email} />
-    </div>
-  </main>
-</Layout>
+<DashboardLayout title="Home">
+  <HomePage client:load userName={user?.name ?? ""} />
+</DashboardLayout>

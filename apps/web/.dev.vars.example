@@ -4,9 +4,10 @@ ENVIRONMENT="development"
 
 BETTER_AUTH_SECRET="replace-me-with-a-32-character-secret-value"
 
-# Optional. Leave empty to keep email verification off.
+# Optional outside production. Leave it empty and the server prints every
+# sign-in code and invitation link to its log instead of sending mail.
 RESEND_API_KEY=""
 
-# Sign-up stays open only while the instance has zero users. Set to "true"
-# to keep registration open for everyone.
+# Lets every account create organizations. Off means only the first account
+# and promoted accounts can; joining through an invitation never needs it.
 REGISTRATION_OPEN="false"

@@ -1,19 +1,23 @@
 ---
+import { ThemeToggle } from "@/components/theme-toggle";
 import Layout from "@/layouts/layout.astro";
 
 interface Props {
   title: string;
-  heading: string;
-  subheading: string;
 }
 
-const { title, heading, subheading } = Astro.props;
+const { title } = Astro.props;
 ---
 
 <Layout title={title}>
+  <div class="fixed top-4 right-4 z-50">
+    <ThemeToggle client:load />
+  </div>
   <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-16">
-    <h1 class="font-serif text-3xl font-bold tracking-tight">{heading}</h1>
-    <p class="text-muted-foreground mt-1 mb-8 text-sm">{subheading}</p>
+    <a href="/" class="mb-8 inline-flex items-center gap-2" aria-label="absqir home">
+      <img src="/favicon.svg" alt="" class="size-7" />
+      <span class="font-serif text-xl font-bold tracking-tight">absqir</span>
+    </a>
     <slot />
   </main>
 </Layout>

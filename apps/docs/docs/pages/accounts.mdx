@@ -1,43 +1,75 @@
 # Accounts and organizations
 
-## Bootstrap, then closed
+## One door
 
-A fresh instance accepts exactly one sign-up: the first account belongs to
-the operator. After that, sign-up answers 403 and the operator adds accounts
-from the CLI:
+absqir has one sign-in page. It asks for an email address first, then
+decides what comes next:
+
+- A known email with a password asks for that password. A link on the same
+  screen sends a 6 digit code instead, which also sets a new password.
+- An unknown email that may register receives a 6 digit code. The code
+  creates the account and opens onboarding: name and password, an optional
+  picture, then the organization.
+- An unknown email that may not register sees a note that it needs an
+  invitation.
+
+Codes and invitations travel by email, so `RESEND_API_KEY` is required in
+production. See [Configuration](/configuration).
+
+## Who may register
+
+The first account on a fresh instance is the operator. It can create
+organizations. After that, an email can register only when:
+
+- an organizer invited it (the invitation email carries the link), or
+- the operator set `REGISTRATION_OPEN=true`, which lets any email register
+  and create organizations.
+
+An account without an organization lands on a page that lists its pending
+invitations and, when allowed, a form to create an organization.
+
+## Organizations and roles
+
+Every resource belongs to an organization. An account can belong to several
+and switches between them in the sidebar. Each membership carries one role:
+
+| Role        | What it can do                                                         |
+| ----------- | ---------------------------------------------------------------------- |
+| `owner`     | Everything, including deleting the organization and naming owners.     |
+| `admin`     | Manage people, groups, invitations, members, and settings.             |
+| `organizer` | Read the directory, run sessions, and scan at the door (next phase).   |
+| `member`    | See their own sessions and history, and ask for leave (later phases).  |
+
+## People and groups
+
+The directory holds every person the organization expects to see, with an
+optional email and an optional identifier such as an employee number. A
+person exists before they have an account: add them by hand, or import a
+CSV with `name`, `email`, and `identifier` columns. A person with an email
+can be invited; when they accept, their account links to that directory row.
+
+Groups collect people: a team, a division, a class, a cohort. A session in
+the next phase expects a group, and whoever does not check in is marked
+absent.
+
+## From the CLI
+
+Create an account that skips onboarding. It can create organizations when
+you pass `--create-orgs`:
 
 ```bash
-npx absqir admin create --email guru@example.com --name "Guru"
+npx absqir admin create --email guru@example.com --name "Guru" --create-orgs
 ```
 
-Without `--password`, the CLI generates one and prints it once. Share it over
-a safe channel; the user can change it after sign-in.
-
-To open sign-up for everyone — for example inside a trusted network — set:
+Let an existing account create organizations, or take that back:
 
 ```bash
-npx absqir config set REGISTRATION_OPEN true
-npx absqir up
+npx absqir admin promote --email guru@example.com
+npx absqir admin promote --email guru@example.com --revoke
 ```
 
-## Organizations
-
-Every resource in absqir belongs to an organization, not to a user. Each
-account gets a personal organization at creation, and can create more from
-the dashboard. Attendance sessions, their QR screens, and their check-in
-lists are visible to the members of one organization only.
-
-Add a user to an organization by its slug:
+Add an existing account to an organization by its slug:
 
 ```bash
-npx absqir member add --email guru@example.com --org yayasan-x --role member
+npx absqir member add --email guru@example.com --org yayasan-x --role organizer
 ```
-
-The slug appears in the organization switcher on the dashboard. Roles are
-`member`, `admin`, and `owner`.
-
-## Check-ins need no account
-
-The people who scan the QR code never sign in. The rotating token in the
-scanned URL proves they saw the live screen; they type a name and an ID and
-they are done.

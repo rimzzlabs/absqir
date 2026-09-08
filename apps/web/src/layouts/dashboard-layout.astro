@@ -1,0 +1,38 @@
+---
+import { AppShell } from "@/components/app-shell/app-shell";
+import Layout from "@/layouts/layout.astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+// src/middleware.ts already redirected a signed-out reader, an unfinished
+// account, and an account without an organization. Everything is set here.
+const { user, memberships, activeMembership } = Astro.locals;
+
+if (!user || !activeMembership) {
+  return Astro.redirect("/sign-in", 302);
+}
+
+const shellUser = {
+  name: user.name,
+  email: user.email,
+  image: user.image ?? null,
+  canCreateOrganizations: user.canCreateOrganizations === true,
+};
+---
+
+<Layout title={`${title} — ${activeMembership.name} — absqir`}>
+  <AppShell
+    client:load
+    user={shellUser}
+    memberships={memberships}
+    active={activeMembership}
+    currentPath={Astro.url.pathname}
+    title={title}
+  >
+    <slot />
+  </AppShell>
+</Layout>

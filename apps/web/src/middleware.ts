@@ -1,13 +1,27 @@
 import { defineMiddleware } from "astro:middleware";
 import { createRequestContext } from "@absqir/api";
+import { isRoleName } from "@absqir/auth";
+import { schema } from "@absqir/db";
+import { isOnboardingStep } from "@absqir/db/schema";
 import { getRuntime } from "@app-runtime";
+import { eq } from "drizzle-orm";
 
-/** Pages for signing in. A signed-in reader is sent back to the dashboard. */
-const AUTH_PATHS = new Set(["/sign-in", "/sign-up"]);
+/** The single sign-in door. A signed-in reader is sent to the dashboard. */
+const SIGN_IN_PATH = "/sign-in";
 
-/** A check-in page opens from a scanned QR code, so it never needs a session. */
+/** Reachable without a session. */
 function isPublicPath(path: string): boolean {
-  return AUTH_PATHS.has(path) || path.startsWith("/a/");
+  return path === SIGN_IN_PATH || path === "/sign-up" || path.startsWith("/invite/");
+}
+
+/** Reachable by a signed-in reader who has no organization yet. */
+function isOrgFreePath(path: string): boolean {
+  return path === "/no-organization" || path === "/onboarding" || path.startsWith("/invite/");
+}
+
+function safeNext(url: URL): string {
+  const next = url.pathname + url.search;
+  return encodeURIComponent(next);
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -18,33 +32,93 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
+  // One door. The old sign-up address still works, it just lands on it.
+  if (path === "/sign-up") {
+    return context.redirect(`${SIGN_IN_PATH}${context.url.search}`, 302);
+  }
+
   const runtime = getRuntime(context.locals);
-  const { auth, close } = createRequestContext(runtime.bindings, context.url.origin);
+  const { auth, db, close } = createRequestContext(runtime.bindings, context.url.origin);
+
+  context.locals.user = null;
+  context.locals.session = null;
+  context.locals.onboardingStep = null;
+  context.locals.memberships = [];
+  context.locals.activeMembership = null;
 
   try {
     // This call also renews a session that has passed its updateAge, which is
     // what keeps a returning reader signed in without a new password.
     const data = await auth.api.getSession({ headers: context.request.headers });
 
-    context.locals.user = data?.user ?? null;
-    context.locals.session = data?.session ?? null;
+    if (!data) {
+      if (!isPublicPath(path)) {
+        return context.redirect(`${SIGN_IN_PATH}?next=${safeNext(context.url)}`, 302);
+      }
 
-    if (!data && !isPublicPath(path)) {
-      const next = encodeURIComponent(path + context.url.search);
-      return context.redirect(`/sign-in?next=${next}`, 302);
+      return withNoStore(await next());
     }
 
-    if (data && AUTH_PATHS.has(path)) {
+    const { user, session } = data;
+    const onboardingStep = isOnboardingStep(user.onboardingStep) ? user.onboardingStep : "profile";
+
+    const rows = await db
+      .select({
+        organizationId: schema.member.organizationId,
+        name: schema.organization.name,
+        slug: schema.organization.slug,
+        logo: schema.organization.logo,
+        role: schema.member.role,
+      })
+      .from(schema.member)
+      .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
+      .where(eq(schema.member.userId, user.id))
+      .orderBy(schema.member.createdAt);
+
+    const memberships = rows.flatMap((row) =>
+      isRoleName(row.role) ? [{ ...row, logo: row.logo ?? null, role: row.role }] : [],
+    );
+
+    const activeMembership =
+      memberships.find((row) => row.organizationId === session.activeOrganizationId) ??
+      memberships[0] ??
+      null;
+
+    context.locals.user = user;
+    context.locals.session = session;
+    context.locals.onboardingStep = onboardingStep;
+    context.locals.memberships = memberships;
+    context.locals.activeMembership = activeMembership;
+
+    if (path === SIGN_IN_PATH) {
       return context.redirect("/", 302);
     }
 
-    const response = await next();
+    // Onboarding first. The invitation id rides along so step 3 can accept it.
+    if (onboardingStep !== "done" && path !== "/onboarding" && !path.startsWith("/invite/")) {
+      return context.redirect(`/onboarding${context.url.search}`, 302);
+    }
 
-    // A page rendered for one reader must never sit in a shared cache.
-    response.headers.set("Cache-Control", "private, no-store");
+    if (onboardingStep === "done" && path === "/onboarding") {
+      return context.redirect("/", 302);
+    }
 
-    return response;
+    if (memberships.length === 0 && !isOrgFreePath(path)) {
+      return context.redirect("/no-organization", 302);
+    }
+
+    if (memberships.length > 0 && path === "/no-organization") {
+      return context.redirect("/", 302);
+    }
+
+    return withNoStore(await next());
   } finally {
     runtime.executionCtx.waitUntil(close());
   }
 });
+
+/** A page rendered for one reader must never sit in a shared cache. */
+function withNoStore(response: Response): Response {
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
+}

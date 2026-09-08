@@ -1,5 +1,5 @@
 {
-  "id": "bf9575a1-b4c6-4503-a51a-967c85c023a6",
+  "id": "00d0553c-08e3-42a1-bd37-ba1b39bac6d5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -111,8 +111,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.attendance_record": {
-      "name": "attendance_record",
+    "public.group": {
+      "name": "group",
       "schema": "",
       "columns": {
         "id": {
@@ -121,8 +121,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "session_id": {
-          "name": "session_id",
+        "organization_id": {
+          "name": "organization_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -133,14 +133,21 @@
           "primaryKey": false,
           "notNull": true
         },
-        "identifier": {
-          "name": "identifier",
+        "description": {
+          "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "checked_in_at": {
-          "name": "checked_in_at",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -148,17 +155,17 @@
         }
       },
       "indexes": {
-        "attendance_record_session_identifier_idx": {
-          "name": "attendance_record_session_identifier_idx",
+        "group_organization_name_idx": {
+          "name": "group_organization_name_idx",
           "columns": [
             {
-              "expression": "session_id",
+              "expression": "organization_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "identifier",
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -171,12 +178,12 @@
         }
       },
       "foreignKeys": {
-        "attendance_record_session_id_attendance_session_id_fk": {
-          "name": "attendance_record_session_id_attendance_session_id_fk",
-          "tableFrom": "attendance_record",
-          "tableTo": "attendance_session",
+        "group_organization_id_organization_id_fk": {
+          "name": "group_organization_id_organization_id_fk",
+          "tableFrom": "group",
+          "tableTo": "organization",
           "columnsFrom": [
-            "session_id"
+            "organization_id"
           ],
           "columnsTo": [
             "id"
@@ -191,37 +198,18 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.attendance_session": {
-      "name": "attendance_session",
+    "public.group_member": {
+      "name": "group_member",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
+        "group_id": {
+          "name": "group_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "secret": {
-          "name": "secret",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "active": {
-          "name": "active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "organization_id": {
-          "name": "organization_id",
+        "person_id": {
+          "name": "person_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -234,14 +222,43 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "group_member_person_idx": {
+          "name": "group_member_person_idx",
+          "columns": [
+            {
+              "expression": "person_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "attendance_session_organization_id_organization_id_fk": {
-          "name": "attendance_session_organization_id_organization_id_fk",
-          "tableFrom": "attendance_session",
-          "tableTo": "organization",
+        "group_member_group_id_group_id_fk": {
+          "name": "group_member_group_id_group_id_fk",
+          "tableFrom": "group_member",
+          "tableTo": "group",
           "columnsFrom": [
-            "organization_id"
+            "group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "group_member_person_id_person_id_fk": {
+          "name": "group_member_person_id_person_id_fk",
+          "tableFrom": "group_member",
+          "tableTo": "person",
+          "columnsFrom": [
+            "person_id"
           ],
           "columnsTo": [
             "id"
@@ -250,7 +267,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "group_member_group_id_person_id_pk": {
+          "name": "group_member_group_id_person_id_pk",
+          "columns": [
+            "group_id",
+            "person_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -383,7 +408,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "member_organization_user_idx": {
+          "name": "member_organization_user_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "member_organization_id_organization_id_fk": {
           "name": "member_organization_id_organization_id_fk",
@@ -472,6 +519,184 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.person": {
+      "name": "person",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "person_organization_user_idx": {
+          "name": "person_organization_user_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"person\".\"user_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "person_organization_email_idx": {
+          "name": "person_organization_email_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"person\".\"email\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "person_organization_identifier_idx": {
+          "name": "person_organization_identifier_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"person\".\"identifier\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "person_organization_name_idx": {
+          "name": "person_organization_name_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "person_organization_id_organization_id_fk": {
+          "name": "person_organization_id_organization_id_fk",
+          "tableFrom": "person",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "person_user_id_user_id_fk": {
+          "name": "person_user_id_user_id_fk",
+          "tableFrom": "person",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -601,6 +826,20 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "onboarding_step": {
+          "name": "onboarding_step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'profile'"
+        },
+        "can_create_organizations": {
+          "name": "can_create_organizations",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",

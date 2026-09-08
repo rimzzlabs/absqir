@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { adminCreate, memberAdd } from "@/commands/admin";
+import { adminCreate, adminPromote, memberAdd } from "@/commands/admin";
 import { configGet, configSet } from "@/commands/config";
 import { doctor } from "@/commands/doctor";
 import { init } from "@/commands/init";
@@ -19,7 +19,8 @@ Usage: absqir <command>
   logs              follow the app logs
   upgrade           pull the configured image tag and restart the app
   migrate           apply database migrations in a one-off container
-  admin create      create an account: --email --name [--password]
+  admin create      create an account: --email --name [--password] [--create-orgs]
+  admin promote     let an account create organizations: --email [--revoke]
   member add        add a user to an organization: --email --org [--role]
   config set K V    change a setting in .env
   config get [K]    print the settings
@@ -45,6 +46,7 @@ async function dispatch(argv: string[]): Promise<number> {
       return migrate();
     case "admin":
       if (rest[0] === "create") return adminCreate(rest.slice(1));
+      if (rest[0] === "promote") return adminPromote(rest.slice(1));
       break;
     case "member":
       if (rest[0] === "add") return memberAdd(rest.slice(1));

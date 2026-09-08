@@ -1,10 +1,8 @@
-import { attendanceKeys, organizationMutationKeys, sessionKeys } from "@absqir/core/query-keys";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { organizationMutationKeys } from "@absqir/core/query-keys";
+import { useMutation } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
 export function useSetActiveOrganization() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationKey: organizationMutationKeys.setActive(),
     mutationFn: async (organizationId: string) => {
@@ -15,10 +13,9 @@ export function useSetActiveOrganization() {
       }
     },
     onSuccess: () => {
-      // The active organization lives on the auth session, and every
-      // attendance query is scoped by it on the server.
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.all });
-      void queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+      // The shell is rendered on the server with the active organization, so
+      // every query and every page has to start over.
+      window.location.assign("/");
     },
   });
 }
