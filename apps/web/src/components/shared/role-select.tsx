@@ -1,4 +1,13 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectItemDescription,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@absqir/ui/select";
 import { type InvitableRole, ROLE_OPTIONS } from "@/lib/directory-schemas";
 
 export interface RoleSelectProps {
@@ -28,12 +37,17 @@ export function RoleSelect(props: RoleSelectProps) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            <span>{option.label}</span>
-            <span className="text-muted-foreground text-xs">{option.hint}</span>
-          </SelectItem>
-        ))}
+        <SelectGroup>
+          <SelectLabel>Role</SelectLabel>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              <span className="flex flex-col">
+                <span>{option.label}</span>
+                <SelectItemDescription>{option.hint}</SelectItemDescription>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );

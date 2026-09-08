@@ -10,7 +10,16 @@ import {
 } from "@absqir/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Form, FormField } from "@absqir/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectItemDescription,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@absqir/ui/select";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,18 +89,23 @@ function AskDialog(props: { open: boolean; onOpenChange: (open: boolean) => void
                     <SelectValue placeholder="Pick a session" />
                   </SelectTrigger>
                   <SelectContent>
-                    {options.length === 0 ? (
-                      <p className="text-muted-foreground px-2 py-1.5 text-sm">
-                        Nothing ahead of you to ask about.
-                      </p>
-                    ) : (
-                      options.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          <span>{option.label}</span>
-                          <span className="text-muted-foreground text-xs">{option.hint}</span>
-                        </SelectItem>
-                      ))
-                    )}
+                    <SelectGroup>
+                      <SelectLabel>Upcoming sessions</SelectLabel>
+                      {options.length === 0 ? (
+                        <p className="text-muted-foreground px-1.5 py-1 text-sm">
+                          Nothing ahead of you to ask about.
+                        </p>
+                      ) : (
+                        options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <span className="flex flex-col">
+                              <span>{option.label}</span>
+                              <SelectItemDescription>{option.hint}</SelectItemDescription>
+                            </span>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               )}

@@ -1,7 +1,15 @@
 import { addDays, endOfDay, startOfDay, startOfMonth, subDays } from "@absqir/core/date";
 import { DatePicker } from "@absqir/ui/date-picker";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import type { Group } from "@/queries/use-groups";
 import type { ReportRange } from "@/queries/use-reports";
@@ -124,12 +132,19 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_GROUPS}>Every session</SelectItem>
-              {props.groups.map((group) => (
-                <SelectItem key={group.id} value={group.id}>
-                  {group.name}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectItem value={ALL_GROUPS}>Every session</SelectItem>
+              </SelectGroup>
+              {props.groups.length > 0 ? (
+                <SelectGroup>
+                  <SelectLabel>Groups</SelectLabel>
+                  {props.groups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ) : null}
             </SelectContent>
           </Select>
         </FieldContent>

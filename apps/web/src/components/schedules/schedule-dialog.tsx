@@ -14,7 +14,14 @@ import { Field, FieldContent, FieldError, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@absqir/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
@@ -172,8 +179,10 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="weekly">Weekly, on chosen days</SelectItem>
-                      <SelectItem value="daily">Every day</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="weekly">Weekly, on chosen days</SelectItem>
+                        <SelectItem value="daily">Every day</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </FieldContent>

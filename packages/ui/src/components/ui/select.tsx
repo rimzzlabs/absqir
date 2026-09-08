@@ -97,7 +97,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
+            "relative isolate z-50 max-h-(--available-height) w-max max-w-[min(24rem,var(--available-width))] min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
             className,
           )}
           {...props}
@@ -132,7 +132,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
@@ -143,6 +143,20 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
         <CheckIcon className="pointer-events-none" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
+  );
+}
+
+/**
+ * A second line under an item's label. The popup grows to fit it, so the
+ * hint never runs past the edge or gets clipped.
+ */
+function SelectItemDescription({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="select-item-description"
+      className={cn("block text-xs text-muted-foreground", className)}
+      {...props}
+    />
   );
 }
 
@@ -197,6 +211,7 @@ export {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectItemDescription,
   SelectLabel,
   SelectScrollDownButton,
   SelectScrollUpButton,
