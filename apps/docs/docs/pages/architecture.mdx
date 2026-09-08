@@ -47,9 +47,13 @@ Better Auth owns `user`, `session`, `account`, `verification`,
   and which groups.
 - `attendance_record` — one row per person per session: status, method,
   time, note. Absent rows are written when the session closes.
+- `session_registration` — who signed up through a session's public page.
+- `leave_request` — a member asks to be excused; an approval writes an
+  excused record.
+- `notification` — what one person is told, with a key that makes a repeat
+  write a no-op.
 
-Everything an organization owns cascades on delete. Leave requests and
-notifications arrive in the next phases.
+Everything an organization owns cascades on delete.
 
 ## The rotating QR token and the pass
 

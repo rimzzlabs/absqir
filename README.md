@@ -35,15 +35,15 @@ directory and the groups live inside them.
 
 ## Where the build stands
 
-Phases 1 to 3 of four are built. One-door sign-in with email codes,
-onboarding, organizations and roles, the people directory with CSV import
-and invitations, groups, sessions with a start, an end, a late threshold,
+All four phases are built. One-door sign-in with email codes, onboarding,
+organizations and roles, the people directory with CSV import and
+invitations, groups, sessions with a start, an end, a late threshold,
 groups that are expected, a rotating QR room screen, a scanner for the
 door, per-person statuses, schedules that spawn sessions, the member's own
-sessions and history, and now a public registration page per session that
-also creates accounts, plus leave requests that organizers approve or
-decline. The dashboard shows every planned module; the ones that are not
-built yet say so and name the phase that brings them.
+sessions and history, a public registration page per session that also
+creates accounts, leave requests that organizers approve or decline, and
+now attendance reports with CSV export, a month and week calendar, and
+notifications with reminders before a session.
 
 | Phase | Delivers                                                                    |
 | ----- | --------------------------------------------------------------------------- |
@@ -51,6 +51,8 @@ built yet say so and name the phase that brings them.
 | 2     | Sessions with a start, an end, a late threshold, statuses, two-way check-in |
 | 3     | Public registration for events, leave requests                              |
 | 4     | Reports, CSV export, calendar, notifications and reminders                  |
+
+Next: the first public release. See `CONTRIBUTING.md` to build it locally.
 
 ## How the QR stays honest
 
