@@ -42,16 +42,17 @@ remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
 projector or a tablet. It shows a QR code that encodes a link with a token.
 The token is an HMAC over the session id and the current 20 second window,
 keyed by a per-session secret that never leaves the server, so a photo of
-the code expires within seconds. A member scans it with the phone camera,
-signs in if the phone asks, and is checked in. Only a signed-in member of
-the organization can use the link, and only if they are on the list, unless
-the session allows walk-ins.
+the code expires within seconds. A member scans it from **Check in** in the
+app, which opens the camera, or with the phone camera, which opens the link
+and signs the member in if the phone asks. Only a signed-in member of the
+organization can use the link, and only if they are on the list, unless the
+session allows walk-ins.
 
 **The scanner at the door.** Each member has a pass for the session on
-**My sessions**: a QR code signed with the session secret and bound to that
-person. The organizer opens the scanner page, points the camera at the pass,
-and the person is in. A pass can be pasted as text when the camera is not
-available.
+**Check in** and on **My sessions**: a QR code signed with the session
+secret and bound to that person. The organizer opens the scanner page,
+points the camera at the pass, and the person is in. A pass can be pasted
+as text when the camera is not available.
 
 Either way, the clock decides present or late. A second scan of the same
 person changes nothing and says so.
@@ -105,7 +106,9 @@ sets the status by hand on the session page.
 
 ## For members
 
-**My sessions** lists what expects you, from yesterday on, whether through
+**Check in** is the way in: the camera reads the room screen, and the
+sessions that run right now show a pass for the door. **My sessions**
+lists what expects you, from yesterday on, whether through
 a group or a registration, with your record once you have one and your
 pass while the session runs. **History** lists every closed session with
 your status and an attendance rate. Nobody else in the organization sees

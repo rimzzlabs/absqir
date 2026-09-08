@@ -1,7 +1,16 @@
 # Notifications and reminders
 
 Everything that concerns a person lands in one list, at **Notifications**.
-The bell in the header says how many wait.
+The bell in the header says how many wait. A click on the bell opens the
+newest few in place, with a link to the full list. With a mouse, the bell
+opens when the pointer rests on it.
+
+The bell stays current without a reload. The page holds a stream from the
+server, `GET /api/notifications/stream`, which sends the unread count and
+every new row as server-sent events. The server asks the database every 5
+seconds, so a new notification shows within that time on Node and on
+Cloudflare alike. A browser that loses the stream falls back to a poll once
+a minute.
 
 ## What absqir sends
 
