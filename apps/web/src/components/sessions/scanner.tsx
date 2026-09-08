@@ -3,11 +3,11 @@ import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import jsQR from "jsqr";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge, SessionStatusBadge } from "@/components/shared/status-badge";
+import { useCamera } from "@/components/shared/use-camera";
 import { type ScanResult, useScan } from "@/mutations/use-scan";
 import { useSession } from "@/queries/use-sessions";
 
@@ -24,75 +24,6 @@ interface ScanEntry {
 
 /** The same code seen again within this window is one scan, not two. */
 const REPEAT_MS = 4000;
-
-function useCamera(onCode: (code: string) => void) {
-  const video = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [active, setActive] = useState(false);
-  const callback = useRef(onCode);
-
-  useEffect(() => {
-    callback.current = onCode;
-  }, [onCode]);
-
-  useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-
-    let stream: MediaStream | null = null;
-    let frame = 0;
-    let stopped = false;
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-
-    const tick = () => {
-      if (stopped) return;
-
-      if (element.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA && context) {
-        canvas.width = element.videoWidth;
-        canvas.height = element.videoHeight;
-        context.drawImage(element, 0, 0, canvas.width, canvas.height);
-        const image = context.getImageData(0, 0, canvas.width, canvas.height);
-        const found = jsQR(image.data, image.width, image.height, {
-          inversionAttempts: "dontInvert",
-        });
-        if (found?.data) callback.current(found.data);
-      }
-
-      frame = requestAnimationFrame(tick);
-    };
-
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: "environment" }, audio: false })
-      .then((media) => {
-        if (stopped) {
-          for (const track of media.getTracks()) track.stop();
-          return;
-        }
-        stream = media;
-        element.srcObject = media;
-        return element.play().then(() => {
-          setActive(true);
-          frame = requestAnimationFrame(tick);
-        });
-      })
-      .catch((cause: unknown) => {
-        setError(
-          cause instanceof Error && cause.name === "NotAllowedError"
-            ? "Camera access was refused. Allow it in the browser, or paste the pass below."
-            : "No camera could be opened. Paste the pass below instead.",
-        );
-      });
-
-    return () => {
-      stopped = true;
-      cancelAnimationFrame(frame);
-      if (stream) for (const track of stream.getTracks()) track.stop();
-    };
-  }, []);
-
-  return { video, error, active };
-}
 
 function ScannerBody(props: ScannerProps) {
   const session = useSession(props.sessionId);

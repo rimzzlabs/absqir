@@ -1,0 +1,15 @@
+---
+import { MemberCheckInPage } from "@/components/check-in/member-check-in-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+// Organizers scan people, not screens. They have the scanner on each session.
+const role = Astro.locals.activeMembership?.role ?? "member";
+
+if (role !== "member") {
+  return Astro.redirect("/sessions", 302);
+}
+---
+
+<DashboardLayout title="Check in">
+  <MemberCheckInPage client:load />
+</DashboardLayout>

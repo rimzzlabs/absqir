@@ -8,7 +8,8 @@
     "./money": "./dist/money.js",
     "./date": "./dist/date.js",
     "./query-keys": "./dist/query-keys.js",
-    "./user-agent": "./dist/user-agent.js"
+    "./user-agent": "./dist/user-agent.js",
+    "./check-in-link": "./dist/check-in-link.js"
   },
   "scripts": {
     "build": "tsdown",

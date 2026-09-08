@@ -9,6 +9,7 @@ import {
   NotePencilIcon,
   QrCodeIcon,
   RepeatIcon,
+  ScanIcon,
   UsersIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
@@ -69,6 +70,7 @@ export const MEMBER_NAV: NavGroup[] = [
   {
     label: "Me",
     items: [
+      { href: "/check-in", label: "Check in", icon: ScanIcon, minimum: "member" },
       { href: "/my/sessions", label: "My sessions", icon: QrCodeIcon, minimum: "member" },
       { href: "/my/history", label: "History", icon: ClockCounterClockwiseIcon, minimum: "member" },
       { href: "/my/leave", label: "My leave", icon: NotePencilIcon, minimum: "member" },
