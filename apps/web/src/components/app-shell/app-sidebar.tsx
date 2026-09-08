@@ -32,22 +32,13 @@ export interface AppSidebarProps {
   canCreateOrganizations: boolean;
 }
 
-/** The cobalt bar on the left edge of the entry for the page you are on. */
-const ACTIVE_BAR =
-  "relative before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary before:opacity-0 before:transition-opacity data-active:before:opacity-100";
-
 function NavEntry(props: { item: NavItem; currentPath: string }) {
   const { item } = props;
   const active = isActivePath(item.href, props.currentPath);
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={active}
-        tooltip={item.label}
-        render={<a href={item.href} />}
-        className={ACTIVE_BAR}
-      >
+      <SidebarMenuButton isActive={active} tooltip={item.label} render={<a href={item.href} />}>
         <item.icon
           weight={active ? "fill" : "regular"}
           className={cn("transition-colors", active ? "text-primary" : "")}
@@ -63,7 +54,7 @@ function NavEntry(props: { item: NavItem; currentPath: string }) {
  * so the tile turns into a tinted cobalt square and only fills when active.
  */
 const COLLAPSED_CHECK_IN =
-  "group-data-[collapsible=icon]:bg-primary/10 group-data-[collapsible=icon]:text-primary group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:hover:bg-primary/15 group-data-[collapsible=icon]:hover:text-primary group-data-[collapsible=icon]:active:bg-primary/20 group-data-[collapsible=icon]:active:text-primary group-data-[collapsible=icon]:data-active:bg-primary group-data-[collapsible=icon]:data-active:text-primary-foreground group-data-[collapsible=icon]:data-active:hover:bg-primary/90 group-data-[collapsible=icon]:data-active:hover:text-primary-foreground";
+  "group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:active:bg-primary/20 group-data-[collapsible=icon]:active:text-primary group-data-[collapsible=icon]:data-active:bg-primary group-data-[collapsible=icon]:data-active:text-primary-foreground group-data-[collapsible=icon]:data-active:hover:bg-primary/90 group-data-[collapsible=icon]:data-active:hover:text-primary-foreground";
 
 /** A member's one action, filled in the brand color so it never hides in the list. */
 function CheckInEntry(props: { currentPath: string }) {
@@ -80,7 +71,7 @@ function CheckInEntry(props: { currentPath: string }) {
           )}
         >
           <CHECK_IN.icon weight="bold" />
-          <span>{CHECK_IN.label}</span>
+          <span className="group-data-[collapsible=icon]:sr-only">{CHECK_IN.label}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
