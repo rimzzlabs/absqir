@@ -130,7 +130,7 @@ export function DevicesGrid() {
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () => (
-          <ScrollArea className="max-h-[32rem] rounded-xl">
+          <ScrollArea className="rounded-xl" viewportClassName="max-h-[32rem] pr-3">
             <ul className={cn(GRID, "p-px")}>
               {rows.map((device) => (
                 <DeviceCard
