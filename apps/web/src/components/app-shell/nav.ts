@@ -63,10 +63,18 @@ export const MANAGER_NAV: NavGroup[] = [
       { href: "/reports", label: "Reports", icon: ChartBarIcon, minimum: "organizer" },
     ],
   },
+  {
+    label: "Other",
+    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "organizer" }],
+  },
 ];
 
 /** What a member sees. */
 export const MEMBER_NAV: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [{ href: "/", label: "Home", icon: HouseIcon, minimum: "member" }],
+  },
   {
     label: "Me",
     items: [
@@ -76,12 +84,14 @@ export const MEMBER_NAV: NavGroup[] = [
       { href: "/my/leave", label: "My leave", icon: NotePencilIcon, minimum: "member" },
     ],
   },
+  {
+    label: "Other",
+    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" }],
+  },
 ];
 
-/** Pinned to the bottom. Settings holds the account and preferences for everyone. */
-export const FOOTER_NAV: NavItem[] = [
-  { href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" },
-];
+/** The public repository, linked from the sidebar footer. */
+export const GITHUB_URL = "https://github.com/absqir/absqir";
 
 export function navFor(role: RoleName): NavGroup[] {
   const groups = roleAtLeast(role, "organizer") ? MANAGER_NAV : MEMBER_NAV;
@@ -92,10 +102,6 @@ export function navFor(role: RoleName): NavGroup[] {
       items: group.items.filter((item) => roleAtLeast(role, item.minimum)),
     }))
     .filter((group) => group.items.length > 0);
-}
-
-export function footerNavFor(role: RoleName): NavItem[] {
-  return FOOTER_NAV.filter((item) => roleAtLeast(role, item.minimum));
 }
 
 export function isActivePath(href: string, currentPath: string): boolean {

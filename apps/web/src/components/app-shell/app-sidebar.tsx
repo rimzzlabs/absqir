@@ -11,8 +11,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@absqir/ui/sidebar";
+import { ArrowSquareOutIcon, GithubLogoIcon } from "@phosphor-icons/react";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
-import { footerNavFor, isActivePath, type NavItem, navFor } from "@/components/app-shell/nav";
+import { GITHUB_URL, isActivePath, type NavItem, navFor } from "@/components/app-shell/nav";
 import { OrgSwitcher } from "@/components/app-shell/org-switcher";
 
 export interface AppSidebarProps {
@@ -41,7 +42,6 @@ function NavEntry(props: { item: NavItem; currentPath: string }) {
 
 export function AppSidebar(props: AppSidebarProps) {
   const groups = navFor(props.active.role);
-  const footer = footerNavFor(props.active.role);
 
   return (
     <Sidebar collapsible="icon">
@@ -70,9 +70,16 @@ export function AppSidebar(props: AppSidebarProps) {
 
       <SidebarFooter>
         <SidebarMenu>
-          {footer.map((item) => (
-            <NavEntry key={item.href} item={item} currentPath={props.currentPath} />
-          ))}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Star on GitHub"
+              render={<a href={GITHUB_URL} target="_blank" rel="noreferrer" />}
+            >
+              <GithubLogoIcon weight="fill" />
+              <span className="truncate">Star on GitHub</span>
+              <ArrowSquareOutIcon aria-hidden className="text-muted-foreground ml-auto" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
 
