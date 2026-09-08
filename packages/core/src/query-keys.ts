@@ -172,6 +172,7 @@ export const accountMutationKeys = {
   requestEmailChange: () => [...accountMutationKeys.all, "request-email-change"] as const,
   confirmEmailChange: () => [...accountMutationKeys.all, "confirm-email-change"] as const,
   changePassword: () => [...accountMutationKeys.all, "change-password"] as const,
+  notificationChannel: () => [...accountMutationKeys.all, "notification-channel"] as const,
   revokeSession: () => [...accountMutationKeys.all, "revoke-session"] as const,
   revokeOtherSessions: () => [...accountMutationKeys.all, "revoke-other-sessions"] as const,
 };

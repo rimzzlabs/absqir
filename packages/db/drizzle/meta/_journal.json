@@ -29,6 +29,13 @@
       "when": 1788889342793,
       "tag": "0003_clumsy_loners",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788897261277,
+      "tag": "0004_numerous_stone_men",
+      "breakpoints": true
     }
   ]
 }

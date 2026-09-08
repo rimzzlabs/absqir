@@ -36,6 +36,18 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+/**
+ * Where a person wants to be told. `all` is the app and email, `none` is
+ * silence. The choice lives on the account and copies onto every
+ * notification at write time, so a later change never rewrites history.
+ */
+export const NOTIFICATION_CHANNELS = ["all", "in-app", "email", "none"] as const;
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
+
+export function isNotificationChannel(value: unknown): value is NotificationChannel {
+  return typeof value === "string" && (NOTIFICATION_CHANNELS as readonly string[]).includes(value);
+}
+
 export const LEAVE_STATUSES = ["pending", "approved", "declined"] as const;
 export type LeaveStatus = (typeof LEAVE_STATUSES)[number];
 
@@ -58,6 +70,11 @@ export const user = pgTable("user", {
   onboardingStep: text("onboarding_step").$type<OnboardingStep>().notNull().default("profile"),
   /** The operator and anyone they promote can open the "create org" door. */
   canCreateOrganizations: boolean("can_create_organizations").notNull().default(false),
+  /** Where notifications reach this person. */
+  notificationChannel: text("notification_channel")
+    .$type<NotificationChannel>()
+    .notNull()
+    .default("all"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -424,6 +441,12 @@ export const notification = pgTable(
      * session per kind, however often the tick runs.
      */
     dedupeKey: text("dedupe_key"),
+    /**
+     * The account's choice when the row was written. An `email` row never
+     * shows in the app; an `in-app` row never goes out by email. `none`
+     * writes no row at all.
+     */
+    channel: text("channel").$type<NotificationChannel>().notNull().default("all"),
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

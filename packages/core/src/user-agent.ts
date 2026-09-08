@@ -1,6 +1,10 @@
+/** The shape of the device, for an icon. */
+export type DeviceKind = "phone" | "tablet" | "desktop";
+
 export interface DeviceDescription {
   browser: string;
   platform: string;
+  kind: DeviceKind;
 }
 
 /**
@@ -39,7 +43,13 @@ export function describeUserAgent(userAgent: string | null | undefined): DeviceD
                 ? "Linux"
                 : "unknown device";
 
-  return { browser, platform };
+  const kind: DeviceKind = /iPhone|Android.*Mobile/.test(ua)
+    ? "phone"
+    : /iPad|Android/.test(ua)
+      ? "tablet"
+      : "desktop";
+
+  return { browser, platform, kind };
 }
 
 export function deviceLabel(userAgent: string | null | undefined): string {

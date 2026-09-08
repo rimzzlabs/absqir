@@ -1,8 +1,8 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
-import type { NotificationType } from "@absqir/db/schema";
+import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
 import type { Mailer } from "@absqir/transactional";
-import { and, asc, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import type { AppEnv } from "@/types";
 
@@ -35,10 +35,52 @@ const ACTIONS: Record<NotificationType, string> = {
   "leave-decided": "Open my leave",
 };
 
+/** A channel a written row can carry. `none` never reaches the table. */
+export type DeliveredChannel = Exclude<NotificationChannel, "none">;
+
+/** Whether a row with this channel shows in the bell and the list. */
+export function reachesApp(channel: NotificationChannel): boolean {
+  return channel === "all" || channel === "in-app";
+}
+
+/** Whether a row with this channel may go out by email. */
+export function reachesEmail(channel: NotificationChannel): boolean {
+  return channel === "all" || channel === "email";
+}
+
+/**
+ * Stamps each row with its reader's choice and drops the rows for readers
+ * who asked for silence. Pure, so the tests need no database.
+ */
+export function routeByChannel<T extends { userId: string }>(
+  rows: T[],
+  channelOf: (userId: string) => NotificationChannel,
+): (T & { channel: DeliveredChannel })[] {
+  return rows.flatMap((row) => {
+    const channel = channelOf(row.userId);
+    return channel === "none" ? [] : [{ ...row, channel }];
+  });
+}
+
+async function channelsFor(
+  db: Database,
+  userIds: string[],
+): Promise<Map<string, NotificationChannel>> {
+  if (userIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: user.id, channel: user.notificationChannel })
+    .from(user)
+    .where(inArray(user.id, userIds));
+
+  return new Map(rows.map((row) => [row.id, row.channel]));
+}
+
 /**
  * Writes the notifications that are new and returns only those. A repeat of
  * a keyed row is dropped by the partial unique index, so a caller can run
- * as often as it likes and nobody is told twice.
+ * as often as it likes and nobody is told twice. Each row carries the
+ * reader's channel choice, and a reader who chose `none` gets no row.
  */
 export async function createNotifications(
   db: Database,
@@ -46,11 +88,15 @@ export async function createNotifications(
 ): Promise<NotificationRow[]> {
   if (rows.length === 0) return [];
 
+  const channels = await channelsFor(db, [...new Set(rows.map((row) => row.userId))]);
+  const routed = routeByChannel(rows, (userId) => channels.get(userId) ?? "all");
+  if (routed.length === 0) return [];
+
   return (
     db
       .insert(notification)
       .values(
-        rows.map((row) => ({
+        routed.map((row) => ({
           id: crypto.randomUUID(),
           organizationId: row.organizationId,
           userId: row.userId,
@@ -59,6 +105,7 @@ export async function createNotifications(
           body: row.body ?? null,
           href: row.href ?? null,
           dedupeKey: row.dedupeKey ?? null,
+          channel: row.channel,
         })),
       )
       // `where` states the partial index predicate, so Postgres can infer the
@@ -82,7 +129,7 @@ export async function emailNotifications(
   origin: string,
   rows: NotificationRow[],
 ): Promise<void> {
-  const worth = rows.filter((row) => EMAILED.has(row.type));
+  const worth = rows.filter((row) => EMAILED.has(row.type) && reachesEmail(row.channel));
   if (!mailer || worth.length === 0) return;
 
   const userIds = [...new Set(worth.map((row) => row.userId))];
@@ -153,6 +200,9 @@ export async function userIdsForPeople(db: Database, personIds: string[]): Promi
 
 const LIST_LIMIT = 100;
 
+/** The rows the app shows. An email-only row is a record of a mail, not news. */
+const inApp = ne(notification.channel, "email");
+
 export async function listNotifications(
   db: Database,
   userId: string,
@@ -162,6 +212,7 @@ export async function listNotifications(
   const where = and(
     eq(notification.userId, userId),
     eq(notification.organizationId, organizationId),
+    inApp,
     scope === "unread" ? isNull(notification.readAt) : undefined,
   );
 
@@ -192,6 +243,7 @@ export async function listNotificationsSince(
       and(
         eq(notification.userId, userId),
         eq(notification.organizationId, organizationId),
+        inApp,
         gte(notification.createdAt, since),
       ),
     )
@@ -211,6 +263,7 @@ export async function unreadCount(
       and(
         eq(notification.userId, userId),
         eq(notification.organizationId, organizationId),
+        inApp,
         isNull(notification.readAt),
       ),
     );
@@ -228,6 +281,7 @@ export async function markRead(
   const mine = and(
     eq(notification.userId, userId),
     eq(notification.organizationId, organizationId),
+    inApp,
     isNull(notification.readAt),
   );
 

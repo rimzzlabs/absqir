@@ -106,6 +106,12 @@ export function createAuth(options: CreateAuthOptions) {
           defaultValue: false,
           input: false,
         },
+        notificationChannel: {
+          type: "string",
+          required: false,
+          defaultValue: "all",
+          input: false,
+        },
       },
     },
     plugins: [

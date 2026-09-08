@@ -1,8 +1,9 @@
 import { isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
-import { isOnboardingStep } from "@absqir/db/schema";
+import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
+import { forwardCookies } from "@/lib/auth-forward";
 import { avatarSchema } from "@/lib/avatar";
 import type { AppEnv } from "@/types";
 
@@ -24,6 +25,7 @@ const meSchema = z.object({
   emailVerified: z.boolean(),
   onboardingStep: z.enum(["profile", "avatar", "organization", "done"]),
   canCreateOrganizations: z.boolean(),
+  notificationChannel: z.enum(NOTIFICATION_CHANNELS),
   activeOrganizationId: z.string().nullable(),
   memberships: z.array(membershipSchema),
 });
@@ -34,6 +36,28 @@ const profileSchema = z.object({
   name: z.string().trim().min(1).max(80),
   /** Absent leaves the picture alone; null removes it. */
   image: avatarSchema.optional(),
+});
+
+const channelSchema = z.object({ channel: z.enum(NOTIFICATION_CHANNELS) });
+
+const channelRoute = createRoute({
+  method: "patch",
+  path: "/me/notifications",
+  tags: ["auth"],
+  summary: "Choose where notifications reach me",
+  description:
+    "The choice applies to what is written from now on. `all` is the app and email, `in-app` and `email` are one of them, `none` is silence.",
+  request: { body: { content: { "application/json": { schema: channelSchema } } } },
+  responses: {
+    200: {
+      description: "What is stored now",
+      content: { "application/json": { schema: channelSchema } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
 });
 
 const route = createRoute({
@@ -76,6 +100,28 @@ const updateRoute = createRoute({
 });
 
 export const meRoutes = new OpenAPIHono<AppEnv>()
+  .openapi(channelRoute, async (c) => {
+    const current = c.get("user");
+    if (!current) return c.json({ error: "Unauthorized" }, 401);
+
+    const { channel } = c.req.valid("json");
+
+    await c.var.db
+      .update(user)
+      .set({ notificationChannel: channel, updatedAt: new Date() })
+      .where(eq(user.id, current.id));
+
+    // The cookie cache still carries the old choice. A forced session read
+    // re-issues the cookie, so the next page shows the new one.
+    const refreshed = await c.var.auth.api.getSession({
+      headers: c.req.raw.headers,
+      query: { disableCookieCache: true },
+      returnHeaders: true,
+    });
+    forwardCookies(c, refreshed.headers);
+
+    return c.json({ channel }, 200);
+  })
   .openapi(updateRoute, async (c) => {
     const current = c.get("user");
     if (!current) return c.json({ error: "Unauthorized" }, 401);
@@ -124,6 +170,9 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
         emailVerified: user.emailVerified,
         onboardingStep: isOnboardingStep(user.onboardingStep) ? user.onboardingStep : "profile",
         canCreateOrganizations: user.canCreateOrganizations === true,
+        notificationChannel: isNotificationChannel(user.notificationChannel)
+          ? user.notificationChannel
+          : "all",
         activeOrganizationId: session.activeOrganizationId ?? null,
         memberships,
       },

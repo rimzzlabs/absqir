@@ -12,6 +12,7 @@ function row(id: string, createdAt: string): NotificationRow {
     body: null,
     href: null,
     dedupeKey: null,
+    channel: "all",
     readAt: null,
     createdAt: new Date(createdAt),
   };
