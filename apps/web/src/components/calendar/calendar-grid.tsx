@@ -64,8 +64,8 @@ export function CalendarGrid(props: CalendarGridProps) {
   const limit = props.view === "month" ? MONTH_CELL_LIMIT : Number.POSITIVE_INFINITY;
 
   return (
-    <div className="border-border overflow-hidden rounded-xl border">
-      <div className="bg-muted/40 text-muted-foreground border-border grid grid-cols-7 border-b text-xs font-medium">
+    <div className="border-border overflow-x-auto rounded-xl border">
+      <div className="bg-muted/40 text-muted-foreground border-border grid min-w-160 grid-cols-7 border-b text-xs font-medium">
         {WEEKDAY_LABELS.map((label) => (
           <div key={label} className="px-2 py-2 text-center">
             {label}
@@ -73,7 +73,7 @@ export function CalendarGrid(props: CalendarGridProps) {
         ))}
       </div>
 
-      <div className="divide-border grid grid-cols-7 divide-x divide-y">
+      <div className="divide-border grid min-w-160 grid-cols-7 divide-x divide-y">
         {props.days.map((day) => {
           const list = props.entries.get(dayKey(day)) ?? [];
           const outside = props.view === "month" && !isSameMonth(day, props.month);
