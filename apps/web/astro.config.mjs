@@ -44,6 +44,8 @@ const UI_DEPS = [
   "@absqir/ui > class-variance-authority",
   "@absqir/ui > cn",
   "@absqir/ui > cmdk",
+  "@absqir/ui > react-day-picker",
+  "@absqir/ui > date-fns",
   "@absqir/ui > input-otp",
   "@absqir/ui > motion/react",
 ];

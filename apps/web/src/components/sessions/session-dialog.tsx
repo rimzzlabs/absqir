@@ -1,5 +1,6 @@
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
+import { DateTimePicker } from "@absqir/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +19,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
-import {
-  fromLocalInput,
-  type SessionValues,
-  sessionSchema,
-  toLocalInput,
-} from "@/lib/session-schemas";
+import { type SessionValues, sessionSchema } from "@/lib/session-schemas";
 import { useCreateSession } from "@/mutations/use-create-session";
 import { useUpdateSession } from "@/mutations/use-update-session";
 import type { Session } from "@/queries/use-sessions";
@@ -48,8 +44,8 @@ function defaults(session: Session | null): SessionValues {
     return {
       title: session.title,
       description: session.description ?? "",
-      startsAt: toLocalInput(session.startsAt),
-      endsAt: toLocalInput(session.endsAt),
+      startsAt: new Date(session.startsAt),
+      endsAt: new Date(session.endsAt),
       lateAfterMinutes: String(session.lateAfterMinutes),
       opensBeforeMinutes: String(session.opensBeforeMinutes),
       allowWalkIns: session.allowWalkIns,
@@ -62,8 +58,8 @@ function defaults(session: Session | null): SessionValues {
   return {
     title: "",
     description: "",
-    startsAt: toLocalInput(start.toISOString()),
-    endsAt: toLocalInput(new Date(start.getTime() + HOUR_MS).toISOString()),
+    startsAt: start,
+    endsAt: new Date(start.getTime() + HOUR_MS),
     lateAfterMinutes: "15",
     opensBeforeMinutes: "15",
     allowWalkIns: false,
@@ -90,8 +86,8 @@ export function SessionDialog(props: SessionDialogProps) {
     const payload = {
       title: values.title,
       description: values.description || null,
-      startsAt: fromLocalInput(values.startsAt),
-      endsAt: fromLocalInput(values.endsAt),
+      startsAt: values.startsAt.toISOString(),
+      endsAt: values.endsAt.toISOString(),
       lateAfterMinutes: Number(values.lateAfterMinutes),
       opensBeforeMinutes: Number(values.opensBeforeMinutes),
       allowWalkIns: values.allowWalkIns,
@@ -139,13 +135,21 @@ export function SessionDialog(props: SessionDialogProps) {
                 control={form.control}
                 name="startsAt"
                 label="Starts"
-                render={(field) => <Input {...field} id="session-starts" type="datetime-local" />}
+                render={(field) => (
+                  <DateTimePicker
+                    id="session-starts"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               <FormField
                 control={form.control}
                 name="endsAt"
                 label="Ends"
-                render={(field) => <Input {...field} id="session-ends" type="datetime-local" />}
+                render={(field) => (
+                  <DateTimePicker id="session-ends" value={field.value} onChange={field.onChange} />
+                )}
               />
             </div>
 

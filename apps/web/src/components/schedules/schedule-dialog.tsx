@@ -1,5 +1,7 @@
+import { formatDate } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
+import { DatePicker, TimeField } from "@absqir/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -40,10 +42,10 @@ const WEEKDAYS = [
   { value: 0, label: "Sun" },
 ];
 
-function today(): string {
-  const date = new Date();
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+/** "yyyy-MM-dd" → a local midnight, so the calendar shows the right day. */
+function fromDay(value: string): Date {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
 }
 
 function defaults(schedule: Schedule | null): ScheduleValues {
@@ -57,8 +59,8 @@ function defaults(schedule: Schedule | null): ScheduleValues {
       durationMinutes: String(schedule.durationMinutes),
       lateAfterMinutes: String(schedule.lateAfterMinutes),
       opensBeforeMinutes: String(schedule.opensBeforeMinutes),
-      startsOn: schedule.startsOn,
-      endsOn: schedule.endsOn ?? "",
+      startsOn: fromDay(schedule.startsOn),
+      endsOn: schedule.endsOn ? fromDay(schedule.endsOn) : null,
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
       groupIds: schedule.groups.map((group) => group.id),
@@ -74,8 +76,8 @@ function defaults(schedule: Schedule | null): ScheduleValues {
     durationMinutes: "60",
     lateAfterMinutes: "15",
     opensBeforeMinutes: "15",
-    startsOn: today(),
-    endsOn: "",
+    startsOn: new Date(),
+    endsOn: null,
     active: true,
     allowWalkIns: false,
     groupIds: [],
@@ -109,8 +111,8 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
       lateAfterMinutes: Number(values.lateAfterMinutes),
       opensBeforeMinutes: Number(values.opensBeforeMinutes),
       timezone,
-      startsOn: values.startsOn,
-      endsOn: values.endsOn || null,
+      startsOn: formatDate(values.startsOn, "iso"),
+      endsOn: values.endsOn ? formatDate(values.endsOn, "iso") : null,
       active: values.active,
       allowWalkIns: values.allowWalkIns,
       groupIds: values.groupIds,
@@ -180,7 +182,13 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 control={form.control}
                 name="startTime"
                 label="Starts at"
-                render={(field) => <Input {...field} id="schedule-start-time" type="time" />}
+                render={(field) => (
+                  <TimeField
+                    id="schedule-start-time"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </div>
 
@@ -246,14 +254,27 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 control={form.control}
                 name="startsOn"
                 label="From"
-                render={(field) => <Input {...field} id="schedule-starts-on" type="date" />}
+                render={(field) => (
+                  <DatePicker
+                    id="schedule-starts-on"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               <FormField
                 control={form.control}
                 name="endsOn"
                 label="Until"
                 description="Leave empty to keep going."
-                render={(field) => <Input {...field} id="schedule-ends-on" type="date" />}
+                render={(field) => (
+                  <DatePicker
+                    id="schedule-ends-on"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="No end"
+                  />
+                )}
               />
             </div>
 
