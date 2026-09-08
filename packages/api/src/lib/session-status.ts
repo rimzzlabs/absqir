@@ -50,3 +50,11 @@ export function statusForCheckIn(session: SessionTimes, at: Date): AttendanceSta
 export function needsFinalising(session: SessionTimes, now: Date = new Date()): boolean {
   return session.closedAt === null && now >= session.endsAt;
 }
+
+/**
+ * A session written after it ended: a record of something that already
+ * happened, not an event to watch. Nobody needs to hear that it closed.
+ */
+export function isBackfill(session: { endsAt: Date; createdAt: Date }): boolean {
+  return session.endsAt <= session.createdAt;
+}

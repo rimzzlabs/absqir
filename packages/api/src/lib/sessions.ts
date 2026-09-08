@@ -5,7 +5,7 @@ import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql }
 import { expectedPersonIds, registeredPersonIds, type SessionRow } from "@/lib/expected";
 import { notifyDueReminders, notifySessionClosed } from "@/lib/notify";
 import { materializeSchedules } from "@/lib/schedule";
-import { needsFinalising, type SessionStatus, statusOf } from "@/lib/session-status";
+import { isBackfill, needsFinalising, type SessionStatus, statusOf } from "@/lib/session-status";
 
 const {
   attendanceSession,
@@ -100,8 +100,9 @@ export async function finalizeSession(db: Database, session: SessionRow, at: Dat
       .returning({ id: attendanceSession.id });
   });
 
-  // Only the close that wins the race tells the organizers.
-  if (closed.length === 0) return;
+  // Only the close that wins the race tells the organizers, and a session
+  // that was already over when somebody wrote it tells nobody.
+  if (closed.length === 0 || isBackfill(session)) return;
 
   const rows = await db
     .select({ status: attendanceRecord.status, value: sql<number>`count(*)`.mapWith(Number) })

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { acceptsCheckIns, needsFinalising, statusForCheckIn, statusOf } from "@/lib/session-status";
+import {
+  acceptsCheckIns,
+  isBackfill,
+  needsFinalising,
+  statusForCheckIn,
+  statusOf,
+} from "@/lib/session-status";
 
 const at = (iso: string) => new Date(iso);
 
@@ -44,5 +50,17 @@ describe("statusForCheckIn", () => {
   it("is present up to the late threshold and late after", () => {
     expect(statusForCheckIn(session, at("2026-09-08T09:15:00Z"))).toBe("present");
     expect(statusForCheckIn(session, at("2026-09-08T09:15:01Z"))).toBe("late");
+  });
+});
+
+describe("isBackfill", () => {
+  it("is true when the session ended before it was written", () => {
+    expect(isBackfill({ ...session, createdAt: at("2026-09-08T10:00:00Z") })).toBe(true);
+    expect(isBackfill({ ...session, createdAt: at("2026-09-09T08:00:00Z") })).toBe(true);
+  });
+
+  it("is false for a session written ahead of its end", () => {
+    expect(isBackfill({ ...session, createdAt: at("2026-09-08T09:59:59Z") })).toBe(false);
+    expect(isBackfill({ ...session, createdAt: at("2026-09-01T09:00:00Z") })).toBe(false);
   });
 });

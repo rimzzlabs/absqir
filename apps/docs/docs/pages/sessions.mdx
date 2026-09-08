@@ -19,6 +19,11 @@ When a session becomes done, every expected person without a record gets an
 `absent` record. That happens on the next read after the end, or at once on
 a manual close, so no cron job is required.
 
+A session can be created with times that already passed, to record something
+that happened before it was written. It closes on the next read and marks
+everyone expected absent, so fix the records afterwards. The dialog warns
+before you save, and the organizers get no closed notification for it.
+
 ## Statuses per person
 
 | Status    | How it happens                                                               |

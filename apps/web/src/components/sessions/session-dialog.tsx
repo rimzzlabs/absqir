@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { DateTimePicker } from "@absqir/ui/date-picker";
@@ -15,6 +16,7 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
@@ -126,6 +128,11 @@ export function SessionDialog(props: SessionDialogProps) {
   };
 
   const groupError = form.formState.errors.groupIds;
+  // A done session always ends in the past; only a session still ahead of
+  // its close needs the warning.
+  const backfill =
+    (props.session === null || props.session.status !== "done") &&
+    form.watch("endsAt") <= new Date();
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
@@ -172,6 +179,18 @@ export function SessionDialog(props: SessionDialogProps) {
                 )}
               />
             </div>
+
+            {backfill ? (
+              <Alert>
+                <ClockCounterClockwiseIcon />
+                <AlertTitle>This session is already over</AlertTitle>
+                <AlertDescription>
+                  {editing
+                    ? "It closes as soon as you save, and everyone expected without a record is marked absent."
+                    : "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record a session that already happened."}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
