@@ -1,5 +1,4 @@
 import {
-  BellIcon,
   CalendarBlankIcon,
   ChartBarIcon,
   ClockCounterClockwiseIcon,
@@ -77,9 +76,8 @@ export const MEMBER_NAV: NavGroup[] = [
   },
 ];
 
-/** Pinned to the bottom for everyone who qualifies. */
+/** Pinned to the bottom for everyone who qualifies. Notifications live in the header bell. */
 export const FOOTER_NAV: NavItem[] = [
-  { href: "/notifications", label: "Notifications", icon: BellIcon, minimum: "member" },
   { href: "/settings", label: "Settings", icon: GearIcon, minimum: "admin" },
 ];
 
