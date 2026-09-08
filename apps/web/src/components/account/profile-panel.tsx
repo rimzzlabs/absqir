@@ -7,6 +7,7 @@ import { CameraIcon, XIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { EmailChange } from "@/components/account/email-change";
+import { TimezoneRow } from "@/components/account/timezone-row";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { RoleBadge, type RoleName } from "@/components/shared/role-badge";
@@ -20,6 +21,8 @@ export interface ProfilePanelProps {
   image: string | null;
   createdAt: string;
   role: RoleName;
+  /** The stored zone. Null follows the device. */
+  timezone: string | null;
 }
 
 /**
@@ -167,6 +170,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
       <div className="border-border border-t">
         <NameRow name={props.name} />
         <EmailRow email={props.email} />
+        <TimezoneRow timezone={props.timezone} />
       </div>
     </SettingsSection>
   );

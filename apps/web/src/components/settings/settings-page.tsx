@@ -37,6 +37,8 @@ export interface SettingsPageProps {
     /** When the account was made, as an ISO instant. */
     createdAt: string;
     notificationChannel: NotificationChannel;
+    /** The stored zone. Null follows the device. */
+    timezone: string | null;
   };
 }
 
@@ -122,6 +124,7 @@ function SettingsBody(props: SettingsPageProps) {
         image={props.user.image}
         createdAt={props.user.createdAt}
         role={props.role}
+        timezone={props.user.timezone}
       />
     ),
     preferences: <PreferencesPanel />,

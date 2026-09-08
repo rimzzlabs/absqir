@@ -42,17 +42,17 @@ const OPTIONS: { value: NotificationChannel; title: string; hint: string; icon: 
   {
     value: "none",
     title: "Off",
-    hint: "Nothing at all. Sessions still expect you.",
+    hint: "Nothing at all. Events still expect you.",
     icon: BellSlashIcon,
   },
 ];
 
 /** What absqir writes, who reads it, and whether an email ever follows. */
 const KINDS: { title: string; who: string; emailed: boolean }[] = [
-  { title: "Session reminder", who: "Everyone expected", emailed: true },
+  { title: "Event reminder", who: "Everyone expected", emailed: true },
   { title: "Leave requested", who: "Organizers", emailed: true },
   { title: "Leave decided", who: "The member who asked", emailed: true },
-  { title: "Session closed", who: "Organizers", emailed: false },
+  { title: "Event closed", who: "Organizers", emailed: false },
 ];
 
 function reachesApp(channel: NotificationChannel): boolean {

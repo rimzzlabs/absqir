@@ -59,7 +59,3 @@ export const scheduleSchema = z
 
 export type SessionValues = z.infer<typeof sessionSchema>;
 export type ScheduleValues = z.infer<typeof scheduleSchema>;
-
-export function browserTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}

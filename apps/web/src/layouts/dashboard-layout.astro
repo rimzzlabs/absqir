@@ -24,7 +24,7 @@ const shellUser = {
 };
 ---
 
-<Layout title={`${title} — ${activeMembership.name} — absqir`}>
+<Layout title={`${title} — ${activeMembership.name} — absqir`} timezone={user.timezone ?? null}>
   <AppShell
     client:load
     user={shellUser}

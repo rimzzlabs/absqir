@@ -1,3 +1,5 @@
+// Installs the display zone before any island formats a date.
+import "@/lib/timezone";
 import { MotionProvider } from "@absqir/ui/motion-provider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/react";

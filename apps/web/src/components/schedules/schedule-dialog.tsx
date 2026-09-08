@@ -1,4 +1,5 @@
-import { formatDate } from "@absqir/core/date";
+import { displayTimezone, formatDate } from "@absqir/core/date";
+import { deviceTimezone } from "@absqir/core/timezone";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { DatePicker, TimeField } from "@absqir/ui/date-picker";
@@ -28,7 +29,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
-import { browserTimezone, type ScheduleValues, scheduleSchema } from "@/lib/session-schemas";
+import { type ScheduleValues, scheduleSchema } from "@/lib/session-schemas";
 import { useCreateSchedule } from "@/mutations/use-create-schedule";
 import { useUpdateSchedule } from "@/mutations/use-update-schedule";
 import type { Schedule } from "@/queries/use-schedules";
@@ -101,7 +102,8 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
   const create = useCreateSchedule();
   const update = useUpdateSchedule();
   const pending = create.isPending || update.isPending;
-  const timezone = props.schedule?.timezone ?? browserTimezone();
+  // A new rule starts in the zone the organizer reads times in.
+  const timezone = props.schedule?.timezone ?? displayTimezone() ?? deviceTimezone();
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.schedule));
@@ -145,7 +147,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
         <DialogHeader>
           <DialogTitle>{editing ? "Edit schedule" : "New schedule"}</DialogTitle>
           <DialogDescription>
-            A rule that creates sessions on its own, two weeks ahead. Times are in {timezone}.
+            A rule that creates events on its own, two weeks ahead. Times are in {timezone}.
           </DialogDescription>
         </DialogHeader>
 

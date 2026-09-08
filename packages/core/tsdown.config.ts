@@ -9,6 +9,7 @@ export default defineConfig({
     "src/user-agent.ts",
     "src/check-in-link.ts",
     "src/notification-channel.ts",
+    "src/timezone.ts",
   ],
   format: "esm",
   platform: "neutral",

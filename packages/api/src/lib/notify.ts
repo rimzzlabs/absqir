@@ -2,7 +2,7 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns";
-import { and, eq, gt, isNull, lte } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { expectedPersonIds, type SessionRow } from "@/lib/expected";
 import {
   createNotifications,
@@ -12,7 +12,7 @@ import {
   userIdsForPeople,
 } from "@/lib/notifications";
 
-const { attendanceSession, schedule } = schema;
+const { attendanceSession, schedule, user } = schema;
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -26,8 +26,9 @@ const BOTH_REMINDERS_GAP_MS = 2 * HOUR_MS;
 
 /**
  * Sessions carry absolute instants, so the wording of a reminder needs a
- * zone to read in. Schedules are the only place an organization states one,
- * so the most used one wins, and UTC covers an organization without any.
+ * zone to read in. A reader who chose one on their account gets theirs; for
+ * the rest, schedules are the only place an organization states one, so the
+ * most used one wins, and UTC covers an organization without any.
  */
 async function organizationTimezone(db: Database, organizationId: string): Promise<string> {
   const rows = await db
@@ -41,6 +42,18 @@ async function organizationTimezone(db: Database, organizationId: string): Promi
   const [best] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
 
   return best?.[0] ?? "UTC";
+}
+
+/** The zone each account chose, for the ones that did. */
+async function userTimezones(db: Database, userIds: string[]): Promise<Map<string, string>> {
+  if (userIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: user.id, timezone: user.timezone })
+    .from(user)
+    .where(inArray(user.id, userIds));
+
+  return new Map(rows.flatMap((row) => (row.timezone ? [[row.id, row.timezone] as const] : [])));
 }
 
 function whenLine(session: SessionRow, timezone: string): string {
@@ -91,7 +104,7 @@ export async function notifyDueReminders(
     const userIds = await userIdsForPeople(db, personIds);
     if (userIds.length === 0) continue;
 
-    const body = whenLine(session, timezone);
+    const zones = await userTimezones(db, userIds);
 
     for (const kind of kinds) {
       const title =
@@ -105,7 +118,7 @@ export async function notifyDueReminders(
           userId,
           type: "session-reminder",
           title,
-          body,
+          body: whenLine(session, zones.get(userId) ?? timezone),
           href: "/my/sessions",
           dedupeKey: `session-reminder:${session.id}:${kind}`,
         });

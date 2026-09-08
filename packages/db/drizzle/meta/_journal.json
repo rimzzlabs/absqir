@@ -43,6 +43,13 @@
       "when": 1788898944965,
       "tag": "0005_polite_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788902293305,
+      "tag": "0006_nice_boomer",
+      "breakpoints": true
     }
   ]
 }

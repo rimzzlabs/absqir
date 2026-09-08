@@ -113,7 +113,10 @@ export const scheduleMutationKeys = {
 
 export const myKeys = {
   all: ["my"] as const,
+  /** Every page of every scope. Mutations invalidate this prefix. */
   sessions: () => [...myKeys.all, "sessions"] as const,
+  sessionsPage: (scope: string, limit: number | null = null) =>
+    [...myKeys.sessions(), scope, limit] as const,
   pass: (id: string) => [...myKeys.all, "pass", id] as const,
   history: () => [...myKeys.all, "history"] as const,
 };
@@ -132,7 +135,10 @@ export const eventMutationKeys = {
 export const leaveKeys = {
   all: ["leave"] as const,
   queue: (status = "pending") => [...leaveKeys.all, "queue", status] as const,
+  /** Every page of every scope of my own requests. */
   mine: () => [...leaveKeys.all, "mine"] as const,
+  minePage: (scope: string, limit: number | null = null) =>
+    [...leaveKeys.mine(), scope, limit] as const,
 };
 
 export const leaveMutationKeys = {
@@ -181,6 +187,7 @@ export const accountMutationKeys = {
   confirmEmailChange: () => [...accountMutationKeys.all, "confirm-email-change"] as const,
   changePassword: () => [...accountMutationKeys.all, "change-password"] as const,
   notificationChannel: () => [...accountMutationKeys.all, "notification-channel"] as const,
+  timezone: () => [...accountMutationKeys.all, "timezone"] as const,
   revokeSession: () => [...accountMutationKeys.all, "revoke-session"] as const,
   revokeOtherSessions: () => [...accountMutationKeys.all, "revoke-other-sessions"] as const,
 };

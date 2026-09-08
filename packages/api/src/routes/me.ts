@@ -1,4 +1,5 @@
 import { isRoleName } from "@absqir/auth";
+import { isTimezone } from "@absqir/core/timezone";
 import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
@@ -27,6 +28,8 @@ const meSchema = z.object({
   onboardingStep: z.enum(["profile", "avatar", "organization", "done"]),
   canCreateOrganizations: z.boolean(),
   notificationChannel: z.enum(NOTIFICATION_CHANNELS),
+  /** IANA zone, or null to follow the device. */
+  timezone: z.string().nullable(),
   activeOrganizationId: z.string().nullable(),
   memberships: z.array(membershipSchema),
 });
@@ -40,6 +43,9 @@ const profileSchema = z.object({
 });
 
 const channelSchema = z.object({ channel: z.enum(NOTIFICATION_CHANNELS) });
+
+/** Null means "follow the device". */
+const timezoneSchema = z.object({ timezone: z.string().max(64).nullable() });
 
 const DEVICE_PAGE_SIZE = 8;
 const MAX_DEVICE_PAGE_SIZE = 50;
@@ -99,6 +105,30 @@ const channelRoute = createRoute({
     200: {
       description: "What is stored now",
       content: { "application/json": { schema: channelSchema } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const timezoneRoute = createRoute({
+  method: "patch",
+  path: "/me/timezone",
+  tags: ["auth"],
+  summary: "Choose the time zone I read times in",
+  description:
+    "An IANA name such as `Asia/Jakarta`. Every page then shows that clock, and reminders are worded in it. Null follows the device again.",
+  request: { body: { content: { "application/json": { schema: timezoneSchema } } } },
+  responses: {
+    200: {
+      description: "What is stored now",
+      content: { "application/json": { schema: timezoneSchema } },
+    },
+    400: {
+      description: "Not a zone this server knows",
+      content: { "application/json": { schema: errorSchema } },
     },
     401: {
       description: "No active session",
@@ -226,6 +256,30 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     return c.json({ channel }, 200);
   })
+  .openapi(timezoneRoute, async (c) => {
+    const current = c.get("user");
+    if (!current) return c.json({ error: "Unauthorized" }, 401);
+
+    const { timezone } = c.req.valid("json");
+    if (timezone !== null && !isTimezone(timezone)) {
+      return c.json({ error: "Unknown time zone." }, 400);
+    }
+
+    await c.var.db
+      .update(user)
+      .set({ timezone, updatedAt: new Date() })
+      .where(eq(user.id, current.id));
+
+    // The cookie cache still carries the old zone; see the channel route.
+    const refreshed = await c.var.auth.api.getSession({
+      headers: c.req.raw.headers,
+      query: { disableCookieCache: true },
+      returnHeaders: true,
+    });
+    forwardCookies(c, refreshed.headers);
+
+    return c.json({ timezone }, 200);
+  })
   .openapi(updateRoute, async (c) => {
     const current = c.get("user");
     if (!current) return c.json({ error: "Unauthorized" }, 401);
@@ -277,6 +331,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
         notificationChannel: isNotificationChannel(user.notificationChannel)
           ? user.notificationChannel
           : "all",
+        timezone: isTimezone(user.timezone) ? user.timezone : null,
         activeOrganizationId: session.activeOrganizationId ?? null,
         memberships,
       },

@@ -25,6 +25,7 @@ const shellUser = {
   notificationChannel: isNotificationChannel(user.notificationChannel)
     ? user.notificationChannel
     : "all",
+  timezone: user.timezone ?? null,
 };
 ---
 

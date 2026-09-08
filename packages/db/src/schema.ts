@@ -72,6 +72,8 @@ export const user = pgTable("user", {
     .$type<NotificationChannel>()
     .notNull()
     .default("all"),
+  /** IANA zone the account reads times in. Null follows the device. */
+  timezone: text("timezone"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

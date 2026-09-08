@@ -112,6 +112,11 @@ export function createAuth(options: CreateAuthOptions) {
           defaultValue: "all",
           input: false,
         },
+        timezone: {
+          type: "string",
+          required: false,
+          input: false,
+        },
       },
     },
     plugins: [

@@ -10,7 +10,8 @@
     "./query-keys": "./dist/query-keys.js",
     "./user-agent": "./dist/user-agent.js",
     "./check-in-link": "./dist/check-in-link.js",
-    "./notification-channel": "./dist/notification-channel.js"
+    "./notification-channel": "./dist/notification-channel.js",
+    "./timezone": "./dist/timezone.js"
   },
   "scripts": {
     "build": "tsdown",
@@ -20,6 +21,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.5.0",
     "@mobily/ts-belt": "4.0.0-rc.5",
     "date-fns": "^4.4.0",
     "dinero.js": "^2.0.2",
