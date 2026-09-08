@@ -1,15 +1,18 @@
 ---
 import { HomePage } from "@/components/home/home-page";
+import { MemberHomePage } from "@/components/home/member-home-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
 const { user, activeMembership } = Astro.locals;
-
-// A member has no overview; their home is their own sessions.
-if (activeMembership?.role === "member") {
-  return Astro.redirect("/my/sessions", 302);
-}
+const isMember = activeMembership?.role === "member";
 ---
 
 <DashboardLayout title="Home">
-  <HomePage client:load userName={user?.name ?? ""} />
+  {
+    isMember ? (
+      <MemberHomePage client:load userName={user?.name ?? ""} />
+    ) : (
+      <HomePage client:load userName={user?.name ?? ""} />
+    )
+  }
 </DashboardLayout>

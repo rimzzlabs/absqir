@@ -11,6 +11,8 @@ const PATTERNS = {
   date: "d MMM yyyy",
   dateTime: "d MMM yyyy, HH:mm",
   weekdayDateTime: "EEE d MMM, HH:mm",
+  /** For a greeting line: "Wednesday, 9 September, 20:15". */
+  longDateTime: "EEEE, d MMMM, HH:mm",
   time: "HH:mm",
   iso: "yyyy-MM-dd",
 } as const;
