@@ -18,6 +18,10 @@ export default defineConfig({
   adapter: deployTarget === "node" ? node({ mode: "standalone" }) : cloudflare(),
   integrations: [
     react({
+      // Keep Babel and the React Compiler away from Vite's pre-bundled deps.
+      // Without this filter, Babel re-parses 500KB+ files in .vite/deps on
+      // every request that touches them.
+      exclude: ["**/node_modules/**"],
       babel: {
         plugins: [["babel-plugin-react-compiler", { target: "19" }]],
       },
@@ -53,6 +57,78 @@ export default defineConfig({
   ],
   server: { port: 4321 },
   vite: {
+    // The workspace packages stay excluded so tsdown rebuilds show up without
+    // a re-optimize. Their third-party imports are listed in `include` (the
+    // "a > b" form resolves b through a's node_modules), so Vite bundles them
+    // in one pass at startup instead of discovering them one page load at a
+    // time, where each discovery forces a full reload.
+    optimizeDeps: {
+      exclude: ["@absqir/api", "@absqir/core", "@absqir/db", "@absqir/ui"],
+      include: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@tanstack/react-query",
+        "@phosphor-icons/react",
+        "react-hook-form",
+        "@hookform/resolvers/zod",
+        "zod",
+        "qrcode",
+        "ts-pattern",
+        "@absqir/ui > @base-ui/react/button",
+        "@absqir/ui > @base-ui/react/input",
+        "@absqir/ui > @base-ui/react/select",
+        "@absqir/ui > @base-ui/react/separator",
+        "@absqir/ui > class-variance-authority",
+        "@absqir/ui > cn",
+        "@absqir/ui > motion/react",
+        "@absqir/core > date-fns",
+      ],
+    },
+    ssr: {
+      optimizeDeps: {
+        include: [
+          "react",
+          "react-dom",
+          "react-dom/server",
+          "react/jsx-runtime",
+          "@tanstack/react-query",
+          "@phosphor-icons/react",
+          "react-hook-form",
+          "@hookform/resolvers/zod",
+          "zod",
+          "qrcode",
+          "ts-pattern",
+          "hono/body-limit",
+          "hono/csrf",
+          "hono/http-exception",
+          "hono/request-id",
+          "hono/secure-headers",
+          "better-auth",
+          "better-auth/api",
+          "better-auth/plugins",
+          "better-auth/adapters/drizzle",
+          "@absqir/api > @hono/zod-openapi",
+          "@absqir/api > @scalar/hono-api-reference",
+          "@absqir/api > @t3-oss/env-core",
+          "@absqir/api > drizzle-orm",
+          "@absqir/db > drizzle-orm/node-postgres",
+          "@absqir/db > drizzle-orm/pg-core",
+          "@absqir/db > pg",
+          "@absqir/api > @absqir/transactional > @react-email/components",
+          "@absqir/api > @absqir/transactional > resend",
+          "@absqir/ui > @base-ui/react/button",
+          "@absqir/ui > @base-ui/react/input",
+          "@absqir/ui > @base-ui/react/select",
+          "@absqir/ui > @base-ui/react/separator",
+          "@absqir/ui > class-variance-authority",
+          "@absqir/ui > cn",
+          "@absqir/ui > motion/react",
+          "@absqir/core > date-fns",
+        ],
+      },
+    },
     plugins: [tailwindcss()],
     resolve: {
       alias: {
