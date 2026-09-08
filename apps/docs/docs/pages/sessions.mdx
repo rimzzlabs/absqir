@@ -4,6 +4,18 @@ A session is one moment people are expected: a shift, a meeting, a
 workshop. It has a start, an end, a late threshold, and one or more groups.
 Everyone in those groups is on the list.
 
+## The list
+
+**Sessions** shows a grid of cards, twelve at a time, with **Upcoming**
+soonest first and **Past** newest first. **Load more** adds the next
+twelve. The search box matches a piece of the title, and the group filter
+keeps the sessions that expect that group. The tab, the search and the
+group stay in the address, so a link opens the same view.
+
+The API answers `GET /api/sessions` with `items` and a `nextCursor`. Send
+the cursor back as `cursor` for the next page. The cursor is where the
+previous page ended, so page fifty costs the database what page one does.
+
 ## The session clock
 
 A session moves through three statuses on its own. Nothing is stored; the
@@ -106,6 +118,10 @@ sets the status by hand on the session page.
 
 ## For members
 
+**Home** is a member's front page: a greeting with the reader's own clock,
+the session that runs now or comes next with its check-in buttons, the
+attendance rate, the sessions attended, the late count, the pending leave
+requests, and the next five sessions beside the last five records.
 **Check in** is the way in: the camera reads the room screen, and the
 sessions that run right now show a pass for the door. **My sessions**
 lists what expects you, from yesterday on, whether through
