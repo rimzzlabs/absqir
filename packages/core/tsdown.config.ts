@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/money.ts", "src/date.ts", "src/query-keys.ts"],
+  entry: ["src/index.ts", "src/money.ts", "src/date.ts", "src/query-keys.ts", "src/user-agent.ts"],
   format: "esm",
   platform: "neutral",
   dts: true,

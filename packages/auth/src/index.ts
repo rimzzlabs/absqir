@@ -154,6 +154,8 @@ export function createAuth(options: CreateAuthOptions) {
         // The one-door flow verifies every new email with a code, so the
         // link-based verification email is never sent.
         overrideDefaultEmailVerification: true,
+        // The account page: a code to the new address proves it is theirs.
+        changeEmail: { enabled: true },
         sendVerificationOTP: async ({ email, otp, type }) => {
           await sendOtp({ email, otp, type });
         },
@@ -271,6 +273,9 @@ export function createAuth(options: CreateAuthOptions) {
         "/sign-in/email-otp": { window: ONE_MINUTE, max: 5 },
         "/email-otp/reset-password": { window: ONE_MINUTE, max: 5 },
         "/forget-password": { window: ONE_HOUR, max: 5 },
+        "/email-otp/request-email-change": { window: ONE_MINUTE, max: 3 },
+        "/email-otp/change-email": { window: ONE_MINUTE, max: 5 },
+        "/change-password": { window: ONE_MINUTE, max: 5 },
       },
     },
     advanced: {

@@ -5,6 +5,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "@/lib/auth-forward";
+import { avatarSchema } from "@/lib/avatar";
 import { findPublicSession, registerForSession } from "@/lib/events";
 import { isSlug } from "@/lib/slug";
 import type { AppEnv } from "@/types";
@@ -13,9 +14,6 @@ const { user, account, invitation, organization, member } = schema;
 
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 128;
-/** A 128px avatar as WebP or JPEG lands well under this. */
-const MAX_AVATAR_BYTES = 48_000;
-const AVATAR_DATA_URL = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/;
 
 const stepSchema = z.enum(["profile", "avatar", "organization", "done"]);
 
@@ -94,7 +92,7 @@ const avatarRoute = createRoute({
         "application/json": {
           schema: z.object({
             /** A small data URL. Null keeps the current picture, or none. */
-            image: z.string().max(MAX_AVATAR_BYTES).regex(AVATAR_DATA_URL).nullable(),
+            image: avatarSchema,
           }),
         },
       },
