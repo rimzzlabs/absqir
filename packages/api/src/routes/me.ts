@@ -2,12 +2,13 @@ import { isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 import { forwardCookies } from "@/lib/auth-forward";
 import { avatarSchema } from "@/lib/avatar";
+import { decodeCursor, pageOf } from "@/lib/cursor";
 import type { AppEnv } from "@/types";
 
-const { member, organization, user } = schema;
+const { member, organization, session, user } = schema;
 
 const membershipSchema = z.object({
   organizationId: z.string(),
@@ -39,6 +40,52 @@ const profileSchema = z.object({
 });
 
 const channelSchema = z.object({ channel: z.enum(NOTIFICATION_CHANNELS) });
+
+const DEVICE_PAGE_SIZE = 8;
+const MAX_DEVICE_PAGE_SIZE = 50;
+
+const deviceSchema = z.object({
+  id: z.string(),
+  /** What `revokeSession` wants. */
+  token: z.string(),
+  userAgent: z.string().nullable(),
+  ipAddress: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  /** The one that made this request. */
+  current: z.boolean(),
+});
+
+const devicePage = z.object({
+  items: z.array(deviceSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+});
+
+const devicesRoute = createRoute({
+  method: "get",
+  path: "/me/devices",
+  tags: ["auth"],
+  summary: "The browsers signed in as me, one page at a time",
+  description:
+    "This device first, then the most recently seen. The page walks the (user, last seen) index, not an offset.",
+  request: {
+    query: z.object({
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_DEVICE_PAGE_SIZE).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "One page of devices",
+      content: { "application/json": { schema: devicePage } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
 
 const channelRoute = createRoute({
   method: "patch",
@@ -100,6 +147,63 @@ const updateRoute = createRoute({
 });
 
 export const meRoutes = new OpenAPIHono<AppEnv>()
+  .openapi(devicesRoute, async (c) => {
+    const current = c.get("user");
+    const mine = c.get("session");
+    if (!current || !mine) return c.json({ error: "Unauthorized" }, 401);
+
+    const query = c.req.valid("query");
+    const limit = query.limit ?? DEVICE_PAGE_SIZE;
+    const cursor = decodeCursor(query.cursor);
+    const now = new Date();
+
+    // Postgres keeps microseconds and JS keeps milliseconds, so the cursor
+    // carries the column as text and the comparison happens in Postgres.
+    const seenAt = sql<string>`${session.updatedAt}::text`;
+    const after = cursor
+      ? or(
+          lt(session.updatedAt, sql`${cursor.at}::timestamp`),
+          and(eq(session.updatedAt, sql`${cursor.at}::timestamp`), lt(session.id, cursor.id)),
+        )
+      : undefined;
+
+    const rows = await c.var.db
+      .select({ row: session, at: seenAt })
+      .from(session)
+      .where(
+        and(
+          eq(session.userId, current.id),
+          gt(session.expiresAt, now),
+          // This device leads the first page and never repeats on a later one.
+          cursor ? sql`${session.id} <> ${mine.id}` : undefined,
+          after,
+        ),
+      )
+      .orderBy(
+        ...(cursor ? [] : [desc(sql`${session.id} = ${mine.id}`)]),
+        desc(session.updatedAt),
+        desc(session.id),
+      )
+      .limit(limit + 1);
+
+    const page = pageOf(rows, limit, (entry) => ({ at: entry.at, id: entry.row.id }));
+
+    return c.json(
+      {
+        items: page.items.map(({ row }) => ({
+          id: row.id,
+          token: row.token,
+          userAgent: row.userAgent ?? null,
+          ipAddress: row.ipAddress ?? null,
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+          current: row.id === mine.id,
+        })),
+        nextCursor: page.nextCursor,
+      },
+      200,
+    );
+  })
   .openapi(channelRoute, async (c) => {
     const current = c.get("user");
     if (!current) return c.json({ error: "Unauthorized" }, 401);

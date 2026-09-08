@@ -71,9 +71,17 @@ export const groupMutationKeys = {
   setMembers: () => [...groupMutationKeys.all, "set-members"] as const,
 };
 
+export interface SessionListFilter {
+  scope: "upcoming" | "past" | "all";
+  q: string;
+  groupId: string;
+}
+
 export const sessionListKeys = {
   all: ["sessions"] as const,
-  list: (scope = "upcoming") => [...sessionListKeys.all, "list", scope] as const,
+  /** Every page of every list. Mutations invalidate this prefix. */
+  lists: () => [...sessionListKeys.all, "list"] as const,
+  list: (filter: SessionListFilter) => [...sessionListKeys.lists(), filter] as const,
   detail: (id: string) => [...sessionListKeys.all, "detail", id] as const,
   records: (id: string) => [...sessionListKeys.all, "records", id] as const,
   qrToken: (id: string) => [...sessionListKeys.all, "qr-token", id] as const,
@@ -163,7 +171,7 @@ export const notificationMutationKeys = {
 
 export const accountKeys = {
   all: ["account"] as const,
-  sessions: () => [...accountKeys.all, "sessions"] as const,
+  devices: () => [...accountKeys.all, "devices"] as const,
 };
 
 export const accountMutationKeys = {

@@ -25,7 +25,7 @@ export function useChangePassword() {
       if (error) throw authErrorMessage(error, "Could not change the password.");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accountKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: accountKeys.devices() });
     },
   });
 }

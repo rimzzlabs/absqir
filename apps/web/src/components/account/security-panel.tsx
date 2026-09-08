@@ -6,7 +6,7 @@ import { Label } from "@absqir/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
-import { DevicesGrid, useOtherDeviceCount } from "@/components/account/devices-grid";
+import { DevicesGrid, useHasOtherDevices } from "@/components/account/devices-grid";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { type ChangePasswordValues, changePasswordSchema } from "@/lib/account-schemas";
@@ -87,10 +87,10 @@ function PasswordRow() {
 }
 
 function SignOutOthers() {
-  const others = useOtherDeviceCount();
+  const hasOthers = useHasOtherDevices();
   const revoke = useRevokeSession();
 
-  if (others === 0) return null;
+  if (!hasOthers) return null;
 
   return (
     <Button variant="outline" disabled={revoke.isPending} onClick={() => revoke.mutate(null)}>

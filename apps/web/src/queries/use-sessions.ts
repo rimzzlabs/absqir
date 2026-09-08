@@ -1,15 +1,32 @@
-import { sessionListKeys } from "@absqir/core/query-keys";
-import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
+import { type SessionListFilter, sessionListKeys } from "@absqir/core/query-keys";
+import {
+  keepPreviousData,
+  type QueryFunctionContext,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
-export type SessionScope = "upcoming" | "past" | "all";
+export type SessionScope = SessionListFilter["scope"];
+export type { SessionListFilter };
 
-export function useSessions(scope: SessionScope = "upcoming") {
-  return useQuery({
-    queryKey: sessionListKeys.list(scope),
-    queryFn: async (ctx: QueryFunctionContext) => {
+/** One list, page by page. The filter is the key, so a new search starts at page one. */
+export function useSessions(filter: SessionListFilter) {
+  return useInfiniteQuery({
+    queryKey: sessionListKeys.list(filter),
+    initialPageParam: null as string | null,
+    queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
+      const [, , wanted] = ctx.queryKey as ReturnType<typeof sessionListKeys.list>;
+
       const response = await api.sessions.$get(
-        { query: { scope } },
+        {
+          query: {
+            scope: wanted.scope,
+            q: wanted.q || undefined,
+            groupId: wanted.groupId || undefined,
+            cursor: ctx.pageParam ?? undefined,
+          },
+        },
         { init: { signal: ctx.signal } },
       );
 
@@ -17,6 +34,9 @@ export function useSessions(scope: SessionScope = "upcoming") {
 
       return response.json();
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // While the reader types, the old page stays instead of a skeleton.
+    placeholderData: keepPreviousData,
     // A running session moves through its statuses on the clock.
     refetchInterval: 60_000,
   });
@@ -57,5 +77,7 @@ export function useSessionRecords(id: string) {
   });
 }
 
-export type Session = NonNullable<ReturnType<typeof useSessions>["data"]>[number];
+export type Session = NonNullable<
+  ReturnType<typeof useSessions>["data"]
+>["pages"][number]["items"][number];
 export type SessionRecord = NonNullable<ReturnType<typeof useSessionRecords>["data"]>[number];

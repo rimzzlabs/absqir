@@ -1,42 +1,26 @@
 import { accountKeys } from "@absqir/core/query-keys";
-import { useQuery } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
+import { type QueryFunctionContext, useInfiniteQuery } from "@tanstack/react-query";
+import { api, apiError } from "@/lib/api";
 
-export interface AccountSession {
-  id: string;
-  token: string;
-  userAgent: string | null;
-  ipAddress: string | null;
-  createdAt: string;
-  updatedAt: string;
-  /** The one that made this request. */
-  current: boolean;
-}
+/** Every browser signed in as me, this one first, then the most recent, page by page. */
+export function useDevices() {
+  return useInfiniteQuery({
+    queryKey: accountKeys.devices(),
+    initialPageParam: null as string | null,
+    queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
+      const response = await api.me.devices.$get(
+        { query: { cursor: ctx.pageParam ?? undefined } },
+        { init: { signal: ctx.signal } },
+      );
 
-/** Every device signed in as me, this one first, then the most recent. */
-export function useAccountSessions() {
-  return useQuery({
-    queryKey: accountKeys.sessions(),
-    queryFn: async (): Promise<AccountSession[]> => {
-      const [list, mine] = await Promise.all([authClient.listSessions(), authClient.getSession()]);
+      if (!response.ok) throw await apiError(response, "Could not list your devices.");
 
-      if (list.error) throw new Error(list.error.message ?? "Could not list your devices.");
-
-      const currentId = mine.data?.session.id ?? null;
-
-      return (list.data ?? [])
-        .map((row) => ({
-          id: row.id,
-          token: row.token,
-          userAgent: row.userAgent ?? null,
-          ipAddress: row.ipAddress ?? null,
-          createdAt: new Date(row.createdAt).toISOString(),
-          updatedAt: new Date(row.updatedAt).toISOString(),
-          current: row.id === currentId,
-        }))
-        .sort(
-          (a, b) => Number(b.current) - Number(a.current) || b.updatedAt.localeCompare(a.updatedAt),
-        );
+      return response.json();
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 }
+
+export type Device = NonNullable<
+  ReturnType<typeof useDevices>["data"]
+>["pages"][number]["items"][number];

@@ -36,6 +36,13 @@
       "when": 1788897261277,
       "tag": "0004_numerous_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788898944965,
+      "tag": "0005_polite_patch",
+      "breakpoints": true
     }
   ]
 }

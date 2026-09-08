@@ -17,7 +17,7 @@ export function useRevokeSession() {
       if (error) throw authErrorMessage(error, "Could not sign that device out.");
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accountKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: accountKeys.devices() });
     },
   });
 }

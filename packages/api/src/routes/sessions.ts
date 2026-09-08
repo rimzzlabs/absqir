@@ -122,16 +122,35 @@ const badTimes = {
   content: { "application/json": { schema: errorSchema } },
 } as const;
 
+const PAGE_SIZE = 12;
+const MAX_PAGE_SIZE = 50;
+
+const listQuery = z.object({
+  scope: z.enum(["upcoming", "past", "all"]).optional(),
+  /** A piece of the title, any case. */
+  q: z.string().trim().max(120).optional(),
+  groupId: z.string().max(64).optional(),
+  /** `nextCursor` from the previous page. Absent for the first page. */
+  cursor: z.string().max(256).optional(),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+});
+
+const sessionPage = z.object({
+  items: z.array(sessionSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+});
+
 const listRoute = createRoute({
   method: "get",
   path: "/sessions",
   tags: ["sessions"],
-  summary: "List sessions. Also spawns scheduled ones and closes ended ones",
-  request: { query: z.object({ scope: z.enum(["upcoming", "past", "all"]).optional() }) },
+  summary: "List sessions, one page at a time. Also spawns scheduled ones and closes ended ones",
+  request: { query: listQuery },
   responses: {
     200: {
       description: "Upcoming sessions soonest first, past ones newest first",
-      content: { "application/json": { schema: z.array(sessionSchema) } },
+      content: { "application/json": { schema: sessionPage } },
     },
     401: unauthorized,
     403: forbidden,
@@ -381,13 +400,24 @@ app.use("/sessions/*", organizationGuard());
 export const sessionRoutes = app
   .openapi(listRoute, async (c) => {
     const organizationId = organizationIdOf(c);
-    const { scope } = c.req.valid("query");
+    const query = c.req.valid("query");
     const now = new Date();
 
     await settle(c.var.db, organizationId, now);
-    const rows = await listSessions(c.var.db, organizationId, scope ?? "upcoming", now);
+    const page = await listSessions(c.var.db, {
+      organizationId,
+      scope: query.scope ?? "upcoming",
+      q: query.q || undefined,
+      groupId: query.groupId || undefined,
+      cursor: query.cursor,
+      limit: query.limit ?? PAGE_SIZE,
+      now,
+    });
 
-    return c.json(await toSessionJson(c.var.db, rows, now), 200);
+    return c.json(
+      { items: await toSessionJson(c.var.db, page.items, now), nextCursor: page.nextCursor },
+      200,
+    );
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);

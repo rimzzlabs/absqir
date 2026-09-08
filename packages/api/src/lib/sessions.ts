@@ -1,7 +1,23 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { AttendanceStatus } from "@absqir/db/schema";
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
+import { decodeCursor, pageOf } from "@/lib/cursor";
 import { expectedPersonIds, registeredPersonIds, type SessionRow } from "@/lib/expected";
 import { notifyDueReminders, notifySessionClosed } from "@/lib/notify";
 import { materializeSchedules } from "@/lib/schedule";
@@ -255,44 +271,81 @@ export async function toSessionJson(
 
 export type SessionScope = "upcoming" | "past" | "all";
 
-const PAST_LIMIT = 200;
+export interface ListSessionsParams {
+  organizationId: string;
+  scope: SessionScope;
+  /** A piece of the title, any case. */
+  q?: string;
+  /** Only sessions that expect this group. */
+  groupId?: string;
+  /** Where the previous page ended, from the previous answer. */
+  cursor?: string;
+  limit: number;
+  now?: Date;
+}
 
 /** A session belongs to the past once it closed, by hand or by the clock. */
 export function isPast(now: Date) {
   return or(isNotNull(attendanceSession.closedAt), lt(attendanceSession.endsAt, now));
 }
 
-export async function listSessions(
-  db: Database,
-  organizationId: string,
-  scope: SessionScope,
-  now: Date = new Date(),
-): Promise<SessionRow[]> {
-  const base = eq(attendanceSession.organizationId, organizationId);
+/**
+ * One page of sessions. Upcoming ones run soonest first, the others newest
+ * first, and the page walks the (starts_at, id) index instead of an offset,
+ * so page fifty costs what page one does.
+ */
+export async function listSessions(db: Database, params: ListSessionsParams) {
+  const now = params.now ?? new Date();
+  const ascending = params.scope === "upcoming";
+  const cursor = decodeCursor(params.cursor);
+  const startsAtText = sql<string>`${attendanceSession.startsAt}::text`;
 
-  if (scope === "upcoming") {
-    return db
-      .select()
-      .from(attendanceSession)
-      .where(and(base, isNull(attendanceSession.closedAt), gte(attendanceSession.endsAt, now)))
-      .orderBy(asc(attendanceSession.startsAt));
-  }
+  const after = cursor
+    ? or(
+        (ascending ? gt : lt)(attendanceSession.startsAt, sql`${cursor.at}::timestamptz`),
+        and(
+          eq(attendanceSession.startsAt, sql`${cursor.at}::timestamptz`),
+          (ascending ? gt : lt)(attendanceSession.id, cursor.id),
+        ),
+      )
+    : undefined;
 
-  if (scope === "past") {
-    return db
-      .select()
-      .from(attendanceSession)
-      .where(and(base, isPast(now)))
-      .orderBy(desc(attendanceSession.startsAt))
-      .limit(PAST_LIMIT);
-  }
+  const needle = params.q ? `%${params.q.replaceAll(/[%_\\]/g, "\\$&")}%` : null;
 
-  return db
-    .select()
+  const rows = await db
+    .select({ row: attendanceSession, at: startsAtText })
     .from(attendanceSession)
-    .where(base)
-    .orderBy(desc(attendanceSession.startsAt))
-    .limit(PAST_LIMIT);
+    .where(
+      and(
+        eq(attendanceSession.organizationId, params.organizationId),
+        params.scope === "upcoming"
+          ? and(isNull(attendanceSession.closedAt), gte(attendanceSession.endsAt, now))
+          : params.scope === "past"
+            ? isPast(now)
+            : undefined,
+        needle ? ilike(attendanceSession.title, needle) : undefined,
+        params.groupId
+          ? inArray(
+              attendanceSession.id,
+              db
+                .select({ id: sessionGroup.sessionId })
+                .from(sessionGroup)
+                .where(eq(sessionGroup.groupId, params.groupId)),
+            )
+          : undefined,
+        after,
+      ),
+    )
+    .orderBy(
+      ...(ascending
+        ? [asc(attendanceSession.startsAt), asc(attendanceSession.id)]
+        : [desc(attendanceSession.startsAt), desc(attendanceSession.id)]),
+    )
+    .limit(params.limit + 1);
+
+  const page = pageOf(rows, params.limit, (entry) => ({ at: entry.at, id: entry.row.id }));
+
+  return { items: page.items.map((entry) => entry.row), nextCursor: page.nextCursor };
 }
 
 export interface RecordJson {

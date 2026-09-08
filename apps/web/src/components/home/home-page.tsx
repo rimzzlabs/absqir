@@ -93,8 +93,8 @@ function Checklist(props: { organization: Organization }) {
 }
 
 function UpcomingSessions() {
-  const sessions = useSessions("upcoming");
-  const rows = (sessions.data ?? []).slice(0, 5);
+  const sessions = useSessions({ scope: "upcoming", q: "", groupId: "" });
+  const rows = (sessions.data?.pages[0]?.items ?? []).slice(0, 5);
 
   return (
     <Card>
