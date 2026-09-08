@@ -2,7 +2,7 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationType } from "@absqir/db/schema";
 import type { Mailer } from "@absqir/transactional";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import type { AppEnv } from "@/types";
 
@@ -170,6 +170,32 @@ export async function listNotifications(
     .from(notification)
     .where(where)
     .orderBy(desc(notification.createdAt))
+    .limit(LIST_LIMIT);
+}
+
+/**
+ * The rows written at or after the cursor, oldest first, so a stream can
+ * hand them over in the order they happened. The caller drops what it has
+ * already sent: a JavaScript date holds milliseconds and Postgres holds
+ * microseconds, so the last row sent sits on the cursor itself.
+ */
+export async function listNotificationsSince(
+  db: Database,
+  userId: string,
+  organizationId: string,
+  since: Date,
+): Promise<NotificationRow[]> {
+  return db
+    .select()
+    .from(notification)
+    .where(
+      and(
+        eq(notification.userId, userId),
+        eq(notification.organizationId, organizationId),
+        gte(notification.createdAt, since),
+      ),
+    )
+    .orderBy(asc(notification.createdAt))
     .limit(LIST_LIMIT);
 }
 

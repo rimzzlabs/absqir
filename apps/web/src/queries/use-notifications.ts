@@ -4,9 +4,18 @@ import { api, apiError } from "@/lib/api";
 
 export type NotificationScope = "all" | "unread";
 
-export function useNotifications(scope: NotificationScope = "all") {
+export interface UseNotificationsOptions {
+  /** False keeps the list cold until something shows it. */
+  enabled?: boolean;
+}
+
+export function useNotifications(
+  scope: NotificationScope = "all",
+  options: UseNotificationsOptions = {},
+) {
   return useQuery({
     queryKey: notificationKeys.list(scope),
+    enabled: options.enabled ?? true,
     queryFn: async (ctx: QueryFunctionContext) => {
       const response = await api.notifications.$get(
         { query: { scope } },
@@ -20,7 +29,10 @@ export function useNotifications(scope: NotificationScope = "all") {
   });
 }
 
-/** Feeds the badge in the header, so it polls and nothing else does. */
+/**
+ * Feeds the badge in the header. The stream keeps it current; the poll is
+ * the fallback for a browser that lost the stream.
+ */
 export function useUnreadCount() {
   return useQuery({
     queryKey: notificationKeys.unread(),

@@ -4,16 +4,10 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@a
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
-import {
-  BellIcon,
-  CheckCircleIcon,
-  type Icon,
-  NotePencilIcon,
-  QrCodeIcon,
-  SealCheckIcon,
-} from "@phosphor-icons/react";
+import { BellIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
+import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
@@ -24,16 +18,9 @@ import {
   useNotifications,
 } from "@/queries/use-notifications";
 
-const ICONS: Record<Notification["type"], Icon> = {
-  "session-reminder": QrCodeIcon,
-  "session-closed": SealCheckIcon,
-  "leave-requested": NotePencilIcon,
-  "leave-decided": CheckCircleIcon,
-};
-
 function Row(props: { notification: Notification; onRead: (id: string) => void }) {
   const { notification } = props;
-  const Icon = ICONS[notification.type];
+  const Icon = NOTIFICATION_ICONS[notification.type];
   const unread = notification.readAt === null;
 
   return (

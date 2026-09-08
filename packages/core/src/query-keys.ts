@@ -149,7 +149,9 @@ export const calendarKeys = {
 
 export const notificationKeys = {
   all: ["notifications"] as const,
-  list: (scope = "all") => [...notificationKeys.all, "list", scope] as const,
+  /** Every list, whatever its scope. The stream invalidates this prefix. */
+  lists: () => [...notificationKeys.all, "list"] as const,
+  list: (scope = "all") => [...notificationKeys.lists(), scope] as const,
   unread: () => [...notificationKeys.all, "unread"] as const,
 };
 
@@ -157,6 +159,21 @@ export const notificationMutationKeys = {
   all: ["notification-mutations"] as const,
   read: () => [...notificationMutationKeys.all, "read"] as const,
   readAll: () => [...notificationMutationKeys.all, "read-all"] as const,
+};
+
+export const accountKeys = {
+  all: ["account"] as const,
+  sessions: () => [...accountKeys.all, "sessions"] as const,
+};
+
+export const accountMutationKeys = {
+  all: ["account-mutations"] as const,
+  profile: () => [...accountMutationKeys.all, "profile"] as const,
+  requestEmailChange: () => [...accountMutationKeys.all, "request-email-change"] as const,
+  confirmEmailChange: () => [...accountMutationKeys.all, "confirm-email-change"] as const,
+  changePassword: () => [...accountMutationKeys.all, "change-password"] as const,
+  revokeSession: () => [...accountMutationKeys.all, "revoke-session"] as const,
+  revokeOtherSessions: () => [...accountMutationKeys.all, "revoke-other-sessions"] as const,
 };
 
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */

@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { notificationStream } from "@/lib/notification-stream";
 import { listNotifications, markRead, toNotificationJson, unreadCount } from "@/lib/notifications";
 import { organizationGuard, organizationIdOf } from "@/lib/org-access";
 import type { AppEnv } from "@/types";
@@ -84,6 +85,15 @@ const app = new OpenAPIHono<AppEnv>();
 
 app.use("/notifications", organizationGuard());
 app.use("/notifications/*", organizationGuard());
+
+// Server-sent events. Off the OpenAPI chain: a stream has no JSON body to
+// describe, and the typed client cannot consume one anyway.
+app.get("/notifications/stream", (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+  return notificationStream(c, user.id, organizationIdOf(c));
+});
 
 export const notificationRoutes = app
   .openapi(listRoute, async (c) => {
