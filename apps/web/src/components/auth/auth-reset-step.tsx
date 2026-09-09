@@ -3,10 +3,12 @@ import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { RESEND_COOLDOWN_SECONDS } from "@/components/auth/auth-code-step";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { CodeInput } from "@/components/auth/code-input";
 import { FormError } from "@/components/shared/form-error";
 import { MIN_PASSWORD_LENGTH, type ResetValues, resetSchema } from "@/lib/auth-schemas";
+import { useCooldown } from "@/lib/use-cooldown";
 import { useResetPassword } from "@/mutations/use-reset-password";
 import { useSendCode } from "@/mutations/use-send-code";
 
@@ -25,6 +27,7 @@ export function AuthResetStep(props: AuthResetStepProps) {
 
   const reset = useResetPassword({ redirectTo: props.next });
   const resend = useSendCode();
+  const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
 
   return (
     <Form {...form}>
@@ -72,10 +75,19 @@ export function AuthResetStep(props: AuthResetStepProps) {
             variant="link"
             size="sm"
             className="px-0"
-            disabled={resend.isPending}
-            onClick={() => resend.mutate({ email: props.email, purpose: "forget-password" })}
+            disabled={resend.isPending || !cooldown.ready}
+            onClick={() =>
+              resend.mutate(
+                { email: props.email, purpose: "forget-password" },
+                { onSuccess: cooldown.restart },
+              )
+            }
           >
-            {resend.isPending ? "Sending…" : resend.isSuccess ? "Sent again" : "Send a new code"}
+            {resend.isPending
+              ? "Sending…"
+              : cooldown.ready
+                ? "Send a new code"
+                : `New code in ${cooldown.remaining}s`}
           </Button>
         </div>
       </form>

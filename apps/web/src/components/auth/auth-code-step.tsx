@@ -6,8 +6,12 @@ import { AuthHeading } from "@/components/auth/auth-heading";
 import { CodeInput } from "@/components/auth/code-input";
 import { FormError } from "@/components/shared/form-error";
 import { type CodeValues, codeSchema } from "@/lib/auth-schemas";
+import { useCooldown } from "@/lib/use-cooldown";
 import { useSendCode } from "@/mutations/use-send-code";
 import { useVerifyCode } from "@/mutations/use-verify-code";
+
+/** How long a reader waits before a new code can be asked for. */
+export const RESEND_COOLDOWN_SECONDS = 30;
 
 export interface AuthCodeStepProps {
   email: string;
@@ -25,6 +29,7 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
 
   const verify = useVerifyCode({ redirectTo: props.next });
   const resend = useSendCode();
+  const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
 
   return (
     <Form {...form}>
@@ -74,10 +79,19 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
             variant="link"
             size="sm"
             className="px-0"
-            disabled={resend.isPending}
-            onClick={() => resend.mutate({ email: props.email, purpose: "sign-in" })}
+            disabled={resend.isPending || !cooldown.ready}
+            onClick={() =>
+              resend.mutate(
+                { email: props.email, purpose: "sign-in" },
+                { onSuccess: cooldown.restart },
+              )
+            }
           >
-            {resend.isPending ? "Sending…" : resend.isSuccess ? "Sent again" : "Send a new code"}
+            {resend.isPending
+              ? "Sending…"
+              : cooldown.ready
+                ? "Send a new code"
+                : `New code in ${cooldown.remaining}s`}
           </Button>
         </div>
       </form>
