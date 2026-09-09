@@ -50,6 +50,20 @@
       "when": 1788902293305,
       "tag": "0006_nice_boomer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788985770086,
+      "tag": "0007_wild_dust",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788986156008,
+      "tag": "0008_optimal_shiver_man",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,8 @@
     "./user-agent": "./dist/user-agent.js",
     "./check-in-link": "./dist/check-in-link.js",
     "./notification-channel": "./dist/notification-channel.js",
-    "./timezone": "./dist/timezone.js"
+    "./timezone": "./dist/timezone.js",
+    "./email-domain": "./dist/email-domain.js"
   },
   "scripts": {
     "build": "tsdown",

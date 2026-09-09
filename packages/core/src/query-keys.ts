@@ -43,6 +43,31 @@ export const organizationMutationKeys = {
   removeMember: () => [...organizationMutationKeys.all, "remove-member"] as const,
 };
 
+export const domainKeys = {
+  all: ["domains"] as const,
+  list: () => [...domainKeys.all, "list"] as const,
+};
+
+export const domainMutationKeys = {
+  all: ["domain-mutations"] as const,
+  claim: () => [...domainMutationKeys.all, "claim"] as const,
+  verify: () => [...domainMutationKeys.all, "verify"] as const,
+  release: () => [...domainMutationKeys.all, "release"] as const,
+  policy: () => [...domainMutationKeys.all, "policy"] as const,
+};
+
+export const joinRequestKeys = {
+  all: ["join-requests"] as const,
+  list: (status = "pending") => [...joinRequestKeys.all, "list", status] as const,
+};
+
+export const joinRequestMutationKeys = {
+  all: ["join-request-mutations"] as const,
+  ask: () => [...joinRequestMutationKeys.all, "ask"] as const,
+  withdraw: () => [...joinRequestMutationKeys.all, "withdraw"] as const,
+  decide: () => [...joinRequestMutationKeys.all, "decide"] as const,
+};
+
 export const peopleKeys = {
   all: ["people"] as const,
   list: (query = "") => [...peopleKeys.all, "list", query] as const,

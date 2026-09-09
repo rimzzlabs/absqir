@@ -1,5 +1,6 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import { domainOpensRegistration, seedOwnerDomain } from "@absqir/db/domains";
 import { ensurePersonForUser } from "@absqir/db/people";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -182,10 +183,13 @@ export function createAuth(options: CreateAuthOptions) {
           defaultValue: "profile",
           input: false,
         },
+        // Better Auth writes this value on every new row, so it wins over the
+        // column default. Every account may start an organization; an operator
+        // takes it away from one account by hand.
         canCreateOrganizations: {
           type: "boolean",
           required: false,
-          defaultValue: false,
+          defaultValue: true,
           input: false,
         },
         notificationChannel: {
@@ -237,6 +241,10 @@ export function createAuth(options: CreateAuthOptions) {
               name: user.name,
               email: user.email,
             });
+
+            // The address that made the workspace names the domain it belongs
+            // to. A mailbox provider such as gmail.com claims nothing.
+            await seedOwnerDomain(db, { organizationId: org.id, email: user.email });
           },
         },
       }),
@@ -258,8 +266,9 @@ export function createAuth(options: CreateAuthOptions) {
       user: {
         create: {
           // The sign-up door. The first account is the operator. After that,
-          // an account needs an invitation unless the operator opened
-          // registration. The operator gets the "create organization" right.
+          // an account needs an invitation, an open event, or a workspace that
+          // claimed its email domain, unless the operator opened registration.
+          // The operator gets the "create organization" right.
           before: async (user, context) => {
             const [row] = await db.select({ value: count() }).from(schema.user);
             const firstUser = (row?.value ?? 0) === 0;
@@ -289,6 +298,11 @@ export function createAuth(options: CreateAuthOptions) {
 
               if (open[0]) return;
             }
+
+            // The fourth door: a workspace that proved it owns this domain and
+            // takes people from it. What happens next is the workspace's
+            // policy: a join request, or membership at once.
+            if (await domainOpensRegistration(db, user.email)) return;
 
             const invited = await db
               .select({ id: schema.invitation.id })

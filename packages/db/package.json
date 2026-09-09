@@ -8,7 +8,8 @@
     "./schema": "./dist/schema.js",
     "./migrate": "./dist/migrate.js",
     "./ops": "./dist/ops.js",
-    "./people": "./dist/people.js"
+    "./people": "./dist/people.js",
+    "./domains": "./dist/domains.js"
   },
   "scripts": {
     "build": "tsdown",

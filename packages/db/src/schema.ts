@@ -33,6 +33,8 @@ export const NOTIFICATION_TYPES = [
   "session-closed",
   "leave-requested",
   "leave-decided",
+  "join-requested",
+  "join-decided",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -55,6 +57,26 @@ export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
 export const ORGANIZATION_ROLES = ["owner", "admin", "organizer", "member"] as const;
 export type OrganizationRole = (typeof ORGANIZATION_ROLES)[number];
 
+/**
+ * What a verified domain opens for an account that signs up with it.
+ * `closed` keeps the invitation as the only way in. `request` shows the
+ * organization and asks an admin to decide. `auto` makes the account a
+ * member at once.
+ */
+export const JOIN_POLICIES = ["closed", "request", "auto"] as const;
+export type JoinPolicy = (typeof JOIN_POLICIES)[number];
+
+export function isJoinPolicy(value: unknown): value is JoinPolicy {
+  return typeof value === "string" && (JOIN_POLICIES as readonly string[]).includes(value);
+}
+
+/** How a domain claim was proven. */
+export const DOMAIN_PROOFS = ["email", "dns"] as const;
+export type DomainProof = (typeof DOMAIN_PROOFS)[number];
+
+export const JOIN_REQUEST_STATUSES = ["pending", "approved", "declined"] as const;
+export type JoinRequestStatus = (typeof JOIN_REQUEST_STATUSES)[number];
+
 // Tables required by Better Auth. Keep the property names in sync with the
 // Better Auth field names: the Drizzle adapter looks columns up by property.
 export const user = pgTable("user", {
@@ -65,8 +87,12 @@ export const user = pgTable("user", {
   image: text("image"),
   /** Where onboarding resumes. Set by the API, never by the client. */
   onboardingStep: text("onboarding_step").$type<OnboardingStep>().notNull().default("profile"),
-  /** The operator and anyone they promote can open the "create org" door. */
-  canCreateOrganizations: boolean("can_create_organizations").notNull().default(false),
+  /**
+   * Whether this account may start an organization. Every account may, so
+   * nobody who signs up is left with nowhere to go. An operator can take it
+   * away from one account.
+   */
+  canCreateOrganizations: boolean("can_create_organizations").notNull().default(true),
   /** Where notifications reach this person. */
   notificationChannel: text("notification_channel")
     .$type<NotificationChannel>()
@@ -131,6 +157,8 @@ export const organization = pgTable("organization", {
   slug: text("slug").notNull().unique(),
   logo: text("logo"),
   metadata: text("metadata"),
+  /** What a verified domain opens. Read only after a domain is verified. */
+  joinPolicy: text("join_policy").$type<JoinPolicy>().notNull().default("request"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -164,6 +192,69 @@ export const invitation = pgTable("invitation", {
     .references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * A domain an organization claims, such as kolosal.ai. A new account whose
+ * address ends in a verified domain finds the organization on its own,
+ * which is what `organization.joinPolicy` then decides about. The claim
+ * covers the whole domain and nothing under it: kolosal.ai never matches
+ * mail.kolosal.ai, because a subdomain can belong to someone else.
+ */
+export const organizationDomain = pgTable(
+  "organization_domain",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Lower case, no trailing dot. Normalized by @absqir/core/email-domain. */
+    domain: text("domain").notNull().unique(),
+    /** Null until the claim is proven. An unproven domain opens no door. */
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verifiedBy: text("verified_by").$type<DomainProof>(),
+    /** What the _absqir TXT record must carry. Kept, so a re-check can run. */
+    verificationToken: text("verification_token").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("organization_domain_organization_idx").on(table.organizationId)],
+);
+
+/**
+ * An account asks the organization that claimed its domain to let it in.
+ * An approval writes a member row and a person row, the same way an accepted
+ * invitation does. A decline leaves the account outside, free to ask again.
+ */
+export const joinRequest = pgTable(
+  "join_request",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** The domain that matched when the request was made. */
+    domain: text("domain").notNull(),
+    message: text("message"),
+    status: text("status").$type<JoinRequestStatus>().notNull().default("pending"),
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decisionNote: text("decision_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // One open request per account per organization. A decided one stays as
+    // history, and the account can ask again.
+    uniqueIndex("join_request_organization_user_pending_idx")
+      .on(table.organizationId, table.userId)
+      .where(sql`${table.status} = 'pending'`),
+    index("join_request_organization_status_idx").on(table.organizationId, table.status),
+    index("join_request_user_idx").on(table.userId),
+  ],
+);
 
 /**
  * The directory. A person is someone the organization expects to see:

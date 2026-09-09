@@ -1,4 +1,5 @@
 import { schema } from "@absqir/db";
+import { domainOpensRegistration } from "@absqir/db/domains";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt } from "drizzle-orm";
 import { parseEnv } from "@/env";
@@ -27,7 +28,7 @@ const lookupRoute = createRoute({
   tags: ["auth"],
   summary: "Find out which sign-in step comes next for an email",
   description:
-    "The single sign-in door asks for the email first. This tells the page whether to ask for a password, send a code, or explain that the email needs an invitation. Rate limited per IP.",
+    "The single sign-in door asks for the email first. This tells the page whether to ask for a password, send a code, or explain that the email needs an invitation. A workspace that claimed the email domain also opens the door, and the reply never names it. Rate limited per IP.",
   request: { body: { content: { "application/json": { schema: lookupBody } } } },
   responses: {
     200: {
@@ -82,6 +83,13 @@ export const authFlowRoutes = new OpenAPIHono<AppEnv>().openapi(lookupRoute, asy
     if (open.length > 0) {
       return c.json({ exists: false, hasPassword: false, canRegister: true }, 200);
     }
+  }
+
+  // A workspace that proved it owns this domain and takes people from it.
+  // The reply never names the workspace: whoever asks has not proved yet that
+  // the address is theirs. The workspace card waits until they are signed in.
+  if (await domainOpensRegistration(db, email)) {
+    return c.json({ exists: false, hasPassword: false, canRegister: true }, 200);
   }
 
   const invited = await db
