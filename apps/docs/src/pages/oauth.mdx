@@ -129,7 +129,9 @@ then does one of three things.
 
 **The address already has an account.** The provider is linked to that
 account, and the reader signs in. absqir links on a verified address only, so
-one person keeps one account and one row in the directory.
+one person keeps one account and one row in the directory. A provider that was
+connected from the account page signs in to that account whatever address it
+carries, because absqir recognises the provider account itself.
 
 **The address is new and may join.** absqir creates the account, and
 onboarding asks for a name. It asks for no password: an emailed code signs
@@ -145,6 +147,15 @@ address the invitation was sent to.
 **Settings** then **Security** lists every provider. A reader connects or
 disconnects one there. The last way into an account cannot be disconnected, so
 nobody locks themselves out.
+
+The address on the provider does not have to match the account. Someone who
+signed up with a work address can connect a GitHub account that carries a
+personal one. The account keeps its own address, and that provider then signs
+in to that account.
+
+This applies to connecting only. On the sign-in page a provider still matches
+an address exactly: an address absqir does not know creates a new account, or
+is refused, by the rules in [Accounts and organizations](/accounts#who-may-register).
 
 ## When something fails
 

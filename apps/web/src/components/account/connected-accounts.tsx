@@ -85,7 +85,7 @@ export function ConnectedAccounts() {
   return (
     <SettingsRow
       label="Connected accounts"
-      hint="Sign in with a provider instead of a code. The last way into your account cannot be disconnected."
+      hint="Sign in with a provider instead of a code. The address on the provider does not have to match this account. The last way in cannot be disconnected."
     >
       <div className="space-y-3">
         <ul className="divide-y divide-border rounded-lg border border-border">

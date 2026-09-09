@@ -153,7 +153,13 @@ export function createAuth(options: CreateAuthOptions) {
         // up by email and then pressed a provider button would end up with a
         // second account, and the directory keys people on the address.
         trustedProviders: [...SOCIAL_PROVIDERS],
-        allowDifferentEmails: false,
+        // Only the account page reads this. A reader who is already signed in
+        // may connect a provider that carries their personal address, which
+        // is the common case for a work account. It does not loosen sign-in:
+        // that path still matches an address exactly, and a first-time
+        // provider under an unknown address creates a new account or is
+        // refused by the door above.
+        allowDifferentEmails: true,
       },
     },
     database: drizzleAdapter(db, {
