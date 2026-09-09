@@ -9,12 +9,18 @@ command from the instance directory — the one that holds `.env` and
 ## init
 
 ```bash
-npx absqir@latest init [dir] [--force]
+npx absqir@latest init [dir] [--force] [--yes]
 ```
 
 Writes `docker-compose.yml` and a `.env` with a fresh `BETTER_AUTH_SECRET`
 and Postgres password. Refuses to overwrite existing files without
 `--force`. Set `RESEND_API_KEY` before the first `up`.
+
+On a terminal, `init` also asks whether to add GitHub sign-in and Google
+sign-in. Answering yes writes the keys empty and prints the callback address
+to register. The instance starts with empty keys, so yes commits to nothing.
+`--yes` and a piped install skip both questions. See
+[Sign in with GitHub and Google](/oauth).
 
 ## up · down · logs
 
@@ -70,9 +76,13 @@ npx absqir config set <KEY> <value>
 
 Reads and edits the instance `.env`. `set` accepts: `PORT`,
 `SECURE_COOKIES`, `REGISTRATION_OPEN`, `ABSQIR_TAG`, `RESEND_API_KEY`,
-`EMAIL_FROM`. Apply a change with `absqir up`.
+`EMAIL_FROM`, `APP_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Apply a change with `absqir up`.
 
 ## doctor
 
 Checks Docker, the instance files, the secret length, the mail key, and the
 health endpoint. Exits non-zero when a check fails, so it fits in scripts.
+
+When a provider key is set, it also checks that both keys of the pair hold a
+value and that `APP_URL` is a public address, because the callback follows it.

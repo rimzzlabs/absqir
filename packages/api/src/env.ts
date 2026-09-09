@@ -1,3 +1,4 @@
+import { SOCIAL_PROVIDERS, type SocialProviderId, type SocialProviderKeyMap } from "@absqir/auth";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import type { ApiBindings } from "@/bindings";
@@ -33,6 +34,16 @@ const schema = z
      * as in the heartbeat. Set it on every deployment that sends email.
      */
     APP_URL: z.url().optional(),
+    /**
+     * OAuth keys. Both keys of a pair, or neither: a provider that holds one
+     * half is a typo, and the only symptom would be a button that never
+     * appears. Unset means the provider stays off and the sign-in page looks
+     * exactly as it does without this feature.
+     */
+    GITHUB_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   })
   .check((ctx) => {
     if (ctx.value.ENVIRONMENT === "production" && !ctx.value.RESEND_API_KEY) {
@@ -43,6 +54,28 @@ const schema = z
         message: "RESEND_API_KEY is required in production: sign-up codes travel by email.",
       });
     }
+
+    const pairs = [
+      ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"],
+      ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    ] as const;
+
+    for (const [idKey, secretKey] of pairs) {
+      const id = ctx.value[idKey];
+      const secret = ctx.value[secretKey];
+
+      if (Boolean(id) === Boolean(secret)) continue;
+
+      const missing = id ? secretKey : idKey;
+      const present = id ? idKey : secretKey;
+
+      ctx.issues.push({
+        code: "custom",
+        input: ctx.value[missing],
+        path: [missing],
+        message: `${missing} is required when ${present} is set.`,
+      });
+    }
   });
 
 function build(bindings: ApiBindings) {
@@ -50,6 +83,10 @@ function build(bindings: ApiBindings) {
     server: schema.shape,
     runtimeEnv: {
       BETTER_AUTH_SECRET: bindings.BETTER_AUTH_SECRET,
+      GITHUB_CLIENT_ID: bindings.GITHUB_CLIENT_ID,
+      GITHUB_CLIENT_SECRET: bindings.GITHUB_CLIENT_SECRET,
+      GOOGLE_CLIENT_ID: bindings.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: bindings.GOOGLE_CLIENT_SECRET,
       RESEND_API_KEY: bindings.RESEND_API_KEY,
       EMAIL_FROM: bindings.EMAIL_FROM,
       ENVIRONMENT: bindings.ENVIRONMENT,
@@ -89,4 +126,29 @@ export function docsEnabled(env: ApiEnv) {
 
 export function secureCookies(env: ApiEnv) {
   return env.SECURE_COOKIES ?? isProduction(env);
+}
+
+/**
+ * The providers the operator turned on. The parse above already refused a
+ * half-set pair, so a present id means a present secret.
+ */
+export function socialProviderKeys(env: ApiEnv): SocialProviderKeyMap {
+  const keys: SocialProviderKeyMap = {};
+
+  if (env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET) {
+    keys.github = { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET };
+  }
+
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+    keys.google = { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET };
+  }
+
+  return keys;
+}
+
+/** The provider ids a page renders a button for, in a stable order. */
+export function enabledSocialProviders(bindings: ApiBindings): SocialProviderId[] {
+  const keys = socialProviderKeys(parseEnv(bindings));
+
+  return SOCIAL_PROVIDERS.filter((provider) => keys[provider] !== undefined);
 }

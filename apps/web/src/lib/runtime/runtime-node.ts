@@ -77,6 +77,10 @@ export function getRuntime(_locals: App.Locals): AppRuntime {
     SECURE_COOKIES: process.env.SECURE_COOKIES,
     CRON_SECRET: process.env.CRON_SECRET,
     APP_URL: process.env.APP_URL,
+    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   };
 
   const runtime: AppRuntime = {

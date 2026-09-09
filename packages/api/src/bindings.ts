@@ -31,4 +31,12 @@ export interface ApiBindings {
   SECURE_COOKIES?: string;
   CRON_SECRET?: string;
   APP_URL?: string;
+  /**
+   * OAuth keys. A provider is on when both of its keys are set, and absent
+   * everywhere when they are not: no button, and no route to start the flow.
+   */
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
 }

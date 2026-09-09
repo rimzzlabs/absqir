@@ -1,0 +1,158 @@
+---
+outline: 2
+---
+
+# Sign in with GitHub and Google
+
+<div role="doc-subtitle">Optional provider buttons on the sign-in page</div>
+
+absqir signs people in with an email and a six digit code. You can add a
+GitHub button, a Google button, or both. The feature is off until you set the
+keys. With no keys, the sign-in page looks exactly as it does now: no buttons,
+no divider, no extra request.
+
+Turning it on changes nothing about who may join. A provider proves an
+address. Your instance still decides whether that address may create an
+account. See [Accounts and organizations](/accounts).
+
+:::note
+`absqir init` asks whether you want each provider. Answering yes writes the
+keys empty and prints the callback address. The instance starts and works with
+empty keys, so you can answer yes before you register anything.
+:::
+
+## What you need
+
+| Key                    | What it is                        |
+| ---------------------- | --------------------------------- |
+| `GITHUB_CLIENT_ID`     | The client ID of your GitHub app  |
+| `GITHUB_CLIENT_SECRET` | The client secret of that app     |
+| `GOOGLE_CLIENT_ID`     | The client ID of your Google app  |
+| `GOOGLE_CLIENT_SECRET` | The client secret of that app     |
+
+Set both keys of a pair, or neither. A pair with one half set stops the
+server with a message that names the missing key. An empty value counts as
+unset, so a template with empty keys starts.
+
+## The callback address
+
+The provider sends the reader back to one fixed address:
+
+```
+<APP_URL>/api/auth/callback/github
+<APP_URL>/api/auth/callback/google
+```
+
+`APP_URL` decides that address, not the host the reader typed. Set `APP_URL`
+to the public address of your instance before you register the app. An
+instance reachable by two names still uses this one callback, so the provider
+always recognises it.
+
+:::warning
+Set `APP_URL` first. A callback that does not match what you registered fails
+on the provider's own page, where absqir cannot explain anything. The error
+reads `redirect_uri_mismatch`.
+:::
+
+## Add GitHub
+
+:::steps
+
+### Register an OAuth app
+
+Open [github.com/settings/developers](https://github.com/settings/developers),
+then **New OAuth App**.
+
+- **Homepage URL** is your `APP_URL`.
+- **Authorization callback URL** is `<APP_URL>/api/auth/callback/github`.
+
+### Copy the keys
+
+GitHub shows the client ID at once. **Generate a new client secret** shows the
+secret one time. Copy it now.
+
+### Set them on your instance
+
+```bash
+absqir config set GITHUB_CLIENT_ID Ov23li...
+absqir config set GITHUB_CLIENT_SECRET 8f2c...
+absqir up
+```
+
+### Check the sign-in page
+
+Open `/sign-in`. **Continue with GitHub** sits under the email field.
+
+:::
+
+## Add Google
+
+:::steps
+
+### Create the credentials
+
+Open
+[console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
+Configure the consent screen once, then **Create credentials** and **OAuth
+client ID**. Choose **Web application**.
+
+### Set the callback
+
+Add `<APP_URL>/api/auth/callback/google` under **Authorized redirect URIs**.
+
+### Set the keys on your instance
+
+```bash
+absqir config set GOOGLE_CLIENT_ID 1234...apps.googleusercontent.com
+absqir config set GOOGLE_CLIENT_SECRET GOCSPX-...
+absqir up
+```
+
+:::
+
+## On Cloudflare Workers
+
+A Workers deployment reads the same four keys as secrets:
+
+```bash
+pnpm cf:secret GITHUB_CLIENT_ID
+pnpm cf:secret GITHUB_CLIENT_SECRET
+```
+
+Set `APP_URL` in `wrangler.jsonc` under `vars` to the address people type,
+then deploy. The callback follows `APP_URL` the same way.
+
+## What happens on a sign-in
+
+A reader presses the button, approves at the provider, and comes back. absqir
+then does one of three things.
+
+**The address already has an account.** The provider is linked to that
+account, and the reader signs in. absqir links on a verified address only, so
+one person keeps one account and one row in the directory.
+
+**The address is new and may join.** absqir creates the account, and
+onboarding asks for a name. It asks for no password: an emailed code signs
+that account in, and the account page offers a password later.
+
+**The address may not join.** The sign-in page says so and names the address
+the provider returned. This is common when a reader was invited at a work
+address and their provider carries a personal one. They sign in with the
+address the invitation was sent to.
+
+## Manage a connected account
+
+**Settings** then **Security** lists every provider. A reader connects or
+disconnects one there. The last way into an account cannot be disconnected, so
+nobody locks themselves out.
+
+## When something fails
+
+| What you see                     | What it means                                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| No button on the sign-in page    | A key is empty. Run `absqir doctor`, then `absqir config get`.                        |
+| The server refuses to start      | One key of a pair is set. The log names the missing key.                              |
+| `redirect_uri_mismatch`          | The registered callback does not match `APP_URL`. Fix one of the two.                 |
+| "That address has no invitation" | The provider returned a different address than the invitation. Use the invited one.   |
+
+More cases are in [Troubleshooting](/troubleshooting).

@@ -1,7 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
+import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "@/lib/providers";
+
+const DEFAULT_APP_URL = "http://localhost:4321";
 
 const COMPOSE_TEMPLATE = `# absqir self-host stack. Secrets live in the .env file next to this file.
 services:
@@ -36,13 +40,43 @@ services:
       RESEND_API_KEY: \${RESEND_API_KEY:?Set RESEND_API_KEY in .env, sign-up codes travel by email}
       EMAIL_FROM: \${EMAIL_FROM:-absqir <onboarding@resend.dev>}
       APP_URL: \${APP_URL:-http://localhost:4321}
+      GITHUB_CLIENT_ID: \${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: \${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: \${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: \${GOOGLE_CLIENT_SECRET:-}
       ENVIRONMENT: production
 
 volumes:
   db-data:
 `;
 
-function envTemplate(secret: string, dbPassword: string): string {
+/**
+ * The OAuth block. A chosen provider gets empty keys the operator fills in
+ * later; an empty value counts as unset, so the instance still starts. A
+ * provider that was skipped stays commented out, as a hint that it exists.
+ */
+function oauthBlock(chosen: ProviderId[]): string {
+  const lines = [
+    "# Sign in with GitHub and Google. Set both keys of a pair, or neither:",
+    "# one half alone stops the server. Register the callback address with the",
+    "# provider first, and keep it in step with APP_URL.",
+  ];
+
+  for (const provider of PROVIDERS) {
+    const [idKey, secretKey] = keysOf(provider.id);
+    const prefix = chosen.includes(provider.id) ? "" : "# ";
+
+    lines.push("");
+    lines.push(`# ${provider.label}: ${provider.console}`);
+    lines.push(`# Callback: ${callbackUrl(DEFAULT_APP_URL, provider.id)}`);
+    lines.push(`${prefix}${idKey}=""`);
+    lines.push(`${prefix}${secretKey}=""`);
+  }
+
+  return lines.join("\n");
+}
+
+function envTemplate(secret: string, dbPassword: string, chosen: ProviderId[]): string {
   return `# Written by \`absqir init\`. Keep this file out of version control.
 BETTER_AUTH_SECRET="${secret}"
 POSTGRES_PASSWORD="${dbPassword}"
@@ -71,13 +105,70 @@ APP_URL="http://localhost:4321"
 
 # Image tag to run. \`absqir upgrade\` pulls this tag again.
 ABSQIR_TAG="latest"
+
+${oauthBlock(chosen)}
 `;
+}
+
+/**
+ * Asks once per provider. A pipe, a CI run, or --yes answers no: a prompt
+ * nobody can see must never hold up an install.
+ */
+async function askProviders(skip: boolean): Promise<ProviderId[]> {
+  if (skip || !process.stdin.isTTY) return [];
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const chosen: ProviderId[] = [];
+
+  try {
+    console.log("");
+    console.log("Optional: let people sign in with a provider instead of an emailed code.");
+
+    for (const provider of PROVIDERS) {
+      const answer = await rl.question(`Add ${provider.label} sign-in? [y/N] `);
+
+      if (/^y(es)?$/i.test(answer.trim())) chosen.push(provider.id);
+    }
+  } finally {
+    rl.close();
+  }
+
+  return chosen;
+}
+
+/** What the operator has to do at the provider, printed where they are. */
+function printProviderSteps(chosen: ProviderId[]): void {
+  if (chosen.length === 0) return;
+
+  console.log("");
+  console.log("Sign-in providers:");
+
+  for (const id of chosen) {
+    const provider = PROVIDERS.find((entry) => entry.id === id);
+    if (!provider) continue;
+
+    const [idKey, secretKey] = keysOf(id);
+
+    console.log("");
+    console.log(`  ${provider.label}`);
+    console.log(`    1. Register an app at ${provider.console}`);
+    console.log(`    2. Set the callback to ${callbackUrl(DEFAULT_APP_URL, id)}`);
+    console.log(`       Change it to match APP_URL when this instance moves.`);
+    console.log(`    3. absqir config set ${idKey} <id>`);
+    console.log(`       absqir config set ${secretKey} <secret>`);
+  }
+
+  console.log("");
+  console.log("  The buttons appear once both keys of a pair hold a value.");
 }
 
 export async function init(argv: string[]): Promise<number> {
   const { values, positionals } = parseArgs({
     args: argv,
-    options: { force: { type: "boolean", default: false } },
+    options: {
+      force: { type: "boolean", default: false },
+      yes: { type: "boolean", default: false },
+    },
     allowPositionals: true,
   });
 
@@ -90,11 +181,17 @@ export async function init(argv: string[]): Promise<number> {
     return 1;
   }
 
+  const chosen = await askProviders(values.yes);
+
   mkdirSync(dir, { recursive: true });
   writeFileSync(composePath, COMPOSE_TEMPLATE);
   writeFileSync(
     envPath,
-    envTemplate(randomBytes(32).toString("base64url"), randomBytes(16).toString("base64url")),
+    envTemplate(
+      randomBytes(32).toString("base64url"),
+      randomBytes(16).toString("base64url"),
+      chosen,
+    ),
     { mode: 0o600 },
   );
 
@@ -106,6 +203,8 @@ export async function init(argv: string[]): Promise<number> {
   console.log("  2. absqir up                                 start the stack");
   console.log("  3. open http://localhost:4321, enter your email, and create the first account");
   console.log("  4. absqir doctor                             check the instance");
+
+  printProviderSteps(chosen);
 
   return 0;
 }

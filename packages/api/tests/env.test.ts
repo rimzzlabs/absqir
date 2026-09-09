@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApiBindings } from "@/bindings";
-import { docsEnabled, isProduction, parseEnv } from "@/env";
+import { docsEnabled, enabledSocialProviders, isProduction, parseEnv } from "@/env";
 
 const SECRET = "a".repeat(32);
 
@@ -57,9 +57,64 @@ describe("parseEnv", () => {
     expect(() => parseEnv(production())).not.toThrow();
   });
 
+  it("refuses a provider that holds one key only", () => {
+    // t3-env wraps every issue in one message. The named key reaches the
+    // operator through the log it prints beside it.
+    expect(() => parseEnv(bindings({ GITHUB_CLIENT_ID: "id" }))).toThrow();
+    expect(() => parseEnv(bindings({ GITHUB_CLIENT_SECRET: "shh" }))).toThrow();
+    expect(() => parseEnv(bindings({ GOOGLE_CLIENT_ID: "id" }))).toThrow();
+    expect(() => parseEnv(bindings({ GOOGLE_CLIENT_SECRET: "shh" }))).toThrow();
+  });
+
+  it("accepts a complete pair, and no keys at all", () => {
+    expect(() =>
+      parseEnv(bindings({ GITHUB_CLIENT_ID: "id", GITHUB_CLIENT_SECRET: "shh" })),
+    ).not.toThrow();
+    expect(() => parseEnv(bindings())).not.toThrow();
+  });
+
+  it("treats a blank key as unset, so a half-filled template still starts", () => {
+    expect(() =>
+      parseEnv(bindings({ GITHUB_CLIENT_ID: "", GITHUB_CLIENT_SECRET: "" })),
+    ).not.toThrow();
+  });
+
   it("caches the parse per bindings object", () => {
     const shared = bindings();
 
     expect(parseEnv(shared)).toBe(parseEnv(shared));
+  });
+});
+
+describe("enabledSocialProviders", () => {
+  it("is empty when the operator set no keys", () => {
+    expect(enabledSocialProviders(bindings())).toEqual([]);
+  });
+
+  it("lists only the provider whose pair is set", () => {
+    expect(
+      enabledSocialProviders(bindings({ GITHUB_CLIENT_ID: "id", GITHUB_CLIENT_SECRET: "shh" })),
+    ).toEqual(["github"]);
+
+    expect(
+      enabledSocialProviders(bindings({ GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "shh" })),
+    ).toEqual(["google"]);
+  });
+
+  it("keeps a stable order when both are set", () => {
+    const both = bindings({
+      GOOGLE_CLIENT_ID: "id",
+      GOOGLE_CLIENT_SECRET: "shh",
+      GITHUB_CLIENT_ID: "id",
+      GITHUB_CLIENT_SECRET: "shh",
+    });
+
+    expect(enabledSocialProviders(both)).toEqual(["github", "google"]);
+  });
+
+  it("ignores a blank pair", () => {
+    expect(
+      enabledSocialProviders(bindings({ GITHUB_CLIENT_ID: "", GITHUB_CLIENT_SECRET: "" })),
+    ).toEqual([]);
   });
 });

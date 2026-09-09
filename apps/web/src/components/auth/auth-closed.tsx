@@ -3,6 +3,8 @@ import { AuthHeading } from "@/components/auth/auth-heading";
 
 export interface AuthClosedProps {
   email: string;
+  /** What the provider round trip said, when a provider sent the reader here. */
+  reason?: string | null;
   onBack: () => void;
 }
 
@@ -12,7 +14,10 @@ export function AuthClosed(props: AuthClosedProps) {
     <div className="space-y-5">
       <AuthHeading
         title="This email needs an invitation"
-        description={`There is no account for ${props.email}, and this absqir only lets invited people in.`}
+        description={
+          props.reason ??
+          `There is no account for ${props.email}, and this absqir only lets invited people in.`
+        }
       />
 
       <p className="text-muted-foreground text-sm">

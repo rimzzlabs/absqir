@@ -10,6 +10,10 @@ const ALLOWED_KEYS = new Set([
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "APP_URL",
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
 ]);
 
 const ENV_PATH = ".env";

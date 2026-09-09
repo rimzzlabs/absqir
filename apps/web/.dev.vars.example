@@ -11,3 +11,13 @@ RESEND_API_KEY=""
 # Lets every account create organizations. Off means only the first account
 # and promoted accounts can; joining through an invitation never needs it.
 REGISTRATION_OPEN="false"
+
+# Sign in with GitHub and Google. Both keys of a pair, or neither: one half
+# alone stops the server with a message. Unset means no button appears.
+# Callback to register with the provider:
+#   http://localhost:4321/api/auth/callback/github
+#   http://localhost:4321/api/auth/callback/google
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""

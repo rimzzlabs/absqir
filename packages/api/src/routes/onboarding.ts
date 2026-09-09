@@ -2,7 +2,7 @@ import { authErrorOf, isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import type { OnboardingStep } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, count, eq, gt } from "drizzle-orm";
+import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "@/lib/auth-forward";
 import { avatarSchema } from "@/lib/avatar";
@@ -23,6 +23,8 @@ const statusSchema = z.object({
   email: z.string(),
   image: z.string().nullable(),
   hasPassword: z.boolean(),
+  /** The providers already linked to this account, such as "github". */
+  linkedProviders: z.array(z.string()),
   canCreateOrganizations: z.boolean(),
   membershipCount: z.number(),
   invitations: z.array(
@@ -248,6 +250,16 @@ async function hasCredential(c: Context<AppEnv>, userId: string) {
   return rows.length > 0;
 }
 
+/** Every provider signed in as this account, without the password row. */
+async function linkedProvidersOf(c: Context<AppEnv>, userId: string) {
+  const rows = await c.var.db
+    .select({ providerId: account.providerId })
+    .from(account)
+    .where(and(eq(account.userId, userId), ne(account.providerId, "credential")));
+
+  return rows.map((row) => row.providerId);
+}
+
 async function activate(c: Context<AppEnv>, organizationId: string) {
   const result = await c.var.auth.api.setActiveOrganization({
     body: { organizationId },
@@ -294,6 +306,7 @@ export const onboardingRoutes = app
         email: row.email,
         image: row.image ?? null,
         hasPassword: await hasCredential(c, row.id),
+        linkedProviders: await linkedProvidersOf(c, row.id),
         canCreateOrganizations: row.canCreateOrganizations,
         membershipCount: memberships[0]?.value ?? 0,
         invitations: invitations.map((row) => ({
@@ -312,14 +325,21 @@ export const onboardingRoutes = app
     const credential = await hasCredential(c, current.id);
 
     if (!credential) {
-      if (!password) {
+      // A provider is a credential too. An account that arrived through one
+      // needs no password here: an emailed code signs it in either way, and
+      // the account page offers a password later.
+      const linked = await linkedProvidersOf(c, current.id);
+
+      if (!password && linked.length === 0) {
         return c.json({ error: "Choose a password to finish the account." }, 400);
       }
 
-      await c.var.auth.api.setPassword({
-        body: { newPassword: password },
-        headers: c.req.raw.headers,
-      });
+      if (password) {
+        await c.var.auth.api.setPassword({
+          body: { newPassword: password },
+          headers: c.req.raw.headers,
+        });
+      }
     }
 
     await c.var.db.update(user).set({ name, updatedAt: new Date() }).where(eq(user.id, current.id));

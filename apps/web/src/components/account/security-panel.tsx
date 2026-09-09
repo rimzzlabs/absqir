@@ -6,13 +6,21 @@ import { Label } from "@absqir/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
+import { ConnectedAccounts } from "@/components/account/connected-accounts";
 import { DevicesGrid, useHasOtherDevices } from "@/components/account/devices-grid";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
-import { type ChangePasswordValues, changePasswordSchema } from "@/lib/account-schemas";
+import {
+  type ChangePasswordValues,
+  changePasswordSchema,
+  type SetPasswordValues,
+  setPasswordSchema,
+} from "@/lib/account-schemas";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth-schemas";
 import { useChangePassword } from "@/mutations/use-change-password";
 import { useRevokeSession } from "@/mutations/use-revoke-session";
+import { useSetPassword } from "@/mutations/use-set-password";
+import { useCredentials } from "@/queries/use-credentials";
 
 function PasswordRow() {
   const change = useChangePassword();
@@ -86,6 +94,57 @@ function PasswordRow() {
   );
 }
 
+/** An account that arrived through a provider, or only ever used a code. */
+function SetPasswordRow() {
+  const set = useSetPassword();
+  const form = useForm<SetPasswordValues>({
+    resolver: zodResolver(setPasswordSchema),
+    defaultValues: { password: "" },
+  });
+
+  return (
+    <SettingsRow
+      label="Password"
+      hint="This account has none. An emailed code signs you in either way, so a password is optional."
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit((values) =>
+            set.mutate(values.password, { onSuccess: () => form.reset() }),
+          )}
+          className="space-y-4"
+          noValidate
+        >
+          <FormField
+            control={form.control}
+            name="password"
+            label="New password"
+            description={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+            render={(field) => (
+              <Input {...field} id="password" type="password" autoComplete="new-password" />
+            )}
+          />
+
+          <FormError error={set.error} />
+
+          <Button type="submit" disabled={set.isPending}>
+            {set.isPending ? "Saving…" : "Set a password"}
+          </Button>
+        </form>
+      </Form>
+    </SettingsRow>
+  );
+}
+
+/** Which of the two password rows this account needs. */
+function PasswordSection() {
+  const credentials = useCredentials();
+
+  if (!credentials.data) return null;
+
+  return credentials.data.hasPassword ? <PasswordRow /> : <SetPasswordRow />;
+}
+
 function SignOutOthers() {
   const hasOthers = useHasOtherDevices();
   const revoke = useRevokeSession();
@@ -104,7 +163,8 @@ export function SecurityPanel() {
   return (
     <div className="space-y-12">
       <SettingsSection title="Sign-in" description="What proves it is you.">
-        <PasswordRow />
+        <PasswordSection />
+        <ConnectedAccounts />
       </SettingsSection>
 
       <SettingsSection

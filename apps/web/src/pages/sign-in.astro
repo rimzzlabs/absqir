@@ -1,6 +1,9 @@
 ---
+import { enabledSocialProviders } from "@absqir/api";
+import { getRuntime } from "@app-runtime";
 import { AuthFlow } from "@/components/auth/auth-flow";
 import AuthLayout from "@/layouts/auth-layout.astro";
+import { isAuthProvider, readCallbackError } from "@/lib/auth-providers";
 import { setEventCookie } from "@/lib/event-cookie";
 
 const next = Astro.url.searchParams.get("next") ?? "/";
@@ -14,8 +17,28 @@ const eventId = Astro.url.searchParams.get("event");
 if (eventId) {
   setEventCookie(Astro.cookies, eventId);
 }
+
+// Which buttons the card shows is a server fact: the keys the operator set.
+// Reading it here keeps the row on the first paint, before any request.
+const providers = enabledSocialProviders(getRuntime(Astro.locals).bindings);
+
+// A provider that refused sends the reader back here. The page owns the
+// wording, so only the code and a checked address survive the address bar.
+const provider = Astro.url.searchParams.get("provider") ?? "";
+const callbackError = readCallbackError({
+  code: Astro.url.searchParams.get("error"),
+  description: Astro.url.searchParams.get("error_description"),
+  provider: isAuthProvider(provider) ? provider : null,
+});
 ---
 
 <AuthLayout title="Sign in — absqir">
-  <AuthFlow client:load next={safeNext} initialEmail={email} eventId={eventId} />
+  <AuthFlow
+    client:load
+    next={safeNext}
+    initialEmail={email}
+    eventId={eventId}
+    providers={providers}
+    callbackError={callbackError}
+  />
 </AuthLayout>

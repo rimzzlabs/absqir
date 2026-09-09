@@ -1,7 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { ensurePersonForUser } from "@absqir/db/people";
-import { betterAuth } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { emailOTP, organization } from "better-auth/plugins";
@@ -16,6 +16,21 @@ export const OTP_LENGTH = 6;
 export const OTP_EXPIRES_IN_SECONDS = 10 * ONE_MINUTE;
 
 export type OtpPurpose = "sign-in" | "email-verification" | "forget-password" | "change-email";
+
+/** The providers this build knows. Each one is off until its keys are set. */
+export const SOCIAL_PROVIDERS = ["github", "google"] as const;
+
+export type SocialProviderId = (typeof SOCIAL_PROVIDERS)[number];
+
+export interface SocialProviderKeys {
+  clientId: string;
+  clientSecret: string;
+}
+
+export type SocialProviderKeyMap = Partial<Record<SocialProviderId, SocialProviderKeys>>;
+
+/** The code the sign-up door throws with. The sign-in page maps it to its own copy. */
+export const NO_INVITATION_CODE = "NO_INVITATION";
 
 export interface OtpEmail {
   email: string;
@@ -67,6 +82,55 @@ export interface CreateAuthOptions {
    * where every request shares one bucket and a test run trips it.
    */
   enforceRateLimit?: boolean;
+  /**
+   * The provider keys the operator set. A provider that is absent here never
+   * reaches the page: no button, and no route to start the flow.
+   */
+  socialProviders?: SocialProviderKeyMap;
+  /**
+   * The origin a provider redirects back to. It must stay the one string the
+   * operator registered with GitHub or Google, so it cannot follow the
+   * request the way baseURL does. Defaults to baseURL.
+   */
+  callbackOrigin?: string;
+}
+
+/**
+ * The provider hands back a picture as a remote URL. An avatar here is a
+ * small data URL this instance stores itself, so the URL is dropped and the
+ * reader picks a picture during onboarding.
+ */
+const dropProviderImage = () => ({ image: undefined });
+
+/**
+ * The providers that hold both keys, each pinned to the callback the
+ * operator registered. Default scopes already ask for the email and nothing
+ * else, so none are added.
+ */
+function socialProvidersFor(options: CreateAuthOptions): BetterAuthOptions["socialProviders"] {
+  const keys = options.socialProviders ?? {};
+  const origin = options.callbackOrigin ?? options.baseURL;
+  const callback = (id: SocialProviderId) => `${origin}/api/auth/callback/${id}`;
+
+  return {
+    ...(keys.github && {
+      github: {
+        ...keys.github,
+        redirectURI: callback("github"),
+        mapProfileToUser: dropProviderImage,
+      },
+    }),
+    ...(keys.google && {
+      google: {
+        ...keys.google,
+        redirectURI: callback("google"),
+        // Google signs a reader in as whichever account the browser holds.
+        // This asks which one, which is what a shared machine needs.
+        prompt: "select_account" as const,
+        mapProfileToUser: dropProviderImage,
+      },
+    }),
+  };
 }
 
 export function createAuth(options: CreateAuthOptions) {
@@ -80,6 +144,18 @@ export function createAuth(options: CreateAuthOptions) {
     baseURL,
     trustedOrigins,
     basePath: "/api/auth",
+    socialProviders: socialProvidersFor(options),
+    account: {
+      accountLinking: {
+        enabled: true,
+        // Both providers return an address they verified themselves, so the
+        // same address is the same person. Without this, a reader who signed
+        // up by email and then pressed a provider button would end up with a
+        // second account, and the directory keys people on the address.
+        trustedProviders: [...SOCIAL_PROVIDERS],
+        allowDifferentEmails: false,
+      },
+    },
     database: drizzleAdapter(db, {
       provider: "pg",
       schema: {
@@ -220,8 +296,14 @@ export function createAuth(options: CreateAuthOptions) {
               .limit(1);
 
             if (!invited[0]) {
+              // The code is what makes the OAuth callback redirect to the
+              // sign-in page. Without one, Better Auth serves a raw 403.
+              // The address is in the message because a provider can hand
+              // back one the reader did not expect, and naming it is the
+              // only way they can act on the refusal.
               throw new APIError("FORBIDDEN", {
-                message: "This email has no invitation. Ask an organizer to invite you.",
+                code: NO_INVITATION_CODE,
+                message: `${user.email} has no invitation. Ask an organizer to invite you.`,
               });
             }
           },
@@ -282,6 +364,7 @@ export function createAuth(options: CreateAuthOptions) {
         "/sign-up/email": { window: ONE_HOUR, max: 10 },
         "/email-otp/send-verification-otp": { window: ONE_MINUTE, max: 3 },
         "/sign-in/email-otp": { window: ONE_MINUTE, max: 5 },
+        "/sign-in/social": { window: ONE_MINUTE, max: 10 },
         "/email-otp/reset-password": { window: ONE_MINUTE, max: 5 },
         "/forget-password": { window: ONE_HOUR, max: 5 },
         "/email-otp/request-email-change": { window: ONE_MINUTE, max: 3 },

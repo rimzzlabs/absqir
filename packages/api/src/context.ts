@@ -2,7 +2,7 @@ import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
 import { createMailer, type Mailer } from "@absqir/transactional";
 import type { ApiBindings } from "@/bindings";
-import { type ApiEnv, parseEnv, secureCookies } from "@/env";
+import { type ApiEnv, parseEnv, secureCookies, socialProviderKeys } from "@/env";
 
 export interface RequestContext {
   db: Database;
@@ -53,6 +53,11 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     useSecureCookies: secureCookies(env),
     registrationOpen: env.REGISTRATION_OPEN,
     enforceRateLimit: env.ENVIRONMENT !== "development",
+    socialProviders: socialProviderKeys(env),
+    // The provider redirects back to the one address the operator registered.
+    // The request origin can differ from it, behind a proxy or under a second
+    // hostname, and the provider refuses a callback it does not know.
+    callbackOrigin: env.APP_URL ?? origin,
     sendOtp: async ({ email, otp, type }) => {
       if (!mailer) {
         console.log(`[absqir mail] code for ${email} (${type}): ${otp}`);

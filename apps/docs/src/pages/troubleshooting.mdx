@@ -71,6 +71,33 @@ the normal state. Choose one:
 
 - Let anybody register: `npx absqir config set REGISTRATION_OPEN true`.
 
+A provider button raises the same note when the address it returned differs
+from the invited one. The page names that address. Sign in with the address
+the invitation was sent to, or invite the one the provider carries.
+
+## A provider button is missing from the sign-in page
+
+The keys are not both set. Every button needs a pair, and one half alone stops
+the server instead.
+
+```bash
+npx absqir doctor
+npx absqir config get
+```
+
+See [Sign in with GitHub and Google](/oauth).
+
+## The provider answers `redirect_uri_mismatch`
+
+The callback you registered with GitHub or Google does not match `APP_URL`.
+The callback absqir uses is always `<APP_URL>/api/auth/callback/<provider>`.
+
+```bash
+npx absqir config get APP_URL
+```
+
+Change one of the two so they match, then try again.
+
 ## Links in an email point at localhost
 
 `APP_URL` still holds the default. A reminder is written by a timer, so the

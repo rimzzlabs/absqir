@@ -14,7 +14,9 @@ export interface OnboardingProfileStepProps {
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
-  const needsPassword = !props.status.hasPassword;
+  // A linked provider is a credential too. Asking for a password right after
+  // the reader chose the provider button takes back what the button offered.
+  const needsPassword = !props.status.hasPassword && props.status.linkedProviders.length === 0;
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(

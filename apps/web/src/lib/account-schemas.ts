@@ -18,6 +18,14 @@ export const changePasswordSchema = z.object({
   signOutOthers: z.boolean(),
 });
 
+export const setPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(MIN_PASSWORD_LENGTH, `Use at least ${MIN_PASSWORD_LENGTH} characters.`)
+    .max(MAX_PASSWORD_LENGTH, "That password is too long."),
+});
+
 export type NameValues = z.infer<typeof nameSchema>;
+export type SetPasswordValues = z.infer<typeof setPasswordSchema>;
 export type NewEmailValues = z.infer<typeof newEmailSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;

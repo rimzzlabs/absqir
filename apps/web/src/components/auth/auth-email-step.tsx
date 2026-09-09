@@ -5,7 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { AuthHeading } from "@/components/auth/auth-heading";
+import { AuthProviderButtons } from "@/components/auth/auth-provider-buttons";
 import { FormError } from "@/components/shared/form-error";
+import type { AuthProviderId } from "@/lib/auth-providers";
 import { type EmailValues, emailSchema } from "@/lib/auth-schemas";
 import { useLookupEmail } from "@/mutations/use-lookup-email";
 import { useSendCode } from "@/mutations/use-send-code";
@@ -13,6 +15,12 @@ import { useSendCode } from "@/mutations/use-send-code";
 export interface AuthEmailStepProps {
   initialEmail: string;
   eventId: string | null;
+  /** The providers the operator turned on. Empty hides the whole row. */
+  providers: AuthProviderId[];
+  /** Where a provider sends the reader back to. */
+  next: string;
+  /** What went wrong on the way back from a provider, if anything. */
+  notice: string | null;
   /** The password is whatever a password manager put in the hidden field. */
   onKnownWithPassword: (email: string, password: string) => void;
   onCodeSent: (email: string, isNew: boolean) => void;
@@ -61,6 +69,12 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
           description="Enter your email. We will tell you what comes next."
         />
 
+        {props.notice ? (
+          <p role="alert" className="text-destructive text-sm">
+            {props.notice}
+          </p>
+        ) : null}
+
         <FormField
           control={form.control}
           name="email"
@@ -90,6 +104,8 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
         <Button type="submit" disabled={pending} className="w-full">
           {pending ? "Checking…" : "Continue"}
         </Button>
+
+        <AuthProviderButtons providers={props.providers} next={props.next} />
       </form>
     </Form>
   );

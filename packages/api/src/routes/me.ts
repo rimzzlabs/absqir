@@ -4,12 +4,13 @@ import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
+import { enabledSocialProviders } from "@/env";
 import { forwardCookies } from "@/lib/auth-forward";
 import { avatarSchema } from "@/lib/avatar";
 import { decodeCursor, pageOf } from "@/lib/cursor";
 import type { AppEnv } from "@/types";
 
-const { member, organization, session, user } = schema;
+const { account, member, organization, session, user } = schema;
 
 const membershipSchema = z.object({
   organizationId: z.string(),
@@ -128,6 +129,69 @@ const timezoneRoute = createRoute({
     },
     400: {
       description: "Not a zone this server knows",
+      content: { "application/json": { schema: errorSchema } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const MIN_PASSWORD_LENGTH = 12;
+const MAX_PASSWORD_LENGTH = 128;
+
+const credentialsSchema = z.object({
+  /** This account can sign in with a password. */
+  hasPassword: z.boolean(),
+  /** The providers already linked, with the id the unlink call wants. */
+  linked: z.array(z.object({ accountId: z.string(), provider: z.string() })),
+  /** The providers this instance offers. Empty when the operator set no keys. */
+  available: z.array(z.string()),
+});
+
+const credentialsRoute = createRoute({
+  method: "get",
+  path: "/me/credentials",
+  tags: ["auth"],
+  summary: "How I can sign in: a password, and the providers I linked",
+  responses: {
+    200: {
+      description: "The ways in",
+      content: { "application/json": { schema: credentialsSchema } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const setPasswordRoute = createRoute({
+  method: "post",
+  path: "/me/password",
+  tags: ["auth"],
+  summary: "Choose a password for an account that has none",
+  description:
+    "For an account that only signs in with a provider or an emailed code. Changing a password that exists goes through the auth endpoint instead, which asks for the current one.",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "The password is set",
+      content: { "application/json": { schema: z.object({ hasPassword: z.literal(true) }) } },
+    },
+    400: {
+      description: "This account already has a password",
       content: { "application/json": { schema: errorSchema } },
     },
     401: {
@@ -293,6 +357,49 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
       .returning({ name: user.name, image: user.image });
 
     return c.json({ name: row?.name ?? name, image: row?.image ?? null }, 200);
+  })
+  .openapi(credentialsRoute, async (c) => {
+    const current = c.get("user");
+    if (!current) return c.json({ error: "Unauthorized" }, 401);
+
+    const rows = await c.var.db
+      .select({ id: account.id, providerId: account.providerId })
+      .from(account)
+      .where(eq(account.userId, current.id));
+
+    return c.json(
+      {
+        hasPassword: rows.some((row) => row.providerId === "credential"),
+        linked: rows
+          .filter((row) => row.providerId !== "credential")
+          .map((row) => ({ accountId: row.id, provider: row.providerId })),
+        available: enabledSocialProviders(c.env) as string[],
+      },
+      200,
+    );
+  })
+  .openapi(setPasswordRoute, async (c) => {
+    const current = c.get("user");
+    if (!current) return c.json({ error: "Unauthorized" }, 401);
+
+    const existing = await c.var.db
+      .select({ id: account.id })
+      .from(account)
+      .where(and(eq(account.userId, current.id), eq(account.providerId, "credential")))
+      .limit(1);
+
+    if (existing[0]) {
+      return c.json({ error: "This account already has a password. Change it instead." }, 400);
+    }
+
+    const { password } = c.req.valid("json");
+
+    await c.var.auth.api.setPassword({
+      body: { newPassword: password },
+      headers: c.req.raw.headers,
+    });
+
+    return c.json({ hasPassword: true as const }, 200);
   })
   .openapi(route, async (c) => {
     const user = c.get("user");

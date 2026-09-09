@@ -178,6 +178,7 @@ export const notificationMutationKeys = {
 export const accountKeys = {
   all: ["account"] as const,
   devices: () => [...accountKeys.all, "devices"] as const,
+  credentials: () => [...accountKeys.all, "credentials"] as const,
 };
 
 export const accountMutationKeys = {
@@ -190,6 +191,9 @@ export const accountMutationKeys = {
   timezone: () => [...accountMutationKeys.all, "timezone"] as const,
   revokeSession: () => [...accountMutationKeys.all, "revoke-session"] as const,
   revokeOtherSessions: () => [...accountMutationKeys.all, "revoke-other-sessions"] as const,
+  setPassword: () => [...accountMutationKeys.all, "set-password"] as const,
+  linkProvider: () => [...accountMutationKeys.all, "link-provider"] as const,
+  unlinkProvider: () => [...accountMutationKeys.all, "unlink-provider"] as const,
 };
 
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */

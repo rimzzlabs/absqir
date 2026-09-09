@@ -6,6 +6,7 @@ import { AuthEmailStep } from "@/components/auth/auth-email-step";
 import { AuthPasswordStep } from "@/components/auth/auth-password-step";
 import { AuthResetStep } from "@/components/auth/auth-reset-step";
 import { Providers } from "@/components/providers";
+import type { AuthProviderId, CallbackError } from "@/lib/auth-providers";
 
 export interface AuthFlowProps {
   /** Where to land after a successful sign in. */
@@ -14,6 +15,10 @@ export interface AuthFlowProps {
   initialEmail?: string;
   /** The open event whose public page sent the reader here. */
   eventId?: string | null;
+  /** The providers the operator turned on. Empty means no buttons at all. */
+  providers?: AuthProviderId[];
+  /** What came back from a provider that refused, read on the server. */
+  callbackError?: CallbackError | null;
 }
 
 /**
@@ -28,14 +33,35 @@ type Step =
   | { kind: "reset"; email: string }
   | { kind: "closed"; email: string };
 
+/**
+ * A provider that refused because the address needs an invitation lands on
+ * the closed card, the same one the email door shows. Every other failure
+ * stays on the email step, where the reader can simply try again.
+ */
+function firstStep(props: AuthFlowProps): Step {
+  const failure = props.callbackError;
+
+  if (failure?.needsInvitation) {
+    return { kind: "closed", email: failure.email ?? props.initialEmail ?? "" };
+  }
+
+  return { kind: "email" };
+}
+
 function AuthSteps(props: AuthFlowProps) {
-  const [step, setStep] = useState<Step>({ kind: "email" });
+  const [step, setStep] = useState<Step>(() => firstStep(props));
+  const notice = props.callbackError?.needsInvitation
+    ? null
+    : (props.callbackError?.message ?? null);
 
   return match(step)
     .with({ kind: "email" }, () => (
       <AuthEmailStep
         initialEmail={props.initialEmail ?? ""}
         eventId={props.eventId ?? null}
+        providers={props.providers ?? []}
+        next={props.next}
+        notice={notice}
         onKnownWithPassword={(email, password) => setStep({ kind: "password", email, password })}
         onCodeSent={(email, isNew) => setStep({ kind: "code", email, isNew })}
         onClosed={(email) => setStep({ kind: "closed", email })}
@@ -66,7 +92,11 @@ function AuthSteps(props: AuthFlowProps) {
       />
     ))
     .with({ kind: "closed" }, ({ email }) => (
-      <AuthClosed email={email} onBack={() => setStep({ kind: "email" })} />
+      <AuthClosed
+        email={email}
+        reason={props.callbackError?.message ?? null}
+        onBack={() => setStep({ kind: "email" })}
+      />
     ))
     .exhaustive();
 }

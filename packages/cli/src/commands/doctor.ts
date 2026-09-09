@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { dockerAvailable } from "@/lib/compose";
 import { readEnvValue } from "@/lib/env-file";
+import { callbackUrl, keysOf, PROVIDERS } from "@/lib/providers";
 
 const MIN_SECRET_LENGTH = 32;
 
@@ -61,6 +62,32 @@ export async function doctor(): Promise<number> {
       ok: mailKey.length > 0,
       hint: "Sign-in codes travel by email. Set it: absqir config set RESEND_API_KEY re_...",
     });
+  }
+
+  if (hasEnv) {
+    const appUrl = readEnvValue(".env", "APP_URL") ?? "";
+
+    for (const provider of PROVIDERS) {
+      const [idKey, secretKey] = keysOf(provider.id);
+      const id = readEnvValue(".env", idKey) ?? "";
+      const secret = readEnvValue(".env", secretKey) ?? "";
+
+      if (!id && !secret) continue;
+
+      results.push({
+        label: `${provider.label} sign-in has both keys`,
+        ok: Boolean(id) && Boolean(secret),
+        hint: `Set the missing one: absqir config set ${id ? secretKey : idKey} ...`,
+      });
+
+      // The provider refuses a callback it does not know, and says so on its
+      // own page, where absqir cannot explain anything.
+      results.push({
+        label: `${provider.label} callback matches a public APP_URL`,
+        ok: appUrl.length > 0 && !appUrl.includes("localhost") && !appUrl.includes("127.0.0.1"),
+        hint: `Set APP_URL to the address people type, then register ${callbackUrl(appUrl || "https://absqir.example.com", provider.id)} with ${provider.label}.`,
+      });
+    }
   }
 
   const port = (hasEnv ? readEnvValue(".env", "PORT") : null) ?? "4321";

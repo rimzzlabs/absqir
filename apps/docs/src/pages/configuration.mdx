@@ -17,6 +17,10 @@ with `absqir up`.
 | `REGISTRATION_OPEN`  | `false`                          | Lets any email register and create organizations. Off means invitations only, plus the first account.                            |
 | `APP_URL`            | `http://localhost:4321`          | Where this instance answers. Links in a reminder email point here, so set it to the address people type.                         |
 | `ABSQIR_TAG`         | `latest`                         | The image tag `absqir upgrade` pulls. Pin a version for reproducible deploys.                                                    |
+| `GITHUB_CLIENT_ID`   | empty                            | Turns on the GitHub button with `GITHUB_CLIENT_SECRET`. See [Sign in with GitHub and Google](/oauth).                            |
+| `GITHUB_CLIENT_SECRET` | empty                          | The other half of the GitHub pair. One half alone stops the server.                                                             |
+| `GOOGLE_CLIENT_ID`   | empty                            | Turns on the Google button with `GOOGLE_CLIENT_SECRET`.                                                                         |
+| `GOOGLE_CLIENT_SECRET` | empty                          | The other half of the Google pair.                                                                                              |
 
 Two more variables exist on the container itself, outside `.env`:
 
@@ -25,6 +29,13 @@ Two more variables exist on the container itself, outside `.env`:
 | `SKIP_MIGRATIONS` | `false`      | Skips the automatic migrations on start. Use with `absqir migrate` when you want manual control. |
 | `ENVIRONMENT`     | `production` | Turns on HSTS, hides the API docs page, and requires `RESEND_API_KEY`.                           |
 | `CRON_SECRET`     | empty        | Turns on `POST /api/tick` for a scheduler outside the app. See [the heartbeat](/notifications#the-heartbeat). Docker and Node run the same work on a timer, so a self-host can leave it empty. |
+
+## Sign-in providers
+
+The four OAuth keys are optional. With none of them set, the sign-in page asks
+for an email and nothing else. Set a pair and a button appears. The callback
+address follows `APP_URL`, so set that first.
+[Sign in with GitHub and Google](/oauth) walks through both providers.
 
 ## Email in development
 
