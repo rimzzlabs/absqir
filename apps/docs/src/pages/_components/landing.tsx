@@ -40,10 +40,8 @@ export function Landing() {
         <div>
           <h1 className="lp-title">The code on the screen dies every 20 seconds.</h1>
           <p className="lp-lede">
-            absqir is <strong>open source attendance you run yourself</strong>. Put an event's QR on
-            the projector. People scan it with the phone already in their hand, and the check-ins
-            arrive on your dashboard while they are still sitting down. A photo of the code is
-            worthless before it reaches the group chat.
+            <strong>Open source attendance you run yourself.</strong> Put the QR on the projector,
+            and the check-ins land while people are still sitting down.
           </p>
           <InstallCommand />
           <div className="lp-actions">
@@ -69,11 +67,9 @@ export function Landing() {
           <div className="lp-door lp-door-main">
             <h3>The room screen</h3>
             <p className="lp-p">
-              The QR encodes a link carrying a token: an HMAC over the event and the current 20
-              second window, keyed by a per-event secret that never leaves the server. The screen
-              asks for a fresh one when the window ends, and the server accepts this window and the
-              one before it. Only a signed-in member who is on the list can turn that link into a
-              record.
+              The QR carries an HMAC over the event and the current 20 second window, keyed by a
+              secret that never leaves the server. The server accepts this window and the one before
+              it. Only a signed-in member on the list can turn that link into a record.
             </p>
           </div>
           <div className="lp-door lp-door-alt">

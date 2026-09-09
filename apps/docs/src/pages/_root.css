@@ -27,9 +27,9 @@
    and centering a two line headline weakens both lines. */
 .lp-hero {
   display: grid;
-  gap: 3rem;
+  gap: 3.5rem;
   align-items: start;
-  padding: 4rem 0 1rem;
+  padding: 5.5rem 0 3rem;
 }
 
 /* Below this the two columns leave the headline too little room to hold its
@@ -37,8 +37,8 @@
 @media (min-width: 1000px) {
   .lp-hero {
     grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
-    gap: 4rem;
-    padding-top: 6rem;
+    gap: 5rem;
+    padding: 8rem 0 4rem;
   }
 }
 
@@ -59,8 +59,8 @@
   font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
   line-height: 1.6;
   color: var(--lp-ink-2);
-  max-width: 48ch;
-  margin: 1.25rem 0 0;
+  max-width: 46ch;
+  margin: 1.75rem 0 0;
 }
 
 .lp-lede strong {
@@ -72,7 +72,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.625rem;
-  margin-top: 2rem;
+  margin-top: 2.25rem;
 }
 
 .lp-btn {
@@ -124,7 +124,7 @@
    the real command with the three package runners people actually use, and a copy
    button that works. No traffic lights, no prompt chrome, no typing animation. */
 .lp-install {
-  margin-top: 2.25rem;
+  margin-top: 2.75rem;
   border: 1px solid var(--lp-line);
   border-radius: 10px;
   background: var(--lp-panel);
