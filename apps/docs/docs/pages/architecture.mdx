@@ -1,5 +1,7 @@
 # Architecture
 
+import { OneOriginTwoTargets, RotatingToken } from "../components/architecture-diagram";
+
 ## One origin, two targets
 
 absqir is one codebase that runs on two targets. Astro renders the pages,
@@ -8,15 +10,7 @@ no CORS and the session cookie stays `SameSite=Lax`. The Docker image runs
 it on Node.js against your Postgres. The same code deploys to Cloudflare
 Workers, which is how the hosted version will run.
 
-```
-Browser ── /            Astro pages (dashboard shell, onboarding, sign-in)
-        ── /api/...     Hono API (directory, groups, onboarding, OpenAPI)
-        ── /api/auth    Better Auth (codes, passwords, organizations)
-                        └── Postgres
-```
-
-Platform access — the database connection, the rate limiter, environment —
-sits behind one small interface, picked per target at build time.
+<OneOriginTwoTargets />
 
 ## Accounts
 
@@ -56,6 +50,8 @@ Better Auth owns `user`, `session`, `account`, `verification`,
 Everything an organization owns cascades on delete.
 
 ## The rotating QR token and the pass
+
+<RotatingToken />
 
 The room screen encodes a link carrying a token: an HMAC-SHA256 over the
 session id and the current 20-second time window, keyed by a per-session

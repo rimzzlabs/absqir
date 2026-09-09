@@ -1,5 +1,7 @@
 # Events and check-in
 
+import { EventClock, TwoWaysToCheckIn } from "../components/session-diagram";
+
 An event is one moment people are expected: a shift, a meeting, a
 workshop, a community day. It has a start, an end, a late threshold, and
 one or more groups. Everyone in those groups is on the list.
@@ -26,6 +28,8 @@ previous page ended, so page fifty costs the database what page one does.
 
 An event moves through three statuses on its own. Nothing is stored; the
 status is read from the timestamps every time.
+
+<EventClock />
 
 | Status      | When                                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -55,6 +59,8 @@ An organizer can change any status by hand from the event page. The record
 remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
 
 ## Two ways to check in
+
+<TwoWaysToCheckIn />
 
 **The room screen.** The organizer opens the event's room screen on a
 projector or a tablet. It shows a QR code that encodes a link with a token.

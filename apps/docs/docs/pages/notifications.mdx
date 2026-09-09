@@ -1,5 +1,7 @@
 # Notifications and reminders
 
+import { TheHeartbeat } from "../components/notification-diagram";
+
 Everything that concerns a person lands in one list, at **Notifications**.
 The bell in the header says how many wait. A click on the bell opens the
 newest few in place, with a link to the full list. With a mouse, the bell
@@ -61,6 +63,8 @@ a reminder sent by the heartbeat has no request to read an origin from.
 
 Three jobs run on the clock: schedules spawn their events, ended events
 close and write their absent rows, and reminders go out.
+
+<TheHeartbeat />
 
 Reading a page settles the organization it belongs to, so a small instance
 needs no cron at all. The heartbeat only makes the work eager, so a reminder
