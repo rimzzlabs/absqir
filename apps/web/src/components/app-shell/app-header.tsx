@@ -7,6 +7,8 @@ import { UserMenu } from "@/components/app-shell/user-menu";
 export interface AppHeaderProps {
   title: string;
   user: ShellUser;
+  /** The bell reads one organization, so it stays away until there is one. */
+  hasOrganization: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ export function AppHeader(props: AppHeaderProps) {
       <Separator orientation="vertical" className="mr-2 h-4 self-center" />
       <p className="min-w-0 flex-1 truncate text-sm font-medium">{props.title}</p>
       <div className="flex items-center gap-1">
-        <NotificationBell />
+        {props.hasOrganization ? <NotificationBell /> : null}
         <UserMenu user={props.user} />
       </div>
     </header>

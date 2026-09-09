@@ -97,6 +97,21 @@ export const MEMBER_NAV: NavGroup[] = [
   },
 ];
 
+/**
+ * What an account with no organization sees. Everything on this list works
+ * without one, so nothing here is a dead entry.
+ */
+export const SOLO_NAV: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [{ href: "/", label: "Getting started", icon: HouseIcon, minimum: "member" }],
+  },
+  {
+    label: "You",
+    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" }],
+  },
+];
+
 /** The public repository, linked from the sidebar footer. */
 export const GITHUB_URL = "https://github.com/rimzzlabs/absqir";
 

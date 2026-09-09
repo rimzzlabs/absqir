@@ -8,11 +8,12 @@ interface Props {
 
 const { title } = Astro.props;
 
-// src/middleware.ts already redirected a signed-out reader, an unfinished
-// account, and an account without an organization. Everything is set here.
+// src/middleware.ts already redirected a signed-out reader and an unfinished
+// account. An account with no organization reaches the home page, where the
+// frame renders with the navigation locked.
 const { user, memberships, activeMembership } = Astro.locals;
 
-if (!user || !activeMembership) {
+if (!user) {
   return Astro.redirect("/sign-in", 302);
 }
 
@@ -28,7 +29,10 @@ const shellUser = {
 };
 ---
 
-<Layout title={`${title} — ${activeMembership.name} — absqir`} timezone={user.timezone ?? null}>
+<Layout
+  title={activeMembership ? `${title} — ${activeMembership.name} — absqir` : `${title} — absqir`}
+  timezone={user.timezone ?? null}
+>
   <AppShell
     client:load
     user={shellUser}

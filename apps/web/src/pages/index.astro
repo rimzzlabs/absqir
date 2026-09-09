@@ -1,4 +1,5 @@
 ---
+import { GettingStartedPage } from "@/components/home/getting-started-page";
 import { HomePage } from "@/components/home/home-page";
 import { MemberHomePage } from "@/components/home/member-home-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
@@ -7,13 +8,15 @@ const { user, activeMembership } = Astro.locals;
 const isMember = activeMembership?.role === "member";
 ---
 
-<DashboardLayout title="Home">
+<DashboardLayout title={activeMembership ? "Home" : "Getting started"}>
   {
-    isMember ? (
+    !activeMembership ? (
+      <GettingStartedPage client:load userName={user?.name ?? ""} />
+    ) : isMember ? (
       <MemberHomePage
         client:load
         userName={user?.name ?? ""}
-        organizationName={activeMembership?.name ?? ""}
+        organizationName={activeMembership.name}
         timezone={user?.timezone ?? null}
       />
     ) : (

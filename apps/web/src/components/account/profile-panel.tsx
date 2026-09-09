@@ -20,7 +20,8 @@ export interface ProfilePanelProps {
   email: string;
   image: string | null;
   createdAt: string;
-  role: RoleName;
+  /** Null while the account belongs to no organization. */
+  role: RoleName | null;
   /** The stored zone. Null follows the device. */
   timezone: string | null;
 }
@@ -58,7 +59,7 @@ function Identity(props: ProfilePanelProps) {
         <p className="font-heading truncate text-xl font-semibold tracking-tight">{props.name}</p>
         <p className="text-muted-foreground truncate text-sm">{props.email}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <RoleBadge role={props.role} />
+          {props.role ? <RoleBadge role={props.role} /> : null}
           <span className="text-muted-foreground text-xs">
             Joined {formatDate(new Date(props.createdAt))}
           </span>

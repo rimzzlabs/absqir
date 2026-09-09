@@ -19,10 +19,15 @@ function isPublicPath(path: string): boolean {
   );
 }
 
-/** Reachable by a signed-in reader who has no organization yet. */
+/**
+ * Reachable by a signed-in reader who has no organization yet. The home page
+ * shows the steps that lead into one; settings holds the account's own
+ * profile, preferences, and devices, none of which need an organization.
+ */
 function isOrgFreePath(path: string): boolean {
   return (
-    path === "/no-organization" ||
+    path === "/" ||
+    path === "/settings" ||
     path === "/onboarding" ||
     path.startsWith("/invite/") ||
     path.startsWith("/e/")
@@ -123,11 +128,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return context.redirect("/", 302);
     }
 
-    if (memberships.length === 0 && !isOrgFreePath(path)) {
-      return context.redirect("/no-organization", 302);
+    // The old waiting room folded into the home page.
+    if (path === "/no-organization") {
+      return context.redirect("/", 302);
     }
 
-    if (memberships.length > 0 && path === "/no-organization") {
+    if (memberships.length === 0 && !isOrgFreePath(path)) {
       return context.redirect("/", 302);
     }
 

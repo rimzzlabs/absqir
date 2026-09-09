@@ -7,15 +7,19 @@ import DashboardLayout from "@/layouts/dashboard-layout.astro";
 // for owners and admins only; the page decides from the role.
 const { user, activeMembership } = Astro.locals;
 
-if (!user || !activeMembership) {
-  return Astro.redirect("/", 302);
+if (!user) {
+  return Astro.redirect("/sign-in", 302);
 }
 
-const organization = {
-  id: activeMembership.organizationId,
-  name: activeMembership.name,
-  slug: activeMembership.slug,
-};
+// An account with no organization still owns a profile, preferences, and a
+// list of its devices. Only the organization tabs need one.
+const organization = activeMembership
+  ? {
+      id: activeMembership.organizationId,
+      name: activeMembership.name,
+      slug: activeMembership.slug,
+    }
+  : null;
 
 const shellUser = {
   name: user.name,
@@ -32,7 +36,7 @@ const shellUser = {
 <DashboardLayout title="Settings">
   <SettingsPage
     client:load
-    role={activeMembership.role}
+    role={activeMembership?.role ?? null}
     organization={organization}
     currentUserId={user.id}
     user={shellUser}

@@ -24,7 +24,8 @@ export interface ShellUser {
 export interface AppShellProps {
   user: ShellUser;
   memberships: ShellMembership[];
-  active: ShellMembership;
+  /** Null while the account belongs to no organization. */
+  active: ShellMembership | null;
   currentPath: string;
   title: string;
   /** The state the reader left the sidebar in, from the cookie. */
@@ -39,7 +40,9 @@ const PAGE =
 /**
  * The dashboard frame: sidebar, header, page. Rendered on the server with
  * the active organization, so a switch reloads the page instead of juggling
- * every query's cache.
+ * every query's cache. An account that belongs to nowhere gets the same
+ * frame with the navigation locked, so it can see what absqir is before it
+ * has one.
  */
 export function AppShell(props: AppShellProps) {
   return (
@@ -53,7 +56,11 @@ export function AppShell(props: AppShellProps) {
             canCreateOrganizations={props.user.canCreateOrganizations}
           />
           <SidebarInset>
-            <AppHeader title={props.title} user={props.user} />
+            <AppHeader
+              title={props.title}
+              user={props.user}
+              hasOrganization={props.active !== null}
+            />
             <div className={PAGE}>{props.children}</div>
           </SidebarInset>
         </SidebarProvider>

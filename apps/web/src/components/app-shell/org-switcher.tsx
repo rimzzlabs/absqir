@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@absqir/ui/sidebar";
-import { CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react";
+import { BuildingsIcon, CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import { FormError } from "@/components/shared/form-error";
@@ -30,7 +30,8 @@ import { useSetActiveOrganization } from "@/mutations/use-set-active-organizatio
 
 export interface OrgSwitcherProps {
   memberships: ShellMembership[];
-  active: ShellMembership;
+  /** Null while the account belongs to no organization. */
+  active: ShellMembership | null;
   canCreateOrganizations: boolean;
 }
 
@@ -63,11 +64,19 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
               />
             }
           >
-            <OrgAvatar membership={props.active} />
+            {props.active ? (
+              <OrgAvatar membership={props.active} />
+            ) : (
+              <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md">
+                <BuildingsIcon />
+              </div>
+            )}
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{props.active.name}</span>
+              <span className="truncate font-medium">
+                {props.active ? props.active.name : "No organization"}
+              </span>
               <span className="text-muted-foreground truncate text-xs">
-                {roleLabel(props.active.role)}
+                {props.active ? roleLabel(props.active.role) : "Join one to get started"}
               </span>
             </div>
             <CaretUpDownIcon className="ml-auto" />
@@ -83,10 +92,17 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
             <DropdownMenuGroup>
               <DropdownMenuLabel>Organizations</DropdownMenuLabel>
             </DropdownMenuGroup>
+            {props.memberships.length === 0 ? (
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-muted-foreground font-normal">
+                  You are in none yet.
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
+            ) : null}
             <DropdownMenuRadioGroup
-              value={props.active.organizationId}
+              value={props.active?.organizationId ?? ""}
               onValueChange={(value) => {
-                if (value !== props.active.organizationId) setActive.mutate(value);
+                if (value && value !== props.active?.organizationId) setActive.mutate(value);
               }}
             >
               {props.memberships.map((membership) => (

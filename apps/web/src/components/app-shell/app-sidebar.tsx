@@ -21,13 +21,15 @@ import {
   type NavItem,
   navFor,
   roleAtLeast,
+  SOLO_NAV,
 } from "@/components/app-shell/nav";
 import { OrgSwitcher } from "@/components/app-shell/org-switcher";
 import { SidebarStatus } from "@/components/app-shell/sidebar-status";
 
 export interface AppSidebarProps {
   memberships: ShellMembership[];
-  active: ShellMembership;
+  /** Null while the account belongs to no organization. */
+  active: ShellMembership | null;
   currentPath: string;
   canCreateOrganizations: boolean;
 }
@@ -79,8 +81,12 @@ function CheckInEntry(props: { currentPath: string }) {
 }
 
 export function AppSidebar(props: AppSidebarProps) {
-  const groups = navFor(props.active.role);
-  const member = !roleAtLeast(props.active.role, "organizer");
+  const { active } = props;
+
+  // Without an organization the list is short on purpose: the two entries
+  // that work, and nothing that turns the reader away.
+  const groups = active ? navFor(active.role) : SOLO_NAV;
+  const member = active !== null && !roleAtLeast(active.role, "organizer");
 
   return (
     <Sidebar variant="inset" collapsible="icon">

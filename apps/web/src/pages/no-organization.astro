@@ -1,8 +1,5 @@
 ---
-import { NoOrganization } from "@/components/no-organization/no-organization";
-import AuthLayout from "@/layouts/auth-layout.astro";
+// The waiting room folded into the home page, which now renders the frame
+// with the navigation locked. Old links still land in the right place.
+return Astro.redirect("/", 302);
 ---
-
-<AuthLayout title="No organization — absqir">
-  <NoOrganization client:load />
-</AuthLayout>

@@ -4,6 +4,8 @@ import {
   BellIcon,
   BuildingsIcon,
   EnvelopeSimpleIcon,
+  GlobeHemisphereWestIcon,
+  HandWavingIcon,
   ShieldCheckIcon,
   SlidersHorizontalIcon,
   UserCircleIcon,
@@ -15,7 +17,9 @@ import { NotificationsPanel } from "@/components/account/notifications-panel";
 import { ProfilePanel } from "@/components/account/profile-panel";
 import { SecurityPanel } from "@/components/account/security-panel";
 import { Providers } from "@/components/providers";
+import { DomainsPanel } from "@/components/settings/domains-panel";
 import { InvitationsPanel } from "@/components/settings/invitations-panel";
+import { JoinRequestsPanel } from "@/components/settings/join-requests-panel";
 import { MembersTable } from "@/components/settings/members-table";
 import { OrganizationSettings } from "@/components/settings/organization-settings";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
@@ -25,10 +29,12 @@ import { PageHeader } from "@/components/shared/page-header";
 import type { RoleName } from "@/components/shared/role-badge";
 
 export interface SettingsPageProps {
-  role: RoleName;
+  /** Null while the account belongs to no organization. */
+  role: RoleName | null;
   /** The `tab` in the address, read on the server so the first paint is right. */
   requestedTab: string | null;
-  organization: { id: string; name: string; slug: string };
+  /** Null alongside a null role. */
+  organization: { id: string; name: string; slug: string } | null;
   currentUserId: string;
   user: {
     name: string;
@@ -42,7 +48,13 @@ export interface SettingsPageProps {
   };
 }
 
-const ORGANIZATION_TABS = ["members", "invitations", "organization"] as const;
+const ORGANIZATION_TABS = [
+  "members",
+  "invitations",
+  "requests",
+  "domains",
+  "organization",
+] as const;
 const PERSONAL_TABS = ["profile", "preferences", "notifications", "security"] as const;
 type SettingsTab = (typeof ORGANIZATION_TABS)[number] | (typeof PERSONAL_TABS)[number];
 
@@ -54,6 +66,8 @@ const ORGANIZATION_GROUP: SettingsNavGroup<SettingsTab> = {
   items: [
     { value: "members", label: "Members", icon: UsersThreeIcon },
     { value: "invitations", label: "Invitations", icon: EnvelopeSimpleIcon },
+    { value: "requests", label: "Requests", icon: HandWavingIcon },
+    { value: "domains", label: "Domains", icon: GlobeHemisphereWestIcon },
     { value: "organization", label: "Organization", icon: BuildingsIcon },
   ],
 };
@@ -73,7 +87,8 @@ function isTab(value: string, allowed: readonly SettingsTab[]): value is Setting
 }
 
 function SettingsBody(props: SettingsPageProps) {
-  const runsOrganization = props.role === "owner" || props.role === "admin";
+  const runsOrganization =
+    props.organization !== null && (props.role === "owner" || props.role === "admin");
   const groups = runsOrganization ? [ORGANIZATION_GROUP, PERSONAL_GROUP] : [PERSONAL_GROUP];
   const allowed: readonly SettingsTab[] = runsOrganization
     ? [...ORGANIZATION_TABS, ...PERSONAL_TABS]
@@ -86,17 +101,21 @@ function SettingsBody(props: SettingsPageProps) {
   const wanted = requested ? (ALIASES[requested] ?? requested) : null;
   const tab: SettingsTab = wanted && isTab(wanted, allowed) ? wanted : (allowed[0] ?? "profile");
 
+  // Every organization tab is unreachable without a role, so each one folds
+  // to nothing rather than carrying a null through the tree.
+  const { role, organization } = props;
+
   const content = {
-    members: (
+    members: role ? (
       <SettingsSection
         title="Members"
         description="Everyone with an account in the organization, and what each one can do."
       >
         <div className="pt-6">
-          <MembersTable role={props.role} currentUserId={props.currentUserId} />
+          <MembersTable role={role} currentUserId={props.currentUserId} />
         </div>
       </SettingsSection>
-    ),
+    ) : null,
     invitations: (
       <SettingsSection
         title="Invitations"
@@ -107,23 +126,44 @@ function SettingsBody(props: SettingsPageProps) {
         </div>
       </SettingsSection>
     ),
-    organization: (
+    requests: (
       <SettingsSection
-        title="Organization"
-        description="The name people see, and the slug that appears in links."
+        title="Requests"
+        description="People at one of your domains who ask to come in."
       >
         <div className="pt-6">
-          <OrganizationSettings role={props.role} organization={props.organization} />
+          <JoinRequestsPanel />
         </div>
       </SettingsSection>
     ),
+    domains: (
+      <SettingsSection
+        title="Domains"
+        description="Claim the email domain your people share, so a new account finds this workspace on its own."
+      >
+        <div className="pt-6">
+          <DomainsPanel />
+        </div>
+      </SettingsSection>
+    ),
+    organization:
+      role && organization ? (
+        <SettingsSection
+          title="Organization"
+          description="The name people see, and the slug that appears in links."
+        >
+          <div className="pt-6">
+            <OrganizationSettings role={role} organization={organization} />
+          </div>
+        </SettingsSection>
+      ) : null,
     profile: (
       <ProfilePanel
         name={props.user.name}
         email={props.user.email}
         image={props.user.image}
         createdAt={props.user.createdAt}
-        role={props.role}
+        role={role}
         timezone={props.user.timezone}
       />
     ),
