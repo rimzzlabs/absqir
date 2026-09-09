@@ -6,21 +6,67 @@ The `absqir` package on npm drives the self-host lifecycle. Run every
 command from the instance directory — the one that holds `.env` and
 `docker-compose.yml`.
 
+## The menu
+
+```bash
+npx absqir
+```
+
+With no command, `absqir` opens a menu on a terminal. Pick a command from the
+list, and it asks for the values it needs. Outside a terminal the same call
+prints the command list and exits 1.
+
+Every command works from flags alone. A prompt only fills in a value a flag
+did not carry.
+
 ## init
 
 ```bash
-npx absqir@latest init [dir] [--force] [--yes]
+npx absqir@latest init [dir] [--force] [--yes] [--app-url <url>] [--registration-open]
+                       [--resend-key <key>] [--email-from <address>] [--provider <id>]
 ```
 
 Writes `docker-compose.yml` and a `.env` with a fresh `BETTER_AUTH_SECRET`
 and Postgres password. Refuses to overwrite existing files without
-`--force`. Set `RESEND_API_KEY` before the first `up`.
+`--force`.
 
-On a terminal, `init` also asks whether to add GitHub sign-in and Google
-sign-in. Answering yes writes the keys empty and prints the callback address
-to register. The instance starts with empty keys, so yes commits to nothing.
-`--yes` and a piped install skip both questions. See
-[Sign in with GitHub and Google](/oauth).
+On a terminal, `init` runs as a guided flow. It asks in this order:
+
+1. The directory, when you gave none on the command line.
+2. Where people reach the instance: this machine, or a domain. The first
+   answer takes `http://localhost:4321` for a local try. The second asks for
+   the address and shows the shape it expects. The address goes into
+   `APP_URL`, into the callback lines of the `.env`, and into the steps
+   printed at the end. An `https` address also sets `SECURE_COOKIES` to
+   `true`, and a plain `http` domain draws a warning.
+3. Who can join. Invite only is the default: a person needs an invitation, or
+   the public page of an open event. The other answer lets any email address
+   create an account and an organization, and sets `REGISTRATION_OPEN` to
+   `true`. Your first account is always allowed either way.
+4. The Resend API key. The flow first prints the page that holds the key,
+   [resend.com/api-keys](https://resend.com/api-keys). The field is masked.
+5. The From address, when you gave a key. It keeps
+   `absqir <onboarding@resend.dev>` by default, and `init` then says that this
+   address reaches only the account owner.
+6. The sign-in providers, as one list.
+7. The client ID and the client secret of each provider you picked. Before
+   each pair, the flow prints the provider console and the exact callback
+   address to register. The secret field is masked. Leave the ID empty to set
+   both keys later.
+
+`--yes`, a pipe, and a CI job skip every question and take the defaults. A
+provider picked with `--provider` gets empty keys, because a secret on the
+command line lands in the shell history. Set those two with `absqir config
+set`.
+
+`--provider` accepts `github` and `google`, and repeats:
+
+```bash
+npx absqir init . --yes --app-url https://absensi.example.com \
+  --provider github --provider google
+```
+
+See [Sign in with GitHub and Google](/oauth).
 
 ## up · down · logs
 
@@ -29,6 +75,9 @@ npx absqir up      # docker compose up -d
 npx absqir down    # docker compose down
 npx absqir logs    # follow the app logs
 ```
+
+Compose keeps the output of these commands, so what you read is what compose
+prints.
 
 ## upgrade
 
@@ -51,6 +100,9 @@ apply. The account skips onboarding. With `--create-orgs` it may create
 organizations. Without `--password`, the CLI generates one and prints it
 once.
 
+On a terminal, a missing flag becomes a question. The password field is
+masked while you type. Leave it empty to take a generated password.
+
 ## admin promote
 
 ```bash
@@ -66,11 +118,12 @@ npx absqir member add --email <email> --org <slug> [--role owner|admin|organizer
 ```
 
 Adds an existing account to an organization by slug, and to its directory.
+On a terminal, the role comes from a list.
 
 ## config
 
 ```bash
-npx absqir config get [KEY]
+npx absqir config get [KEY] [--reveal]
 npx absqir config set <KEY> <value>
 ```
 
@@ -79,6 +132,9 @@ Reads and edits the instance `.env`. `set` accepts: `PORT`,
 `EMAIL_FROM`, `APP_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Apply a change with `absqir up`.
 
+`get` prints `********` for a secret key. Add `--reveal` to print the value.
+On a terminal, `set` with no key offers the list.
+
 ## doctor
 
 Checks Docker, the instance files, the secret length, the mail key, and the
@@ -86,3 +142,16 @@ health endpoint. Exits non-zero when a check fails, so it fits in scripts.
 
 When a provider key is set, it also checks that both keys of the pair hold a
 value and that `APP_URL` is a public address, because the callback follows it.
+
+## Scripts and CI
+
+The CLI drops the boxes and the colour when it does not own a terminal, when
+`CI` is set, or when `NO_COLOR` is set. It then writes one fact per line and
+asks nothing. A value a flag did not carry becomes an error that names the
+flag.
+
+| Exit code | Meaning                          |
+| --------- | -------------------------------- |
+| 0         | The command did its work         |
+| 1         | Wrong input, or a failed check    |
+| 130       | You cancelled a prompt           |

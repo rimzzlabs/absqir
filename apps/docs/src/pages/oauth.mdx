@@ -16,9 +16,11 @@ address. Your instance still decides whether that address may create an
 account. See [Accounts and organizations](/accounts).
 
 :::note
-`absqir init` asks whether you want each provider. Answering yes writes the
-keys empty and prints the callback address. The instance starts and works with
-empty keys, so you can answer yes before you register anything.
+`absqir init` offers both providers in one list. For each provider you pick,
+it prints the console address and the exact callback to register, then asks for
+the client ID and the client secret. The secret field is masked. Leave the ID
+empty to write both keys empty and set them later: the instance starts and
+works with empty keys.
 :::
 
 ## What you need
