@@ -1,4 +1,4 @@
-import { leaveKeys, leaveMutationKeys } from "@absqir/core/query-keys";
+import { leaveKeys, leaveMutationKeys, myKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -17,6 +17,7 @@ export function useWithdrawLeave() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveKeys.all });
+      void queryClient.invalidateQueries({ queryKey: myKeys.sessions() });
     },
   });
 }

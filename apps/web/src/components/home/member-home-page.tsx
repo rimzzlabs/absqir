@@ -15,13 +15,14 @@ import { match, P } from "ts-pattern";
 import { MemberHomeAgenda } from "@/components/home/member-home-agenda";
 import { MemberHomeNow } from "@/components/home/member-home-now";
 import { MemberHomeStanding } from "@/components/home/member-home-standing";
+import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
 import { type LeaveStatus, LeaveStatusBadge } from "@/components/shared/status-badge";
 import { useMyLeave } from "@/queries/use-leave";
-import { useMyHistory, useMySessions } from "@/queries/use-my";
+import { type MySession, useMyHistory, useMySessions } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
   userName: string;
@@ -72,6 +73,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
   const history = useMyHistory();
   const leave = useMyLeave({ scope: "all" });
   const [passFor, setPassFor] = useState<string | null>(null);
+  const [leaveFor, setLeaveFor] = useState<MySession | null>(null);
 
   const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
   const requests = leave.data?.pages.flatMap((page) => page.items) ?? [];
@@ -109,7 +111,12 @@ function MemberHomeBody(props: MemberHomePageProps) {
         .otherwise(() => null)}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <MemberHomeAgenda sessions={rows} pending={sessions.isPending} />
+        <MemberHomeAgenda
+          sessions={rows}
+          pending={sessions.isPending}
+          onPass={setPassFor}
+          onAskLeave={setLeaveFor}
+        />
 
         <div className="flex flex-col gap-6">
           {match(history)
@@ -129,6 +136,11 @@ function MemberHomeBody(props: MemberHomePageProps) {
       </div>
 
       <PassDialog sessionId={passFor} onClose={() => setPassFor(null)} />
+      <AskLeaveDialog
+        open={leaveFor !== null}
+        onOpenChange={(open) => !open && setLeaveFor(null)}
+        session={leaveFor}
+      />
     </>
   );
 }

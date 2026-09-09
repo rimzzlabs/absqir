@@ -1,4 +1,4 @@
-import { leaveKeys, leaveMutationKeys } from "@absqir/core/query-keys";
+import { leaveKeys, leaveMutationKeys, myKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -22,6 +22,8 @@ export function useAskLeave() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveKeys.all });
+      // Each of my events carries its own request, so the cards refresh too.
+      void queryClient.invalidateQueries({ queryKey: myKeys.sessions() });
     },
   });
 }

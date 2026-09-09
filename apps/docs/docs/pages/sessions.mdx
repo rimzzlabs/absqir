@@ -141,7 +141,18 @@ with **Upcoming** and **Past** tabs and **Load more**. Each card carries
 the event, its groups, and your side of it: the record once you have one,
 the pass while it runs, or when the door opens. `GET /api/my/sessions`
 answers with `items` and a `nextCursor`, and takes `scope`, `cursor` and
-`limit` like the organizer's list.
+`limit` like the organizer's list. Each item also carries `leave`, your
+request for that event if you sent one, and a `note` on the record when
+an organizer wrote one.
+
+A click on a card, or on a row of **Coming up** on the home page, opens
+the event's details in place: when the door opens, when late starts, the
+groups, and your side of it. Under the rule sits your record with the
+organizer's note, or your leave request with its status and a **Withdraw**
+button while it waits. The actions fit the moment: **Check in** and **My
+pass** while the event runs, and **Ask for leave** on an event ahead of
+you that has no record and no request. That button opens the leave form
+with the event already chosen.
 
 **My leave** shows the requests that wait for a decision first, then a
 rule that says **Decided**, then the answered ones newest first as cards,

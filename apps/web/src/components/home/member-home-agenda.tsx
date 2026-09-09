@@ -11,12 +11,16 @@ import {
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
+import { MySessionDetails, STRETCHED_TRIGGER } from "@/components/my/my-session-details";
 import { SessionStatusBadge } from "@/components/shared/status-badge";
 import type { MySession } from "@/queries/use-my";
 
 export interface MemberHomeAgendaProps {
   sessions: MySession[];
   pending: boolean;
+  onPass: (id: string) => void;
+  onAskLeave: (session: MySession) => void;
 }
 
 /** Enough to fill the column without a scroll. */
@@ -41,6 +45,45 @@ function byDay(sessions: MySession[]): Day[] {
   }
 
   return [...days.values()];
+}
+
+/** One line of the agenda. A click opens the event's details. */
+function AgendaRow(props: {
+  session: MySession;
+  onPass: (id: string) => void;
+  onAskLeave: (session: MySession) => void;
+}) {
+  const { session } = props;
+  const row = useRef<HTMLLIElement>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <li
+      ref={row}
+      className={cn(
+        "relative -mx-2 flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
+        open ? "bg-accent/60" : "hover:bg-accent/60",
+      )}
+    >
+      <span className="text-muted-foreground w-11 shrink-0 text-xs tabular-nums">
+        {formatDate(new Date(session.startsAt), "time")}
+      </span>
+      <MySessionDetails
+        session={session}
+        open={open}
+        onOpenChange={setOpen}
+        anchor={row}
+        onPass={props.onPass}
+        onAskLeave={props.onAskLeave}
+        trigger={
+          <button type="button" className={cn(STRETCHED_TRIGGER, "flex-1 truncate font-medium")}>
+            {session.title}
+          </button>
+        }
+      />
+      <SessionStatusBadge status={session.status} />
+    </li>
+  );
 }
 
 /** The member's next days, as an agenda. */
@@ -94,18 +137,14 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
                     {formatDate(day.at, "dayOfMonth")}
                   </span>
                 </div>
-                <ul className="divide-border min-w-0 flex-1 divide-y">
+                <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {day.rows.map((session) => (
-                    <li
+                    <AgendaRow
                       key={session.id}
-                      className="flex items-center gap-3 py-2 text-sm first:pt-0 last:pb-0"
-                    >
-                      <span className="text-muted-foreground w-11 shrink-0 text-xs tabular-nums">
-                        {formatDate(new Date(session.startsAt), "time")}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate font-medium">{session.title}</span>
-                      <SessionStatusBadge status={session.status} />
-                    </li>
+                      session={session}
+                      onPass={props.onPass}
+                      onAskLeave={props.onAskLeave}
+                    />
                   ))}
                 </ul>
               </li>

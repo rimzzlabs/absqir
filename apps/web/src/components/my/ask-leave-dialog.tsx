@@ -27,11 +27,15 @@ import { FormError } from "@/components/shared/form-error";
 import { type AskLeaveValues, askLeaveSchema } from "@/lib/leave-schemas";
 import { useAskLeave } from "@/mutations/use-ask-leave";
 import { useMyLeave } from "@/queries/use-leave";
-import { useMySessions } from "@/queries/use-my";
+import { type MySession, useMySessions } from "@/queries/use-my";
+
+export type AskLeaveTarget = Pick<MySession, "id" | "title" | "startsAt" | "endsAt">;
 
 export interface AskLeaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** An event chosen before the dialog opened. The picker stays hidden. */
+  session?: AskLeaveTarget | null;
 }
 
 /** Enough rows to offer every event still ahead without a second page. */
@@ -46,9 +50,11 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
     defaultValues: { sessionId: "", reason: "" },
   });
 
+  const preset = props.session ?? null;
+
   useEffect(() => {
-    if (props.open) form.reset({ sessionId: "", reason: "" });
-  }, [props.open, form]);
+    if (props.open) form.reset({ sessionId: preset?.id ?? "", reason: "" });
+  }, [props.open, preset, form]);
 
   // Only events still ahead, without a record, and without a request already.
   const asked = new Set(
@@ -78,41 +84,53 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField
-              control={form.control}
-              name="sessionId"
-              label="Event"
-              render={(field) => (
-                <Select
-                  items={options.map((option) => ({ value: option.value, label: option.label }))}
-                  value={field.value}
-                  onValueChange={(value) => field.onChange(value ?? "")}
-                >
-                  <SelectTrigger id="leave-session" className="w-full">
-                    <SelectValue placeholder="Pick an event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Upcoming events</SelectLabel>
-                      {options.length === 0 ? (
-                        <p className="text-muted-foreground px-1.5 py-1 text-sm">
-                          Nothing ahead of you to ask about.
-                        </p>
-                      ) : (
-                        options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <span className="flex flex-col">
-                              <span>{option.label}</span>
-                              <SelectItemDescription>{option.hint}</SelectItemDescription>
-                            </span>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            {preset ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Event</p>
+                <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
+                  <p className="text-sm font-medium">{preset.title}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatRange(new Date(preset.startsAt), new Date(preset.endsAt))}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <FormField
+                control={form.control}
+                name="sessionId"
+                label="Event"
+                render={(field) => (
+                  <Select
+                    items={options.map((option) => ({ value: option.value, label: option.label }))}
+                    value={field.value}
+                    onValueChange={(value) => field.onChange(value ?? "")}
+                  >
+                    <SelectTrigger id="leave-session" className="w-full">
+                      <SelectValue placeholder="Pick an event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Upcoming events</SelectLabel>
+                        {options.length === 0 ? (
+                          <p className="text-muted-foreground px-1.5 py-1 text-sm">
+                            Nothing ahead of you to ask about.
+                          </p>
+                        ) : (
+                          options.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <span className="flex flex-col">
+                                <span>{option.label}</span>
+                                <SelectItemDescription>{option.hint}</SelectItemDescription>
+                              </span>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="reason"

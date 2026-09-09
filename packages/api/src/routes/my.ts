@@ -14,7 +14,7 @@ import {
 } from "@/lib/sessions";
 import type { AppEnv } from "@/types";
 
-const { attendanceSession, attendanceRecord } = schema;
+const { attendanceSession, attendanceRecord, leaveRequest } = schema;
 
 const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
@@ -37,6 +37,17 @@ const mySessionSchema = z.object({
       status: attendanceEnum,
       checkedInAt: z.string().nullable(),
       method: z.string(),
+      /** What the organizer wrote when marking it by hand. */
+      note: z.string().nullable(),
+    })
+    .nullable(),
+  /** My leave request for this event, if I sent one. */
+  leave: z
+    .object({
+      id: z.string(),
+      status: z.enum(["pending", "approved", "declined"]),
+      reason: z.string(),
+      decisionNote: z.string().nullable(),
     })
     .nullable(),
 });
@@ -172,12 +183,21 @@ export const myRoutes = app
       : [];
     const byId = new Map(records.map((row) => [row.sessionId, row]));
 
+    const leaves = ids.length
+      ? await c.var.db
+          .select()
+          .from(leaveRequest)
+          .where(and(eq(leaveRequest.personId, me.id), inArray(leaveRequest.sessionId, ids)))
+      : [];
+    const leaveById = new Map(leaves.map((row) => [row.sessionId, row]));
+
     const json = await toSessionJson(c.var.db, page.items, now);
 
     return c.json(
       {
         items: json.map((row) => {
           const record = byId.get(row.id);
+          const leave = leaveById.get(row.id);
 
           return {
             id: row.id,
@@ -194,6 +214,15 @@ export const myRoutes = app
                   status: record.status,
                   checkedInAt: record.checkedInAt?.toISOString() ?? null,
                   method: record.method,
+                  note: record.note ?? null,
+                }
+              : null,
+            leave: leave
+              ? {
+                  id: leave.id,
+                  status: leave.status,
+                  reason: leave.reason,
+                  decisionNote: leave.decisionNote ?? null,
                 }
               : null,
           };

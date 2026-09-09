@@ -6,6 +6,7 @@ import { QrCodeIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
+import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
 import { MySessionCard } from "@/components/my/my-session-card";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
@@ -24,6 +25,7 @@ function SessionGrid(props: {
   rows: MySession[];
   scope: MySessionScope;
   onPass: (id: string) => void;
+  onAskLeave: (session: MySession) => void;
 }) {
   if (props.rows.length === 0) {
     return (
@@ -48,7 +50,12 @@ function SessionGrid(props: {
   return (
     <ul className={GRID}>
       {props.rows.map((session) => (
-        <MySessionCard key={session.id} session={session} onPass={props.onPass} />
+        <MySessionCard
+          key={session.id}
+          session={session}
+          onPass={props.onPass}
+          onAskLeave={props.onAskLeave}
+        />
       ))}
     </ul>
   );
@@ -59,6 +66,7 @@ function MySessionsBody() {
   const sessions = useMySessions({ scope });
   const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
   const [passFor, setPassFor] = useState<string | null>(null);
+  const [leaveFor, setLeaveFor] = useState<MySession | null>(null);
 
   return (
     <>
@@ -85,7 +93,7 @@ function MySessionsBody() {
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
-            <SessionGrid rows={rows} scope={scope} onPass={setPassFor} />
+            <SessionGrid rows={rows} scope={scope} onPass={setPassFor} onAskLeave={setLeaveFor} />
 
             {sessions.hasNextPage ? (
               <div className="flex justify-center">
@@ -103,6 +111,11 @@ function MySessionsBody() {
         .otherwise(() => null)}
 
       <PassDialog sessionId={passFor} onClose={() => setPassFor(null)} />
+      <AskLeaveDialog
+        open={leaveFor !== null}
+        onOpenChange={(open) => !open && setLeaveFor(null)}
+        session={leaveFor}
+      />
     </>
   );
 }
