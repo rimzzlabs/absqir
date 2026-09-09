@@ -2,3 +2,8 @@
 
 /* Tailwind also scans this app for class names. */
 @source "../";
+
+:root {
+  /* The app bar's height. The page pads itself by it on a phone. */
+  --app-bar-height: 3.5rem;
+}

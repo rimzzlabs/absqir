@@ -32,6 +32,10 @@ export interface AppShellProps {
   children: ReactNode;
 }
 
+/** On a phone the bar sits at the bottom, so the page keeps room under it. */
+const PAGE =
+  "flex min-w-0 flex-1 flex-col gap-6 p-4 pb-[calc(var(--app-bar-height)+env(safe-area-inset-bottom)+--spacing(4))] md:p-6";
+
 /**
  * The dashboard frame: sidebar, header, page. Rendered on the server with
  * the active organization, so a switch reloads the page instead of juggling
@@ -50,7 +54,7 @@ export function AppShell(props: AppShellProps) {
           />
           <SidebarInset>
             <AppHeader title={props.title} user={props.user} />
-            <div className="flex min-w-0 flex-1 flex-col gap-6 p-4 md:p-6">{props.children}</div>
+            <div className={PAGE}>{props.children}</div>
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>
