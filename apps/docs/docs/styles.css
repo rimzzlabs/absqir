@@ -1,0 +1,462 @@
+/* Landing page. Everything is scoped under .lp so the docs pages keep the Vocs defaults.
+   Palette, type, and the one accent gesture come from the brand page: ink, paper, cobalt.
+   Only two colors are used beyond the neutral scale, and cobalt appears at exactly two
+   moments: the module that slides into the code, and the primary button. */
+
+.lp {
+  --lp-mono: var(--vocs-fontFamily_mono, ui-monospace, "JetBrains Mono", monospace);
+  --lp-cobalt: #2563eb;
+  /* The call to action holds one colour in both themes. It is the brand mark,
+     not a state, so it must not shift when the page does. */
+  --lp-cta: #2563eb;
+  --lp-cta-ink: #ffffff;
+  --lp-panel: var(--vocs-color_background2);
+  --lp-line: var(--vocs-color_border);
+  --lp-ink: #131a26;
+  --lp-ink-2: #4a5567;
+
+  text-align: left;
+  padding-bottom: 5rem;
+}
+
+:root.dark .lp {
+  --lp-cobalt: #7ca9ff;
+  --lp-ink: #e7ecf4;
+  --lp-ink-2: #9aa6b8;
+}
+
+/* ---------------------------------------------------------------- hero */
+
+/* Asymmetric on purpose. The stock centered stack gives the code panel no anchor,
+   and centering a two line headline weakens both lines. */
+.lp-hero {
+  display: grid;
+  gap: 3rem;
+  align-items: start;
+  padding: 4rem 0 1rem;
+}
+
+/* Below this the two columns leave the headline too little room to hold its
+   line breaks, so the panel drops under it instead. */
+@media (min-width: 1000px) {
+  .lp-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+    gap: 4rem;
+    padding-top: 6rem;
+  }
+}
+
+/* Two short lines have to read as one held breath, so the leading is tight and the
+   size is capped hard enough that the second line never orphans on a phone. */
+.lp-title {
+  font-size: clamp(2.125rem, 1.15rem + 4.4vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  font-weight: 600;
+  color: var(--lp-ink);
+  margin: 0;
+  max-width: 15ch;
+  text-wrap: balance;
+}
+
+.lp-lede {
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
+  line-height: 1.6;
+  color: var(--lp-ink-2);
+  max-width: 48ch;
+  margin: 1.25rem 0 0;
+}
+
+.lp-lede strong {
+  color: var(--lp-ink);
+  font-weight: 550;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 2rem;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+  border-radius: 8px;
+  border: 1px solid var(--lp-line);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  line-height: 1;
+  text-decoration: none;
+  color: var(--lp-ink);
+  background: var(--vocs-color_background);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.lp-btn:hover {
+  border-color: var(--vocs-color_borderAccent, var(--lp-cobalt));
+}
+
+.lp-btn-primary {
+  background: var(--lp-cta);
+  border-color: var(--lp-cta);
+  color: var(--lp-cta-ink);
+}
+
+.lp-btn-primary:hover {
+  filter: brightness(1.08);
+  border-color: var(--lp-cta);
+}
+
+.lp-btn:focus-visible,
+.lp-tab:focus-visible,
+.lp-copy:focus-visible,
+.lp a:focus-visible {
+  outline: 2px solid var(--lp-cobalt);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ------------------------------------------------------- install block */
+
+/* Not a terminal costume. absqir is installed by typing this line, so the block is
+   the real command with the three package runners people actually use, and a copy
+   button that works. No traffic lights, no prompt chrome, no typing animation. */
+.lp-install {
+  margin-top: 2.25rem;
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  background: var(--lp-panel);
+  overflow: hidden;
+  max-width: 34rem;
+}
+
+.lp-install-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 0 0.875rem;
+  min-height: 2.75rem;
+  font-family: var(--lp-mono);
+  font-size: 0.8125rem;
+  color: var(--lp-ink-2);
+  cursor: pointer;
+}
+
+.lp-tab[aria-selected="true"] {
+  color: var(--lp-ink);
+  border-bottom-color: var(--lp-cobalt);
+}
+
+.lp-install-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  min-height: 3.75rem;
+}
+
+.lp-cmd {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  font-family: var(--lp-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--lp-ink);
+  white-space: pre;
+  scrollbar-width: none;
+}
+
+.lp-cmd::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-cmd-runner {
+  color: var(--lp-ink-2);
+}
+
+.lp-copy {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--lp-ink-2);
+  cursor: pointer;
+}
+
+.lp-copy:hover {
+  border-color: var(--lp-line);
+  color: var(--lp-ink);
+}
+
+/* The icon carries the confirmation, so the announcement needs no room. */
+.lp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lp-copy[data-copied="true"] {
+  color: var(--lp-cobalt);
+}
+
+/* --------------------------------------------------- the code that dies */
+
+.lp-screen {
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  background: var(--lp-panel);
+  padding: 1rem;
+  max-width: 22rem;
+}
+
+.lp-screen-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--lp-mono);
+  font-size: 0.75rem;
+  color: var(--lp-ink-2);
+}
+
+.lp-screen-title {
+  color: var(--lp-ink);
+}
+
+.lp-modules {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.875rem 0;
+}
+
+/* The bar is the twenty second window draining. It is the only moving thing on the
+   page, and it moves because rotation is what the product is. */
+.lp-window {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lp-line);
+  overflow: hidden;
+}
+
+.lp-window-fill {
+  display: block;
+  height: 100%;
+  background: var(--lp-cobalt);
+  transform-origin: left center;
+  transition: transform 240ms linear;
+}
+
+.lp-tokens {
+  margin-top: 0.75rem;
+  font-family: var(--lp-mono);
+  font-size: 0.75rem;
+  line-height: 1.9;
+}
+
+.lp-token-live {
+  color: var(--lp-ink);
+}
+
+.lp-token-dead {
+  color: var(--lp-ink-2);
+  text-decoration: line-through;
+}
+
+.lp-token-tag {
+  color: var(--lp-ink-2);
+}
+
+/* --------------------------------------------------------- prose bands */
+
+.lp-band {
+  padding-top: 4.5rem;
+}
+
+.lp-h2 {
+  font-size: clamp(1.5rem, 1.2rem + 1.1vw, 1.875rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--lp-ink);
+  margin: 0 0 0.75rem;
+  max-width: 24ch;
+}
+
+.lp-p {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--lp-ink-2);
+  max-width: 62ch;
+  margin: 0 0 1rem;
+}
+
+.lp-p:last-child {
+  margin-bottom: 0;
+}
+
+.lp-p strong {
+  color: var(--lp-ink);
+  font-weight: 550;
+}
+
+/* Two doors, unequal on purpose: the room screen is the main path and the scanner is
+   the fallback, so equal cards would lie about their weight. */
+.lp-doors {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 860px) {
+  .lp-doors {
+    grid-template-columns: 1.45fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+.lp-door-main {
+  border-left: 2px solid var(--lp-cobalt);
+  padding-left: 1.25rem;
+}
+
+.lp-door-alt {
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--lp-line);
+}
+
+.lp-door h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--lp-ink);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* The rest of the product, as a definition list. These are features of unequal
+   importance and none of them is worth a card. */
+.lp-list {
+  margin: 1.75rem 0 0;
+  display: grid;
+  gap: 0;
+}
+
+@media (min-width: 900px) {
+  .lp-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 3rem;
+  }
+}
+
+.lp-list-row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--lp-line);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.lp-list-key {
+  color: var(--lp-ink);
+  font-weight: 550;
+}
+
+.lp-list-val {
+  color: var(--lp-ink-2);
+}
+
+@media (max-width: 460px) {
+  .lp-list-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}
+
+/* ------------------------------------------------------------- closing */
+
+.lp-close {
+  margin-top: 4.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--lp-line);
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 860px) {
+  .lp-close {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3rem;
+  }
+}
+
+.lp-note {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--lp-ink-2);
+  margin: 1rem 0 0;
+}
+
+.lp a {
+  color: var(--lp-ink);
+  text-underline-offset: 3px;
+  text-decoration-color: var(--lp-ink-2);
+}
+
+.lp a:hover {
+  text-decoration-color: currentColor;
+}
+
+.lp-figure {
+  margin: 2rem 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-window-fill {
+    transition: none;
+  }
+}
+
+.lp code {
+  font-family: var(--lp-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--lp-panel);
+  border: 1px solid var(--lp-line);
+}
+
+.lp-install code,
+.lp-cmd {
+  padding: 0;
+  border: 0;
+  background: none;
+}

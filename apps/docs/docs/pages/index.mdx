@@ -1,26 +1,9 @@
 ---
 layout: landing
+content:
+  width: 66rem
 ---
 
-import { HomePage } from "vocs/components";
-import { HowAbsqirWorks } from "../components/how-absqir-works";
+import { Landing } from "../components/landing";
 
-<HomePage.Root>
-  <HomePage.Logo />
-  <HomePage.Tagline>
-    Open-source QR attendance. Project a rotating code. Watch check-ins arrive.
-  </HomePage.Tagline>
-  <HomePage.InstallPackage name="absqir" type="init" />
-  <HomePage.Description>
-    Create an event and put its QR screen on the projector. The code rotates every 20 seconds, so a
-    photo of it stops working almost at once. A reader scans it with a phone camera, fills in a name
-    and an ID, and appears on your dashboard within seconds. Self-host it with one command, on your
-    own Postgres.
-  </HomePage.Description>
-  <HomePage.Buttons>
-    <HomePage.Button href="/getting-started" variant="accent">
-      Get started
-    </HomePage.Button>
-    <HomePage.Button href="https://github.com/rimzzlabs/absqir">GitHub</HomePage.Button>
-  </HomePage.Buttons>
-</HomePage.Root>
+<Landing />
