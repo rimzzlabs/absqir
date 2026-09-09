@@ -94,9 +94,7 @@ const LOCAL_ORIGIN = "http://localhost:4321";
  */
 export function startTickerFor(bindings: ApiBindings, db: Database): () => void {
   const env = parseEnv(bindings);
+  const origin = env.APP_URL ?? LOCAL_ORIGIN;
 
-  return startTicker(db, {
-    mailer: createMailerFor(env),
-    origin: env.APP_URL ?? LOCAL_ORIGIN,
-  });
+  return startTicker(db, { mailer: createMailerFor(env, origin), origin });
 }

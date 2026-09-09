@@ -16,10 +16,18 @@ export interface RequestContext {
 /**
  * Outside production the mailer is optional: codes and links go to the
  * server log instead, which is what a developer wants on a laptop.
+ *
+ * The origin is the fallback for APP_URL. It reaches the templates as the
+ * base for the brand mark and the notification preference link, so a
+ * self-host that never set APP_URL still renders both against itself.
  */
-export function createMailerFor(env: ApiEnv): Mailer | null {
+export function createMailerFor(env: ApiEnv, origin: string): Mailer | null {
   return env.RESEND_API_KEY
-    ? createMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
+    ? createMailer({
+        apiKey: env.RESEND_API_KEY,
+        from: env.EMAIL_FROM,
+        appUrl: env.APP_URL ?? origin,
+      })
     : null;
 }
 
@@ -35,7 +43,7 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     ? { db: bindings.SHARED_DB, close: async () => {} }
     : createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
 
-  const mailer = createMailerFor(env);
+  const mailer = createMailerFor(env, origin);
 
   const auth = createAuth({
     db,

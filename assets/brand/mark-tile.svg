@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"><title>absqir</title>
+  <!-- The mark on a baked paper tile, for email. A mail client that inverts
+       colors for dark mode leaves images alone, so the ink strokes keep their
+       ground and stay readable on a dark card. Render to
+       apps/web/public/brand/mark.png; see apps/docs/src/pages/brand.mdx. -->
+  <rect x="0.5" y="0.5" width="71" height="71" rx="17.5" fill="#f6f8fb" stroke="#dfe5ee"/>
+  <g transform="translate(12 12) scale(0.75)">
+    <path d="M36 9 H19 Q9 9 9 19 V45 Q9 55 19 55 H45 Q55 55 55 45 V28" fill="none" stroke="#131a26" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="43.5" y="9" width="12" height="12" rx="3.5" fill="#2563eb"/>
+    <rect x="25" y="25" width="14" height="14" rx="4" fill="#131a26"/>
+  </g>
+</svg>

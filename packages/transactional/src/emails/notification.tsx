@@ -1,13 +1,11 @@
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from "@react-email/components";
+  EmailButton,
+  EmailFallbackLink,
+  EmailHeading,
+  EmailText,
+} from "@/components/email-content";
+import { EmailLayout } from "@/components/email-layout";
+import { color } from "@/theme";
 
 export interface NotificationEmailProps {
   title: string;
@@ -17,39 +15,39 @@ export interface NotificationEmailProps {
   url: string;
   /** The label on the button, for example "Open the event". */
   action: string;
+  /** The instance origin, for the brand mark. The mailer fills it in. */
+  appUrl?: string;
 }
 
 /** One notification, the same words the in-app list shows. */
 export function NotificationEmail(props: NotificationEmailProps) {
-  const { title, body, organizationName, url, action } = props;
+  const { title, body, organizationName, url, action, appUrl } = props;
+  const preferencesUrl = appUrl ? `${appUrl.replace(/\/$/, "")}/settings?tab=notifications` : null;
 
   return (
-    <Html lang="en">
-      <Head />
-      <Preview>{title}</Preview>
-      <Body style={{ backgroundColor: "#f6f6f6", fontFamily: "system-ui, sans-serif" }}>
-        <Container style={{ backgroundColor: "#ffffff", padding: "32px", borderRadius: "8px" }}>
-          <Heading as="h1" style={{ fontSize: "20px" }}>
-            {title}
-          </Heading>
-          {body ? <Text>{body}</Text> : null}
-          <Button
-            href={url}
-            style={{
-              backgroundColor: "#111111",
-              color: "#ffffff",
-              padding: "12px 20px",
-              borderRadius: "6px",
-            }}
-          >
-            {action}
-          </Button>
-          <Text style={{ color: "#666666", fontSize: "14px" }}>
-            You get this because you belong to {organizationName} on absqir.
-          </Text>
-        </Container>
-      </Body>
-    </Html>
+    <EmailLayout
+      preview={title}
+      appUrl={appUrl}
+      footer={
+        <>
+          You get this because you belong to {organizationName} on absqir.
+          {preferencesUrl ? (
+            <>
+              {" "}
+              <a className="abs-link" href={preferencesUrl} style={{ color: color.cobalt }}>
+                Choose which emails reach you
+              </a>
+              .
+            </>
+          ) : null}
+        </>
+      }
+    >
+      <EmailHeading>{title}</EmailHeading>
+      {body ? <EmailText>{body}</EmailText> : null}
+      <EmailButton href={url}>{action}</EmailButton>
+      <EmailFallbackLink href={url} />
+    </EmailLayout>
   );
 }
 
@@ -59,6 +57,7 @@ NotificationEmail.PreviewProps = {
   organizationName: "Yayasan Contoh",
   url: "http://localhost:4321/my/sessions",
   action: "Open my events",
+  appUrl: "http://localhost:4321",
 } satisfies NotificationEmailProps;
 
 export default NotificationEmail;
