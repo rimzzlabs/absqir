@@ -5,28 +5,29 @@ import { configGet, configSet } from "@/commands/config";
 import { doctor } from "@/commands/doctor";
 import { init } from "@/commands/init";
 import { down, logs, migrate, up, upgrade } from "@/commands/lifecycle";
+import { COMMANDS } from "@/lib/commands";
+import { CancelError, UsageError } from "@/lib/errors";
+import { menu } from "@/menu";
+import * as ui from "@/ui";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
 
-const HELP = `absqir ${version} — self-host the QR attendance system
+function helpText(): string {
+  const width = Math.max(...COMMANDS.map((command) => command.id.length));
+  const lines = COMMANDS.map((command) => `  ${command.id.padEnd(width)}  ${command.hint}`);
 
-Usage: absqir <command>
-
-  init [dir]        write docker-compose.yml and .env with fresh secrets
-  up                start the stack (docker compose up -d)
-  down              stop the stack
-  logs              follow the app logs
-  upgrade           pull the configured image tag and restart the app
-  migrate           apply database migrations in a one-off container
-  admin create      create an account: --email --name [--password] [--create-orgs]
-  admin promote     let an account create organizations: --email [--revoke]
-  member add        add a user to an organization: --email --org [--role]
-  config set K V    change a setting in .env
-  config get [K]    print the settings
-  doctor            check docker, files, secrets, and the health endpoint
-
-Run every command from the instance directory (where .env lives).`;
+  return [
+    `absqir ${version} — self-host the QR attendance system`,
+    "",
+    "Usage: absqir <command>",
+    "       absqir            open the menu",
+    "",
+    ...lines,
+    "",
+    "Run every command from the instance directory (where .env lives).",
+  ].join("\n");
+}
 
 async function dispatch(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
@@ -59,21 +60,57 @@ async function dispatch(argv: string[]): Promise<number> {
       return doctor();
     case "--version":
     case "-v":
-      console.log(version);
+      ui.raw(version);
       return 0;
-    case undefined:
     case "--help":
     case "-h":
-      console.log(HELP);
-      return command === undefined ? 1 : 0;
+      ui.raw(helpText());
+      return 0;
     default:
       break;
   }
 
-  console.error(`Unknown command: ${argv.join(" ")}`);
-  console.error("Run `absqir --help` for the command list.");
-  return 1;
+  throw new UsageError(
+    `Unknown command: ${argv.join(" ")}\nRun \`absqir --help\` for the command list.`,
+  );
 }
 
-const code = await dispatch(process.argv.slice(2));
-process.exit(code);
+async function main(): Promise<number> {
+  const argv = process.argv.slice(2);
+
+  if (argv.length > 0) return dispatch(argv);
+
+  if (!ui.isRich()) {
+    ui.raw(helpText());
+    return 1;
+  }
+
+  const picked = await menu();
+
+  if (!picked) return 0;
+
+  return dispatch(picked);
+}
+
+function isParseArgsError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    String((error as NodeJS.ErrnoException).code).startsWith("ERR_PARSE_ARGS")
+  );
+}
+
+try {
+  process.exit(await main());
+} catch (error) {
+  if (error instanceof CancelError) {
+    ui.cancelled();
+    process.exit(130);
+  }
+
+  if (error instanceof UsageError || isParseArgsError(error)) {
+    ui.outroError((error as Error).message);
+    process.exit(1);
+  }
+
+  throw error;
+}

@@ -22,7 +22,9 @@
   },
   "devDependencies": {
     "@absqir/config": "workspace:^",
+    "@clack/prompts": "1.7.0",
     "@types/node": "^26.5.0",
+    "picocolors": "1.1.1",
     "tsdown": "^0.23.0",
     "vitest": "^5.0.0"
   }

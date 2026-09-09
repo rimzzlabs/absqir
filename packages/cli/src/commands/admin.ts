@@ -1,6 +1,25 @@
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
+import { usageOf } from "@/lib/commands";
 import { runCompose } from "@/lib/compose";
+import { UsageError } from "@/lib/errors";
+import * as ui from "@/ui";
+
+const ROLES = ["owner", "admin", "organizer", "member"] as const;
+
+type Role = (typeof ROLES)[number];
+
+function validateEmail(value: string | undefined): string | undefined {
+  if (!value || !/^\S+@\S+\.\S+$/.test(value)) return "Enter an email address";
+
+  return undefined;
+}
+
+function validateFilled(value: string | undefined): string | undefined {
+  if (!value || value.trim().length === 0) return "This one cannot stay empty";
+
+  return undefined;
+}
 
 export async function adminCreate(argv: string[]): Promise<number> {
   const { values } = parseArgs({
@@ -9,18 +28,50 @@ export async function adminCreate(argv: string[]): Promise<number> {
       email: { type: "string" },
       name: { type: "string" },
       password: { type: "string" },
-      "create-orgs": { type: "boolean", default: false },
+      "create-orgs": { type: "boolean" },
     },
   });
 
-  if (!values.email || !values.name) {
-    console.error(
-      "Usage: absqir admin create --email <email> --name <name> [--password <pw>] [--create-orgs]",
-    );
-    return 1;
-  }
+  ui.intro("absqir admin create");
 
-  const password = values.password ?? randomBytes(12).toString("base64url");
+  const email =
+    values.email ??
+    (await ui.text({
+      message: "Email address",
+      flag: `--email. ${usageOf("admin create")}`,
+      validate: validateEmail,
+    }));
+
+  const name =
+    values.name ??
+    (await ui.text({
+      message: "Full name",
+      flag: `--name. ${usageOf("admin create")}`,
+      validate: validateFilled,
+    }));
+
+  const typed =
+    values.password ??
+    (ui.isRich()
+      ? await ui.password({
+          message: "Password (leave it empty to generate one)",
+          flag: "--password",
+        })
+      : "");
+
+  const password = typed || randomBytes(12).toString("base64url");
+
+  const createOrgs =
+    values["create-orgs"] ??
+    (ui.isRich()
+      ? await ui.confirm({
+          message: "Let this account create organizations?",
+          flag: "--create-orgs",
+          initialValue: true,
+        })
+      : false);
+
+  ui.info(`Creating ${email} in a one-off container.`);
 
   // REGISTRATION_OPEN=true only inside this one-off container, so the closed
   // instance stays closed while the operator adds an account.
@@ -34,22 +85,30 @@ export async function adminCreate(argv: string[]): Promise<number> {
       "node",
       "scripts/admin-create.mjs",
       "--email",
-      values.email,
+      email,
       "--name",
-      values.name,
+      name,
       "--password",
       password,
-      ...(values["create-orgs"] ? ["--create-orgs"] : []),
+      ...(createOrgs ? ["--create-orgs"] : []),
     ],
   });
 
-  if (code === 0 && !values.password) {
-    console.log("");
-    console.log(`Generated password for ${values.email}: ${password}`);
-    console.log("Share it over a safe channel. The user can change it after sign-in.");
+  if (code !== 0) {
+    ui.outroError(`The account was not created. docker compose stopped with code ${code}.`);
+    return code;
   }
 
-  return code;
+  if (!typed) {
+    ui.note({
+      title: `Password for ${email}`,
+      lines: [password, "", "Send it over a safe channel. The user can change it after sign-in."],
+    });
+  }
+
+  ui.outro(`${email} can sign in now.`);
+
+  return 0;
 }
 
 export async function adminPromote(argv: string[]): Promise<number> {
@@ -61,12 +120,17 @@ export async function adminPromote(argv: string[]): Promise<number> {
     },
   });
 
-  if (!values.email) {
-    console.error("Usage: absqir admin promote --email <email> [--revoke]");
-    return 1;
-  }
+  ui.intro("absqir admin promote");
 
-  return runCompose({
+  const email =
+    values.email ??
+    (await ui.text({
+      message: "Email address",
+      flag: `--email. ${usageOf("admin promote")}`,
+      validate: validateEmail,
+    }));
+
+  const code = await runCompose({
     args: [
       "run",
       "--rm",
@@ -74,10 +138,22 @@ export async function adminPromote(argv: string[]): Promise<number> {
       "node",
       "scripts/admin-promote.mjs",
       "--email",
-      values.email,
+      email,
       ...(values.revoke ? ["--revoke"] : []),
     ],
   });
+
+  if (code === 0) {
+    ui.outro(
+      values.revoke
+        ? `${email} can no longer create organizations.`
+        : `${email} can create organizations.`,
+    );
+  } else {
+    ui.outroError(`docker compose stopped with code ${code}.`);
+  }
+
+  return code;
 }
 
 export async function memberAdd(argv: string[]): Promise<number> {
@@ -86,20 +162,49 @@ export async function memberAdd(argv: string[]): Promise<number> {
     options: {
       email: { type: "string" },
       org: { type: "string" },
-      role: { type: "string", default: "member" },
+      role: { type: "string" },
     },
   });
 
-  const roles = ["owner", "admin", "organizer", "member"];
-
-  if (!values.email || !values.org || !roles.includes(values.role)) {
-    console.error(
-      "Usage: absqir member add --email <email> --org <slug> [--role owner|admin|organizer|member]",
-    );
-    return 1;
+  if (values.role && !ROLES.includes(values.role as Role)) {
+    throw new UsageError(`Unknown role ${values.role}. ${usageOf("member add")}`);
   }
 
-  return runCompose({
+  ui.intro("absqir member add");
+
+  const email =
+    values.email ??
+    (await ui.text({
+      message: "Email address of the account",
+      flag: `--email. ${usageOf("member add")}`,
+      validate: validateEmail,
+    }));
+
+  const org =
+    values.org ??
+    (await ui.text({
+      message: "Organization slug",
+      flag: `--org. ${usageOf("member add")}`,
+      validate: validateFilled,
+    }));
+
+  const role =
+    (values.role as Role | undefined) ??
+    (ui.isRich()
+      ? await ui.select<Role>({
+          message: "Role in the organization",
+          flag: "--role",
+          initialValue: "member",
+          options: [
+            { value: "owner", label: "owner", hint: "everything, including deletion" },
+            { value: "admin", label: "admin", hint: "members, events, settings" },
+            { value: "organizer", label: "organizer", hint: "events and attendance" },
+            { value: "member", label: "member", hint: "attends events" },
+          ],
+        })
+      : "member");
+
+  const code = await runCompose({
     args: [
       "run",
       "--rm",
@@ -107,11 +212,16 @@ export async function memberAdd(argv: string[]): Promise<number> {
       "node",
       "scripts/member-add.mjs",
       "--email",
-      values.email,
+      email,
       "--org",
-      values.org,
+      org,
       "--role",
-      values.role,
+      role,
     ],
   });
+
+  if (code === 0) ui.outro(`${email} joined ${org} as ${role}.`);
+  else ui.outroError(`docker compose stopped with code ${code}.`);
+
+  return code;
 }

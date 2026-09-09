@@ -1,165 +1,146 @@
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
+import { UsageError } from "@/lib/errors";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "@/lib/providers";
+import {
+  COMPOSE_TEMPLATE,
+  DEFAULT_APP_URL,
+  DEFAULT_EMAIL_FROM,
+  EXAMPLE_APP_URL,
+  envTemplate,
+  type ProviderCredential,
+  pendingProviderSteps,
+  RESEND,
+} from "@/lib/templates";
+import * as ui from "@/ui";
 
-const DEFAULT_APP_URL = "http://localhost:4321";
+function validateAppUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  if (!/^https?:\/\/\S+$/.test(value)) return "Start the address with http:// or https://";
 
-const COMPOSE_TEMPLATE = `# absqir self-host stack. Secrets live in the .env file next to this file.
-services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: absqir
-      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: absqir
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U absqir -d absqir"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  return undefined;
+}
 
-  app:
-    image: ghcr.io/rimzzlabs/absqir:\${ABSQIR_TAG:-latest}
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - "\${PORT:-4321}:4321"
-    environment:
-      DATABASE_URL: postgresql://absqir:\${POSTGRES_PASSWORD}@db:5432/absqir
-      BETTER_AUTH_SECRET: \${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
-      SECURE_COOKIES: \${SECURE_COOKIES:-false}
-      REGISTRATION_OPEN: \${REGISTRATION_OPEN:-false}
-      RESEND_API_KEY: \${RESEND_API_KEY:?Set RESEND_API_KEY in .env, sign-up codes travel by email}
-      EMAIL_FROM: \${EMAIL_FROM:-absqir <onboarding@resend.dev>}
-      APP_URL: \${APP_URL:-http://localhost:4321}
-      GITHUB_CLIENT_ID: \${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: \${GITHUB_CLIENT_SECRET:-}
-      GOOGLE_CLIENT_ID: \${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: \${GOOGLE_CLIENT_SECRET:-}
-      ENVIRONMENT: production
+/** The .env writer wraps a value in double quotes, so a value cannot hold one. */
+function validateNoQuote(value: string | undefined): string | undefined {
+  if (value?.includes('"')) return "Remove the double quote. The .env file cannot hold one.";
 
-volumes:
-  db-data:
-`;
+  return undefined;
+}
 
 /**
- * The OAuth block. A chosen provider gets empty keys the operator fills in
- * later; an empty value counts as unset, so the instance still starts. A
- * provider that was skipped stays commented out, as a hint that it exists.
+ * Two answers, because the address decides more than it looks like. It goes
+ * into every reminder email, into the provider callbacks, and into
+ * SECURE_COOKIES. A localhost default would quietly hand a server install the
+ * wrong one of each.
  */
-function oauthBlock(chosen: ProviderId[]): string {
-  const lines = [
-    "# Sign in with GitHub and Google. Set both keys of a pair, or neither:",
-    "# one half alone stops the server. Register the callback address with the",
-    "# provider first, and keep it in step with APP_URL.",
-  ];
+async function askAppUrl(): Promise<string> {
+  const where = await ui.select<"local" | "domain">({
+    message: "Where will people reach this instance?",
+    flag: "--app-url",
+    initialValue: "local",
+    options: [
+      { value: "local", label: "This machine, for a try", hint: DEFAULT_APP_URL },
+      { value: "domain", label: "A domain", hint: EXAMPLE_APP_URL },
+    ],
+  });
 
-  for (const provider of PROVIDERS) {
-    const [idKey, secretKey] = keysOf(provider.id);
-    const prefix = chosen.includes(provider.id) ? "" : "# ";
+  if (where === "local") return DEFAULT_APP_URL;
 
-    lines.push("");
-    lines.push(`# ${provider.label}: ${provider.console}`);
-    lines.push(`# Callback: ${callbackUrl(DEFAULT_APP_URL, provider.id)}`);
-    lines.push(`${prefix}${idKey}=""`);
-    lines.push(`${prefix}${secretKey}=""`);
+  const typed = await ui.text({
+    message: "The address people will type",
+    flag: "--app-url",
+    placeholder: EXAMPLE_APP_URL,
+    validate: (value) => {
+      if (!value) return "Enter the address, with the scheme.";
+
+      return validateAppUrl(value);
+    },
+  });
+
+  if (typed.startsWith("http://")) {
+    ui.warn(
+      "Over plain http a sign-in code travels unprotected. Put the instance behind HTTPS before you invite people.",
+    );
   }
 
-  return lines.join("\n");
+  return typed;
 }
 
-function envTemplate(secret: string, dbPassword: string, chosen: ProviderId[]): string {
-  return `# Written by \`absqir init\`. Keep this file out of version control.
-BETTER_AUTH_SECRET="${secret}"
-POSTGRES_PASSWORD="${dbPassword}"
+function parseProviders(values: string[]): ProviderId[] {
+  const known = PROVIDERS.map((provider) => provider.id as string);
 
-# The published port on this machine.
-PORT="4321"
-
-# Set to true when the instance is behind HTTPS. Over plain http the browser
-# drops Secure cookies and sign-in fails silently.
-SECURE_COOKIES="false"
-
-# Required. Sign-in codes and invitations travel by email through Resend.
-# Get a key at https://resend.com, then set the From address to a domain
-# you verified there.
-RESEND_API_KEY=""
-EMAIL_FROM="absqir <onboarding@resend.dev>"
-
-# Lets every account create organizations. Off by default: only the first
-# account and accounts promoted with \`absqir admin promote\` can. Joining
-# through an invitation never needs this.
-REGISTRATION_OPEN="false"
-
-# Where this instance answers. Links in a reminder email point here, so set
-# it to the address people type, with the scheme.
-APP_URL="http://localhost:4321"
-
-# Image tag to run. \`absqir upgrade\` pulls this tag again.
-ABSQIR_TAG="latest"
-
-${oauthBlock(chosen)}
-`;
-}
-
-/**
- * Asks once per provider. A pipe, a CI run, or --yes answers no: a prompt
- * nobody can see must never hold up an install.
- */
-async function askProviders(skip: boolean): Promise<ProviderId[]> {
-  if (skip || !process.stdin.isTTY) return [];
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const chosen: ProviderId[] = [];
-
-  try {
-    console.log("");
-    console.log("Optional: let people sign in with a provider instead of an emailed code.");
-
-    for (const provider of PROVIDERS) {
-      const answer = await rl.question(`Add ${provider.label} sign-in? [y/N] `);
-
-      if (/^y(es)?$/i.test(answer.trim())) chosen.push(provider.id);
+  for (const value of values) {
+    if (!known.includes(value)) {
+      throw new UsageError(`Unknown provider ${value}. Known: ${known.join(", ")}`);
     }
-  } finally {
-    rl.close();
   }
 
-  return chosen;
+  return values as ProviderId[];
 }
 
-/** What the operator has to do at the provider, printed where they are. */
-function printProviderSteps(chosen: ProviderId[]): void {
-  if (chosen.length === 0) return;
+interface AskCredentialsParams {
+  appUrl: string;
+  chosen: ProviderId[];
+}
 
-  console.log("");
-  console.log("Sign-in providers:");
+/**
+ * Walks the operator through one provider console at a time. The callback
+ * address comes first, because the provider refuses a callback it does not
+ * know, and it refuses it on its own page where absqir cannot explain
+ * anything. An empty ID skips the secret: one half of a pair alone stops the
+ * server, so both keys stay empty together.
+ */
+async function askCredentials(params: AskCredentialsParams): Promise<ProviderCredential[]> {
+  const credentials: ProviderCredential[] = [];
 
-  for (const id of chosen) {
+  for (const id of params.chosen) {
     const provider = PROVIDERS.find((entry) => entry.id === id);
     if (!provider) continue;
 
     const [idKey, secretKey] = keysOf(id);
 
-    console.log("");
-    console.log(`  ${provider.label}`);
-    console.log(`    1. Register an app at ${provider.console}`);
-    console.log(`    2. Set the callback to ${callbackUrl(DEFAULT_APP_URL, id)}`);
-    console.log(`       Change it to match APP_URL when this instance moves.`);
-    console.log(`    3. absqir config set ${idKey} <id>`);
-    console.log(`       absqir config set ${secretKey} <secret>`);
+    ui.note({
+      title: `${provider.label} sign-in`,
+      lines: [
+        `1. Open ${provider.console}`,
+        "2. Register an app, and set its callback to:",
+        `   ${callbackUrl(params.appUrl, id)}`,
+        "3. Copy the client ID and the client secret back here.",
+        "",
+        "Leave the ID empty to set both keys later.",
+      ],
+    });
+
+    const clientId = await ui.text({
+      message: `${provider.label} client ID`,
+      flag: `absqir config set ${idKey} <id>`,
+      placeholder: "leave it empty to set it later",
+      defaultValue: "",
+      validate: validateNoQuote,
+    });
+
+    if (!clientId) {
+      credentials.push({ id, clientId: "", clientSecret: "" });
+      continue;
+    }
+
+    const clientSecret = await ui.password({
+      message: `${provider.label} client secret`,
+      flag: `absqir config set ${secretKey} <secret>`,
+      validate: (value) => {
+        if (!value) return "The secret cannot stay empty next to an ID.";
+
+        return validateNoQuote(value);
+      },
+    });
+
+    credentials.push({ id, clientId, clientSecret });
   }
 
-  console.log("");
-  console.log("  The buttons appear once both keys of a pair hold a value.");
+  return credentials;
 }
 
 export async function init(argv: string[]): Promise<number> {
@@ -168,43 +149,197 @@ export async function init(argv: string[]): Promise<number> {
     options: {
       force: { type: "boolean", default: false },
       yes: { type: "boolean", default: false },
+      "app-url": { type: "string" },
+      "resend-key": { type: "string" },
+      "email-from": { type: "string" },
+      "registration-open": { type: "boolean" },
+      provider: { type: "string", multiple: true },
     },
     allowPositionals: true,
   });
 
-  const dir = resolve(positionals[0] ?? ".");
+  const guided = ui.isRich() && !values.yes;
+
+  ui.intro("absqir init");
+
+  const target =
+    positionals[0] ??
+    (guided
+      ? await ui.text({
+          message: "Where do the files go?",
+          flag: "a directory",
+          placeholder: ".",
+          defaultValue: ".",
+        })
+      : ".");
+
+  const dir = resolve(target);
   const composePath = join(dir, "docker-compose.yml");
   const envPath = join(dir, ".env");
+  const occupied = existsSync(composePath) || existsSync(envPath);
 
-  if (!values.force && (existsSync(composePath) || existsSync(envPath))) {
-    console.error(`Refusing to overwrite ${composePath} or ${envPath}. Use --force to replace.`);
-    return 1;
+  if (occupied && !values.force) {
+    if (!guided) {
+      throw new UsageError(
+        `${composePath} or ${envPath} is already here. Use --force to replace it.`,
+      );
+    }
+
+    const replace = await ui.confirm({
+      message: `${dir} already holds an instance. Replace docker-compose.yml and .env?`,
+      flag: "--force",
+      initialValue: false,
+    });
+
+    if (!replace) {
+      ui.outro("Nothing was written.");
+      return 1;
+    }
   }
 
-  const chosen = await askProviders(values.yes);
+  const appUrlFlag = values["app-url"];
+  const flagError = validateAppUrl(appUrlFlag);
+  if (flagError) throw new UsageError(`${flagError} (--app-url)`);
+
+  const appUrl = (appUrlFlag ?? (guided ? await askAppUrl() : DEFAULT_APP_URL)).replace(/\/+$/, "");
+
+  if (guided && values["registration-open"] === undefined) {
+    ui.note({
+      title: "Who can join",
+      lines: [
+        "Your first account is always allowed. It is yours, and it can create",
+        "organizations.",
+        "",
+        "Invite only: a person needs an invitation, or the public page of an",
+        "open event.",
+        "Open: any email address can create an account and an organization.",
+      ],
+    });
+  }
+
+  const registrationOpen =
+    values["registration-open"] ??
+    (guided
+      ? (await ui.select<"invite" | "open">({
+          message: "After your own account, who can join?",
+          flag: "--registration-open",
+          initialValue: "invite",
+          options: [
+            { value: "invite", label: "Invite only", hint: "an office, a school, a team" },
+            {
+              value: "open",
+              label: "Anyone with an email address",
+              hint: "a public community",
+            },
+          ],
+        })) === "open"
+      : false);
+
+  if (guided && values["resend-key"] === undefined) {
+    ui.note({
+      title: "Email",
+      lines: [
+        "Sign-in codes and invitations travel by email through Resend.",
+        "",
+        `1. Open ${RESEND.keys}`,
+        "2. Create an API key with send access.",
+        "3. Copy the key back here.",
+        "",
+        "Leave it empty to set it later.",
+      ],
+    });
+  }
+
+  const resendKey =
+    values["resend-key"] ??
+    (guided
+      ? await ui.password({
+          message: "Resend API key",
+          flag: "--resend-key",
+          validate: validateNoQuote,
+        })
+      : "");
+
+  const emailFrom =
+    values["email-from"] ??
+    (guided && resendKey
+      ? await ui.text({
+          message: "From address on every email",
+          flag: "--email-from",
+          placeholder: DEFAULT_EMAIL_FROM,
+          defaultValue: DEFAULT_EMAIL_FROM,
+          validate: validateNoQuote,
+        })
+      : DEFAULT_EMAIL_FROM);
+
+  const chosen = values.provider
+    ? parseProviders(values.provider)
+    : guided
+      ? await ui.multiselect<ProviderId>({
+          message: "Sign-in providers, on top of the emailed code",
+          flag: "--provider",
+          options: PROVIDERS.map((provider) => ({
+            value: provider.id,
+            label: provider.label,
+            hint: "absqir asks for the keys next",
+          })),
+        })
+      : [];
+
+  const providers = guided
+    ? await askCredentials({ appUrl, chosen })
+    : chosen.map((id) => ({ id, clientId: "", clientSecret: "" }));
 
   mkdirSync(dir, { recursive: true });
   writeFileSync(composePath, COMPOSE_TEMPLATE);
   writeFileSync(
     envPath,
-    envTemplate(
-      randomBytes(32).toString("base64url"),
-      randomBytes(16).toString("base64url"),
-      chosen,
-    ),
+    envTemplate({
+      secret: randomBytes(32).toString("base64url"),
+      dbPassword: randomBytes(16).toString("base64url"),
+      appUrl,
+      resendKey,
+      emailFrom,
+      registrationOpen,
+      providers,
+    }),
     { mode: 0o600 },
   );
 
-  console.log(`Wrote ${composePath}`);
-  console.log(`Wrote ${envPath} (secrets generated)`);
-  console.log("");
-  console.log("Next steps:");
-  console.log("  1. absqir config set RESEND_API_KEY re_...   codes and invitations go by email");
-  console.log("  2. absqir up                                 start the stack");
-  console.log("  3. open http://localhost:4321, enter your email, and create the first account");
-  console.log("  4. absqir doctor                             check the instance");
+  ui.success(`Wrote ${composePath}`);
+  ui.success(`Wrote ${envPath} with fresh secrets`);
 
-  printProviderSteps(chosen);
+  if (resendKey && emailFrom.includes("onboarding@resend.dev")) {
+    ui.warn(
+      `The From address still uses onboarding@resend.dev. It reaches only the address that owns the Resend account. Verify a domain at ${RESEND.domains}.`,
+    );
+  }
+
+  for (const credential of providers) {
+    if (!credential.clientId || !credential.clientSecret) continue;
+
+    const provider = PROVIDERS.find((entry) => entry.id === credential.id);
+    if (provider) ui.success(`${provider.label} sign-in is ready.`);
+  }
+
+  const next = resendKey
+    ? []
+    : ["absqir config set RESEND_API_KEY re_...   codes and invitations go by email"];
+
+  ui.note({
+    title: "Next steps",
+    lines: [
+      ...next,
+      "absqir up                                start the stack",
+      `open ${appUrl} and create the first account`,
+      "absqir doctor                            check the instance",
+    ],
+  });
+
+  const steps = pendingProviderSteps({ appUrl, providers });
+  if (steps.length > 0) ui.note({ title: "Still to do", lines: steps });
+
+  ui.outro("The instance is ready to start.");
 
   return 0;
 }

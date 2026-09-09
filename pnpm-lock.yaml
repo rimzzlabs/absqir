@@ -255,9 +255,15 @@ importers:
       '@absqir/config':
         specifier: workspace:^
         version: link:../config
+      '@clack/prompts':
+        specifier: 1.7.0
+        version: 1.7.0
       '@types/node':
         specifier: ^26.5.0
         version: 26.5.0
+      picocolors:
+        specifier: 1.1.1
+        version: 1.1.1
       tsdown:
         specifier: ^0.23.0
         version: 0.23.0(@volar/typescript@2.4.28)(tsx@4.23.13)(typescript@5.9.3)

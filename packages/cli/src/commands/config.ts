@@ -1,65 +1,131 @@
 import { existsSync } from "node:fs";
+import { parseArgs } from "node:util";
+import { usageOf } from "@/lib/commands";
 import { readEnvValue, setEnvValue } from "@/lib/env-file";
-
-/** The keys the operator may change. Everything else is not configuration. */
-const ALLOWED_KEYS = new Set([
-  "PORT",
-  "SECURE_COOKIES",
-  "REGISTRATION_OPEN",
-  "ABSQIR_TAG",
-  "RESEND_API_KEY",
-  "EMAIL_FROM",
-  "APP_URL",
-  "GITHUB_CLIENT_ID",
-  "GITHUB_CLIENT_SECRET",
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-]);
+import { UsageError } from "@/lib/errors";
+import * as ui from "@/ui";
 
 const ENV_PATH = ".env";
 
-export function configSet(argv: string[]): number {
-  const [key, value] = argv;
+interface SettingInfo {
+  key: string;
+  hint: string;
+  secret: boolean;
+}
 
-  if (!key || value === undefined) {
-    console.error("Usage: absqir config set <KEY> <value>");
-    return 1;
+/** The keys the operator may change. Everything else is not configuration. */
+const SETTINGS: SettingInfo[] = [
+  { key: "APP_URL", hint: "the address people type", secret: false },
+  { key: "PORT", hint: "the published port on this machine", secret: false },
+  { key: "SECURE_COOKIES", hint: "true behind HTTPS", secret: false },
+  { key: "REGISTRATION_OPEN", hint: "open sign-up to any email address", secret: false },
+  { key: "ABSQIR_TAG", hint: "image tag `absqir upgrade` pulls", secret: false },
+  { key: "RESEND_API_KEY", hint: "sign-in codes travel by email", secret: true },
+  { key: "EMAIL_FROM", hint: "From address on every email", secret: false },
+  { key: "GITHUB_CLIENT_ID", hint: "GitHub sign-in", secret: false },
+  { key: "GITHUB_CLIENT_SECRET", hint: "GitHub sign-in", secret: true },
+  { key: "GOOGLE_CLIENT_ID", hint: "Google sign-in", secret: false },
+  { key: "GOOGLE_CLIENT_SECRET", hint: "Google sign-in", secret: true },
+];
+
+function settingOf(key: string): SettingInfo | undefined {
+  return SETTINGS.find((setting) => setting.key === key);
+}
+
+function requireEnvFile(): void {
+  if (existsSync(ENV_PATH)) return;
+
+  throw new UsageError("No .env here. Run `absqir init`, or cd into the instance directory.");
+}
+
+export async function configSet(argv: string[]): Promise<number> {
+  requireEnvFile();
+
+  const [flagKey, flagValue] = argv;
+
+  if (flagKey && !settingOf(flagKey)) {
+    throw new UsageError(
+      `Unknown key ${flagKey}. Known: ${SETTINGS.map((setting) => setting.key).join(", ")}`,
+    );
   }
 
-  if (!ALLOWED_KEYS.has(key)) {
-    console.error(`Unknown key ${key}. Allowed: ${[...ALLOWED_KEYS].join(", ")}`);
-    return 1;
-  }
+  if (!flagKey && !ui.isRich()) throw new UsageError(usageOf("config set"));
+  if (flagKey && flagValue === undefined && !ui.isRich())
+    throw new UsageError(usageOf("config set"));
 
-  if (!existsSync(ENV_PATH)) {
-    console.error("No .env here. Run `absqir init` first, or cd into the instance directory.");
-    return 1;
-  }
+  ui.intro("absqir config set");
+
+  const key =
+    flagKey ??
+    (await ui.select({
+      message: "Which setting?",
+      flag: "a KEY",
+      options: SETTINGS.map((setting) => ({
+        value: setting.key,
+        label: setting.key,
+        hint: setting.hint,
+      })),
+    }));
+
+  const setting = settingOf(key);
+  const current = readEnvValue(ENV_PATH, key) ?? "";
+
+  const value =
+    flagValue ??
+    (setting?.secret
+      ? await ui.password({ message: `New value for ${key}`, flag: "a value" })
+      : await ui.text({
+          message: `New value for ${key}`,
+          flag: "a value",
+          placeholder: current || "empty",
+          defaultValue: current,
+        }));
 
   setEnvValue({ path: ENV_PATH, key, value });
-  console.log(`${key} set. Run \`absqir up\` to apply it.`);
+
+  ui.success(`${key} is set.`);
+  ui.outro("Run `absqir up` to apply it.");
 
   return 0;
 }
 
-export function configGet(argv: string[]): number {
-  if (!existsSync(ENV_PATH)) {
-    console.error("No .env here. Run `absqir init` first, or cd into the instance directory.");
-    return 1;
-  }
+function maskedValue(params: { setting: SettingInfo | undefined; value: string }): string {
+  if (!params.setting?.secret || params.value.length === 0) return params.value;
 
-  const [key] = argv;
+  return "********";
+}
+
+export function configGet(argv: string[]): number {
+  requireEnvFile();
+
+  const { values, positionals } = parseArgs({
+    args: argv,
+    options: { reveal: { type: "boolean", default: false } },
+    allowPositionals: true,
+  });
+
+  const [key] = positionals;
 
   if (key) {
     const value = readEnvValue(ENV_PATH, key);
-    console.log(value ?? "");
-    return value === null ? 1 : 0;
+
+    if (value === null) {
+      ui.fail(`${key} is not in ${ENV_PATH}.`);
+      return 1;
+    }
+
+    ui.raw(values.reveal ? value : maskedValue({ setting: settingOf(key), value }));
+    return 0;
   }
 
-  for (const name of ALLOWED_KEYS) {
-    const value = readEnvValue(ENV_PATH, name);
-    if (value !== null) console.log(`${name}=${value}`);
+  for (const setting of SETTINGS) {
+    const value = readEnvValue(ENV_PATH, setting.key);
+    if (value === null) continue;
+
+    ui.raw(`${setting.key}=${values.reveal ? value : maskedValue({ setting, value })}`);
   }
+
+  if (!values.reveal && ui.isRich()) ui.info("Secrets are masked. Add --reveal to print them.");
 
   return 0;
 }
