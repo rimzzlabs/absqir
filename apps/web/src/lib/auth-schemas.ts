@@ -29,10 +29,29 @@ export const codeSchema = z.object({ code });
 
 export const resetSchema = z.object({ code, password });
 
+const fullName = z.string().trim().min(1, "Enter your name.").max(80, "That name is too long.");
+
+/**
+ * The profile step for an account that signs in with a provider. A password
+ * is welcome and never asked for, so an empty field passes. The field starts
+ * as an empty string, which is why `optional()` alone would not do: an empty
+ * string is a value, and it would fail the length rule with no field on
+ * screen to show the message.
+ */
 export const profileSchema = z.object({
-  name: z.string().trim().min(1, "Enter your name.").max(80, "That name is too long."),
-  password: password.optional(),
+  name: fullName,
+  password: z
+    .string()
+    .max(MAX_PASSWORD_LENGTH, "That password is too long.")
+    .refine(
+      (value) => value.length === 0 || value.length >= MIN_PASSWORD_LENGTH,
+      `Use at least ${MIN_PASSWORD_LENGTH} characters.`,
+    )
+    .optional(),
 });
+
+/** The same step for an account with no other way back in. */
+export const profileWithPasswordSchema = z.object({ name: fullName, password });
 
 export const organizationSchema = z.object({
   name: z.string().trim().min(1, "Enter a name.").max(80, "That name is too long."),
