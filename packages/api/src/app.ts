@@ -8,9 +8,11 @@ import { authRoutes } from "@/routes/auth";
 import { authFlowRoutes } from "@/routes/auth-flow";
 import { calendarRoutes } from "@/routes/calendar";
 import { mountDocs } from "@/routes/docs";
+import { domainRoutes } from "@/routes/domains";
 import { eventRoutes } from "@/routes/events";
 import { groupRoutes } from "@/routes/groups";
 import { healthRoutes } from "@/routes/health";
+import { joinRequestRoutes } from "@/routes/join-requests";
 import { leaveRoutes } from "@/routes/leave";
 import { meRoutes } from "@/routes/me";
 import { myRoutes } from "@/routes/my";
@@ -46,6 +48,8 @@ const routes = app
   .route("/", healthRoutes)
   .route("/", meRoutes)
   .route("/", onboardingRoutes)
+  .route("/", joinRequestRoutes)
+  .route("/", domainRoutes)
   .route("/", organizationRoutes)
   .route("/", peopleRoutes)
   .route("/", groupRoutes)

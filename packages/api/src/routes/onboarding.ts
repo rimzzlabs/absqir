@@ -1,12 +1,13 @@
 import { authErrorOf, isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
-import type { OnboardingStep } from "@absqir/db/schema";
+import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "@/lib/auth-forward";
 import { avatarSchema } from "@/lib/avatar";
 import { findPublicSession, registerForSession } from "@/lib/events";
+import { activateOrganization, setOnboardingStep } from "@/lib/onboarding";
 import { isSlug } from "@/lib/slug";
 import type { AppEnv } from "@/types";
 
@@ -27,6 +28,30 @@ const statusSchema = z.object({
   linkedProviders: z.array(z.string()),
   canCreateOrganizations: z.boolean(),
   membershipCount: z.number(),
+  /**
+   * The workspace that claimed this account's email domain and takes people
+   * from it. Named only here, behind a session: at the sign-in door the
+   * address is not proven yet.
+   */
+  workspace: z
+    .object({
+      organizationId: z.string(),
+      name: z.string(),
+      slug: z.string(),
+      logo: z.string().nullable(),
+      domain: z.string(),
+      /** `auto` joins on one press. `request` waits for an admin. */
+      joinPolicy: z.enum(["request", "auto"]),
+    })
+    .nullable(),
+  /** The request this account already sent, if it waits for one. */
+  joinRequest: z
+    .object({
+      id: z.string(),
+      organizationName: z.string(),
+      createdAt: z.string(),
+    })
+    .nullable(),
   invitations: z.array(
     z.object({
       id: z.string(),
@@ -223,23 +248,6 @@ function userOf(c: Context<AppEnv>) {
   return current;
 }
 
-async function setStep(c: Context<AppEnv>, userId: string, step: OnboardingStep) {
-  await c.var.db
-    .update(user)
-    .set({ onboardingStep: step, updatedAt: new Date() })
-    .where(eq(user.id, userId));
-
-  // The cookie cache still carries the old user row. A forced session read
-  // re-issues the cookie, so the next page sees the new step at once.
-  const refreshed = await c.var.auth.api.getSession({
-    headers: c.req.raw.headers,
-    query: { disableCookieCache: true },
-    returnHeaders: true,
-  });
-
-  forwardCookies(c, refreshed.headers);
-}
-
 async function hasCredential(c: Context<AppEnv>, userId: string) {
   const rows = await c.var.db
     .select({ id: account.id })
@@ -258,16 +266,6 @@ async function linkedProvidersOf(c: Context<AppEnv>, userId: string) {
     .where(and(eq(account.userId, userId), ne(account.providerId, "credential")));
 
   return rows.map((row) => row.providerId);
-}
-
-async function activate(c: Context<AppEnv>, organizationId: string) {
-  const result = await c.var.auth.api.setActiveOrganization({
-    body: { organizationId },
-    headers: c.req.raw.headers,
-    returnHeaders: true,
-  });
-
-  forwardCookies(c, result.headers);
 }
 
 const app = new OpenAPIHono<AppEnv>();
@@ -299,6 +297,26 @@ export const onboardingRoutes = app
     const row = rows[0];
     if (!row) return c.json({ error: "Unauthorized" }, 401);
 
+    const match = await findOrganizationForEmail(db, row.email);
+    const workspace =
+      match && match.joinPolicy !== "closed"
+        ? {
+            organizationId: match.organizationId,
+            name: match.name,
+            slug: match.slug,
+            logo: match.logo,
+            joinPolicy: match.joinPolicy,
+            domain: match.domain,
+          }
+        : null;
+
+    const open = workspace
+      ? await findPendingJoinRequest(db, {
+          organizationId: workspace.organizationId,
+          userId: row.id,
+        })
+      : null;
+
     return c.json(
       {
         step: row.onboardingStep,
@@ -309,6 +327,14 @@ export const onboardingRoutes = app
         linkedProviders: await linkedProvidersOf(c, row.id),
         canCreateOrganizations: row.canCreateOrganizations,
         membershipCount: memberships[0]?.value ?? 0,
+        workspace,
+        joinRequest: open
+          ? {
+              id: open.id,
+              organizationName: workspace?.name ?? "",
+              createdAt: open.createdAt.toISOString(),
+            }
+          : null,
         invitations: invitations.map((row) => ({
           id: row.id,
           organizationName: row.organizationName,
@@ -344,7 +370,7 @@ export const onboardingRoutes = app
 
     await c.var.db.update(user).set({ name, updatedAt: new Date() }).where(eq(user.id, current.id));
 
-    await setStep(c, current.id, "avatar");
+    await setOnboardingStep(c, current.id, "avatar");
 
     return c.json({ step: "avatar" as const }, 200);
   })
@@ -359,7 +385,7 @@ export const onboardingRoutes = app
         .where(eq(user.id, current.id));
     }
 
-    await setStep(c, current.id, "organization");
+    await setOnboardingStep(c, current.id, "organization");
 
     return c.json({ step: "organization" as const }, 200);
   })
@@ -383,8 +409,8 @@ export const onboardingRoutes = app
       const organizationId = created.response?.id;
       if (!organizationId) throw new Error("createOrganization returned no organization");
 
-      await activate(c, organizationId);
-      await setStep(c, current.id, "done");
+      await activateOrganization(c, organizationId);
+      await setOnboardingStep(c, current.id, "done");
 
       return c.json({ step: "done" as const, organizationId }, 200);
     } catch (error) {
@@ -429,8 +455,8 @@ export const onboardingRoutes = app
 
     forwardCookies(c, accepted.headers);
 
-    await activate(c, found.organizationId);
-    await setStep(c, current.id, "done");
+    await activateOrganization(c, found.organizationId);
+    await setOnboardingStep(c, current.id, "done");
 
     return c.json({ step: "done" as const, organizationId: found.organizationId }, 200);
   })
@@ -449,15 +475,15 @@ export const onboardingRoutes = app
       return c.json({ error: message }, 409);
     }
 
-    await activate(c, found.session.organizationId);
-    await setStep(c, current.id, "done");
+    await activateOrganization(c, found.session.organizationId);
+    await setOnboardingStep(c, current.id, "done");
 
     return c.json({ step: "done" as const, organizationId: found.session.organizationId }, 200);
   })
   .openapi(finishRoute, async (c) => {
     const current = userOf(c);
 
-    await setStep(c, current.id, "done");
+    await setOnboardingStep(c, current.id, "done");
 
     return c.json({ step: "done" as const }, 200);
   });

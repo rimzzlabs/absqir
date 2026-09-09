@@ -26,6 +26,8 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
   "session-reminder",
   "leave-decided",
   "leave-requested",
+  "join-requested",
+  "join-decided",
 ]);
 
 const ACTIONS: Record<NotificationType, string> = {
@@ -33,6 +35,8 @@ const ACTIONS: Record<NotificationType, string> = {
   "session-closed": "Open the event",
   "leave-requested": "Open the queue",
   "leave-decided": "Open my leave",
+  "join-requested": "Open the requests",
+  "join-decided": "Open absqir",
 };
 
 /** A channel a written row can carry. `none` never reaches the table. */
@@ -184,6 +188,18 @@ export async function managerUserIds(db: Database, organizationId: string): Prom
     .where(eq(member.organizationId, organizationId));
 
   return rows.filter((row) => row.role !== "member").map((row) => row.userId);
+}
+
+/** The accounts that decide who gets in: admin and owner. */
+export async function adminUserIds(db: Database, organizationId: string): Promise<string[]> {
+  const rows = await db
+    .select({ userId: member.userId, role: member.role })
+    .from(member)
+    .where(eq(member.organizationId, organizationId));
+
+  return rows
+    .filter((row) => row.role === "owner" || row.role === "admin")
+    .map((row) => row.userId);
 }
 
 /** The accounts behind the given directory rows. People without one drop out. */

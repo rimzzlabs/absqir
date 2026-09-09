@@ -1,3 +1,4 @@
+import { NOTIFICATION_TYPES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { notificationStream } from "@/lib/notification-stream";
 import { listNotifications, markRead, toNotificationJson, unreadCount } from "@/lib/notifications";
@@ -6,7 +7,7 @@ import type { AppEnv } from "@/types";
 
 const notificationSchema = z.object({
   id: z.string(),
-  type: z.enum(["session-reminder", "session-closed", "leave-requested", "leave-decided"]),
+  type: z.enum(NOTIFICATION_TYPES),
   title: z.string(),
   body: z.string().nullable(),
   href: z.string().nullable(),

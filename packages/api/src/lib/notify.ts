@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { expectedPersonIds, type SessionRow } from "@/lib/expected";
 import {
+  adminUserIds,
   createNotifications,
   managerUserIds,
   type NotificationInput,
@@ -223,6 +224,72 @@ export async function notifyLeaveDecided(
           : "The record stays as it is. Talk to an organizer if that is wrong."),
       href: "/my/leave",
       dedupeKey: `leave-decided:${params.requestId}`,
+    },
+  ]);
+}
+
+export interface JoinRequestedParams {
+  organizationId: string;
+  requestId: string;
+  /** The account that asks, as the admins will read it. */
+  personName: string;
+  email: string;
+  message: string | null;
+}
+
+/** Tells the admins that somebody from a claimed domain asks to come in. */
+export async function notifyJoinRequested(
+  db: Database,
+  params: JoinRequestedParams,
+): Promise<NotificationRow[]> {
+  const userIds = await adminUserIds(db, params.organizationId);
+  if (userIds.length === 0) return [];
+
+  return createNotifications(
+    db,
+    userIds.map((userId) => ({
+      organizationId: params.organizationId,
+      userId,
+      type: "join-requested" as const,
+      title: `${params.personName} asks to join`,
+      body: params.message ?? params.email,
+      href: "/settings?tab=requests",
+      dedupeKey: `join-requested:${params.requestId}:${userId}`,
+    })),
+  );
+}
+
+export interface JoinDecidedParams {
+  organizationId: string;
+  organizationName: string;
+  requestId: string;
+  userId: string;
+  decision: "approved" | "declined";
+  note: string | null;
+}
+
+/** Tells the account whether it is in. */
+export async function notifyJoinDecided(
+  db: Database,
+  params: JoinDecidedParams,
+): Promise<NotificationRow[]> {
+  const approved = params.decision === "approved";
+
+  return createNotifications(db, [
+    {
+      organizationId: params.organizationId,
+      userId: params.userId,
+      type: "join-decided",
+      title: approved
+        ? `You are in ${params.organizationName}`
+        : `${params.organizationName} declined your request`,
+      body:
+        params.note ??
+        (approved
+          ? "Open absqir to see your events."
+          : "Ask somebody there to invite you if that is wrong."),
+      href: "/",
+      dedupeKey: `join-decided:${params.requestId}`,
     },
   ]);
 }

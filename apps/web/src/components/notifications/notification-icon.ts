@@ -4,6 +4,8 @@ import {
   NotePencilIcon,
   QrCodeIcon,
   SealCheckIcon,
+  UserCheckIcon,
+  UserPlusIcon,
 } from "@phosphor-icons/react";
 import type { Notification } from "@/queries/use-notifications";
 
@@ -13,4 +15,6 @@ export const NOTIFICATION_ICONS: Record<Notification["type"], Icon> = {
   "session-closed": SealCheckIcon,
   "leave-requested": NotePencilIcon,
   "leave-decided": CheckCircleIcon,
+  "join-requested": UserPlusIcon,
+  "join-decided": UserCheckIcon,
 };
