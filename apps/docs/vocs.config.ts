@@ -4,8 +4,8 @@ export default defineConfig({
   title: "absqir",
   description: "Open-source QR attendance. Project a rotating code, watch check-ins arrive.",
   rootDir: "docs",
-  iconUrl: { light: "/mark-light.svg", dark: "/mark-dark.svg" },
-  logoUrl: { light: "/mark-light.svg", dark: "/mark-dark.svg" },
+  iconUrl: "/favicon.svg",
+  logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },
   theme: {
     accentColor: { light: "#2563eb", dark: "#7ca9ff" },
   },
@@ -33,7 +33,7 @@ export default defineConfig({
   ],
   topNav: [
     { text: "Docs", link: "/getting-started" },
-    { text: "GitHub", link: "https://github.com/absqir/absqir" },
+    { text: "GitHub", link: "https://github.com/rimzzlabs/absqir" },
   ],
-  socials: [{ icon: "github", link: "https://github.com/absqir/absqir" }],
+  socials: [{ icon: "github", link: "https://github.com/rimzzlabs/absqir" }],
 });

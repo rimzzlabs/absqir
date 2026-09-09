@@ -27,6 +27,42 @@ token replacing the one before it. The module in the center is the reader.
   </div>
 </div>
 
+## The lockup
+
+The mark and the name travel together. The wordmark is JetBrains Mono 600,
+the same face the app uses, converted to outlines. Outlines carry no font
+dependency, so the lockup is identical on every machine, in a browser tab, in
+a README, and in a slide. The x-height is 26 units, the same as the mark's
+modules, which puts the stem within half a unit of the mark's stroke. This is
+the sidebar logo, the header logo, and the image to use anywhere the name
+appears beside the mark.
+
+<div style={{ display: "flex", flexWrap: "wrap", gap: "12px", margin: "24px 0" }}>
+  <div
+    style={{
+      background: "#f6f8fb",
+      border: "1px solid #dfe5ee",
+      borderRadius: "12px",
+      padding: "32px",
+    }}
+  >
+    <img src="/logo-light.svg" alt="absqir lockup on a light ground" width="245" height="64" />
+  </div>
+  <div
+    style={{
+      background: "#10151e",
+      border: "1px solid #232c3a",
+      borderRadius: "12px",
+      padding: "32px",
+    }}
+  >
+    <img src="/logo-dark.svg" alt="absqir lockup on a dark ground" width="245" height="64" />
+  </div>
+</div>
+
+Use the mark alone where the name is already on the screen, or where the space
+is square: a favicon, an avatar, an app icon.
+
 ## Color
 
 | Token  | Light     | Dark      | Usage                                                     |
@@ -40,9 +76,10 @@ own semantic colors inside the app.
 
 ## Typography
 
-- **Wordmark**: JetBrains Mono 600, always lowercase: `absqir`. Never
-  capitalize the name, in prose either.
-- **Text**: Inter. Both faces already ship with the app; the brand adds no
+- **Wordmark**: JetBrains Mono 600, always lowercase: `absqir`. Use the
+  outlined lockup above for artwork. Set live text in the same face at the
+  same weight. Never capitalize the name, in prose either.
+- **Text**: Inter. Both faces already ship with the app. The brand adds no
   font.
 
 ## Usage
@@ -54,6 +91,16 @@ own semantic colors inside the app.
 
 ## Assets
 
-Source files live in [`assets/brand/`](https://github.com/absqir/absqir/tree/main/assets/brand):
-`mark-light.svg`, `mark-dark.svg`, `favicon.svg` (theme-aware), and
-`avatar-512.png` for the GitHub organization.
+Source files live in [`assets/brand/`](https://github.com/rimzzlabs/absqir/tree/main/assets/brand):
+
+| File                              | Use                                              |
+| --------------------------------- | ------------------------------------------------ |
+| `logo-light.svg`, `logo-dark.svg` | The lockup, 245 x 64. Header, sidebar, README, slides. |
+| `mark-light.svg`, `mark-dark.svg` | The mark alone, on a square or a tight space.     |
+| `favicon.svg`                     | Heavier strokes for 16 px, theme-aware on its own. |
+| `avatar-512.png`                  | The repository's social image and the npm avatar. |
+
+absqir lives at [github.com/rimzzlabs/absqir](https://github.com/rimzzlabs/absqir),
+under a personal account, not under a GitHub organization. Keep the two names
+apart. absqir is the product. rimzzlabs is the person who maintains it. Never
+write the two as one name.

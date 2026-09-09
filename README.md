@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
+  <img alt="absqir" src="assets/brand/logo-light.svg" width="240">
+</picture>
+
 # absqir
 
 Open-source attendance for offices and communities. An organization keeps a
