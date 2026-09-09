@@ -16,6 +16,10 @@ if (!user || !activeMembership) {
   return Astro.redirect("/sign-in", 302);
 }
 
+// The sidebar writes its state to a cookie on every toggle. Reading it here
+// lets the server paint the sidebar the way the reader left it.
+const sidebarOpen = Astro.cookies.get("sidebar_state")?.value !== "false";
+
 const shellUser = {
   name: user.name,
   email: user.email,
@@ -32,6 +36,7 @@ const shellUser = {
     active={activeMembership}
     currentPath={Astro.url.pathname}
     title={title}
+    sidebarOpen={sidebarOpen}
   >
     <slot />
   </AppShell>

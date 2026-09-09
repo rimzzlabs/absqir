@@ -27,6 +27,8 @@ export interface AppShellProps {
   active: ShellMembership;
   currentPath: string;
   title: string;
+  /** The state the reader left the sidebar in, from the cookie. */
+  sidebarOpen?: boolean;
   children: ReactNode;
 }
 
@@ -39,7 +41,7 @@ export function AppShell(props: AppShellProps) {
   return (
     <Providers>
       <TooltipProvider>
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={props.sidebarOpen ?? true}>
           <AppSidebar
             memberships={props.memberships}
             active={props.active}
