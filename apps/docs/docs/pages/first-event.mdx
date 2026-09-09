@@ -1,0 +1,166 @@
+# Run your first event
+
+<div role="doc-subtitle">From an empty instance to a report you can download</div>
+
+import { Step, Steps } from "vocs/components";
+
+Your instance answers and you own the operator account. Nothing else exists
+yet. This page fills the instance and ends with a report you can download. It
+takes about fifteen minutes.
+
+Do it once with real people from one small group. A first event that runs on a
+Tuesday with four colleagues teaches you more than a careful plan.
+
+:::warning
+A person who has no account cannot check in. The room screen and the door pass
+both need a signed-in member. Invite the people you expect, or mark them by
+hand on the event page.
+:::
+
+<Steps>
+
+<Step title="Put your people in the directory">
+
+Open **People** in the sidebar.
+
+**Add person** takes one name, and an optional email and identifier. The
+identifier is your own number for that person, such as an employee number or a
+student number.
+
+**Import** takes a CSV. The first row names the columns. `name` is required.
+`email` and `identifier` are optional.
+
+```csv
+name,email,identifier
+Ada Lovelace,ada@example.com,EMP-001
+Grace Hopper,,EMP-002
+```
+
+The import dialog has a checkbox: **Invite every row that has an email**. Tick
+it. Each person then receives an invitation, and the invitation is what turns a
+directory row into an account that can check in.
+
+</Step>
+
+<Step title="Collect them into a group">
+
+Open **Groups** and press **New group**. Give it the name people use for
+themselves: `Morning shift`, `Class 10A`, `Volunteers`.
+
+Open the group and add people to it.
+
+An event expects groups, never single people. The group is the list, and the
+list decides who counts as absent. Make the first group small.
+
+</Step>
+
+<Step title="Invite the people who help you run it">
+
+Open **Settings**, then **Invitations**, and invite anyone who will run events
+with you. Give them the `organizer` role.
+
+An organizer can create events, open the room screen, scan at the door, and
+decide leave requests. An organizer cannot change the organization or manage
+members. See [the role table](/accounts#organizations-and-roles).
+
+</Step>
+
+<Step title="Create the event">
+
+Open **Events** and press **New event**.
+
+| Field                     | What to put in it                                                        |
+| ------------------------- | ------------------------------------------------------------------------ |
+| **Title**                 | What people call it. `Monday standup`.                                   |
+| **Starts** and **Ends**   | The real times. Both are absolute instants, read in your own time zone.  |
+| **Late after (minutes)**  | Minutes after the start before an arrival counts as late. Try 10.        |
+| **Opens before (minutes)**| Minutes before the start when check-in opens. Try 15.                    |
+| **Expected groups**       | The group you made. Everybody in it is on the list.                      |
+
+Save it. The event now sits under **Upcoming**, and it opens on its own when
+the clock reaches `opens before`.
+
+</Step>
+
+<Step title="Open the room screen">
+
+At the start of the event, open the event and press **Room screen**. Put that
+screen on a projector, a television, or a tablet on the table.
+
+The screen shows a QR code that carries a token for the current 20 second
+window. It asks for a new token when the window ends, so a photograph of the
+code stops working almost at once.
+
+If the event has not opened yet and you want to start early, press **Open now**.
+
+</Step>
+
+<Step title="Let the room check in">
+
+Each person opens **Check in** in absqir, points the camera at the screen, and
+lands on your event. A phone camera outside the app works too, because the code
+is a link.
+
+Records appear on the event page within seconds. Somebody who arrives after the
+late threshold is recorded as `late`, not `absent`.
+
+If a camera fails, use the other door. Open **Scanner** on your own phone and
+read the pass from the member's screen. The pass sits on their **Check in**
+page.
+
+</Step>
+
+<Step title="Fix what the room got wrong">
+
+On the event page, set any person's status by hand. Use it for the person whose
+phone died, and for the person you excused by a message the night before.
+
+A record remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
+A manual correction is visible as one.
+
+</Step>
+
+<Step title="Close it">
+
+An event closes on its own at the end. To close it early, press **Close now**.
+
+The close writes an `absent` record for everyone on the list who never checked
+in. Until it closes, the event shows the people who arrived and nobody as
+absent. That is why the numbers change at the end.
+
+</Step>
+
+<Step title="Read the report">
+
+Open **Reports** and pick a range that holds your event.
+
+Two rates appear. **Attendance** counts present plus late, over everyone
+judged. **On time** counts present, over the people who turned up. An excused
+person is left out of both.
+
+**Download CSV** exports the table you are looking at, with the same range and
+the same group filter.
+
+</Step>
+
+</Steps>
+
+## What to do the second time
+
+- **Stop creating events by hand.** A [schedule](/sessions#schedules) is a
+  rule, such as every weekday at 09:00 for 60 minutes. It writes its events two
+  weeks ahead.
+- **Let people ask for leave.** A member sends a request on **My leave**. Your
+  approval writes an `excused` record, so the close does not mark them absent.
+  See [Leave requests](/sessions#leave-requests).
+- **Check the reminders.** Everyone expected receives one the day before and
+  one within the hour, in their own time zone. See
+  [Notifications](/notifications).
+- **Open an event to strangers.** An event can have a public page where anyone
+  can register. See [Public registration](/sessions#public-registration).
+
+## When you take it live
+
+Your instance still runs on plain http, and it still sends mail from the Resend
+test address. Read [Going to production](/production) before other people
+depend on it.

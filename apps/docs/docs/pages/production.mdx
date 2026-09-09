@@ -1,0 +1,139 @@
+# Going to production
+
+<div role="doc-subtitle">What to change before other people depend on it</div>
+
+An instance from [Install absqir](/getting-started) works on your desk. It is
+not ready for other people. This page is the list of things to change before
+you give anyone the address.
+
+Work through it in order. Each step ends with `absqir up`, which recreates the
+containers with the new settings.
+
+## 1. Put it behind HTTPS
+
+Run absqir behind a reverse proxy that terminates TLS and forwards to port
+4321. Caddy, nginx, and Traefik all work.
+
+The proxy must send `X-Forwarded-For` and `X-Forwarded-Proto`. absqir reads the
+first for its rate limits, and the second to know the request arrived over
+HTTPS.
+
+Then turn Secure cookies on:
+
+```bash
+npx absqir config set SECURE_COOKIES true
+npx absqir up
+```
+
+:::danger
+Do not publish port 4321 to the internet directly. Without TLS, session cookies
+and passwords travel in plain text.
+:::
+
+:::warning
+Set `SECURE_COOKIES` to `true` only after HTTPS works. Over plain http the
+browser drops a Secure cookie, and sign-in then fails with no error message.
+:::
+
+## 2. Tell the instance its address
+
+```bash
+npx absqir config set APP_URL https://absqir.example.com
+npx absqir up
+```
+
+A reminder email is written by a timer, not by a request, so the server has no
+address to read. It uses `APP_URL`. Set it to the address people type, or every
+link in every email points at `localhost`.
+
+## 3. Send email from your own domain
+
+Verify your domain in [Resend](https://resend.com), then point the From address
+at it:
+
+```bash
+npx absqir config set EMAIL_FROM "absqir <no-reply@your-domain.example>"
+npx absqir up
+```
+
+Until you do this, the test sender reaches only the address that owns the
+Resend account. Invitations to anybody else never arrive.
+
+## 4. Decide who may register
+
+`REGISTRATION_OPEN` is `false`, and that is the right setting for most
+instances. An email address can then get an account only through an invitation,
+or through the public page of an event that takes registrations.
+
+Turn it on when you want any email address to register and create its own
+organization:
+
+```bash
+npx absqir config set REGISTRATION_OPEN true
+npx absqir up
+```
+
+See [Who may register](/accounts#who-may-register).
+
+## 5. Pin the version
+
+`ABSQIR_TAG` is `latest`, which follows every release. Pin it so a restart
+never changes the code under you:
+
+```bash
+npx absqir config set ABSQIR_TAG v0.2.0
+npx absqir up
+```
+
+Move the pin when you decide to. See [Upgrades](/upgrades).
+
+## 6. Back up the database
+
+Postgres keeps everything in a Docker volume named `db-data`, prefixed with the
+name of your instance directory. Find it:
+
+```bash
+docker volume ls | grep db-data
+```
+
+Copy it to a tar file:
+
+```bash
+docker run --rm \
+  -v my-absqir_db-data:/data:ro \
+  -v "$PWD":/backup \
+  alpine tar czf /backup/absqir-db.tar.gz -C /data .
+```
+
+Run that on a timer, and copy the result off the machine. Back the volume up
+before every major upgrade.
+
+The app container holds nothing. You can delete and recreate it at any time.
+Only the volume matters.
+
+## 7. Check the heartbeat
+
+Three jobs run on the clock: schedules spawn their events, ended events close
+and write their absent records, and reminders go out.
+
+**On Docker and Node the server runs the heartbeat itself, once a minute.**
+There is nothing to configure, and this step is already done.
+
+Only Cloudflare Workers needs an outside scheduler, because a Worker holds no
+timer between requests. See [The heartbeat](/notifications#the-heartbeat).
+
+## Before you hand out the address
+
+```bash
+npx absqir doctor
+```
+
+Then confirm each of these by hand:
+
+- The site answers on `https://`, and `http://` redirects to it.
+- You sign in with a code that arrives at a real mailbox.
+- An invitation to a colleague on another domain arrives.
+- A link inside that email points at your domain, not at `localhost`.
+- `docker volume ls` shows your volume, and your backup command writes a file.
+
+If any of these fails, read [Troubleshooting](/troubleshooting).

@@ -1,0 +1,160 @@
+# Troubleshooting
+
+<div role="doc-subtitle">The failures people meet first, and what fixes them</div>
+
+Start every investigation with the same two commands:
+
+```bash
+npx absqir doctor
+npx absqir logs
+```
+
+`doctor` verifies Docker, `docker-compose.yml`, `.env`, the length of
+`BETTER_AUTH_SECRET`, the mail key, and the health endpoint. `logs` follows the
+app container, where the server prints what it refused and why.
+
+## The stack refuses to start
+
+**`Set RESEND_API_KEY in .env, sign-up codes travel by email`**
+
+The compose file requires the key. Docker stops before it starts anything.
+
+```bash
+npx absqir config set RESEND_API_KEY re_xxxxxxxx
+npx absqir up
+```
+
+**`Set BETTER_AUTH_SECRET in .env`** or **`Set POSTGRES_PASSWORD in .env`**
+
+`absqir init` writes both. If either is missing, you are in the wrong
+directory, or the `.env` was replaced. Run every command from the directory
+that holds `docker-compose.yml`.
+
+## The sign-in code never arrives
+
+1. Read the log. Without a valid key, the server prints the code instead of
+   sending it:
+
+   ```
+   [absqir mail] code for ada@example.com (sign-in): 482913
+   ```
+
+2. Check the From address. The Resend test sender reaches only the address that
+   owns the Resend account. To reach anybody else, verify a domain and set
+   `EMAIL_FROM`. See [Going to production](/production#3-send-email-from-your-own-domain).
+
+3. Check the Resend dashboard. A rejected send appears there with a reason.
+
+## Sign-in looks correct, then returns to the sign-in page
+
+`SECURE_COOKIES` is `true` and the site is on plain http. The browser drops a
+Secure cookie without a warning, so the session never starts.
+
+Either finish the HTTPS setup, or turn the flag off while you work:
+
+```bash
+npx absqir config set SECURE_COOKIES false
+npx absqir up
+```
+
+## An email address is told it needs an invitation
+
+`REGISTRATION_OPEN` is `false`, and the first account is already taken. That is
+the normal state. Choose one:
+
+- Invite the address from **Settings**, then **Invitations**.
+- Create the account from the CLI:
+
+  ```bash
+  npx absqir admin create --email guru@example.com --name "Guru" --create-orgs
+  ```
+
+- Let anybody register: `npx absqir config set REGISTRATION_OPEN true`.
+
+## Links in an email point at localhost
+
+`APP_URL` still holds the default. A reminder is written by a timer, so the
+server has no request to read an address from.
+
+```bash
+npx absqir config set APP_URL https://absqir.example.com
+npx absqir up
+```
+
+## The room screen says the code expired
+
+The screen asks for a new token when its 20 second window ends. A tablet that
+sleeps, or a browser tab in the background, stops asking. The server accepts
+the current window and the one before it, and nothing older.
+
+Wake the screen and let it fetch. Turn the device's screen lock off before the
+next event.
+
+## A person cannot check in
+
+Work down this list in order:
+
+1. **They have no account.** A directory row cannot scan anything. Invite them,
+   or set their status by hand on the event page.
+2. **They are not on the list.** Only people in the event's expected groups can
+   check in, unless the event allows walk-ins.
+3. **The event is not open.** Check-in opens `opens before` minutes ahead of
+   the start. Press **Open now** to start early.
+4. **They already checked in.** A second scan changes nothing and says so.
+
+## Everyone is marked absent
+
+The event closed, and nobody checked in before it did. Two common causes:
+
+- The event was created with times that already passed. It closes on the next
+  read and marks everyone expected absent. Fix the records by hand.
+- Nobody was able to reach the room screen, because none of them had accounts. See
+  the list above.
+
+Absent records are written only at the close. An open event shows the people
+who arrived and nobody as absent, so the numbers always change at the end.
+
+## Reminders never arrive
+
+1. **The person has no account.** A directory row has nowhere to receive.
+2. **The account turned email off.** Each account chooses in **Settings**, then
+   **Notifications**. See [Where they go](/notifications#where-they-go).
+3. **The event was created too late.** An event created less than two hours
+   before it starts sends the hour reminder only.
+4. **You run on Cloudflare Workers.** A Worker holds no timer. Set
+   `CRON_SECRET` and call the endpoint from a scheduler. See
+   [The heartbeat](/notifications#the-heartbeat). On Docker and Node the server
+   runs it once a minute by itself.
+
+## `POST /api/tick` answers 404 or 401
+
+- **404**: `CRON_SECRET` is not set. The route does not exist until it is.
+- **401**: the token is wrong. Send it as `authorization: Bearer <secret>`.
+- **A rejection with a correct token**: the `content-type` header is missing.
+  Without `content-type: application/json` the site reads the call as a
+  cross-site form post and refuses it.
+
+## The reports are empty
+
+Reports count the events that **start** inside the range, and absent records
+exist only after a close. Widen the range, and check the totals line, which
+says how many events in the range have closed.
+
+## After an upgrade the app will not start
+
+The container applies pending migrations before it serves anything, so a
+migration failure shows in the log.
+
+```bash
+npx absqir logs
+```
+
+Restore the volume from your backup, pin `ABSQIR_TAG` to the version you ran
+before, then read the release note. See [Upgrades](/upgrades).
+
+## Something else
+
+Open an issue at
+[github.com/rimzzlabs/absqir](https://github.com/rimzzlabs/absqir/issues).
+Include the output of `absqir doctor` and the last lines of `absqir logs`.
+Remove your secrets first.

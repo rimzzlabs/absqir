@@ -1,0 +1,58 @@
+# What absqir is
+
+<div role="doc-subtitle">The model, the words, and the things absqir does not do</div>
+
+import { HowAbsqirWorks } from "../components/how-absqir-works";
+
+absqir records who turned up. An organizer puts a QR code on a screen. The
+people in the room scan it with their own phones. The code changes every 20
+seconds, so a photograph of it is dead before it travels.
+
+You run absqir yourself, on your own machine, against your own Postgres.
+
+Read this page first. It takes two minutes, and it gives you the six words the
+rest of the documentation uses.
+
+## The model
+
+<HowAbsqirWorks />
+
+| Word             | What it is                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| **Organization** | Everything belongs to one. An account can join several, with a different role in each. |
+| **Person**       | One row in the directory. A person can exist before they have an account.              |
+| **Group**        | A set of people: a team, a division, a class, a cohort.                                |
+| **Event**        | One moment people are expected. It has a start, an end, and one or more groups.        |
+| **Record**       | One row per person per event: present, late, excused, or absent.                       |
+| **Report**       | The records of many events, counted over a range of days.                              |
+
+The chain runs one way. The groups say who is expected. The event says when.
+Check-in writes a record for each person who arrives. The close writes an
+absent record for everyone else. Reports count the records.
+
+## Who runs it
+
+- An office that must record shifts, and pay or roster from the result.
+- A school, a course, or a bootcamp that takes attendance in a room.
+- A community that runs meetups, and wants to know who came back.
+
+Each of these is one organization. One instance can hold many.
+
+## What absqir does not do
+
+- It does not do payroll, and it does not calculate pay.
+- It does not read location, and it does not watch people between events.
+- It does not have a hosted version yet. Today you self-host it.
+
+## Two words that mean the same thing
+
+The app says **event**. The API, the database, and the addresses still say
+`session`: `/sessions`, `/my/sessions`, `attendance_session`. Only the copy
+changed, because a signed-in browser is also a session, and one word for two
+things confused people. Nothing you link or script breaks.
+
+## Where to go next
+
+1. [Install absqir](/getting-started) puts an instance on a machine.
+2. [Run your first event](/first-event) takes you from an empty instance to a
+   report, in about fifteen minutes.
