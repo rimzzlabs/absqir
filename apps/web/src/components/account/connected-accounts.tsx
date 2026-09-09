@@ -1,8 +1,8 @@
 import { Button } from "@absqir/ui/button";
-import { GithubLogoIcon, GoogleLogoIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
+import { ProviderIcon } from "@/components/shared/provider-icon";
 import { authClient } from "@/lib/auth-client";
 import {
   type AuthProviderId,
@@ -12,8 +12,6 @@ import {
 } from "@/lib/auth-providers";
 import { useUnlinkProvider } from "@/mutations/use-unlink-provider";
 import { useCredentials } from "@/queries/use-credentials";
-
-const ICONS = { github: GithubLogoIcon, google: GoogleLogoIcon } as const;
 
 const RETURN_PATH = "/settings?tab=security";
 
@@ -90,12 +88,11 @@ export function ConnectedAccounts() {
       <div className="space-y-3">
         <ul className="divide-y divide-border rounded-lg border border-border">
           {rows.map(({ provider, accountId }) => {
-            const Icon = ICONS[provider];
             const name = providerLabel(provider);
 
             return (
               <li key={provider} className="flex items-center gap-3 px-3 py-2.5">
-                <Icon weight="fill" className="size-4 shrink-0" aria-hidden />
+                <ProviderIcon provider={provider} className="size-4 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{name}</p>
                   <p className="text-muted-foreground text-xs">
@@ -106,7 +103,7 @@ export function ConnectedAccounts() {
                 {accountId ? (
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="destructive"
                     disabled={unlink.isPending || ways < 2}
                     onClick={() => unlink.mutate(accountId)}
                   >

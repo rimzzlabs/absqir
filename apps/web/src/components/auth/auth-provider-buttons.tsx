@@ -1,10 +1,8 @@
 import { Button } from "@absqir/ui/button";
-import { GithubLogoIcon, GoogleLogoIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { ProviderIcon } from "@/components/shared/provider-icon";
 import { authClient } from "@/lib/auth-client";
 import { type AuthProviderId, providerLabel } from "@/lib/auth-providers";
-
-const ICONS = { github: GithubLogoIcon, google: GoogleLogoIcon } as const;
 
 export interface AuthProviderButtonsProps {
   /** The providers the operator turned on. Empty renders nothing at all. */
@@ -47,25 +45,21 @@ export function AuthProviderButtons(props: AuthProviderButtonsProps) {
       </div>
 
       <div className="grid gap-2">
-        {props.providers.map((provider) => {
-          const Icon = ICONS[provider];
-
-          return (
-            <Button
-              key={provider}
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={pending !== null}
-              onClick={() => {
-                void start(provider).catch(() => setPending(null));
-              }}
-            >
-              <Icon weight="fill" aria-hidden />
-              {pending === provider ? "Opening…" : `Continue with ${providerLabel(provider)}`}
-            </Button>
-          );
-        })}
+        {props.providers.map((provider) => (
+          <Button
+            key={provider}
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={pending !== null}
+            onClick={() => {
+              void start(provider).catch(() => setPending(null));
+            }}
+          >
+            <ProviderIcon provider={provider} />
+            {pending === provider ? "Opening…" : `Continue with ${providerLabel(provider)}`}
+          </Button>
+        ))}
       </div>
     </div>
   );
