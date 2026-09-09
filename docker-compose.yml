@@ -17,7 +17,7 @@ services:
       retries: 10
 
   app:
-    image: ghcr.io/absqir/absqir:latest
+    image: ghcr.io/rimzzlabs/absqir:latest
     build: .
     restart: unless-stopped
     depends_on:

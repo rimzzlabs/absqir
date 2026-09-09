@@ -98,7 +98,7 @@ export const MEMBER_NAV: NavGroup[] = [
 ];
 
 /** The public repository, linked from the sidebar footer. */
-export const GITHUB_URL = "https://github.com/absqir/absqir";
+export const GITHUB_URL = "https://github.com/rimzzlabs/absqir";
 
 export function navFor(role: RoleName): NavGroup[] {
   const groups = roleAtLeast(role, "organizer") ? MANAGER_NAV : MEMBER_NAV;

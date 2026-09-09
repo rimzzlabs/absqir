@@ -21,7 +21,7 @@ services:
       retries: 10
 
   app:
-    image: ghcr.io/absqir/absqir:\${ABSQIR_TAG:-latest}
+    image: ghcr.io/rimzzlabs/absqir:\${ABSQIR_TAG:-latest}
     restart: unless-stopped
     depends_on:
       db:
