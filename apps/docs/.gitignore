@@ -1,1 +1,3 @@
-docs/dist
+dist
+.vocs
+src/pages.gen.ts

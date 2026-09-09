@@ -2,7 +2,7 @@
 
 <div role="doc-subtitle">One codebase, two targets, and the rotating token</div>
 
-import { OneOriginTwoTargets, RotatingToken } from "../components/architecture-diagram";
+import { RotatingToken } from "./_components/architecture-diagram";
 
 ## One origin, two targets
 
@@ -12,7 +12,26 @@ no CORS and the session cookie stays `SameSite=Lax`. The Docker image runs
 it on Node.js against your Postgres. The same code deploys to Cloudflare
 Workers, which is how the hosted version will run.
 
-<OneOriginTwoTargets />
+```mermaid
+flowchart LR
+  Browser["Browser"]
+  subgraph origin["One origin — no CORS, a SameSite=Lax cookie"]
+    Pages["Astro pages<br/>/ — dashboard, onboarding, room screen"]
+    Api["Hono API<br/>/api — directory, groups, events, reports"]
+    Auth["Better Auth<br/>/api/auth — codes, passwords, organizations"]
+  end
+  Platform["Platform access<br/>database, rate limit, env"]
+  Node["Node and Postgres<br/>the Docker image you run"]
+  Workers["Cloudflare Workers<br/>how the hosted version will run"]
+
+  Browser --> origin
+  origin --> Platform
+  Platform --> Node
+  Platform --> Workers
+```
+
+Platform access — the database connection, the rate limiter, the environment —
+sits behind one small interface, picked per target at build time.
 
 ## Accounts
 

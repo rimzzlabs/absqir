@@ -10,7 +10,7 @@
     },
     "@absqir/docs#build": {
       "dependsOn": ["^build"],
-      "outputs": ["docs/dist/**"]
+      "outputs": ["dist/**"]
     },
     "dev": {
       "dependsOn": ["^build"],

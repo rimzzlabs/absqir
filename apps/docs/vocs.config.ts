@@ -1,18 +1,19 @@
-import { defineConfig } from "vocs";
+import { defineConfig } from "vocs/config";
+
+const repo = "https://github.com/rimzzlabs/absqir";
 
 export default defineConfig({
   title: "absqir",
   description: "Open-source QR attendance. Project a rotating code, watch check-ins arrive.",
-  rootDir: "docs",
   iconUrl: "/favicon.svg",
   logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },
-  aiCta: true,
+  accentColor: "light-dark(#2563eb, #7ca9ff)",
+  colorScheme: "light dark",
+  // The docs ship as files behind a static host, so nothing serves them at request time.
+  renderStrategy: "full-static",
   editLink: {
-    pattern: "https://github.com/rimzzlabs/absqir/edit/main/apps/docs/docs/pages/:path",
+    link: `${repo}/edit/main/apps/docs/src/pages/:path`,
     text: "Suggest a change",
-  },
-  theme: {
-    accentColor: { light: "#2563eb", dark: "#7ca9ff" },
   },
   sidebar: [
     {
@@ -52,7 +53,17 @@ export default defineConfig({
   ],
   topNav: [
     { text: "Docs", link: "/what-is-absqir", match: "/" },
-    { text: "GitHub", link: "https://github.com/rimzzlabs/absqir" },
+    // absqir has not cut a 1.0. The mark says so, and every item under it is a
+    // way to tell us what broke, so the warning and the report sit together.
+    {
+      text: "Beta",
+      items: [
+        { text: "Report a bug", link: `${repo}/issues/new?labels=bug` },
+        { text: "Request a feature", link: `${repo}/issues/new?labels=enhancement` },
+        { text: "Open issues", link: `${repo}/issues` },
+      ],
+    },
+    { text: "GitHub", link: repo },
   ],
-  socials: [{ icon: "github", link: "https://github.com/rimzzlabs/absqir" }],
+  socials: [{ icon: "github", link: repo }],
 });

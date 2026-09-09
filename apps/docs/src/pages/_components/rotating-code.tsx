@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /** The real window, in milliseconds. The panel keeps the product's own clock. */

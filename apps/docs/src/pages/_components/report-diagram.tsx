@@ -11,7 +11,7 @@ export function TwoRates() {
       <path
         d="M40 68 V58 H466 V68"
         fill="none"
-        stroke="var(--vocs-color_borderGreen)"
+        stroke="var(--vocs-border-color-success-tint)"
         strokeWidth={1.5}
       />
       <Note x={253} y={42} text="on time = present ÷ this" tone="strong" weight={600} />
@@ -24,7 +24,7 @@ export function TwoRates() {
       <path
         d="M40 136 V146 H686 V136"
         fill="none"
-        stroke="var(--vocs-color_borderAccent)"
+        stroke="var(--vocs-color-accent)"
         strokeWidth={1.5}
       />
       <Note

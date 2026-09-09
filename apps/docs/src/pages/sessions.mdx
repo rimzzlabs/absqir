@@ -2,7 +2,7 @@
 
 <div role="doc-subtitle">The clock, the two doors, schedules, and leave requests</div>
 
-import { EventClock, TwoWaysToCheckIn } from "../components/session-diagram";
+import { EventClock } from "./_components/session-diagram";
 
 An event is one moment people are expected: a shift, a meeting, a
 workshop, a community day. It has a start, an end, a late threshold, and
@@ -62,7 +62,20 @@ remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
 
 ## Two ways to check in
 
-<TwoWaysToCheckIn />
+```mermaid
+flowchart LR
+  Secret["Event secret<br/>never leaves the server"]
+  Secret --> Screen["Room screen<br/>a QR that rotates every 20 seconds"]
+  Secret --> Pass["The member's pass<br/>a QR bound to that one person"]
+  Screen --> M["The member scans<br/>from Check in, or with the phone camera"]
+  Pass --> O["The organizer scans<br/>at the door"]
+  M --> R["Record<br/>present or late"]
+  O --> R
+```
+
+Both codes are signed with the same per-event secret, so both are checked by
+the server before anything is written. Either way, the clock decides present
+or late.
 
 **The room screen.** The organizer opens the event's room screen on a
 projector or a tablet. It shows a QR code that encodes a link with a token.

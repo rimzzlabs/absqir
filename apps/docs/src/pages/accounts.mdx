@@ -2,11 +2,19 @@
 
 <div role="doc-subtitle">One sign-in door, the roles behind it, and the directory</div>
 
-import { OneDoor } from "../components/account-diagram";
-
 ## One door
 
-<OneDoor />
+```mermaid
+flowchart LR
+  A["Sign-in page<br/>asks for an email address"] --> B{"Look it up<br/>known? may it register?"}
+  B --> C["Known<br/>the password, or a 6 digit code instead"]
+  B --> D["Unknown, may register<br/>a code creates the account, then onboarding"]
+  B --> E["Unknown, may not register<br/>it needs an invitation first"]
+```
+
+An email may register when an organizer invited it, when it arrived from an
+event's public page, when `REGISTRATION_OPEN` is true, or when the instance
+has no account yet.
 
 absqir has one sign-in page. It asks for an email address first, then
 decides what comes next:

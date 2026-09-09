@@ -3,27 +3,27 @@ import type { ReactNode } from "react";
 export type Tone = "plain" | "muted" | "accent" | "good" | "warn" | "bad";
 
 const toneFill: Record<Tone, string> = {
-  plain: "var(--vocs-color_background2)",
-  muted: "var(--vocs-color_background3)",
-  accent: "var(--vocs-color_backgroundBlueTint)",
-  good: "var(--vocs-color_backgroundGreenTint)",
-  warn: "var(--vocs-color_backgroundYellowTint)",
-  bad: "var(--vocs-color_backgroundRedTint)",
+  plain: "var(--vocs-background-color-surface)",
+  muted: "var(--vocs-background-color-surfaceMuted)",
+  accent: "var(--vocs-background-color-info-tint)",
+  good: "var(--vocs-background-color-success-tint)",
+  warn: "var(--vocs-background-color-warning-tint)",
+  bad: "var(--vocs-color-destructive-tint)",
 };
 
 const toneStroke: Record<Tone, string> = {
-  plain: "var(--vocs-color_border)",
-  muted: "var(--vocs-color_border)",
-  accent: "var(--vocs-color_borderAccent)",
-  good: "var(--vocs-color_borderGreen)",
-  warn: "var(--vocs-color_borderYellow)",
-  bad: "var(--vocs-color_borderRed)",
+  plain: "var(--vocs-border-color-primary)",
+  muted: "var(--vocs-border-color-primary)",
+  accent: "var(--vocs-color-accent)",
+  good: "var(--vocs-border-color-success-tint)",
+  warn: "var(--vocs-border-color-warning-tint)",
+  bad: "var(--vocs-border-color-destructive-tint)",
 };
 
 const inkFor: Record<"muted" | "accent" | "strong", string> = {
-  muted: "var(--vocs-color_text3)",
-  accent: "var(--vocs-color_textAccent)",
-  strong: "var(--vocs-color_text)",
+  muted: "var(--vocs-text-color-muted)",
+  accent: "var(--vocs-color-accent)",
+  strong: "var(--vocs-text-color-primary)",
 };
 
 export interface DiagramProps {
@@ -50,7 +50,7 @@ export function Diagram(props: DiagramProps) {
       {props.caption ? (
         <figcaption
           style={{
-            color: "var(--vocs-color_text3)",
+            color: "var(--vocs-text-color-muted)",
             fontSize: "0.875rem",
             lineHeight: 1.5,
             marginTop: "10px",
@@ -98,7 +98,7 @@ export function Node(props: NodeProps) {
         dominantBaseline="middle"
         fontSize={14}
         fontWeight={600}
-        fill="var(--vocs-color_text)"
+        fill="var(--vocs-text-color-primary)"
       >
         {props.label}
       </text>
@@ -110,7 +110,7 @@ export function Node(props: NodeProps) {
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={11.5}
-          fill="var(--vocs-color_text3)"
+          fill="var(--vocs-text-color-muted)"
         >
           {line}
         </text>

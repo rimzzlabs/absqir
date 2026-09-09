@@ -1,8 +1,10 @@
+---
+outline: 2
+---
+
 # Run your first event
 
 <div role="doc-subtitle">From an empty instance to a report you can download</div>
-
-import { Step, Steps } from "vocs/components";
 
 Your instance answers and you own the operator account. Nothing else exists
 yet. This page fills the instance and ends with a report you can download. It
@@ -17,9 +19,9 @@ both need a signed-in member. Invite the people you expect, or mark them by
 hand on the event page.
 :::
 
-<Steps>
+:::steps
 
-<Step title="Put your people in the directory">
+### Put your people in the directory
 
 Open **People** in the sidebar.
 
@@ -40,9 +42,8 @@ The import dialog has a checkbox: **Invite every row that has an email**. Tick
 it. Each person then receives an invitation, and the invitation is what turns a
 directory row into an account that can check in.
 
-</Step>
 
-<Step title="Collect them into a group">
+### Collect them into a group
 
 Open **Groups** and press **New group**. Give it the name people use for
 themselves: `Morning shift`, `Class 10A`, `Volunteers`.
@@ -52,9 +53,8 @@ Open the group and add people to it.
 An event expects groups, never single people. The group is the list, and the
 list decides who counts as absent. Make the first group small.
 
-</Step>
 
-<Step title="Invite the people who help you run it">
+### Invite the people who help you run it
 
 Open **Settings**, then **Invitations**, and invite anyone who will run events
 with you. Give them the `organizer` role.
@@ -63,9 +63,8 @@ An organizer can create events, open the room screen, scan at the door, and
 decide leave requests. An organizer cannot change the organization or manage
 members. See [the role table](/accounts#organizations-and-roles).
 
-</Step>
 
-<Step title="Create the event">
+### Create the event
 
 Open **Events** and press **New event**.
 
@@ -80,9 +79,8 @@ Open **Events** and press **New event**.
 Save it. The event now sits under **Upcoming**, and it opens on its own when
 the clock reaches `opens before`.
 
-</Step>
 
-<Step title="Open the room screen">
+### Open the room screen
 
 At the start of the event, open the event and press **Room screen**. Put that
 screen on a projector, a television, or a tablet on the table.
@@ -93,9 +91,8 @@ code stops working almost at once.
 
 If the event has not opened yet and you want to start early, press **Open now**.
 
-</Step>
 
-<Step title="Let the room check in">
+### Let the room check in
 
 Each person opens **Check in** in absqir, points the camera at the screen, and
 lands on your event. A phone camera outside the app works too, because the code
@@ -108,9 +105,8 @@ If a camera fails, use the other door. Open **Scanner** on your own phone and
 read the pass from the member's screen. The pass sits on their **Check in**
 page.
 
-</Step>
 
-<Step title="Fix what the room got wrong">
+### Fix what the room got wrong
 
 On the event page, set any person's status by hand. Use it for the person whose
 phone died, and for the person you excused by a message the night before.
@@ -118,9 +114,8 @@ phone died, and for the person you excused by a message the night before.
 A record remembers how it came to be: `screen`, `scanner`, `manual`, or `auto`.
 A manual correction is visible as one.
 
-</Step>
 
-<Step title="Close it">
+### Close it
 
 An event closes on its own at the end. To close it early, press **Close now**.
 
@@ -128,9 +123,8 @@ The close writes an `absent` record for everyone on the list who never checked
 in. Until it closes, the event shows the people who arrived and nobody as
 absent. That is why the numbers change at the end.
 
-</Step>
 
-<Step title="Read the report">
+### Read the report
 
 Open **Reports** and pick a range that holds your event.
 
@@ -141,9 +135,8 @@ person is left out of both.
 **Download CSV** exports the table you are looking at, with the same range and
 the same group filter.
 
-</Step>
 
-</Steps>
+:::
 
 ## What to do the second time
 

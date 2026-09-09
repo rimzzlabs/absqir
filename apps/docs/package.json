@@ -4,13 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vocs dev",
-    "build": "vocs build",
+    "dev": "vite dev",
+    "build": "vite build",
     "preview": "vocs preview"
   },
   "dependencies": {
+    "mermaid": "^11.17.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "vocs": "^1.4.1"
+    "vite": "^8.2.2",
+    "vocs": "^2.8.5",
+    "waku": "1.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1"
   }
 }

@@ -4,25 +4,21 @@
    moments: the module that slides into the code, and the primary button. */
 
 .lp {
-  --lp-mono: var(--vocs-fontFamily_mono, ui-monospace, "JetBrains Mono", monospace);
-  --lp-cobalt: #2563eb;
+  --lp-mono: var(--vocs-font-family-mono, ui-monospace, "JetBrains Mono", monospace);
+  /* Vocs keeps color-scheme in step with its own toggle, so light-dark() covers
+     the toggle and the system default without a second selector. */
+  --lp-cobalt: light-dark(#2563eb, #7ca9ff);
   /* The call to action holds one colour in both themes. It is the brand mark,
      not a state, so it must not shift when the page does. */
   --lp-cta: #2563eb;
   --lp-cta-ink: #ffffff;
-  --lp-panel: var(--vocs-color_background2);
-  --lp-line: var(--vocs-color_border);
-  --lp-ink: #131a26;
-  --lp-ink-2: #4a5567;
+  --lp-panel: var(--vocs-background-color-surface);
+  --lp-line: var(--vocs-border-color-primary);
+  --lp-ink: light-dark(#131a26, #e7ecf4);
+  --lp-ink-2: light-dark(#4a5567, #9aa6b8);
 
   text-align: left;
   padding-bottom: 5rem;
-}
-
-:root.dark .lp {
-  --lp-cobalt: #7ca9ff;
-  --lp-ink: #e7ecf4;
-  --lp-ink-2: #9aa6b8;
 }
 
 /* ---------------------------------------------------------------- hero */
@@ -92,14 +88,14 @@
   line-height: 1;
   text-decoration: none;
   color: var(--lp-ink);
-  background: var(--vocs-color_background);
+  background: var(--vocs-background-color-primary);
   transition:
     border-color 120ms ease,
     background-color 120ms ease;
 }
 
 .lp-btn:hover {
-  border-color: var(--vocs-color_borderAccent, var(--lp-cobalt));
+  border-color: var(--vocs-color-accent, var(--lp-cobalt));
 }
 
 .lp-btn-primary {
@@ -459,4 +455,11 @@
   padding: 0;
   border: 0;
   background: none;
+}
+
+/* The landing is laid out for a wider measure than the prose default, which is
+   sized for a single column of text. Scoping it to the article that holds .lp
+   keeps every other page on the Vocs default. */
+[data-v-content]:has(.lp) {
+  max-width: 66rem;
 }
