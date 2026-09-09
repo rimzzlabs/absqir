@@ -1,21 +1,22 @@
 import { parseCheckInLink } from "@absqir/core/check-in-link";
-import { formatDate } from "@absqir/core/date";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Input } from "@absqir/ui/input";
-import { Reveal } from "@absqir/ui/reveal";
-import { Skeleton } from "@absqir/ui/skeleton";
-import { CheckCircleIcon, TicketIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { Label } from "@absqir/ui/label";
+import { ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { match, P } from "ts-pattern";
+import { CheckInPass } from "@/components/check-in/check-in-pass";
+import { CheckInRecent } from "@/components/check-in/check-in-recent";
+import { CheckInResult } from "@/components/check-in/check-in-result";
+import { CheckInSteps } from "@/components/check-in/check-in-steps";
+import { ScanViewfinder } from "@/components/check-in/scan-viewfinder";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
-import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useCamera } from "@/components/shared/use-camera";
 import { useCheckIn } from "@/mutations/use-check-in";
-import { type MySession, useMySessions } from "@/queries/use-my";
+import { useMySessions } from "@/queries/use-my";
 
 /** The same link seen again within this window is one scan, not two. */
 const REPEAT_MS = 4000;
@@ -48,153 +49,119 @@ function Scanner() {
   const camera = useCamera(submit, { enabled: !checkIn.isSuccess });
   const error = rejected ?? checkIn.error?.message ?? null;
 
-  if (checkIn.isSuccess) {
-    const result = checkIn.data;
-
-    return (
-      <Reveal className="border-border space-y-4 rounded-xl border p-6">
-        <CheckCircleIcon weight="fill" className="size-10 text-emerald-500" />
-        <div>
-          <h2 className="font-heading text-xl font-semibold tracking-tight">
-            {result.already
-              ? `Already in, ${result.personName}`
-              : `You are in, ${result.personName}`}
-          </h2>
-          <p className="text-muted-foreground text-sm">{result.sessionTitle}</p>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <AttendanceStatusBadge status={result.status} />
-          <span className="text-muted-foreground tabular-nums">
-            {formatDate(new Date(result.checkedInAt), "time")}
-          </span>
-        </div>
-        <Button variant="outline" onClick={() => checkIn.reset()}>
-          Scan another
-        </Button>
-      </Reveal>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="bg-muted relative aspect-square max-w-md overflow-hidden rounded-2xl">
-        <video ref={camera.video} muted playsInline className="size-full object-cover" />
-        {!camera.active && !camera.error ? (
-          <p className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm">
-            Opening the camera…
-          </p>
-        ) : null}
-        {checkIn.isPending ? (
-          <p className="bg-background/80 absolute inset-0 flex items-center justify-center text-sm font-medium">
-            Checking you in…
-          </p>
-        ) : null}
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ScanIcon />
+          Scan the room screen
+        </CardTitle>
+        <CardDescription>
+          Hold the code inside the frame. It reads on its own, so there is nothing to press.
+        </CardDescription>
+      </CardHeader>
 
-      {camera.error ? (
-        <Alert className="max-w-md">
-          <AlertTitle>No camera</AlertTitle>
-          <AlertDescription>{camera.error}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      {error ? (
-        <Alert variant="destructive" className="max-w-md">
-          <WarningCircleIcon />
-          <AlertTitle>Not checked in</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <form
-        className="flex max-w-md gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (manual.trim()) submit(manual.trim());
-          setManual("");
-        }}
-      >
-        <Input
-          value={manual}
-          onChange={(event) => setManual(event.target.value)}
-          placeholder="Or paste the link from the screen"
-          aria-label="Link from the screen"
-          autoComplete="off"
-        />
-        <Button type="submit" variant="outline" disabled={checkIn.isPending}>
-          Check in
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-function PassRow(props: { session: MySession; onPass: (id: string) => void }) {
-  const { session } = props;
-
-  return (
-    <li className="flex items-center gap-4 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{session.title}</p>
-        <p className="text-muted-foreground text-xs">
-          Until {formatDate(new Date(session.endsAt), "time")}
-          {session.record ? " · you are in" : ""}
+      <CardContent className="flex flex-col gap-4">
+        {/* The region lives through every state, so a reader hears the outcome. */}
+        <p aria-live="polite" className="sr-only">
+          {checkIn.isSuccess
+            ? `${checkIn.data.personName}, you are in for ${checkIn.data.sessionTitle}.`
+            : checkIn.isPending
+              ? "Checking you in."
+              : ""}
         </p>
-      </div>
-      <Button size="sm" variant="outline" onClick={() => props.onPass(session.id)}>
-        <TicketIcon />
-        My pass
-      </Button>
-    </li>
+
+        <div className="mx-auto w-full max-w-md">
+          {checkIn.isSuccess ? (
+            <CheckInResult result={checkIn.data} onAgain={() => checkIn.reset()} />
+          ) : (
+            <ScanViewfinder
+              video={camera.video}
+              active={camera.active}
+              error={camera.error}
+              busy={checkIn.isPending}
+            />
+          )}
+        </div>
+
+        {!checkIn.isSuccess && camera.error ? (
+          <Alert>
+            <AlertTitle>No camera</AlertTitle>
+            <AlertDescription>{camera.error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {!checkIn.isSuccess && error ? (
+          <Alert variant="destructive">
+            <WarningCircleIcon />
+            <AlertTitle>Not checked in</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {checkIn.isSuccess ? null : (
+          <form
+            className="border-border flex flex-col gap-2 border-t pt-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (manual.trim()) submit(manual.trim());
+              setManual("");
+            }}
+          >
+            <Label htmlFor="check-in-link">Cannot scan? Paste the link</Label>
+            <div className="flex gap-2">
+              <Input
+                id="check-in-link"
+                value={manual}
+                onChange={(event) => setManual(event.target.value)}
+                placeholder="https://…"
+                autoComplete="off"
+              />
+              <Button type="submit" variant="outline" disabled={checkIn.isPending}>
+                Check in
+              </Button>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              The room screen prints the link under its code.
+            </p>
+          </form>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
-function Passes() {
+function MemberCheckInBody() {
   const sessions = useMySessions();
   const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
   const [passFor, setPassFor] = useState<string | null>(null);
 
   return (
-    <Card className="max-w-md">
-      <CardHeader>
-        <CardTitle>Show my pass</CardTitle>
-        <CardDescription>
-          When the organizer scans instead, show them this. One pass per event.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {match(sessions)
-          .with({ isPending: true }, () => <Skeleton className="h-16 rounded-lg" />)
-          .with({ isError: true, error: P.select() }, (error) => (
-            <p className="text-destructive text-sm">{error.message}</p>
-          ))
-          .with({ data: P.nonNullable }, () => {
-            const running = rows.filter((row) => row.status === "running");
-            const next = rows.find((row) => row.status === "scheduled");
+    <>
+      <PageHeader
+        title="Check in"
+        description="Point the camera at the screen in the room. Or show your pass to the organizer."
+      />
 
-            if (running.length > 0) {
-              return (
-                <ul className="divide-border -my-3 divide-y">
-                  {running.map((row) => (
-                    <PassRow key={row.id} session={row} onPass={setPassFor} />
-                  ))}
-                </ul>
-              );
-            }
+      {/* Three columns once there is room: the camera, the pass, then the reading. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        <Scanner />
 
-            return (
-              <p className="text-muted-foreground text-sm">
-                {next
-                  ? `Nothing runs right now. Next: ${next.title}, ${formatDate(new Date(next.startsAt), "weekdayDateTime")}.`
-                  : "Nothing runs right now, and nothing is scheduled for you yet."}
-              </p>
-            );
-          })
-          .otherwise(() => null)}
-      </CardContent>
+        <CheckInPass
+          sessions={rows}
+          pending={sessions.isPending}
+          error={sessions.error}
+          onPass={setPassFor}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 2xl:col-span-1 2xl:grid-cols-1">
+          <CheckInSteps />
+          <CheckInRecent />
+        </div>
+      </div>
 
       <PassDialog sessionId={passFor} onClose={() => setPassFor(null)} />
-    </Card>
+    </>
   );
 }
 
@@ -202,14 +169,7 @@ function Passes() {
 export function MemberCheckInPage() {
   return (
     <Providers>
-      <PageHeader
-        title="Check in"
-        description="Point the camera at the screen in the room. Or show your pass to the organizer."
-      />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,28rem)_minmax(0,28rem)]">
-        <Scanner />
-        <Passes />
-      </div>
+      <MemberCheckInBody />
     </Providers>
   );
 }

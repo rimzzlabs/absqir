@@ -7,3 +7,25 @@
   /* The app bar's height. The page pads itself by it on a phone. */
   --app-bar-height: 3.5rem;
 }
+
+/* The line that travels down the viewfinder while the camera looks for a code.
+   The wrapper spans the frame, so 100% of it is exactly one trip. */
+@keyframes scan-sweep {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.scan-sweep {
+  animation: scan-sweep 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-sweep {
+    animation: none;
+    opacity: 0;
+  }
+}
