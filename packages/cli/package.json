@@ -3,6 +3,13 @@
   "version": "0.0.0",
   "description": "Operator CLI for self-hosting absqir, the QR attendance system",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rimzzlabs/absqir.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://absqir.rimzzlabs.com",
+  "bugs": "https://github.com/rimzzlabs/absqir/issues",
   "type": "module",
   "bin": {
     "absqir": "dist/index.js"
