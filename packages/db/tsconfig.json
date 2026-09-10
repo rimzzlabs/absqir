@@ -1,5 +1,5 @@
 {
   "extends": "@absqir/config/tsconfig/node.json",
-  "include": ["src", "*.config.ts"],
+  "include": ["src", "*.config.ts", "tests"],
   "exclude": ["dist", "node_modules"]
 }
