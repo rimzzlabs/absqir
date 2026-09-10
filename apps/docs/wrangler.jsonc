@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "absqir-docs",
+  "compatibility_date": "2026-09-07",
+  "observability": { "enabled": true },
+
+  // Cloudflare owns the DNS record and the certificate for this hostname.
+  // The zone rimzzlabs.com must live on the same account as the token.
+  "routes": [{ "pattern": "absqir.rimzzlabs.com", "custom_domain": true }],
+  "workers_dev": false,
+
+  // Vocs writes one folder per page with an index.html inside, plus 404.html.
+  // No Worker code runs: Cloudflare serves the files as they are.
+  "assets": {
+    "directory": "./dist/public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
