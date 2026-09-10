@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/rimzzlabs/absqir/compare/v0.1.1...v0.1.2) (2026-09-10)
+
+
+### Bug fixes
+
+* **cli:** name the repository so npm accepts the provenance ([#10](https://github.com/rimzzlabs/absqir/issues/10)) ([904b451](https://github.com/rimzzlabs/absqir/commit/904b451778c41d3142a811308dfc6e668fa4b8f5))
+
 ## [0.1.1](https://github.com/rimzzlabs/absqir/compare/v0.1.0...v0.1.1) (2026-09-10)
 
 
