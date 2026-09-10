@@ -129,13 +129,12 @@ jobs:
         run: npm version --no-git-tag-version "${TAG#v}"
         env:
           TAG: ${{ needs.plan.outputs.tag }}
-      - name: Point npm at the registry token
-        run: echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
+      # No token. npm exchanges the job's OIDC token for a short-lived publish
+      # credential, because this repo and workflow are the package's trusted
+      # publisher on npmjs.com. The job's id-token permission makes that work.
       - name: Publish
         working-directory: packages/cli
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   deploy:
     name: Deploy to Cloudflare
