@@ -58,64 +58,6 @@ export default defineConfig({
   ],
   server: { port: 4321 },
   vite: {
-    // Each @absqir/* package declares a "development" export that points at
-    // its TypeScript source. Vite resolves that condition in dev, so it reads
-    // the packages as ordinary source: it crawls them in the startup scan,
-    // finds every third-party import in one pass, and hot-reloads an edit in
-    // packages/* without a tsdown rebuild. `astro build` resolves the
-    // "production" condition instead and gets the bundled dist output.
-    //
-    // The lists below name only what this app imports directly. Do not add
-    // entries for what a workspace package imports. The scan finds those.
-    optimizeDeps: {
-      include: [
-        "react",
-        "react-dom",
-        "react/jsx-runtime",
-        "react/jsx-dev-runtime",
-        "@tanstack/react-query",
-        "@phosphor-icons/react",
-        "react-hook-form",
-        "@hookform/resolvers/zod",
-        "zod",
-        "ts-pattern",
-        "input-otp",
-        "qrcode",
-        "jsqr",
-      ],
-    },
-    ssr: {
-      optimizeDeps: {
-        include: [
-          "react",
-          "react-dom",
-          "react-dom/server",
-          "react/jsx-runtime",
-          "@tanstack/react-query",
-          "@phosphor-icons/react",
-          "react-hook-form",
-          "@hookform/resolvers/zod",
-          "zod",
-          "ts-pattern",
-          "astro/logger/console",
-          // The middleware reads the session's memberships with drizzle itself.
-          "drizzle-orm",
-          "drizzle-orm/pg-core",
-          "hono/body-limit",
-          "hono/csrf",
-          "hono/http-exception",
-          "hono/request-id",
-          "hono/secure-headers",
-          "better-auth",
-          "better-auth/api",
-          "better-auth/plugins",
-          "better-auth/adapters/drizzle",
-          "input-otp",
-          "qrcode",
-          "jsqr",
-        ],
-      },
-    },
     plugins: [tailwindcss()],
     resolve: {
       alias: {
