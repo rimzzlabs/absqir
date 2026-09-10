@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/rimzzlabs/absqir/compare/v0.3.0...v0.3.1) (2026-09-10)
+
+
+### Documentation
+
+* **repo:** tell a first visitor what works and how to try it ([#20](https://github.com/rimzzlabs/absqir/issues/20)) ([34cb641](https://github.com/rimzzlabs/absqir/commit/34cb64118b6daf374a5763c8af299d4dfc539c03))
+
 ## [0.3.0](https://github.com/rimzzlabs/absqir/compare/v0.2.0...v0.3.0) (2026-09-10)
 
 
