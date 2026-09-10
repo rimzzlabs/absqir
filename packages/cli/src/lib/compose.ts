@@ -22,6 +22,48 @@ export function runCompose(options: RunComposeOptions): Promise<number> {
   });
 }
 
+export interface ComposeStream {
+  /** Resolves when the stream ends, by itself or through stop(). */
+  done: Promise<void>;
+  stop: () => void;
+}
+
+export interface StreamComposeOptions extends RunComposeOptions {
+  /** Called once per line, after the line is shown. */
+  onLine: (line: string) => void;
+}
+
+/**
+ * Runs `docker compose` and shows its output line by line, while a reader
+ * watches each line. `up` follows the app log this way until the app answers,
+ * or until the entrypoint reports a fault it will not recover from.
+ */
+export function streamCompose(options: StreamComposeOptions): ComposeStream {
+  const child = spawn("docker", ["compose", ...options.args], {
+    cwd: options.cwd ?? process.cwd(),
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let rest = "";
+
+  const read = (chunk: Buffer) => {
+    process.stdout.write(chunk);
+    rest += chunk.toString("utf8");
+    const lines = rest.split("\n");
+    rest = lines.pop() ?? "";
+    for (const line of lines) options.onLine(line);
+  };
+
+  child.stdout.on("data", read);
+  child.stderr.on("data", read);
+
+  const done = new Promise<void>((resolve) => {
+    child.on("error", () => resolve());
+    child.on("close", () => resolve());
+  });
+
+  return { done, stop: () => child.kill() };
+}
+
 export function dockerAvailable(): Promise<boolean> {
   return new Promise((resolve) => {
     const child = spawn("docker", ["--version"], { stdio: "ignore" });

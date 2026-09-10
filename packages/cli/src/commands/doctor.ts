@@ -2,7 +2,9 @@ import { existsSync } from "node:fs";
 import { A } from "@mobily/ts-belt";
 import { dockerAvailable } from "#src/lib/compose";
 import { readEnvValue } from "#src/lib/env-file";
+import { nextSteps } from "#src/lib/next-steps";
 import { callbackUrl, keysOf, PROVIDERS } from "#src/lib/providers";
+import { DEFAULT_APP_URL } from "#src/lib/templates";
 import * as ui from "#src/ui";
 
 const MIN_SECRET_LENGTH = 32;
@@ -92,6 +94,10 @@ export async function collectChecks(): Promise<CheckResult[]> {
   return results;
 }
 
+function mailKeyIsSet(): boolean {
+  return (readEnvValue(".env", "RESEND_API_KEY") ?? "").length > 0;
+}
+
 export async function doctor(): Promise<number> {
   ui.intro("absqir doctor");
 
@@ -121,6 +127,12 @@ export async function doctor(): Promise<number> {
   const failed = A.filter(results, (result) => !result.ok).length;
 
   if (failed === 0) {
+    ui.note(
+      nextSteps({
+        appUrl: readEnvValue(".env", "APP_URL") ?? DEFAULT_APP_URL,
+        mailKeySet: mailKeyIsSet(),
+      }),
+    );
     ui.outro("All checks passed.");
     return 0;
   }

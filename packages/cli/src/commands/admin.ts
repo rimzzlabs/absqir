@@ -1,8 +1,11 @@
 import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { usageOf } from "#src/lib/commands";
 import { runCompose } from "#src/lib/compose";
+import { readEnvValue } from "#src/lib/env-file";
 import { UsageError } from "#src/lib/errors";
+import { DEFAULT_APP_URL } from "#src/lib/templates";
 import * as ui from "#src/ui";
 
 const ROLES = ["owner", "admin", "organizer", "member"] as const;
@@ -106,7 +109,9 @@ export async function adminCreate(argv: string[]): Promise<number> {
     });
   }
 
-  ui.outro(`${email} can sign in now.`);
+  const appUrl = (existsSync(".env") ? readEnvValue(".env", "APP_URL") : null) ?? DEFAULT_APP_URL;
+
+  ui.outro(`Open ${appUrl} and sign in as ${email} with the password.`);
 
   return 0;
 }

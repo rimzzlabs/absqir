@@ -14,9 +14,9 @@ export const COMMANDS = [
     id: "init",
     usage:
       "absqir init [dir] [--force] [--yes] [--app-url <url>] [--resend-key <key>] [--provider <id>]",
-    hint: "write docker-compose.yml and .env with fresh secrets",
+    hint: "write docker-compose.yml and .env, and keep the secrets of an existing one",
   },
-  { id: "up", usage: "absqir up", hint: "start the stack" },
+  { id: "up", usage: "absqir up", hint: "start the stack and wait until the app answers" },
   { id: "down", usage: "absqir down", hint: "stop the stack" },
   { id: "logs", usage: "absqir logs", hint: "follow the app logs" },
   { id: "upgrade", usage: "absqir upgrade", hint: "pull the configured tag and restart the app" },
