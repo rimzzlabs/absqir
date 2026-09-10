@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { A } from "@mobily/ts-belt";
+import { readEnvValue } from "#src/lib/env-file";
 import { UsageError } from "#src/lib/errors";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 import {
@@ -189,7 +190,7 @@ export async function init(argv: string[]): Promise<number> {
     }
 
     const replace = await ui.confirm({
-      message: `${dir} already holds an instance. Replace docker-compose.yml and .env?`,
+      message: `${dir} already holds an instance. Rewrite docker-compose.yml and .env? The secrets and the database password stay.`,
       flag: "--force",
       initialValue: false,
     });
@@ -295,13 +296,23 @@ export async function init(argv: string[]): Promise<number> {
     ? await askCredentials({ appUrl, chosen })
     : A.map(chosen, (id) => ({ id, clientId: "", clientSecret: "" }));
 
+  // Postgres reads POSTGRES_PASSWORD once, when it creates its data volume.
+  // A fresh password on a second init would lock the app out of its own
+  // database, so an existing .env keeps its secrets.
+  const kept = existsSync(envPath)
+    ? {
+        secret: readEnvValue(envPath, "BETTER_AUTH_SECRET"),
+        dbPassword: readEnvValue(envPath, "POSTGRES_PASSWORD"),
+      }
+    : { secret: null, dbPassword: null };
+
   mkdirSync(dir, { recursive: true });
   writeFileSync(composePath, COMPOSE_TEMPLATE);
   writeFileSync(
     envPath,
     envTemplate({
-      secret: randomBytes(32).toString("base64url"),
-      dbPassword: randomBytes(16).toString("base64url"),
+      secret: kept.secret || randomBytes(32).toString("base64url"),
+      dbPassword: kept.dbPassword || randomBytes(16).toString("base64url"),
       appUrl,
       resendKey,
       emailFrom,
@@ -312,7 +323,11 @@ export async function init(argv: string[]): Promise<number> {
   );
 
   ui.success(`Wrote ${composePath}`);
-  ui.success(`Wrote ${envPath} with fresh secrets`);
+  ui.success(
+    kept.dbPassword
+      ? `Wrote ${envPath}, and kept its secrets so the database still opens`
+      : `Wrote ${envPath} with fresh secrets`,
+  );
 
   if (resendKey && emailFrom.includes("onboarding@resend.dev")) {
     ui.warn(
