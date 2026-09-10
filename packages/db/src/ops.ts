@@ -1,3 +1,4 @@
+import { R } from "@mobily/ts-belt";
 import { and, eq } from "drizzle-orm";
 import { createDb } from "#src/index";
 import { ensurePersonForUser } from "#src/people";
@@ -15,9 +16,8 @@ import {
  * drizzle-orm through a transitive dependency.
  */
 
-export type AddMemberResult =
-  | { ok: true }
-  | { ok: false; reason: "user-not-found" | "organization-not-found" | "already-member" };
+export type AddMemberError = "user-not-found" | "organization-not-found" | "already-member";
+export type AddMemberResult = R.Result<void, AddMemberError>;
 
 export interface AddMemberOptions {
   connectionString: string;
@@ -32,7 +32,7 @@ export async function addMember(options: AddMemberOptions): Promise<AddMemberRes
   try {
     const users = await db.select().from(user).where(eq(user.email, options.email)).limit(1);
     const foundUser = users[0];
-    if (!foundUser) return { ok: false, reason: "user-not-found" };
+    if (!foundUser) return R.Error("user-not-found");
 
     const organizations = await db
       .select()
@@ -40,14 +40,14 @@ export async function addMember(options: AddMemberOptions): Promise<AddMemberRes
       .where(eq(organization.slug, options.organizationSlug))
       .limit(1);
     const foundOrg = organizations[0];
-    if (!foundOrg) return { ok: false, reason: "organization-not-found" };
+    if (!foundOrg) return R.Error("organization-not-found");
 
     const memberships = await db
       .select({ id: member.id })
       .from(member)
       .where(and(eq(member.userId, foundUser.id), eq(member.organizationId, foundOrg.id)))
       .limit(1);
-    if (memberships[0]) return { ok: false, reason: "already-member" };
+    if (memberships[0]) return R.Error("already-member");
 
     await db.insert(member).values({
       id: crypto.randomUUID(),
@@ -64,13 +64,14 @@ export async function addMember(options: AddMemberOptions): Promise<AddMemberRes
       email: foundUser.email,
     });
 
-    return { ok: true };
+    return R.Ok(undefined);
   } finally {
     await close();
   }
 }
 
-export type MarkUserResult = { ok: true } | { ok: false; reason: "user-not-found" };
+export type MarkUserError = "user-not-found";
+export type MarkUserResult = R.Result<void, MarkUserError>;
 
 export interface MarkUserOptions {
   connectionString: string;
@@ -97,7 +98,7 @@ export async function markUser(options: MarkUserOptions): Promise<MarkUserResult
       .where(eq(user.email, options.email))
       .returning({ id: user.id });
 
-    return updated ? { ok: true } : { ok: false, reason: "user-not-found" };
+    return updated ? R.Ok(undefined) : R.Error("user-not-found");
   } finally {
     await close();
   }

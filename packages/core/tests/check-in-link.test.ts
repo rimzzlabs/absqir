@@ -1,3 +1,4 @@
+import { O } from "@mobily/ts-belt";
 import { describe, expect, it } from "vitest";
 import { parseCheckInLink } from "../src/check-in-link";
 
@@ -14,9 +15,9 @@ describe("parseCheckInLink", () => {
   });
 
   it("rejects a pass, a link without a token, and noise", () => {
-    expect(parseCheckInLink("pass.abc.def")).toBeNull();
-    expect(parseCheckInLink("https://absqir.example/a/abc")).toBeNull();
-    expect(parseCheckInLink("https://absqir.example/sessions/abc?t=x")).toBeNull();
-    expect(parseCheckInLink("")).toBeNull();
+    expect(O.isNone(parseCheckInLink("pass.abc.def"))).toBe(true);
+    expect(O.isNone(parseCheckInLink("https://absqir.example/a/abc"))).toBe(true);
+    expect(O.isNone(parseCheckInLink("https://absqir.example/sessions/abc?t=x"))).toBe(true);
+    expect(O.isNone(parseCheckInLink(""))).toBe(true);
   });
 });

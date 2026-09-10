@@ -3,6 +3,9 @@
  * on the account, because a phone and a projector want different answers.
  * The inline script in layout.astro reads the same keys before first paint.
  */
+import { O } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
+
 export type ThemePreference = "system" | "light" | "dark";
 export type MotionPreference = "system" | "on" | "off";
 
@@ -10,12 +13,9 @@ const THEME_KEY = "theme";
 const MOTION_KEY = "motion";
 const EVENT = "absqir:preferences";
 
-function read(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+// A blocked store and an unset key are the same answer here: None.
+function read(key: string): O.Option<string> {
+  return O.fromExecution(() => localStorage.getItem(key));
 }
 
 function write(key: string, value: string | null) {
@@ -28,13 +28,15 @@ function write(key: string, value: string | null) {
 }
 
 export function readTheme(): ThemePreference {
-  const value = read(THEME_KEY);
-  return value === "light" || value === "dark" ? value : "system";
+  return match(read(THEME_KEY))
+    .with("light", "dark", (theme) => theme)
+    .otherwise(() => "system" as const);
 }
 
 export function readMotion(): MotionPreference {
-  const value = read(MOTION_KEY);
-  return value === "on" || value === "off" ? value : "system";
+  return match(read(MOTION_KEY))
+    .with("on", "off", (motion) => motion)
+    .otherwise(() => "system" as const);
 }
 
 function applyTheme(theme: ThemePreference) {

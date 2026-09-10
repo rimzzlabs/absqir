@@ -1,3 +1,4 @@
+import { O } from "@mobily/ts-belt";
 import { describe, expect, it } from "vitest";
 import { decodeCursor, encodeCursor, pageOf } from "#src/lib/cursor";
 
@@ -11,10 +12,10 @@ describe("cursor", () => {
   });
 
   it("rejects what it did not write", () => {
-    expect(decodeCursor(undefined)).toBeNull();
-    expect(decodeCursor("")).toBeNull();
-    expect(decodeCursor("not-base64!")).toBeNull();
-    expect(decodeCursor(btoa('{"at":1}'))).toBeNull();
+    expect(O.isNone(decodeCursor(undefined))).toBe(true);
+    expect(O.isNone(decodeCursor(""))).toBe(true);
+    expect(O.isNone(decodeCursor("not-base64!"))).toBe(true);
+    expect(O.isNone(decodeCursor(btoa('{"at":1}')))).toBe(true);
   });
 
   it("keeps limit rows and points past the last one", () => {
@@ -25,6 +26,14 @@ describe("cursor", () => {
     expect(decodeCursor(page.nextCursor ?? "")).toEqual({ at: "3", id: "3" });
     expect(
       pageOf([1, 2], 3, (row) => ({ at: String(row), id: String(row) })).nextCursor,
+    ).toBeNull();
+  });
+
+  it("stops at a page that lands exactly on the limit", () => {
+    // Callers fetch limit + 1, so limit rows back means nothing follows. A
+    // cursor here would cost every full last page one more empty request.
+    expect(
+      pageOf([1, 2, 3], 3, (row) => ({ at: String(row), id: String(row) })).nextCursor,
     ).toBeNull();
   });
 });

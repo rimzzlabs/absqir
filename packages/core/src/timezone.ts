@@ -1,4 +1,4 @@
-import { A } from "@mobily/ts-belt";
+import { A, O, pipe } from "@mobily/ts-belt";
 /**
  * IANA time zones, as the browser and Node know them. An account can name
  * one, so two people in different places read the same instant in their own
@@ -7,12 +7,9 @@ import { A } from "@mobily/ts-belt";
 export function isTimezone(value: unknown): value is string {
   if (typeof value !== "string" || value.length === 0 || value.length > 64) return false;
 
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: value });
-    return true;
-  } catch {
-    return false;
-  }
+  // The runtime is the only authority on which zones it knows; an unknown one
+  // throws here rather than returning anything to test.
+  return O.isSome(O.fromExecution(() => new Intl.DateTimeFormat("en", { timeZone: value })));
 }
 
 /** The zone this runtime runs in. UTC when the runtime does not say. */
@@ -27,15 +24,18 @@ export function listTimezones(): string[] {
 
 /** "GMT+7", "GMT-3:30", or "GMT" for a zone at one instant. */
 export function timezoneOffset(zone: string, at: Date = new Date()): string {
-  const parts = A.getBy(
-    new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "shortOffset" }).formatToParts(
-      at,
+  const offset = pipe(
+    A.getBy(
+      new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "shortOffset" }).formatToParts(
+        at,
+      ),
+      (part) => part.type === "timeZoneName",
     ),
-    (part) => part.type === "timeZoneName",
+    O.mapWithDefault("GMT", (part) => part.value),
   );
 
   // "GMT+0" and "GMT" both mean no offset; one spelling is enough.
-  return (parts?.value ?? "GMT").replace(/^GMT[+-]0$/, "GMT");
+  return offset.replace(/^GMT[+-]0$/, "GMT");
 }
 
 /** "Asia/Jakarta" as "Jakarta, Asia (GMT+7)": the city first, because that is what people search. */

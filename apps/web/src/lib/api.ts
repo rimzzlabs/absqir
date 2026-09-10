@@ -1,5 +1,7 @@
 import type { AppType } from "@absqir/api";
+import { O, pipe, R } from "@mobily/ts-belt";
 import { hc } from "hono/client";
+import { match, P } from "ts-pattern";
 
 // Same origin as the site, so the base is a plain path. Call it from the
 // browser only: a relative fetch has no origin to resolve against on the server.
@@ -10,22 +12,22 @@ interface JsonResponse {
   json(): Promise<unknown>;
 }
 
-/**
- * Turns a failed API response into an Error with the server's message. Every
- * absqir route answers `{ error }` on failure; Better Auth answers `{ message }`.
- */
+/** Every absqir route answers `{ error }` on failure; Better Auth answers `{ message }`. */
+function messageOf(body: unknown): O.Option<string> {
+  return match(body)
+    .with({ error: P.string.minLength(1) }, (row) => row.error)
+    .with({ message: P.string.minLength(1) }, (row) => row.message)
+    .otherwise(() => O.None);
+}
+
+/** Turns a failed API response into an Error carrying the server's message. */
 export async function apiError(response: JsonResponse, fallback: string): Promise<Error> {
-  try {
-    const body: unknown = await response.json();
+  // A body that is not JSON is not a failure to report; the fallback covers it.
+  const body = await R.fromPromise(response.json());
 
-    if (body && typeof body === "object") {
-      const record = body as Record<string, unknown>;
-      const message = record.error ?? record.message;
-      if (typeof message === "string" && message.length > 0) return new Error(message);
-    }
-  } catch {
-    // Not JSON. The fallback covers it.
-  }
-
-  return new Error(fallback);
+  return pipe(
+    R.toOption(body),
+    O.flatMap(messageOf),
+    O.mapWithDefault(new Error(fallback), (message: string) => new Error(message)),
+  );
 }

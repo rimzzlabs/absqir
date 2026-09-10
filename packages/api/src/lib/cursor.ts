@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { A, O, pipe } from "@mobily/ts-belt";
 
 /**
  * Where a page of a keyset list ends: the sort column as Postgres printed it,
@@ -16,26 +17,30 @@ export function encodeCursor(cursor: Cursor): string {
   return btoa(JSON.stringify(cursor)).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
 
-/** Null for anything that is not a cursor this server wrote. */
-export function decodeCursor(value: string | undefined): Cursor | null {
-  if (!value) return null;
-
-  try {
-    const json = atob(value.replaceAll("-", "+").replaceAll("_", "/"));
-    const parsed = cursorSchema.safeParse(JSON.parse(json));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+/** None for anything that is not a cursor this server wrote. */
+export function decodeCursor(value: string | undefined): O.Option<Cursor> {
+  return pipe(
+    O.fromFalsy(value),
+    O.flatMap((text: string) =>
+      O.fromExecution(() => JSON.parse(atob(text.replaceAll("-", "+").replaceAll("_", "/")))),
+    ),
+    O.flatMap((json: unknown) => O.fromNullable(cursorSchema.safeParse(json).data)),
+  );
 }
 
 /** Splits limit + 1 rows into the page and the cursor for what follows. */
 export function pageOf<T>(rows: T[], limit: number, cursorOf: (row: T) => Cursor) {
   const items = rows.slice(0, limit);
-  const last = items.at(-1);
 
-  return {
-    items,
-    nextCursor: rows.length > limit && last ? encodeCursor(cursorOf(last)) : null,
-  };
+  // The last row of the page, but only when the limit + 1 fetch actually came
+  // back with a row after it. Null, not None: this value crosses the wire,
+  // where a missing key and an explicit "no next page" do not read the same.
+  const nextCursor = pipe(
+    A.last(items),
+    O.filter(() => rows.length > limit),
+    O.map((row: T) => encodeCursor(cursorOf(row))),
+    O.toNullable,
+  );
+
+  return { items, nextCursor };
 }
