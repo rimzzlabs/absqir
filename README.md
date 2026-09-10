@@ -27,7 +27,7 @@ Set `RESEND_API_KEY` in the generated `.env`, then open
 http://localhost:4321 and enter your email. The code that arrives creates
 the first account, the operator's. After that, people join through
 invitations. The full guide — HTTPS, configuration, upgrades, accounts —
-lives in `apps/docs` and on the docs site.
+lives in `apps/docs` and on the docs site at <https://absqir.rimzzlabs.com>.
 
 ## About this repo
 
@@ -244,7 +244,8 @@ pnpm cf:secret BETTER_AUTH_SECRET
 
 ## Deploy
 
-Self-hosting runs the published Docker image — see the docs site. This
+Self-hosting runs the published Docker image — see the
+[docs site](https://absqir.rimzzlabs.com). This
 section covers deploying your own Cloudflare Worker from source.
 
 1. Create a Hyperdrive config against your production Postgres.
