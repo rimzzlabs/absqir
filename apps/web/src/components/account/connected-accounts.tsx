@@ -69,12 +69,13 @@ export function ConnectedAccounts() {
 
   const { hasPassword, linked, available } = credentials.data;
 
-  const rows: ProviderRow[] = [...new Set([...available, ...linked.map((row) => row.provider)])]
-    .filter(isAuthProvider)
-    .map((provider) => ({
-      provider,
-      accountId: linked.find((row) => row.provider === provider)?.accountId ?? null,
-    }));
+  const accountIdByProvider = new Map(linked.map((row) => [row.provider, row.accountId]));
+  const offered = new Set([...available, ...accountIdByProvider.keys()]);
+
+  const rows: ProviderRow[] = [...offered].filter(isAuthProvider).map((provider) => ({
+    provider,
+    accountId: accountIdByProvider.get(provider) ?? null,
+  }));
 
   if (rows.length === 0) return null;
 
@@ -87,7 +88,8 @@ export function ConnectedAccounts() {
     >
       <div className="space-y-3">
         <ul className="divide-y divide-border rounded-lg border border-border">
-          {rows.map(({ provider, accountId }) => {
+          {rows.map((row) => {
+            const { provider, accountId } = row;
             const name = providerLabel(provider);
 
             return (
