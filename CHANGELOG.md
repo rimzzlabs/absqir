@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/rimzzlabs/absqir/compare/v0.3.1...v0.3.2) (2026-09-10)
+
+
+### Bug fixes
+
+* **docs:** stay on waku 1.0.0-beta.8 until vocs supports the RC ([#23](https://github.com/rimzzlabs/absqir/issues/23)) ([9bf90ae](https://github.com/rimzzlabs/absqir/commit/9bf90ae758c62849204d74da2b314e73ec3b3ee7))
+
 ## [0.3.1](https://github.com/rimzzlabs/absqir/compare/v0.3.0...v0.3.1) (2026-09-10)
 
 
