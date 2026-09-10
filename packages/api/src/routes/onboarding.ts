@@ -2,6 +2,7 @@ import { authErrorOf, isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "#src/lib/auth-forward";
@@ -265,7 +266,7 @@ async function linkedProvidersOf(c: Context<AppEnv>, userId: string) {
     .from(account)
     .where(and(eq(account.userId, userId), ne(account.providerId, "credential")));
 
-  return rows.map((row) => row.providerId);
+  return A.map(rows, (row) => row.providerId);
 }
 
 const app = new OpenAPIHono<AppEnv>();
@@ -335,7 +336,7 @@ export const onboardingRoutes = app
               createdAt: open.createdAt.toISOString(),
             }
           : null,
-        invitations: invitations.map((row) => ({
+        invitations: A.map(invitations, (row) => ({
           id: row.id,
           organizationName: row.organizationName,
           role: row.role ?? "member",

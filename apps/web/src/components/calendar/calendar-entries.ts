@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { A } from "@mobily/ts-belt";
 import type { CalendarSession, ProjectedSession } from "@/queries/use-calendar";
 
 /** One line in a day cell: a real event, or one a schedule still owes. */
@@ -21,7 +22,8 @@ export function entriesByDay(data: {
   projected: ProjectedSession[];
 }): Map<string, CalendarEntry[]> {
   const entries: CalendarEntry[] = [
-    ...data.sessions.map(
+    ...A.map(
+      data.sessions,
       (session): CalendarEntry => ({
         kind: "session",
         key: session.id,
@@ -30,7 +32,8 @@ export function entriesByDay(data: {
         session,
       }),
     ),
-    ...data.projected.map(
+    ...A.map(
+      data.projected,
       (row): CalendarEntry => ({
         kind: "projected",
         key: `${row.scheduleId}:${row.startsAt}`,
@@ -43,7 +46,7 @@ export function entriesByDay(data: {
 
   const map = new Map<string, CalendarEntry[]>();
 
-  for (const entry of entries.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())) {
+  for (const entry of A.sort(entries, (a, b) => a.startsAt.getTime() - b.startsAt.getTime())) {
     const key = dayKey(entry.startsAt);
     const list = map.get(key) ?? [];
     list.push(entry);

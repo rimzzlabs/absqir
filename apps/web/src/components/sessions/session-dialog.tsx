@@ -17,6 +17,7 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -65,7 +66,7 @@ function defaults(session: Session | null, initialStart?: Date | null): SessionV
       registrationOpen: session.registrationOpen,
       registrationLimit:
         session.registrationLimit === null ? "" : String(session.registrationLimit),
-      groupIds: session.groups.map((group) => group.id),
+      groupIds: A.map(session.groups, (group) => group.id),
     };
   }
 

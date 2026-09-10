@@ -1,4 +1,5 @@
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import type { Icon } from "@phosphor-icons/react";
 import { type MouseEvent, useEffect, useRef } from "react";
 
@@ -55,12 +56,12 @@ export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValu
       aria-label="Settings sections"
       className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:gap-6 lg:self-start lg:overflow-visible lg:px-0"
     >
-      {props.groups.map((group) => (
+      {A.map(props.groups, (group) => (
         <div key={group.label} className="flex shrink-0 gap-1 lg:flex-col">
           <p className="text-muted-foreground hidden px-3 pb-1 text-xs font-medium tracking-wide uppercase lg:block">
             {group.label}
           </p>
-          {group.items.map((item) => {
+          {A.map(group.items, (item) => {
             const active = item.value === value;
 
             return (

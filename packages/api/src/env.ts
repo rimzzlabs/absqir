@@ -1,4 +1,5 @@
 import { SOCIAL_PROVIDERS, type SocialProviderId, type SocialProviderKeyMap } from "@absqir/auth";
+import { A } from "@mobily/ts-belt";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import type { ApiBindings } from "#src/bindings";
@@ -150,5 +151,5 @@ export function socialProviderKeys(env: ApiEnv): SocialProviderKeyMap {
 export function enabledSocialProviders(bindings: ApiBindings): SocialProviderId[] {
   const keys = socialProviderKeys(parseEnv(bindings));
 
-  return SOCIAL_PROVIDERS.filter((provider) => keys[provider] !== undefined);
+  return A.filter([...SOCIAL_PROVIDERS], (provider) => keys[provider] !== undefined);
 }

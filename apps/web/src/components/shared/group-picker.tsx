@@ -1,6 +1,7 @@
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { FormError } from "@/components/shared/form-error";
 import { useGroups } from "@/queries/use-groups";
 
@@ -27,13 +28,13 @@ export function GroupPicker(props: GroupPickerProps) {
 
   const toggle = (id: string, checked: boolean) => {
     props.onChange(
-      checked ? [...new Set([...props.value, id])] : props.value.filter((value) => value !== id),
+      checked ? [...new Set([...props.value, id])] : A.filter(props.value, (value) => value !== id),
     );
   };
 
   return (
     <ul className="border-border divide-border max-h-48 divide-y overflow-y-auto rounded-lg border">
-      {groups.data.map((group) => (
+      {A.map(groups.data, (group) => (
         <li key={group.id} className="flex items-center gap-3 px-3 py-2">
           <Checkbox
             id={`group-${group.id}`}

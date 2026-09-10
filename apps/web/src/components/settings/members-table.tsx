@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { A } from "@mobily/ts-belt";
 import { TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -136,7 +137,7 @@ export function MembersTable(props: MembersTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((member) => (
+            {A.map(rows, (member) => (
               <MemberRow
                 key={member.id}
                 member={member}

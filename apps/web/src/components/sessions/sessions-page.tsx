@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
+import { A } from "@mobily/ts-belt";
 import { PlusIcon, QrCodeIcon } from "@phosphor-icons/react";
 import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useDeferredValue, useState } from "react";
@@ -54,7 +55,7 @@ function SessionGrid(props: { rows: Session[]; scope: ListScope; filtered: boole
 
   return (
     <ul className={GRID}>
-      {props.rows.map((session) => (
+      {A.map(props.rows, (session) => (
         <SessionCard key={session.id} session={session} />
       ))}
     </ul>
@@ -68,7 +69,7 @@ function SessionsBody(props: SessionsPageProps) {
   // The grid follows the typing a beat behind, so every keystroke does not fetch.
   const wanted = useDeferredValue(q.trim());
   const sessions = useSessions({ scope, q: wanted, groupId });
-  const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
   const [creating, setCreating] = useState(false);
   const canCreate = props.role !== "member";
 
@@ -106,7 +107,7 @@ function SessionsBody(props: SessionsPageProps) {
       {match(sessions)
         .with({ isPending: true }, () => (
           <div className={GRID} aria-busy>
-            {[0, 1, 2, 3].map((key) => (
+            {A.map([0, 1, 2, 3], (key) => (
               <Skeleton key={key} className="h-44 rounded-xl" />
             ))}
           </div>

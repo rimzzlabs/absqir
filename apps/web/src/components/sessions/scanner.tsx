@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
+import { A } from "@mobily/ts-belt";
 import { CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { Providers } from "@/components/providers";
@@ -119,7 +120,7 @@ function ScannerBody(props: ScannerProps) {
       <FormError error={session.error} />
 
       <ul className="space-y-2" aria-live="polite">
-        {entries.map((entry) => (
+        {A.map(entries, (entry) => (
           <li
             key={entry.key}
             className="border-border flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"

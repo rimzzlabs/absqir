@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { NotePencilIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
@@ -146,7 +147,7 @@ function Queue(props: {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {props.rows.map((row) => (
+          {A.map(props.rows, (row) => (
             <TableRow key={row.id}>
               <TableCell className="font-medium">{row.personName}</TableCell>
               <TableCell>

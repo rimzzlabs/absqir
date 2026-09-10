@@ -1,4 +1,6 @@
-"use client";
+import { A } from "@mobily/ts-belt";
+
+("use client");
 
 import { CalendarBlankIcon, ClockIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
@@ -126,7 +128,7 @@ function normalizeClock(raw: string): string | null {
 }
 
 function shiftClock(value: string, minutes: number): string {
-  const [h, m] = value.split(":").map(Number);
+  const [h, m] = A.map(value.split(":"), Number);
   const total = ((((h ?? 0) * 60 + (m ?? 0) + minutes) % 1440) + 1440) % 1440;
 
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
@@ -219,7 +221,7 @@ export interface DateTimePickerProps {
 }
 
 function withClock(day: Date, clock: string): Date {
-  const [h, m] = clock.split(":").map(Number);
+  const [h, m] = A.map(clock.split(":"), Number);
   return setMinutes(setHours(day, h ?? 0), m ?? 0);
 }
 

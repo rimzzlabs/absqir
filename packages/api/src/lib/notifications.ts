@@ -2,6 +2,7 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
 import type { Mailer } from "@absqir/transactional";
+import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import type { AppEnv } from "#src/types";
@@ -60,7 +61,7 @@ export function routeByChannel<T extends { userId: string }>(
   rows: T[],
   channelOf: (userId: string) => NotificationChannel,
 ): (T & { channel: DeliveredChannel })[] {
-  return rows.flatMap((row) => {
+  return A.flatMap(rows, (row) => {
     const channel = channelOf(row.userId);
     return channel === "none" ? [] : [{ ...row, channel }];
   });
@@ -77,7 +78,7 @@ async function channelsFor(
     .from(user)
     .where(inArray(user.id, userIds));
 
-  return new Map(rows.map((row) => [row.id, row.channel]));
+  return new Map(A.map(rows, (row) => [row.id, row.channel]));
 }
 
 /**
@@ -92,7 +93,7 @@ export async function createNotifications(
 ): Promise<NotificationRow[]> {
   if (rows.length === 0) return [];
 
-  const channels = await channelsFor(db, [...new Set(rows.map((row) => row.userId))]);
+  const channels = await channelsFor(db, [...new Set(A.map(rows, (row) => row.userId))]);
   const routed = routeByChannel(rows, (userId) => channels.get(userId) ?? "all");
   if (routed.length === 0) return [];
 
@@ -100,7 +101,7 @@ export async function createNotifications(
     db
       .insert(notification)
       .values(
-        routed.map((row) => ({
+        A.map(routed, (row) => ({
           id: crypto.randomUUID(),
           organizationId: row.organizationId,
           userId: row.userId,
@@ -133,11 +134,11 @@ export async function emailNotifications(
   origin: string,
   rows: NotificationRow[],
 ): Promise<void> {
-  const worth = rows.filter((row) => EMAILED.has(row.type) && reachesEmail(row.channel));
+  const worth = A.filter(rows, (row) => EMAILED.has(row.type) && reachesEmail(row.channel));
   if (!mailer || worth.length === 0) return;
 
-  const userIds = [...new Set(worth.map((row) => row.userId))];
-  const organizationIds = [...new Set(worth.map((row) => row.organizationId))];
+  const userIds = [...new Set(A.map(worth, (row) => row.userId))];
+  const organizationIds = [...new Set(A.map(worth, (row) => row.organizationId))];
 
   const [people, organizations] = await Promise.all([
     db.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, userIds)),
@@ -147,8 +148,8 @@ export async function emailNotifications(
       .where(inArray(organization.id, organizationIds)),
   ]);
 
-  const emailOf = new Map(people.map((row) => [row.id, row.email]));
-  const nameOf = new Map(organizations.map((row) => [row.id, row.name]));
+  const emailOf = new Map(A.map(people, (row) => [row.id, row.email]));
+  const nameOf = new Map(A.map(organizations, (row) => [row.id, row.name]));
 
   for (const row of worth) {
     const to = emailOf.get(row.userId);
@@ -187,7 +188,11 @@ export async function managerUserIds(db: Database, organizationId: string): Prom
     .from(member)
     .where(eq(member.organizationId, organizationId));
 
-  return rows.filter((row) => row.role !== "member").map((row) => row.userId);
+  return pipe(
+    rows,
+    A.filter((row) => row.role !== "member"),
+    A.map((row) => row.userId),
+  );
 }
 
 /** The accounts that decide who gets in: admin and owner. */
@@ -197,9 +202,11 @@ export async function adminUserIds(db: Database, organizationId: string): Promis
     .from(member)
     .where(eq(member.organizationId, organizationId));
 
-  return rows
-    .filter((row) => row.role === "owner" || row.role === "admin")
-    .map((row) => row.userId);
+  return pipe(
+    rows,
+    A.filter((row) => row.role === "owner" || row.role === "admin"),
+    A.map((row) => row.userId),
+  );
 }
 
 /** The accounts behind the given directory rows. People without one drop out. */
@@ -211,7 +218,7 @@ export async function userIdsForPeople(db: Database, personIds: string[]): Promi
     .from(person)
     .where(inArray(person.id, personIds));
 
-  return rows.flatMap((row) => (row.userId ? [row.userId] : []));
+  return A.flatMap(rows, (row) => (row.userId ? [row.userId] : []));
 }
 
 const LIST_LIMIT = 100;

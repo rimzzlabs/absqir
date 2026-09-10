@@ -1,5 +1,6 @@
 import { type Database, schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
@@ -193,7 +194,7 @@ async function membersOf(db: Database, groupId: string) {
     .where(eq(groupMember.groupId, groupId))
     .orderBy(asc(sql`lower(${person.name})`));
 
-  return rows.map((row) => ({
+  return A.map(rows, (row) => ({
     ...row,
     email: row.email ?? null,
     identifier: row.identifier ?? null,
@@ -225,7 +226,7 @@ export const groupRoutes = app
       .orderBy(asc(sql`lower(${group.name})`));
 
     return c.json(
-      rows.map(({ row, memberCount }) => toJson(row, memberCount)),
+      A.map(rows, ({ row, memberCount }) => toJson(row, memberCount)),
       200,
     );
   })
@@ -338,7 +339,7 @@ export const groupRoutes = app
       if (valid.length) {
         await tx
           .insert(groupMember)
-          .values(valid.map((row) => ({ groupId: id, personId: row.id })));
+          .values(A.map(valid, (row) => ({ groupId: id, personId: row.id })));
       }
     });
 

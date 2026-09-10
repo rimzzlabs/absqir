@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
+import { A } from "@mobily/ts-belt";
 import type { Group } from "@/queries/use-groups";
 import type { ReportRange } from "@/queries/use-reports";
 
@@ -77,7 +78,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
           variant="outline"
           className="flex-wrap"
         >
-          {PRESETS.map((preset) => (
+          {A.map(PRESETS, (preset) => (
             <ToggleGroupItem key={preset.value} value={preset.value}>
               {preset.label}
             </ToggleGroupItem>
@@ -116,7 +117,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
           <Select
             items={[
               { value: ALL_GROUPS, label: "Every event" },
-              ...props.groups.map((group) => ({ value: group.id, label: group.name })),
+              ...A.map(props.groups, (group) => ({ value: group.id, label: group.name })),
             ]}
             value={props.range.groupId ?? ALL_GROUPS}
             onValueChange={(value) => {
@@ -138,7 +139,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
               {props.groups.length > 0 ? (
                 <SelectGroup>
                   <SelectLabel>Groups</SelectLabel>
-                  {props.groups.map((group) => (
+                  {A.map(props.groups, (group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name}
                     </SelectItem>

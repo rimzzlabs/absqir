@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { useMemo } from "react";
@@ -179,7 +180,7 @@ function FieldError({
       return null;
     }
 
-    const uniqueErrors = [...new Map(errors.map((error) => [error?.message, error])).values()];
+    const uniqueErrors = [...new Map(A.map(errors, (error) => [error?.message, error])).values()];
 
     if (uniqueErrors?.length == 1) {
       return uniqueErrors[0]?.message;
@@ -187,7 +188,9 @@ function FieldError({
 
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
-        {uniqueErrors.map((error, index) => error?.message && <li key={index}>{error.message}</li>)}
+        {A.mapWithIndex(uniqueErrors, (index, error) =>
+          error?.message ? <li key={index}>{error.message}</li> : null,
+        )}
       </ul>
     );
   }, [children, errors]);

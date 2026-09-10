@@ -1,4 +1,5 @@
 import { Button } from "@absqir/ui/button";
+import { A } from "@mobily/ts-belt";
 import { useState } from "react";
 import { ProviderIcon } from "@/components/shared/provider-icon";
 import { authClient } from "@/lib/auth-client";
@@ -45,7 +46,7 @@ export function AuthProviderButtons(props: AuthProviderButtonsProps) {
       </div>
 
       <div className="grid gap-2">
-        {props.providers.map((provider) => (
+        {A.map(props.providers, (provider) => (
           <Button
             key={provider}
             type="button"

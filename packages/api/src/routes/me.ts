@@ -3,6 +3,7 @@ import { isTimezone } from "@absqir/core/timezone";
 import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A, pipe } from "@mobily/ts-belt";
 import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 import { enabledSocialProviders } from "#src/env";
 import { forwardCookies } from "#src/lib/auth-forward";
@@ -284,7 +285,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     return c.json(
       {
-        items: page.items.map(({ row }) => ({
+        items: A.map(page.items, ({ row }) => ({
           id: row.id,
           token: row.token,
           userAgent: row.userAgent ?? null,
@@ -369,10 +370,12 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     return c.json(
       {
-        hasPassword: rows.some((row) => row.providerId === "credential"),
-        linked: rows
-          .filter((row) => row.providerId !== "credential")
-          .map((row) => ({ accountId: row.id, provider: row.providerId })),
+        hasPassword: A.some(rows, (row) => row.providerId === "credential"),
+        linked: pipe(
+          rows,
+          A.filter((row) => row.providerId !== "credential"),
+          A.map((row) => ({ accountId: row.id, provider: row.providerId })),
+        ),
         available: enabledSocialProviders(c.env) as string[],
       },
       200,
@@ -422,7 +425,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
       .where(eq(member.userId, user.id))
       .orderBy(member.createdAt);
 
-    const memberships = rows.flatMap((row) =>
+    const memberships = A.flatMap(rows, (row) =>
       isRoleName(row.role) ? [{ ...row, logo: row.logo ?? null, role: row.role }] : [],
     );
 

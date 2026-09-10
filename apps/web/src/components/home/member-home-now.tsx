@@ -2,6 +2,7 @@ import { formatDate, formatRange } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import { ClockIcon, ScanIcon, TicketIcon } from "@phosphor-icons/react";
 import { opensAtOf } from "@/components/my/opens-at";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
@@ -15,8 +16,8 @@ export interface MemberHomeNowProps {
 /** The one event that matters right now: running, or the next scheduled one. */
 export function pickNow(sessions: MySession[]): MySession | null {
   return (
-    sessions.find((row) => row.status === "running") ??
-    sessions.find((row) => row.status === "scheduled") ??
+    A.getBy(sessions, (row) => row.status === "running") ??
+    A.getBy(sessions, (row) => row.status === "scheduled") ??
     null
   );
 }
@@ -107,7 +108,7 @@ export function MemberHomeNow(props: MemberHomeNowProps) {
           </p>
           {next && next.groups.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-1">
-              {next.groups.map((group) => (
+              {A.map(next.groups, (group) => (
                 <Badge key={group.id} variant="outline">
                   {group.name}
                 </Badge>

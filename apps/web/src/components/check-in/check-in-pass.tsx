@@ -11,6 +11,7 @@ import {
 } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon, ClockIcon, TicketIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
@@ -40,7 +41,7 @@ function RunningRow(props: { session: MySession; onPass: (id: string) => void })
 
       {session.groups.length > 0 ? (
         <div className="flex flex-wrap gap-1">
-          {session.groups.map((group) => (
+          {A.map(session.groups, (group) => (
             <Badge key={group.id} variant="outline">
               {group.name}
             </Badge>
@@ -94,8 +95,8 @@ function NextBlock(props: { session: MySession }) {
  * pass, and says when the next door opens while nothing runs.
  */
 export function CheckInPass(props: CheckInPassProps) {
-  const running = props.sessions.filter((row) => row.status === "running");
-  const next = props.sessions.find((row) => row.status === "scheduled");
+  const running = A.filter(props.sessions, (row) => row.status === "running");
+  const next = A.getBy(props.sessions, (row) => row.status === "scheduled");
 
   return (
     <Card>
@@ -145,7 +146,7 @@ export function CheckInPass(props: CheckInPassProps) {
               <div className="flex flex-col gap-3">
                 {running.length > 0 ? (
                   <ul className="flex flex-col gap-2">
-                    {running.map((session) => (
+                    {A.map(running, (session) => (
                       <RunningRow key={session.id} session={session} onPass={props.onPass} />
                     ))}
                   </ul>

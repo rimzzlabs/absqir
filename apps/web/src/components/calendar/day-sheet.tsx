@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@absqir/ui/sheet";
+import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { type CalendarEntry, dayKey } from "@/components/calendar/calendar-entries";
 import { SessionStatusBadge } from "@/components/shared/status-badge";
@@ -31,7 +32,7 @@ export function DaySheet(props: DaySheetProps) {
         </SheetHeader>
 
         <div className="space-y-3 px-4">
-          {entries.map((entry) =>
+          {A.map(entries, (entry) =>
             entry.kind === "session" ? (
               <a
                 key={entry.key}
@@ -51,7 +52,7 @@ export function DaySheet(props: DaySheetProps) {
                 </p>
                 {entry.session.groups.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {entry.session.groups.map((group) => (
+                    {A.map(entry.session.groups, (group) => (
                       <Badge key={group.id} variant="outline">
                         {group.name}
                       </Badge>

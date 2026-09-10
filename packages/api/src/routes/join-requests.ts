@@ -2,6 +2,7 @@ import { schema } from "@absqir/db";
 import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
 import { ensurePersonForUser } from "@absqir/db/people";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, desc, eq, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { deliver } from "#src/lib/notifications";
@@ -339,7 +340,7 @@ export const joinRequestRoutes = app
 
     return c.json(
       {
-        items: rows.map((row) => ({
+        items: A.map(rows, (row) => ({
           ...row,
           image: row.image ?? null,
           message: row.message ?? null,

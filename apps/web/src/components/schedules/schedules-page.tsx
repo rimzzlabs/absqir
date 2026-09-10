@@ -13,6 +13,7 @@ import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { PencilSimpleIcon, PlusIcon, RepeatIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -34,7 +35,7 @@ function describe(schedule: Schedule): string {
   const when =
     schedule.frequency === "daily"
       ? "Every day"
-      : schedule.weekdays.map((day) => DAY_LABELS[day]).join(", ");
+      : A.map(schedule.weekdays, (day) => DAY_LABELS[day]).join(", ");
   const end = schedule.endsOn ? ` until ${schedule.endsOn}` : "";
 
   return `${when} at ${schedule.startTime}, ${schedule.durationMinutes} min, from ${schedule.startsOn}${end} (${schedule.timezone})`;
@@ -56,7 +57,7 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
         <CardDescription>{describe(schedule)}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2">
-        {schedule.groups.map((group) => (
+        {A.map(schedule.groups, (group) => (
           <Badge key={group.id} variant="outline">
             {group.name}
           </Badge>
@@ -146,7 +147,7 @@ function SchedulesBody(props: SchedulesPageProps) {
             </Empty>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
-              {rows.map((schedule) => (
+              {A.map(rows, (schedule) => (
                 <ScheduleCard key={schedule.id} schedule={schedule} canManage={canManage} />
               ))}
             </div>

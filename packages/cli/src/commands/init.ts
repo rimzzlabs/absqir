@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { A } from "@mobily/ts-belt";
 import { UsageError } from "#src/lib/errors";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 import {
@@ -70,7 +71,7 @@ async function askAppUrl(): Promise<string> {
 }
 
 function parseProviders(values: string[]): ProviderId[] {
-  const known = PROVIDERS.map((provider) => provider.id as string);
+  const known = A.map([...PROVIDERS], (provider) => provider.id as string);
 
   for (const value of values) {
     if (!known.includes(value)) {
@@ -97,7 +98,7 @@ async function askCredentials(params: AskCredentialsParams): Promise<ProviderCre
   const credentials: ProviderCredential[] = [];
 
   for (const id of params.chosen) {
-    const provider = PROVIDERS.find((entry) => entry.id === id);
+    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === id);
     if (!provider) continue;
 
     const [idKey, secretKey] = keysOf(id);
@@ -278,7 +279,7 @@ export async function init(argv: string[]): Promise<number> {
     return ui.multiselect<ProviderId>({
       message: "Sign-in providers, on top of the emailed code",
       flag: "--provider",
-      options: PROVIDERS.map((provider) => ({
+      options: A.map([...PROVIDERS], (provider) => ({
         value: provider.id,
         label: provider.label,
         hint: "absqir asks for the keys next",
@@ -290,7 +291,7 @@ export async function init(argv: string[]): Promise<number> {
 
   const providers = guided
     ? await askCredentials({ appUrl, chosen })
-    : chosen.map((id) => ({ id, clientId: "", clientSecret: "" }));
+    : A.map(chosen, (id) => ({ id, clientId: "", clientSecret: "" }));
 
   mkdirSync(dir, { recursive: true });
   writeFileSync(composePath, COMPOSE_TEMPLATE);
@@ -320,7 +321,7 @@ export async function init(argv: string[]): Promise<number> {
   for (const credential of providers) {
     if (!credential.clientId || !credential.clientSecret) continue;
 
-    const provider = PROVIDERS.find((entry) => entry.id === credential.id);
+    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === credential.id);
     if (provider) ui.success(`${provider.label} sign-in is ready.`);
   }
 

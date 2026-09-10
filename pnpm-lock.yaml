@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@mobily/ts-belt':
+        specifier: 4.0.0-rc.5
+        version: 4.0.0-rc.5
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.5.12
@@ -102,6 +106,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.87.0(react@19.2.8))(zod@4.5.4)
+      '@mobily/ts-belt':
+        specifier: 4.0.0-rc.5
+        version: 4.0.0-rc.5
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -251,6 +258,10 @@ importers:
         version: 0.23.0(@volar/typescript@2.4.28)(tsx@4.23.13)(typescript@5.9.3)
 
   packages/cli:
+    dependencies:
+      '@mobily/ts-belt':
+        specifier: 4.0.0-rc.5
+        version: 4.0.0-rc.5
     devDependencies:
       '@absqir/config':
         specifier: workspace:^
@@ -337,6 +348,9 @@ importers:
 
   packages/transactional:
     dependencies:
+      '@mobily/ts-belt':
+        specifier: 4.0.0-rc.5
+        version: 4.0.0-rc.5
       '@react-email/components':
         specifier: ^1.0.12
         version: 1.0.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -380,6 +394,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.87.0(react@19.2.8))(zod@4.5.4)
+      '@mobily/ts-belt':
+        specifier: 4.0.0-rc.5
+        version: 4.0.0-rc.5
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

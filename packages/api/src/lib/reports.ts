@@ -1,5 +1,6 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import { A } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 
 const { attendanceSession, attendanceRecord, person, group, groupMember, sessionGroup } = schema;
@@ -72,7 +73,7 @@ async function sessionIdsInRange(
         .where(and(where, eq(sessionGroup.groupId, range.groupId)))
     : await db.select({ id: attendanceSession.id }).from(attendanceSession).where(where);
 
-  return rows.map((row) => row.id);
+  return A.map(rows, (row) => row.id);
 }
 
 export interface ReportSummary {
@@ -190,7 +191,7 @@ export async function reportByPerson(
     .groupBy(person.id, person.name, person.email, person.identifier)
     .orderBy(asc(sql`lower(${person.name})`));
 
-  return rows.map((row) => {
+  return A.map(rows, (row) => {
     const counts: StatusCounts = {
       present: row.present,
       late: row.late,
@@ -244,15 +245,15 @@ export async function reportByGroup(
               inArray(attendanceRecord.sessionId, ids),
               inArray(
                 groupMember.groupId,
-                groups.map((row) => row.id),
+                A.map(groups, (row) => row.id),
               ),
             ),
           )
           .groupBy(groupMember.groupId);
 
-  const byGroup = new Map(rows.map((row) => [row.groupId, row]));
+  const byGroup = new Map(A.map(rows, (row) => [row.groupId, row]));
 
-  return groups.map((row) => {
+  return A.map(groups, (row) => {
     const found = byGroup.get(row.id);
     const counts: StatusCounts = found
       ? { present: found.present, late: found.late, excused: found.excused, absent: found.absent }
@@ -295,9 +296,9 @@ export async function reportBySession(
       .groupBy(attendanceRecord.sessionId),
   ]);
 
-  const bySession = new Map(rows.map((row) => [row.sessionId, row]));
+  const bySession = new Map(A.map(rows, (row) => [row.sessionId, row]));
 
-  return sessions.map((row) => {
+  return A.map(sessions, (row) => {
     const found = bySession.get(row.id);
     const counts: StatusCounts = found
       ? { present: found.present, late: found.late, excused: found.excused, absent: found.absent }

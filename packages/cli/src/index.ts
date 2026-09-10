@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+
 import { createRequire } from "node:module";
+import { A } from "@mobily/ts-belt";
 import { adminCreate, adminPromote, memberAdd } from "#src/commands/admin";
 import { configGet, configSet } from "#src/commands/config";
 import { doctor } from "#src/commands/doctor";
@@ -14,8 +16,8 @@ const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
 
 function helpText(): string {
-  const width = Math.max(...COMMANDS.map((command) => command.id.length));
-  const lines = COMMANDS.map((command) => `  ${command.id.padEnd(width)}  ${command.hint}`);
+  const width = Math.max(...A.map([...COMMANDS], (command) => command.id.length));
+  const lines = A.map([...COMMANDS], (command) => `  ${command.id.padEnd(width)}  ${command.hint}`);
 
   return [
     `absqir ${version} — self-host the QR attendance system`,

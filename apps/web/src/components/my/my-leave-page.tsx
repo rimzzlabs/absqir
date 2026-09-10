@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Separator } from "@absqir/ui/separator";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { NotePencilIcon, PlusIcon } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 import { match, P } from "ts-pattern";
@@ -46,7 +47,7 @@ function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
 function Grid(props: { rows: LeaveRequest[] }) {
   return (
     <ul className={GRID}>
-      {props.rows.map((request) => (
+      {A.map(props.rows, (request) => (
         <MyLeaveCard key={request.id} request={request} />
       ))}
     </ul>
@@ -56,7 +57,7 @@ function Grid(props: { rows: LeaveRequest[] }) {
 /** The requests an organizer still has to answer. */
 function Waiting() {
   const pending = useMyLeave({ scope: "pending" });
-  const rows = pending.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(pending.data?.pages ?? [], (page) => page.items);
 
   return (
     <section aria-labelledby="leave-waiting" className="space-y-4">
@@ -92,7 +93,7 @@ function Waiting() {
 /** The requests with an answer, newest first. */
 function Decided() {
   const decided = useMyLeave({ scope: "decided" });
-  const rows = decided.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(decided.data?.pages ?? [], (page) => page.items);
 
   return (
     <section aria-label="Decided" className="space-y-4">

@@ -1,4 +1,6 @@
-"use client";
+import { A } from "@mobily/ts-belt";
+
+("use client");
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import {
@@ -173,7 +175,7 @@ function ToastIcon({ type }: { type: string | undefined }) {
 function ToastList() {
   const { toasts } = ToastPrimitive.useToastManager();
 
-  return toasts.map((toastItem) => (
+  return A.map(toasts, (toastItem) => (
     <Toast key={toastItem.id} toast={toastItem}>
       <ToastContent>
         <ToastIcon type={toastItem.type} />

@@ -1,6 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
+import { A, pipe } from "@mobily/ts-belt";
 import { addDays, addMinutes, isAfter, isBefore, startOfDay } from "date-fns";
 import { and, eq, gte, inArray } from "drizzle-orm";
 
@@ -12,12 +13,12 @@ export const HORIZON_DAYS = 14;
 type ScheduleRow = typeof schedule.$inferSelect;
 
 function parseClock(value: string): { hours: number; minutes: number } {
-  const [h, m] = value.split(":").map(Number);
+  const [h, m] = A.map(value.split(":"), Number);
   return { hours: h ?? 0, minutes: m ?? 0 };
 }
 
 function parseDate(value: string, timezone: string): TZDate {
-  const [y, mo, d] = value.split("-").map(Number);
+  const [y, mo, d] = A.map(value.split("-"), Number);
   return new TZDate(y ?? 1970, (mo ?? 1) - 1, d ?? 1, timezone);
 }
 
@@ -64,7 +65,7 @@ export function occurrencesBetween(rule: ScheduleRow, from: Date, until: Date): 
 
 function randomSecret(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return A.map([...bytes], (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -86,7 +87,7 @@ export async function materializeSchedules(
   if (rules.length === 0) return 0;
 
   const until = addDays(now, HORIZON_DAYS);
-  const ruleIds = rules.map((rule) => rule.id);
+  const ruleIds = A.map(rules, (rule) => rule.id);
 
   const [existing, groups] = await Promise.all([
     db
@@ -101,11 +102,15 @@ export async function materializeSchedules(
       .where(inArray(scheduleGroup.scheduleId, ruleIds)),
   ]);
 
-  const seen = new Set(existing.map((row) => `${row.scheduleId}:${row.startsAt.getTime()}`));
+  const seen = new Set(A.map(existing, (row) => `${row.scheduleId}:${row.startsAt.getTime()}`));
   let created = 0;
 
   for (const rule of rules) {
-    const groupIds = groups.filter((row) => row.scheduleId === rule.id).map((row) => row.groupId);
+    const groupIds = pipe(
+      groups,
+      A.filter((row) => row.scheduleId === rule.id),
+      A.map((row) => row.groupId),
+    );
 
     for (const startsAt of occurrencesBetween(rule, now, until)) {
       if (seen.has(`${rule.id}:${startsAt.getTime()}`)) continue;
@@ -133,7 +138,7 @@ export async function materializeSchedules(
         if (groupIds.length) {
           await tx
             .insert(sessionGroup)
-            .values(groupIds.map((groupId) => ({ sessionId: id, groupId })))
+            .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })))
             .onConflictDoNothing();
         }
       });

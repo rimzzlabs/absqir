@@ -12,6 +12,7 @@ import {
 } from "@absqir/ui/item";
 import { Separator } from "@absqir/ui/separator";
 import { Textarea } from "@absqir/ui/textarea";
+import { A } from "@mobily/ts-belt";
 import { useState } from "react";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { OnboardingEventCard } from "@/components/onboarding/onboarding-event-card";
@@ -74,7 +75,7 @@ export function JoinOrganization(props: JoinOrganizationProps) {
   const [message, setMessage] = useState("");
   const [writing, setWriting] = useState(false);
 
-  const invitations = status.invitations.toSorted((a, b) => {
+  const invitations = A.sort(status.invitations, (a, b) => {
     if (a.id === props.invitationId) return -1;
     if (b.id === props.invitationId) return 1;
     return 0;
@@ -157,7 +158,7 @@ export function JoinOrganization(props: JoinOrganizationProps) {
 
       {hasInvitations ? (
         <ItemGroup>
-          {invitations.map((invitation) => (
+          {A.map(invitations, (invitation) => (
             <Item key={invitation.id} variant="outline">
               <ItemContent>
                 <ItemTitle>{invitation.organizationName}</ItemTitle>

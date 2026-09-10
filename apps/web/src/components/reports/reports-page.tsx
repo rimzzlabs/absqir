@@ -2,6 +2,7 @@ import { endOfDay, formatDate, startOfDay } from "@absqir/core/date";
 import { buttonVariants } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
+import { A } from "@mobily/ts-belt";
 import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { useMemo } from "react";
@@ -136,7 +137,7 @@ function ReportsBody() {
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as ReportTab)}>
         <TabsList>
-          {TABS.map((item) => (
+          {A.map(TABS, (item) => (
             <TabsTrigger key={item.value} value={item.value}>
               {item.label}
             </TabsTrigger>

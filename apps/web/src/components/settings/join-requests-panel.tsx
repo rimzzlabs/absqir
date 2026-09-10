@@ -10,6 +10,7 @@ import {
   ItemTitle,
 } from "@absqir/ui/item";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -80,7 +81,7 @@ export function JoinRequestsPanel() {
             </p>
           ) : (
             <div className="space-y-3">
-              {data.items.map((row) => (
+              {A.map(data.items, (row) => (
                 <RequestRow key={row.id} row={row} />
               ))}
             </div>

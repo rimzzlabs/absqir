@@ -4,6 +4,7 @@ import { isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { isOnboardingStep } from "@absqir/db/schema";
 import { getRuntime } from "@app-runtime";
+import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
 
 /** The single sign-in door. A signed-in reader is sent to the dashboard. */
@@ -96,12 +97,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       .where(eq(schema.member.userId, user.id))
       .orderBy(schema.member.createdAt);
 
-    const memberships = rows.flatMap((row) =>
+    const memberships = A.flatMap(rows, (row) =>
       isRoleName(row.role) ? [{ ...row, logo: row.logo ?? null, role: row.role }] : [],
     );
 
     const activeMembership =
-      memberships.find((row) => row.organizationId === session.activeOrganizationId) ??
+      A.getBy(memberships, (row) => row.organizationId === session.activeOrganizationId) ??
       memberships[0] ??
       null;
 

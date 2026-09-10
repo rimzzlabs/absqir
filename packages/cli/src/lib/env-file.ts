@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { A } from "@mobily/ts-belt";
 
 /**
  * Minimal .env editing: one KEY="value" per line, comments preserved. This is
@@ -6,7 +7,7 @@ import { readFileSync, writeFileSync } from "node:fs";
  */
 export function readEnvValue(path: string, key: string): string | null {
   const content = readFileSync(path, "utf8");
-  const line = content.split("\n").find((row) => row.startsWith(`${key}=`));
+  const line = A.getBy(content.split("\n"), (row) => row.startsWith(`${key}=`));
 
   if (!line) return null;
 

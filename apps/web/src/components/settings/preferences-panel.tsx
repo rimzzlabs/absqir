@@ -2,6 +2,7 @@ import { Field, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
+import { A } from "@mobily/ts-belt";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import {
   type MotionPreference,
@@ -105,7 +106,7 @@ export function PreferencesPanel() {
           }}
           className="grid grid-cols-1 gap-3 sm:grid-cols-3"
         >
-          {THEMES.map((option) => (
+          {A.map(THEMES, (option) => (
             <FieldLabel key={option.value} htmlFor={`theme-${option.value}`}>
               <Field className="gap-3">
                 <Preview theme={option.value} />
@@ -135,7 +136,7 @@ export function PreferencesPanel() {
           }}
           variant="outline"
         >
-          {MOTIONS.map((option) => (
+          {A.map(MOTIONS, (option) => (
             <ToggleGroupItem key={option.value} value={option.value}>
               {option.label}
             </ToggleGroupItem>

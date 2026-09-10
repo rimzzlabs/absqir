@@ -1,3 +1,5 @@
+import { A, type O } from "@mobily/ts-belt";
+
 /** The shape of the device, for an icon. */
 export type DeviceKind = "phone" | "tablet" | "desktop";
 
@@ -41,8 +43,8 @@ const KINDS: UserAgentRule<DeviceKind>[] = [
   { pattern: /iPad|Android/, value: "tablet" },
 ];
 
-function firstMatch<T>(ua: string, rules: UserAgentRule<T>[]): T | undefined {
-  return rules.find((rule) => rule.pattern.test(ua))?.value;
+function firstMatch<T>(ua: string, rules: UserAgentRule<T>[]): O.Option<T> {
+  return A.getBy(rules, (rule) => rule.pattern.test(ua))?.value;
 }
 
 /** A short human line for a signed-in device. */

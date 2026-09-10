@@ -3,6 +3,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@absqir/ui/
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,7 +25,7 @@ export interface OnboardingProfileStepProps {
 
 /** "GitHub", or "Your provider" for one this build does not name. */
 function firstProviderLabel(providers: string[]): string {
-  const first = providers.find((provider) => isAuthProvider(provider));
+  const first = A.getBy(providers, (provider) => isAuthProvider(provider));
 
   return first && isAuthProvider(first) ? providerLabel(first) : "Your provider";
 }

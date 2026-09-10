@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@absqir/ui/popover";
 import { Separator } from "@absqir/ui/separator";
+import { A } from "@mobily/ts-belt";
 import { NotePencilIcon, ScanIcon, TicketIcon } from "@phosphor-icons/react";
 import type { ReactElement, ReactNode, RefObject } from "react";
 import { opensAtOf } from "@/components/my/opens-at";
@@ -212,7 +213,7 @@ export function MySessionDetails(props: MySessionDetailsProps) {
           {session.groups.length > 0 ? (
             <Row label="Groups">
               <div className="flex flex-wrap gap-1">
-                {session.groups.map((group) => (
+                {A.map(session.groups, (group) => (
                   <Badge key={group.id} variant="outline" className="text-[11px]">
                     {group.name}
                   </Badge>

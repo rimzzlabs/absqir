@@ -1,5 +1,6 @@
 import { cn } from "@absqir/ui/lib/utils";
 import { Spinner } from "@absqir/ui/spinner";
+import { A } from "@mobily/ts-belt";
 import { VideoCameraSlashIcon } from "@phosphor-icons/react";
 import type { RefObject } from "react";
 
@@ -37,7 +38,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
                 <span className="block h-px w-full bg-white/80 shadow-[0_0_10px_2px_rgba(255,255,255,0.45)]" />
               </span>
             ) : null}
-            {CORNERS.map((corner) => (
+            {A.map(CORNERS, (corner) => (
               <span
                 key={corner}
                 className={cn("absolute size-7 border-white/90 sm:size-9", corner)}

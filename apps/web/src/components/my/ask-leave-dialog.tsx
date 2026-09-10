@@ -21,6 +21,7 @@ import {
 } from "@absqir/ui/select";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A, pipe } from "@mobily/ts-belt";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
@@ -58,16 +59,22 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
 
   // Only events still ahead, without a record, and without a request already.
   const asked = new Set(
-    (mine.data?.pages ?? []).flatMap((page) => page.items).map((row) => row.sessionId),
+    pipe(
+      mine.data?.pages ?? [],
+      A.flatMap((page) => page.items),
+      A.map((row) => row.sessionId),
+    ),
   );
-  const options = (sessions.data?.pages ?? [])
-    .flatMap((page) => page.items)
-    .filter((session) => session.status !== "done" && !session.record && !asked.has(session.id))
-    .map((session) => ({
+  const options = pipe(
+    sessions.data?.pages ?? [],
+    A.flatMap((page) => page.items),
+    A.filter((session) => session.status !== "done" && !session.record && !asked.has(session.id)),
+    A.map((session) => ({
       value: session.id,
       label: session.title,
       hint: formatRange(new Date(session.startsAt), new Date(session.endsAt)),
-    }));
+    })),
+  );
 
   const onSubmit = (values: AskLeaveValues) => {
     ask.mutate(values, { onSuccess: () => props.onOpenChange(false) });
@@ -101,7 +108,10 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                 label="Event"
                 render={(field) => (
                   <Select
-                    items={options.map((option) => ({ value: option.value, label: option.label }))}
+                    items={A.map(options, (option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
                     value={field.value}
                     onValueChange={(value) => field.onChange(value ?? "")}
                   >
@@ -116,7 +126,7 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                             Nothing ahead of you to ask about.
                           </p>
                         ) : (
-                          options.map((option) => (
+                          A.map(options, (option) => (
                             <SelectItem key={option.value} value={option.value}>
                               <span className="flex flex-col">
                                 <span>{option.label}</span>

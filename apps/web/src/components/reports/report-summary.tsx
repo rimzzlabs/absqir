@@ -1,5 +1,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import type { ReportSummary } from "@/queries/use-reports";
 
 /** A rate reads as a whole percent, and an em dash when nothing was judged. */
@@ -7,15 +8,21 @@ export function ratePercent(rate: number | null): string {
   return rate === null ? "—" : `${Math.round(rate * 100)}%`;
 }
 
-const BARS = [
+interface StatusBarSegment {
+  key: keyof ReportSummary["counts"];
+  label: string;
+  className: string;
+}
+
+const BARS: StatusBarSegment[] = [
   { key: "present", label: "Present", className: "bg-emerald-500" },
   { key: "late", label: "Late", className: "bg-amber-500" },
   { key: "excused", label: "Excused", className: "bg-sky-500" },
   { key: "absent", label: "Absent", className: "bg-destructive" },
-] as const;
+];
 
 export function StatusBar(props: { counts: ReportSummary["counts"]; className?: string }) {
-  const total = BARS.reduce((sum, bar) => sum + props.counts[bar.key], 0);
+  const total = A.reduce(BARS, 0, (sum, bar) => sum + props.counts[bar.key]);
 
   if (total === 0) {
     return <div className={cn("bg-muted h-2 rounded-full", props.className)} />;
@@ -23,7 +30,7 @@ export function StatusBar(props: { counts: ReportSummary["counts"]; className?: 
 
   return (
     <div className={cn("bg-muted flex h-2 overflow-hidden rounded-full", props.className)}>
-      {BARS.map((bar) => {
+      {A.map(BARS, (bar) => {
         const value = props.counts[bar.key];
         if (value === 0) return null;
 
@@ -81,7 +88,7 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
       <div className="border-border space-y-2 rounded-xl border p-4">
         <StatusBar counts={summary.counts} />
         <ul className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-          {BARS.map((bar) => (
+          {A.map(BARS, (bar) => (
             <li key={bar.key} className="flex items-center gap-2">
               <span aria-hidden className={cn("size-2 rounded-full", bar.className)} />
               <span className="text-muted-foreground">{bar.label}</span>

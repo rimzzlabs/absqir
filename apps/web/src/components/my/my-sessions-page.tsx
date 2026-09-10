@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
+import { A } from "@mobily/ts-belt";
 import { QrCodeIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
@@ -49,7 +50,7 @@ function SessionGrid(props: {
 
   return (
     <ul className={GRID}>
-      {props.rows.map((session) => (
+      {A.map(props.rows, (session) => (
         <MySessionCard
           key={session.id}
           session={session}
@@ -64,7 +65,7 @@ function SessionGrid(props: {
 function MySessionsBody() {
   const [scope, setScope] = useQueryState("scope", SCOPE);
   const sessions = useMySessions({ scope });
-  const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
   const [leaveFor, setLeaveFor] = useState<MySession | null>(null);
 
@@ -85,7 +86,7 @@ function MySessionsBody() {
       {match(sessions)
         .with({ isPending: true }, () => (
           <div className={GRID} aria-busy>
-            {[0, 1, 2, 3].map((key) => (
+            {A.map([0, 1, 2, 3], (key) => (
               <Skeleton key={key} className="h-44 rounded-xl" />
             ))}
           </div>

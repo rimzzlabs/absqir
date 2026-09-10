@@ -1,4 +1,5 @@
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import { CheckIcon } from "@phosphor-icons/react";
 
 export type OnboardingStepName = "profile" | "avatar" | "organization" | "done";
@@ -19,7 +20,7 @@ export function OnboardingSteps(props: OnboardingStepsProps) {
 
   return (
     <ol className="flex items-center gap-3 text-sm" aria-label="Onboarding steps">
-      {STEPS.map((step, index) => {
+      {A.mapWithIndex(STEPS, (index, step) => {
         const done = index < position;
         const active = index === position;
 

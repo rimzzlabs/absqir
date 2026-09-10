@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@absqir/ui/sidebar";
+import { A } from "@mobily/ts-belt";
 import { ArrowSquareOutIcon, GithubLogoIcon } from "@phosphor-icons/react";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import {
@@ -100,14 +101,14 @@ export function AppSidebar(props: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        {groups.map((group) => (
+        {A.map(groups, (group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-sidebar-foreground/50 text-[11px] tracking-wider uppercase">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
+                {A.map(group.items, (item) => (
                   <NavEntry key={item.href} item={item} currentPath={props.currentPath} />
                 ))}
               </SidebarMenu>

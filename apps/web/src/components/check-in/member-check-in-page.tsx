@@ -4,6 +4,7 @@ import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
+import { A } from "@mobily/ts-belt";
 import { ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { CheckInPass } from "@/components/check-in/check-in-pass";
@@ -132,7 +133,7 @@ function Scanner() {
 
 function MemberCheckInBody() {
   const sessions = useMySessions();
-  const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
 
   return (

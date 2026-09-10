@@ -9,6 +9,7 @@
     "./vitest": "./vitest/shared.ts"
   },
   "files": [
+    "belt.d.ts",
     "tsconfig",
     "vitest"
   ]

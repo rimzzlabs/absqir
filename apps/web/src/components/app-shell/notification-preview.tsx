@@ -2,6 +2,7 @@ import { relativeToNow } from "@absqir/core/date";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
 import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
 import { FormError } from "@/components/shared/form-error";
@@ -18,9 +19,10 @@ export interface NotificationPreviewProps {
 
 /** Unread first, newest first inside each half. A stable sort keeps the order. */
 function pick(rows: Notification[]): Notification[] {
-  return [...rows]
-    .sort((a, b) => Number(a.readAt !== null) - Number(b.readAt !== null))
-    .slice(0, SHOWN);
+  return A.sort([...rows], (a, b) => Number(a.readAt !== null) - Number(b.readAt !== null)).slice(
+    0,
+    SHOWN,
+  );
 }
 
 function PreviewRow(props: { notification: Notification; onRead: (id: string) => Promise<void> }) {
@@ -142,7 +144,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
               </p>
             ) : (
               <ul className="space-y-0.5">
-                {pick(rows).map((row) => (
+                {A.map(pick(rows), (row) => (
                   <PreviewRow key={row.id} notification={row} onRead={onRead} />
                 ))}
               </ul>

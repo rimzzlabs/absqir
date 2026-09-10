@@ -2,6 +2,7 @@ import { formatRange } from "@absqir/core/date";
 import { buttonVariants } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import {
   CheckCircleIcon,
   CircleIcon,
@@ -71,7 +72,7 @@ function Checklist(props: { organization: Organization }) {
       </CardHeader>
       <CardContent>
         <ol className="space-y-3">
-          {steps.map((step) => (
+          {A.map(steps, (step) => (
             <li key={step.label} className="flex items-start gap-3">
               {step.done ? (
                 <CheckCircleIcon weight="fill" className="mt-0.5 size-5 text-emerald-500" />
@@ -113,7 +114,7 @@ function UpcomingSessions() {
         {sessions.isError ? <FormError error={sessions.error} /> : null}
         {rows.length > 0 ? (
           <ul className="divide-border divide-y">
-            {rows.map((session) => (
+            {A.map(rows, (session) => (
               <li key={session.id}>
                 <a
                   href={`/sessions/${session.id}`}
@@ -157,7 +158,7 @@ function HomeBody(props: HomePageProps) {
       {match(organization)
         .with({ isPending: true }, () => (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[0, 1, 2, 3].map((key) => (
+            {A.map([0, 1, 2, 3], (key) => (
               <Skeleton key={key} className="h-28 rounded-xl" />
             ))}
           </div>

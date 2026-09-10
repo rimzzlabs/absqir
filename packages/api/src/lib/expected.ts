@@ -1,5 +1,6 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
 
 const { attendanceSession, sessionGroup, sessionRegistration, groupMember } = schema;
@@ -20,7 +21,7 @@ export async function expectedPersonIds(db: Database, sessionId: string): Promis
       .where(eq(sessionRegistration.sessionId, sessionId)),
   ]);
 
-  return [...new Set([...fromGroups, ...registered].map((row) => row.personId))];
+  return [...new Set(A.map([...fromGroups, ...registered], (row) => row.personId))];
 }
 
 export async function registeredPersonIds(db: Database, sessionId: string): Promise<string[]> {
@@ -29,5 +30,5 @@ export async function registeredPersonIds(db: Database, sessionId: string): Prom
     .from(sessionRegistration)
     .where(eq(sessionRegistration.sessionId, sessionId));
 
-  return rows.map((row) => row.personId);
+  return A.map(rows, (row) => row.personId);
 }

@@ -7,6 +7,7 @@ import {
 import { schema } from "@absqir/db";
 import { JOIN_POLICIES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, asc, eq } from "drizzle-orm";
 import { txtRecords } from "#src/lib/dns";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -190,7 +191,10 @@ export const domainRoutes = app
         .limit(1),
     ]);
 
-    return c.json({ items: rows.map(toJson), joinPolicy: orgs[0]?.joinPolicy ?? "request" }, 200);
+    return c.json(
+      { items: A.map(rows, toJson), joinPolicy: orgs[0]?.joinPolicy ?? "request" },
+      200,
+    );
   })
   .openapi(claimRoute, async (c) => {
     const organizationId = organizationIdOf(c);

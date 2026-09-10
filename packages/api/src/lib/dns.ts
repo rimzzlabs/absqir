@@ -1,3 +1,5 @@
+import { A, pipe } from "@mobily/ts-belt";
+
 /**
  * Reads TXT records over DNS-over-HTTPS. The Workers runtime has no DNS
  * client and the Node build must behave the same way, so both ask a resolver
@@ -37,11 +39,12 @@ export async function txtRecords(host: string): Promise<string[]> {
 
     // A resolver hands TXT values back quoted, and a long one arrives split
     // into several quoted strings that belong together.
-    return reply.Answer.filter((answer) => answer.type === TXT).map((answer) =>
-      answer.data
-        .split('" "')
-        .map((part) => part.replace(/^"|"$/g, ""))
-        .join(""),
+    return pipe(
+      reply.Answer,
+      A.filter((answer) => answer.type === TXT),
+      A.map((answer) =>
+        A.map(answer.data.split('" "'), (part) => part.replace(/^"|"$/g, "")).join(""),
+      ),
     );
   } catch {
     return [];

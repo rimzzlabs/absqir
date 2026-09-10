@@ -1,3 +1,5 @@
+import { A } from "@mobily/ts-belt";
+
 /**
  * A cell starting with = + - @ (or a control character) executes as a
  * formula when the export opens in Excel or Sheets. A leading apostrophe
@@ -48,7 +50,7 @@ export function parseCsv(text: string): string[][] {
     } else if (char === "\n" || char === "\r") {
       if (char === "\r" && text[i + 1] === "\n") i += 1;
       row.push(cell.trim());
-      if (row.some((value) => value.length > 0)) rows.push(row);
+      if (A.some(row, (value) => value.length > 0)) rows.push(row);
       row = [];
       cell = "";
     } else {
@@ -57,7 +59,7 @@ export function parseCsv(text: string): string[][] {
   }
 
   row.push(cell.trim());
-  if (row.some((value) => value.length > 0)) rows.push(row);
+  if (A.some(row, (value) => value.length > 0)) rows.push(row);
 
   return rows;
 }
@@ -70,10 +72,10 @@ export interface CsvTable {
 /** Reads the first row as lowercase column names, the rest as records. */
 export function csvToRecords(text: string): CsvTable {
   const [first, ...rest] = parseCsv(text);
-  const header = (first ?? []).map((name) => name.toLowerCase());
+  const header = A.map(first ?? [], (name) => name.toLowerCase());
 
-  const records = rest.map((row) =>
-    Object.fromEntries(header.map((name, index) => [name, row[index] ?? ""])),
+  const records = A.map(rest, (row) =>
+    Object.fromEntries(A.mapWithIndex(header, (index, name) => [name, row[index] ?? ""])),
   );
 
   return { header, records };

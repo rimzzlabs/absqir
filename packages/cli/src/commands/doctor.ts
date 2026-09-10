@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { A } from "@mobily/ts-belt";
 import { dockerAvailable } from "#src/lib/compose";
 import { readEnvValue } from "#src/lib/env-file";
 import { callbackUrl, keysOf, PROVIDERS } from "#src/lib/providers";
@@ -117,7 +118,7 @@ export async function doctor(): Promise<number> {
   results.push(health);
   ui.check(health);
 
-  const failed = results.filter((result) => !result.ok).length;
+  const failed = A.filter(results, (result) => !result.ok).length;
 
   if (failed === 0) {
     ui.outro("All checks passed.");

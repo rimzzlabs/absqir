@@ -1,5 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import { occurrencesBetween } from "#src/lib/schedule";
@@ -110,25 +111,29 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
     .where(and(eq(schedule.organizationId, organizationId), eq(schedule.active, true)));
 
   const taken = new Set(
-    rows
-      .filter((row) => row.scheduleId)
-      .map((row) => `${row.scheduleId}:${row.startsAt.getTime()}`),
+    pipe(
+      rows,
+      A.filter((row) => row.scheduleId !== null),
+      A.map((row) => `${row.scheduleId}:${row.startsAt.getTime()}`),
+    ),
   );
 
-  const projected = rules.flatMap((rule) =>
-    occurrencesBetween(rule, from > now ? from : now, to)
-      .filter((startsAt) => !taken.has(`${rule.id}:${startsAt.getTime()}`))
-      .map((startsAt) => ({
+  const projected = A.flatMap(rules, (rule) =>
+    pipe(
+      occurrencesBetween(rule, from > now ? from : now, to),
+      A.filter((startsAt) => !taken.has(`${rule.id}:${startsAt.getTime()}`)),
+      A.map((startsAt) => ({
         scheduleId: rule.id,
         title: rule.title,
         startsAt: startsAt.toISOString(),
         endsAt: new Date(startsAt.getTime() + rule.durationMinutes * MINUTE_MS).toISOString(),
       })),
+    ),
   );
 
   return c.json(
     {
-      sessions: sessions.map((row) => ({
+      sessions: A.map(sessions, (row) => ({
         id: row.id,
         title: row.title,
         startsAt: row.startsAt,
@@ -139,7 +144,7 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
         groups: row.groups,
         counts: row.counts,
       })),
-      projected: projected.sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+      projected: A.sort(projected, (a, b) => a.startsAt.localeCompare(b.startsAt)),
     },
     200,
   );

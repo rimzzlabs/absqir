@@ -1,5 +1,6 @@
 import { NOTIFICATION_TYPES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { notificationStream } from "#src/lib/notification-stream";
 import {
   listNotifications,
@@ -110,7 +111,7 @@ export const notificationRoutes = app
     const { scope } = c.req.valid("query");
     const rows = await listNotifications(c.var.db, user.id, organizationId, scope ?? "all");
 
-    return c.json(rows.map(toNotificationJson), 200);
+    return c.json(A.map(rows, toNotificationJson), 200);
   })
   .openapi(countRoute, async (c) => {
     const organizationId = organizationIdOf(c);

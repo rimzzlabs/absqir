@@ -10,6 +10,7 @@ import {
 } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { MySessionDetails, STRETCHED_TRIGGER } from "@/components/my/my-session-details";
@@ -88,7 +89,7 @@ function AgendaRow(props: {
 
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
-  const rows = props.sessions.filter((row) => row.status !== "done").slice(0, PREVIEW);
+  const rows = A.filter(props.sessions, (row) => row.status !== "done").slice(0, PREVIEW);
   const agendaHint =
     rows.length === 0 ? "Nothing is planned for you." : "Soonest first, in your time zone.";
   const days = byDay(rows);
@@ -118,7 +119,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
           </div>
         ) : (
           <ol className="flex flex-col gap-5">
-            {days.map((day) => (
+            {A.map(days, (day) => (
               <li key={day.iso} className="flex gap-4">
                 <div className="w-12 shrink-0 text-center">
                   <span className="text-muted-foreground block text-[11px] font-medium tracking-wider uppercase">
@@ -134,7 +135,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
                   </span>
                 </div>
                 <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  {day.rows.map((session) => (
+                  {A.map(day.rows, (session) => (
                     <AgendaRow
                       key={session.id}
                       session={session}

@@ -4,6 +4,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@a
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
+import { A } from "@mobily/ts-belt";
 import { BellIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { match, P } from "ts-pattern";
@@ -95,7 +96,7 @@ function NotificationsBody() {
   const notifications = useNotifications(scope);
   const markRead = useMarkRead();
 
-  const unread = (notifications.data ?? []).filter((row) => row.readAt === null).length;
+  const unread = A.filter(notifications.data ?? [], (row) => row.readAt === null).length;
 
   return (
     <>
@@ -133,7 +134,7 @@ function NotificationsBody() {
             <NothingHere scope={scope} />
           ) : (
             <ul className="border-border overflow-hidden rounded-xl border">
-              {rows.map((row) => (
+              {A.map(rows, (row) => (
                 <Row key={row.id} notification={row} onRead={(id) => markRead.mutate([id])} />
               ))}
             </ul>

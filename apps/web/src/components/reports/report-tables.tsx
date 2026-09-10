@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { A } from "@mobily/ts-belt";
 import { ChartBarIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { match, P } from "ts-pattern";
@@ -99,7 +100,7 @@ export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {A.map(rows, (row) => (
                 <TableRow key={row.personId}>
                   <TableCell className="font-medium">
                     {row.name}
@@ -145,7 +146,7 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {A.map(rows, (row) => (
                 <TableRow key={row.groupId}>
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell className="tabular-nums">{row.people}</TableCell>
@@ -185,7 +186,7 @@ export function SessionReportTable(props: { query: Query<SessionReportRow> }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {A.map(rows, (row) => (
                 <TableRow key={row.sessionId}>
                   <TableCell className="font-medium">
                     <a href={`/sessions/${row.sessionId}`} className="hover:underline">

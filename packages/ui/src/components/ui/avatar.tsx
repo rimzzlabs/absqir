@@ -1,4 +1,5 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { A } from "@mobily/ts-belt";
 import { cn } from "cn";
 import type * as React from "react";
 
@@ -37,9 +38,10 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
  * The hash is the classic string hash; only the spread over 360 matters.
  */
 export function hueOf(name: string): number {
-  const hash = [...name.trim().toLowerCase()].reduce(
-    (total, char) => (total * 31 + (char.codePointAt(0) ?? 0)) >>> 0,
+  const hash = A.reduce(
+    [...name.trim().toLowerCase()],
     0,
+    (total, char) => (total * 31 + (char.codePointAt(0) ?? 0)) >>> 0,
   );
 
   return hash % 360;

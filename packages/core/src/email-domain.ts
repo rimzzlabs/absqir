@@ -1,3 +1,5 @@
+import { A } from "@mobily/ts-belt";
+
 /**
  * An organization can claim the domain its people share, so a new account at
  * that domain finds its workspace on its own. A shared mailbox provider is
@@ -180,8 +182,8 @@ export function normalizeDomain(value: string): string | null {
 
   // A bare host name and an IP address name no organization on the internet.
   if (labels.length < 2) return null;
-  if (labels.every((label) => /^\d+$/.test(label))) return null;
-  if (!labels.every((label) => LABEL.test(label))) return null;
+  if (A.every(labels, (label) => /^\d+$/.test(label))) return null;
+  if (!A.every(labels, (label) => LABEL.test(label))) return null;
 
   return trimmed;
 }

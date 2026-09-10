@@ -1,5 +1,6 @@
 import { formatDate } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
+import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { SessionStatusBadge } from "@/components/shared/status-badge";
 import type { Session } from "@/queries/use-sessions";
@@ -53,7 +54,7 @@ export function SessionCard(props: { session: Session }) {
 
         {session.groups.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {session.groups.map((group) => (
+            {A.map(session.groups, (group) => (
               <Badge key={group.id} variant="outline">
                 {group.name}
               </Badge>

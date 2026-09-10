@@ -1,5 +1,6 @@
 import { formatDate, isSameMonth, isToday } from "@absqir/core/date";
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { type CalendarEntry, dayKey, entryTitle } from "@/components/calendar/calendar-entries";
 
@@ -66,7 +67,7 @@ export function CalendarGrid(props: CalendarGridProps) {
   return (
     <div className="border-border overflow-x-auto rounded-xl border">
       <div className="bg-muted/40 text-muted-foreground border-border grid min-w-160 grid-cols-7 border-b text-xs font-medium">
-        {WEEKDAY_LABELS.map((label) => (
+        {A.map(WEEKDAY_LABELS, (label) => (
           <div key={label} className="px-2 py-2 text-center">
             {label}
           </div>
@@ -74,7 +75,7 @@ export function CalendarGrid(props: CalendarGridProps) {
       </div>
 
       <div className="divide-border grid min-w-160 grid-cols-7 divide-x divide-y">
-        {props.days.map((day) => {
+        {A.map(props.days, (day) => {
           const list = props.entries.get(dayKey(day)) ?? [];
           const outside = props.view === "month" && !isSameMonth(day, props.month);
           const shown = list.slice(0, limit);
@@ -115,7 +116,7 @@ export function CalendarGrid(props: CalendarGridProps) {
               </div>
 
               <div className="flex flex-col gap-0.5">
-                {shown.map((entry) => (
+                {A.map(shown, (entry) => (
                   <EntryLine key={entry.key} entry={entry} onOpen={props.onOpenEntry} />
                 ))}
                 {list.length > shown.length ? (

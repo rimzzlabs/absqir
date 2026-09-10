@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 export interface CommandInfo {
   id: string;
   usage: string;
@@ -51,7 +52,7 @@ export const COMMANDS = [
 export type CommandId = (typeof COMMANDS)[number]["id"];
 
 export function commandInfo(id: CommandId): CommandInfo {
-  const found = COMMANDS.find((command) => command.id === id);
+  const found = A.getBy([...COMMANDS], (command) => command.id === id);
 
   if (!found) throw new Error(`No such command: ${id}`);
 

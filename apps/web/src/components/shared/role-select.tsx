@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@absqir/ui/select";
+import { A } from "@mobily/ts-belt";
 import { type InvitableRole, ROLE_OPTIONS } from "@/lib/directory-schemas";
 
 export interface RoleSelectProps {
@@ -26,7 +27,7 @@ export function RoleSelect(props: RoleSelectProps) {
 
   return (
     <Select
-      items={options.map((option) => ({ value: option.value, label: option.label }))}
+      items={A.map(options, (option) => ({ value: option.value, label: option.label }))}
       value={props.value}
       disabled={props.disabled}
       onValueChange={(value) => {
@@ -39,7 +40,7 @@ export function RoleSelect(props: RoleSelectProps) {
       <SelectContent>
         <SelectGroup>
           <SelectLabel>Role</SelectLabel>
-          {options.map((option) => (
+          {A.map(options, (option) => (
             <SelectItem key={option.value} value={option.value}>
               <span className="flex flex-col">
                 <span>{option.label}</span>

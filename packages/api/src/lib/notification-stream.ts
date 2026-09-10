@@ -1,4 +1,5 @@
 import { createDb, type Database } from "@absqir/db";
+import { A, pipe } from "@mobily/ts-belt";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import {
@@ -35,13 +36,17 @@ export function splitNew(
   rows: NotificationRow[],
   seen: ReadonlySet<string>,
 ): { fresh: NotificationRow[]; cursor: Date | null; onCursor: Set<string> } {
-  const fresh = rows.filter((row) => !seen.has(row.id));
+  const fresh = A.filter(rows, (row) => !seen.has(row.id));
   const last = fresh.at(-1);
   if (!last) return { fresh, cursor: null, onCursor: new Set(seen) };
 
   const cursor = last.createdAt;
   const onCursor = new Set(
-    rows.filter((row) => row.createdAt.getTime() === cursor.getTime()).map((row) => row.id),
+    pipe(
+      rows,
+      A.filter((row) => row.createdAt.getTime() === cursor.getTime()),
+      A.map((row) => row.id),
+    ),
   );
 
   return { fresh, cursor, onCursor };
@@ -92,7 +97,7 @@ export function notificationStream(
 
       lastCount = count;
       lastWrite = Date.now();
-      const event: StreamEvent = { count, rows: split.fresh.map(toNotificationJson) };
+      const event: StreamEvent = { count, rows: A.map(split.fresh, toNotificationJson) };
 
       await stream.writeSSE({
         event: "notifications",

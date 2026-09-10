@@ -1,6 +1,7 @@
 import { authErrorOf, isRoleName } from "@absqir/auth";
 import { type Database, schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { csvToRecords } from "#src/lib/csv";
@@ -231,9 +232,9 @@ async function decorate(
   organizationId: string,
   rows: PersonRow[],
 ): Promise<Decorations> {
-  const userIds = rows.flatMap((row) => (row.userId ? [row.userId] : []));
-  const emails = rows.flatMap((row) => (row.email ? [row.email] : []));
-  const ids = rows.map((row) => row.id);
+  const userIds = A.flatMap(rows, (row) => (row.userId ? [row.userId] : []));
+  const emails = A.flatMap(rows, (row) => (row.email ? [row.email] : []));
+  const ids = A.map(rows, (row) => row.id);
 
   const [members, invitations, memberships] = await Promise.all([
     userIds.length
@@ -273,8 +274,8 @@ async function decorate(
   }
 
   return {
-    roles: new Map(members.map((row) => [row.userId, row.role])),
-    invited: new Set(invitations.map((row) => row.email)),
+    roles: new Map(A.map(members, (row) => [row.userId, row.role])),
+    invited: new Set(A.map(invitations, (row) => row.email)),
     groups,
   };
 }
@@ -352,7 +353,7 @@ export const peopleRoutes = app
     const extra = await decorate(c.var.db, organizationId, rows);
 
     return c.json(
-      rows.map((row) => toJson(row, extra)),
+      A.map(rows, (row) => toJson(row, extra)),
       200,
     );
   })
@@ -494,9 +495,9 @@ export const peopleRoutes = app
       .from(person)
       .where(eq(person.organizationId, organizationId));
 
-    const byEmail = new Map(existing.flatMap((row) => (row.email ? [[row.email, row.id]] : [])));
+    const byEmail = new Map(A.flatMap(existing, (row) => (row.email ? [[row.email, row.id]] : [])));
     const byIdentifier = new Map(
-      existing.flatMap((row) => (row.identifier ? [[row.identifier, row.id]] : [])),
+      A.flatMap(existing, (row) => (row.identifier ? [[row.identifier, row.id]] : [])),
     );
 
     let created = 0;

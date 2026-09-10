@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
+import { A } from "@mobily/ts-belt";
 import { ListNumbersIcon } from "@phosphor-icons/react";
 
 const STEPS = [
@@ -29,7 +30,7 @@ export function CheckInSteps() {
       </CardHeader>
       <CardContent>
         <ol className="flex flex-col gap-3">
-          {STEPS.map((step, index) => (
+          {A.mapWithIndex(STEPS, (index, step) => (
             <li key={step.title} className="flex gap-3">
               <span
                 aria-hidden

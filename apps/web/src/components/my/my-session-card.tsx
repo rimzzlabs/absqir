@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
+import { A } from "@mobily/ts-belt";
 import { ClockIcon, TicketIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { MySessionDetails, STRETCHED_TRIGGER } from "@/components/my/my-session-details";
@@ -104,7 +105,7 @@ export function MySessionCard(props: MySessionCardProps) {
 
       {session.groups.length > 0 ? (
         <div className="flex flex-wrap gap-1">
-          {session.groups.map((group) => (
+          {A.map(session.groups, (group) => (
             <Badge key={group.id} variant="outline">
               {group.name}
             </Badge>

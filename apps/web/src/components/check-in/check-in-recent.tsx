@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -41,7 +42,7 @@ export function CheckInRecent() {
         {match(history)
           .with({ isPending: true }, () => (
             <div className="flex flex-col gap-2" aria-busy>
-              {[0, 1, 2].map((key) => (
+              {A.map([0, 1, 2], (key) => (
                 <Skeleton key={key} className="h-9 rounded-lg" />
               ))}
             </div>
@@ -58,7 +59,7 @@ export function CheckInRecent() {
 
             return (
               <ul className="divide-border divide-y">
-                {rows.slice(0, RECENT).map((row) => (
+                {A.map(rows.slice(0, RECENT), (row) => (
                   <li key={row.sessionId} className="flex items-center gap-3 py-2 text-sm">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{row.title}</span>

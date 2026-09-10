@@ -11,6 +11,7 @@ import {
 } from "@absqir/ui/dropdown-menu";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { A } from "@mobily/ts-belt";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -54,7 +55,7 @@ function RowActions(props: { session: Session; record: SessionRecord }) {
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Mark as</DropdownMenuLabel>
-          {STATUSES.map((status) => (
+          {A.map(STATUSES, (status) => (
             <DropdownMenuItem
               key={status}
               disabled={set.isPending || props.record.status === status}
@@ -104,7 +105,7 @@ export function SessionRecords(props: SessionRecordsProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row) => {
+                  {A.map(rows, (row) => {
                     const unexpected = row.expected ? null : "Walk-in";
                     const origin = row.registered ? "Registered" : unexpected;
 

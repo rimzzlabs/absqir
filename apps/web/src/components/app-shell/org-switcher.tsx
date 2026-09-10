@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@absqir/ui/sidebar";
+import { A } from "@mobily/ts-belt";
 import { BuildingsIcon, CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
@@ -105,7 +106,7 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
                 if (value && value !== props.active?.organizationId) setActive.mutate(value);
               }}
             >
-              {props.memberships.map((membership) => (
+              {A.map(props.memberships, (membership) => (
                 <DropdownMenuRadioItem
                   key={membership.organizationId}
                   value={membership.organizationId}

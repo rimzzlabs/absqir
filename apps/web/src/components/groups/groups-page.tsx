@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -37,7 +38,7 @@ function GroupCards(props: { rows: Group[]; onOpen: (id: string) => void }) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {props.rows.map((group) => (
+      {A.map(props.rows, (group) => (
         <button
           key={group.id}
           type="button"
@@ -83,7 +84,7 @@ function GroupsBody(props: GroupsPageProps) {
       {match(groups)
         .with({ isPending: true }, () => (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map((key) => (
+            {A.map([0, 1, 2], (key) => (
               <Skeleton key={key} className="h-24 rounded-xl" />
             ))}
           </div>

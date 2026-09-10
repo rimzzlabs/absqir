@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 import { Body, Head, Html, Img, Preview } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
 import { CONTENT_WIDTH, color, font } from "#src/theme";
@@ -26,7 +27,7 @@ export interface EmailLayoutProps {
  * brand chip is a baked tile: an image never inverts, so the mark always
  * reads.
  */
-const DARK_RULES: readonly [string, string][] = [
+const DARK_RULES: [string, string][] = [
   [".abs-page", `background-color: ${color.paperDark} !important;`],
   [
     ".abs-card",
@@ -43,7 +44,7 @@ const DARK_RULES: readonly [string, string][] = [
 ];
 
 function darkRules(prefix: string) {
-  return DARK_RULES.map((rule) => `${prefix}${rule[0]} { ${rule[1]} }`).join("\n");
+  return A.map(DARK_RULES, (rule) => `${prefix}${rule[0]} { ${rule[1]} }`).join("\n");
 }
 
 const COLOR_SCHEME_CSS = `

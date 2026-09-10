@@ -14,6 +14,7 @@ import { Form, FormField } from "@absqir/ui/form";
 import { Label } from "@absqir/ui/label";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { UploadSimpleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -42,7 +43,7 @@ function Summary(props: { result: ImportResult }) {
         <AlertDescription>
           <p>{result.skipped.length} row(s) skipped:</p>
           <ul className="list-disc pl-5">
-            {result.skipped.slice(0, 10).map((row) => (
+            {A.map(result.skipped.slice(0, 10), (row) => (
               <li key={row.row}>
                 Row {row.row}: {row.reason}
               </li>

@@ -1,4 +1,5 @@
 import { organizationKeys } from "@absqir/core/query-keys";
+import { A } from "@mobily/ts-belt";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -38,7 +39,8 @@ export function useInvitations() {
 
       const now = Date.now();
 
-      return data.filter(
+      return A.filter(
+        data,
         (row) => row.status === "pending" && new Date(row.expiresAt).getTime() > now,
       );
     },

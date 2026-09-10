@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@absqir/ui/select";
+import { A } from "@mobily/ts-belt";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useGroups } from "@/queries/use-groups";
 
@@ -44,7 +45,7 @@ export function SessionsToolbar(props: SessionsToolbarProps) {
       <Select
         items={[
           { value: EVERY_GROUP, label: "Every group" },
-          ...rows.map((group) => ({ value: group.id, label: group.name })),
+          ...A.map(rows, (group) => ({ value: group.id, label: group.name })),
         ]}
         value={props.groupId}
         onValueChange={(value) => {
@@ -61,7 +62,7 @@ export function SessionsToolbar(props: SessionsToolbarProps) {
           {rows.length > 0 ? (
             <SelectGroup>
               <SelectLabel>Groups</SelectLabel>
-              {rows.map((group) => (
+              {A.map(rows, (group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.name}
                 </SelectItem>

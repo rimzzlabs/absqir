@@ -33,6 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mobily/ts-belt": "4.0.0-rc.5",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
     "react": "^19.2.8",

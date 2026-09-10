@@ -1,5 +1,6 @@
 import type { Database } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import type { Context } from "hono";
 import { csvCell } from "#src/lib/csv";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -182,7 +183,7 @@ async function csvLines(
 
     return [
       "name,email,identifier,present,late,excused,absent,attendance_rate,punctuality_rate",
-      ...rows.map((row) =>
+      ...A.map(rows, (row) =>
         [
           csvCell(row.name),
           csvCell(row.email ?? ""),
@@ -203,7 +204,7 @@ async function csvLines(
 
     return [
       "group,people,present,late,excused,absent,attendance_rate",
-      ...rows.map((row) =>
+      ...A.map(rows, (row) =>
         [
           csvCell(row.name),
           row.people,
@@ -221,7 +222,7 @@ async function csvLines(
 
   return [
     "session,starts_at,ends_at,closed,present,late,excused,absent,attendance_rate",
-    ...rows.map((row) =>
+    ...A.map(rows, (row) =>
       [
         csvCell(row.title),
         row.startsAt,

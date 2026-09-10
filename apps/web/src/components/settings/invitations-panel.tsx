@@ -7,6 +7,7 @@ import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { PaperPlaneTiltIcon, XIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
@@ -100,7 +101,7 @@ function PendingList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => (
+              {A.map(rows, (row) => (
                 <TableRow key={row.id}>
                   <TableCell className="font-medium">{row.email}</TableCell>
                   <TableCell>

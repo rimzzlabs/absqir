@@ -5,6 +5,7 @@ import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { ScrollArea } from "@absqir/ui/scroll-area";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import {
   AndroidLogoIcon,
   AppleLogoIcon,
@@ -116,7 +117,7 @@ const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 export function DevicesGrid() {
   const devices = useDevices();
   const revoke = useRevokeSession();
-  const rows = devices.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(devices.data?.pages ?? [], (page) => page.items);
 
   return (
     <div className="space-y-4">
@@ -132,7 +133,7 @@ export function DevicesGrid() {
         .with({ data: P.nonNullable }, () => (
           <ScrollArea className="rounded-xl" viewportClassName="max-h-[32rem] pr-3">
             <ul className={cn(GRID, "p-px")}>
-              {rows.map((device) => (
+              {A.map(rows, (device) => (
                 <DeviceCard
                   key={device.id}
                   device={device}
@@ -166,7 +167,7 @@ export function DevicesGrid() {
 /** Whether a device other than this one is signed in. False hides the sign-out-all button. */
 export function useHasOtherDevices(): boolean {
   const devices = useDevices();
-  const rows = devices.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = A.flatMap(devices.data?.pages ?? [], (page) => page.items);
 
-  return devices.hasNextPage || rows.some((row) => !row.current);
+  return devices.hasNextPage || A.some(rows, (row) => !row.current);
 }

@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 
 export const DEFAULT_APP_URL = "http://localhost:4321";
@@ -82,7 +83,7 @@ function oauthBlock(params: OauthBlockParams): string {
 
   for (const provider of PROVIDERS) {
     const [idKey, secretKey] = keysOf(provider.id);
-    const picked = params.providers.find((entry) => entry.id === provider.id);
+    const picked = A.getBy(params.providers, (entry) => entry.id === provider.id);
     const prefix = picked ? "" : "# ";
 
     lines.push("");
@@ -154,7 +155,7 @@ export function pendingProviderSteps(params: ProviderStepsParams): string[] {
   for (const credential of params.providers) {
     if (credential.clientId && credential.clientSecret) continue;
 
-    const provider = PROVIDERS.find((entry) => entry.id === credential.id);
+    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === credential.id);
     if (!provider) continue;
 
     const [idKey, secretKey] = keysOf(credential.id);

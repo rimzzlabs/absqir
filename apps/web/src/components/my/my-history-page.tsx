@@ -3,6 +3,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { A } from "@mobily/ts-belt";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
@@ -13,8 +14,11 @@ import { type HistoryRow, useMyHistory } from "@/queries/use-my";
 
 function Summary(props: { rows: HistoryRow[] }) {
   const total = props.rows.length;
-  const on = props.rows.filter((row) => row.status === "present" || row.status === "late").length;
-  const late = props.rows.filter((row) => row.status === "late").length;
+  const on = A.filter(
+    props.rows,
+    (row) => row.status === "present" || row.status === "late",
+  ).length;
+  const late = A.filter(props.rows, (row) => row.status === "late").length;
   const rate = total === 0 ? 0 : Math.round((on / total) * 100);
 
   return (
@@ -79,7 +83,7 @@ function HistoryBody() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rows.map((row) => (
+                    {A.map(rows, (row) => (
                       <TableRow key={row.sessionId}>
                         <TableCell className="font-medium">{row.title}</TableCell>
                         <TableCell className="text-muted-foreground">

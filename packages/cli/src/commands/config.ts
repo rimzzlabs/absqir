@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { A } from "@mobily/ts-belt";
 import { usageOf } from "#src/lib/commands";
 import { readEnvValue, setEnvValue } from "#src/lib/env-file";
 import { UsageError } from "#src/lib/errors";
@@ -29,7 +30,7 @@ const SETTINGS: SettingInfo[] = [
 ];
 
 function settingOf(key: string): SettingInfo | undefined {
-  return SETTINGS.find((setting) => setting.key === key);
+  return A.getBy([...SETTINGS], (setting) => setting.key === key) ?? undefined;
 }
 
 function requireEnvFile(): void {
@@ -45,7 +46,7 @@ export async function configSet(argv: string[]): Promise<number> {
 
   if (flagKey && !settingOf(flagKey)) {
     throw new UsageError(
-      `Unknown key ${flagKey}. Known: ${SETTINGS.map((setting) => setting.key).join(", ")}`,
+      `Unknown key ${flagKey}. Known: ${A.map([...SETTINGS], (setting) => setting.key).join(", ")}`,
     );
   }
 
@@ -60,7 +61,7 @@ export async function configSet(argv: string[]): Promise<number> {
     (await ui.select({
       message: "Which setting?",
       flag: "a KEY",
-      options: SETTINGS.map((setting) => ({
+      options: A.map([...SETTINGS], (setting) => ({
         value: setting.key,
         label: setting.key,
         hint: setting.hint,

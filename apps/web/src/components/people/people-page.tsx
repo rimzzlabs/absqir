@@ -4,6 +4,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@a
 import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
+import { A } from "@mobily/ts-belt";
 import {
   IdentificationCardIcon,
   MagnifyingGlassIcon,
@@ -67,7 +68,7 @@ function PeopleTable(props: { rows: Person[]; canManage: boolean }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {props.rows.map((person) => (
+          {A.map(props.rows, (person) => (
             <TableRow key={person.id}>
               <TableCell className="font-medium">{person.name}</TableCell>
               <TableCell className="text-muted-foreground">{person.email ?? "—"}</TableCell>
@@ -77,7 +78,7 @@ function PeopleTable(props: { rows: Person[]; canManage: boolean }) {
                   {person.groups.length === 0 ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
-                    person.groups.map((group) => (
+                    A.map(person.groups, (group) => (
                       <Badge key={group.id} variant="outline">
                         {group.name}
                       </Badge>

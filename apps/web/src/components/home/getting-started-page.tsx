@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Progress } from "@absqir/ui/progress";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import {
   ArrowSquareOutIcon,
   ChartBarIcon,
@@ -146,7 +147,7 @@ function GettingStartedBody(props: GettingStartedPageProps) {
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (data) => {
           const steps = stepsFor(data);
-          const done = steps.filter((step) => step.state === "done").length;
+          const done = A.filter(steps, (step) => step.state === "done").length;
 
           return (
             <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -164,7 +165,7 @@ function GettingStartedBody(props: GettingStartedPageProps) {
                 </CardHeader>
                 <CardContent>
                   <ol className="space-y-6">
-                    {steps.map((step) => (
+                    {A.map(steps, (step) => (
                       <StepRow key={step.label} step={step} />
                     ))}
                   </ol>
@@ -224,7 +225,7 @@ function Aside() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-4">
-            {FEATURES.map((feature) => (
+            {A.map(FEATURES, (feature) => (
               <li key={feature.title} className="flex items-start gap-3">
                 <feature.icon aria-hidden className="text-primary mt-0.5 size-5 shrink-0" />
                 <div>
@@ -243,7 +244,7 @@ function Aside() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
-            {TIPS.map((tip) => (
+            {A.map(TIPS, (tip) => (
               <li key={tip.text} className="text-muted-foreground flex items-start gap-3 text-sm">
                 <tip.icon aria-hidden className="mt-0.5 size-4 shrink-0" />
                 <span>{tip.text}</span>

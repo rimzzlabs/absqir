@@ -2,6 +2,7 @@ import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@absqir/core/no
 import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
+import { A } from "@mobily/ts-belt";
 import {
   BellRingingIcon,
   BellSimpleIcon,
@@ -123,7 +124,7 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
           onValueChange={choose}
           className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4"
         >
-          {OPTIONS.map((option) => (
+          {A.map(OPTIONS, (option) => (
             <FieldLabel key={option.value} htmlFor={`channel-${option.value}`}>
               <Field orientation="horizontal" className="h-full items-start">
                 <span
@@ -174,7 +175,7 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
-              {KINDS.map((kind) => (
+              {A.map(KINDS, (kind) => (
                 <tr key={kind.title}>
                   <td className="px-3 py-2.5 font-medium whitespace-nowrap">{kind.title}</td>
                   <td className="text-muted-foreground px-3 py-2.5 whitespace-nowrap">

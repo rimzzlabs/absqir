@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@absqir/ui/select";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { ArrowClockwiseIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -165,7 +166,7 @@ export function DomainsPanel() {
               <FieldLabel htmlFor="join-policy">People from a verified domain</FieldLabel>
               <FieldContent>
                 <Select
-                  items={POLICY_OPTIONS.map((option) => ({
+                  items={A.map(POLICY_OPTIONS, (option) => ({
                     value: option.value,
                     label: option.label,
                   }))}
@@ -181,7 +182,7 @@ export function DomainsPanel() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>When the email domain matches</SelectLabel>
-                      {POLICY_OPTIONS.map((option) => (
+                      {A.map(POLICY_OPTIONS, (option) => (
                         <SelectItem key={option.value} value={option.value}>
                           <span className="flex flex-col">
                             <span>{option.label}</span>
@@ -208,7 +209,7 @@ export function DomainsPanel() {
                 </p>
               ) : (
                 <div className="border-border rounded-xl border px-4">
-                  {data.items.map((row) => (
+                  {A.map(data.items, (row) => (
                     <DomainRow key={row.id} row={row} />
                   ))}
                 </div>

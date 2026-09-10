@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 /**
  * IANA time zones, as the browser and Node know them. An account can name
  * one, so two people in different places read the same instant in their own
@@ -26,9 +27,12 @@ export function listTimezones(): string[] {
 
 /** "GMT+7", "GMT-3:30", or "GMT" for a zone at one instant. */
 export function timezoneOffset(zone: string, at: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "shortOffset" })
-    .formatToParts(at)
-    .find((part) => part.type === "timeZoneName");
+  const parts = A.getBy(
+    new Intl.DateTimeFormat("en", { timeZone: zone, timeZoneName: "shortOffset" }).formatToParts(
+      at,
+    ),
+    (part) => part.type === "timeZoneName",
+  );
 
   // "GMT+0" and "GMT" both mean no offset; one spelling is enough.
   return (parts?.value ?? "GMT").replace(/^GMT[+-]0$/, "GMT");

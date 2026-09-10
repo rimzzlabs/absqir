@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 /**
  * The QR code rotates: the token is an HMAC over the session id and the
  * current time window. A screenshot of the code therefore expires within one
@@ -76,10 +77,10 @@ export async function verifyQrToken(params: VerifyQrTokenParams): Promise<boolea
   const current = windowAt(now);
 
   const candidates = await Promise.all(
-    [current, current - 1].map((window) =>
+    A.map([current, current - 1], (window) =>
       signWindow({ secret: params.secret, sessionId: params.sessionId, window }),
     ),
   );
 
-  return candidates.some((candidate) => candidate === params.token);
+  return A.some(candidates, (candidate) => candidate === params.token);
 }

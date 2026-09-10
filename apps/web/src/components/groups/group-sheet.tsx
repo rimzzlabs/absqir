@@ -21,6 +21,7 @@ import {
   SheetTitle,
 } from "@absqir/ui/sheet";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { match, P } from "ts-pattern";
@@ -38,14 +39,14 @@ export interface GroupSheetProps {
 }
 
 function sameSet(a: string[], b: string[]) {
-  return a.length === b.length && a.every((id) => b.includes(id));
+  return a.length === b.length && A.every(a, (id) => b.includes(id));
 }
 
 /** A searchable checklist of the directory. Simple, keyboard friendly, no surprises. */
 function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
   const people = usePeople();
   const save = useSetGroupMembers();
-  const initial = useMemo(() => props.group.members.map((row) => row.personId), [props.group]);
+  const initial = useMemo(() => A.map(props.group.members, (row) => row.personId), [props.group]);
   const [selected, setSelected] = useState<string[]>(initial);
   const [query, setQuery] = useState("");
 
@@ -53,18 +54,18 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
     setSelected(initial);
   }, [initial]);
 
-  const rows = (people.data ?? []).filter((person) => {
+  const rows = A.filter(people.data ?? [], (person) => {
     const needle = query.trim().toLowerCase();
     if (!needle) return true;
 
-    return [person.name, person.email ?? "", person.identifier ?? ""].some((value) =>
+    return A.some([person.name, person.email ?? "", person.identifier ?? ""], (value) =>
       value.toLowerCase().includes(needle),
     );
   });
 
   const toggle = (id: string, checked: boolean) => {
     setSelected((current) =>
-      checked ? [...new Set([...current, id])] : current.filter((value) => value !== id),
+      checked ? [...new Set([...current, id])] : A.filter(current, (value) => value !== id),
     );
   };
 
@@ -105,7 +106,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
             <Skeleton className="h-5 w-40" />
           </li>
         ) : null}
-        {rows.map((person) => {
+        {A.map(rows, (person) => {
           const checked = selected.includes(person.id);
           if (!props.canManage && !checked) return null;
 

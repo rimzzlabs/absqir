@@ -1,6 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
+import { A } from "@mobily/ts-belt";
 import { format } from "date-fns";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { expectedPersonIds, type SessionRow } from "#src/lib/expected";
@@ -40,7 +41,7 @@ async function organizationTimezone(db: Database, organizationId: string): Promi
   const counts = new Map<string, number>();
   for (const row of rows) counts.set(row.timezone, (counts.get(row.timezone) ?? 0) + 1);
 
-  const [best] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const [best] = A.sort([...counts.entries()], (a, b) => b[1] - a[1]);
 
   return best?.[0] ?? "UTC";
 }
@@ -54,7 +55,7 @@ async function userTimezones(db: Database, userIds: string[]): Promise<Map<strin
     .from(user)
     .where(inArray(user.id, userIds));
 
-  return new Map(rows.flatMap((row) => (row.timezone ? [[row.id, row.timezone] as const] : [])));
+  return new Map(A.flatMap(rows, (row) => (row.timezone ? [[row.id, row.timezone] as const] : [])));
 }
 
 function whenLine(session: SessionRow, timezone: string): string {
@@ -150,7 +151,7 @@ export async function notifySessionClosed(
 
   return createNotifications(
     db,
-    userIds.map((userId) => ({
+    A.map(userIds, (userId) => ({
       organizationId: session.organizationId,
       userId,
       type: "session-closed" as const,
@@ -180,7 +181,7 @@ export async function notifyLeaveRequested(
 
   return createNotifications(
     db,
-    userIds.map((userId) => ({
+    A.map(userIds, (userId) => ({
       organizationId: params.organizationId,
       userId,
       type: "leave-requested" as const,
@@ -247,7 +248,7 @@ export async function notifyJoinRequested(
 
   return createNotifications(
     db,
-    userIds.map((userId) => ({
+    A.map(userIds, (userId) => ({
       organizationId: params.organizationId,
       userId,
       type: "join-requested" as const,

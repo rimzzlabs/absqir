@@ -1,4 +1,5 @@
 import { Button } from "@absqir/ui/button";
+import { A, pipe } from "@mobily/ts-belt";
 import { useEffect, useState } from "react";
 import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
@@ -69,13 +70,17 @@ export function ConnectedAccounts() {
 
   const { hasPassword, linked, available } = credentials.data;
 
-  const accountIdByProvider = new Map(linked.map((row) => [row.provider, row.accountId]));
+  const accountIdByProvider = new Map(A.map(linked, (row) => [row.provider, row.accountId]));
   const offered = new Set([...available, ...accountIdByProvider.keys()]);
 
-  const rows: ProviderRow[] = [...offered].filter(isAuthProvider).map((provider) => ({
-    provider,
-    accountId: accountIdByProvider.get(provider) ?? null,
-  }));
+  const rows: ProviderRow[] = pipe(
+    [...offered],
+    A.filter(isAuthProvider),
+    A.map((provider) => ({
+      provider,
+      accountId: accountIdByProvider.get(provider) ?? null,
+    })),
+  );
 
   if (rows.length === 0) return null;
 
@@ -88,7 +93,7 @@ export function ConnectedAccounts() {
     >
       <div className="space-y-3">
         <ul className="divide-y divide-border rounded-lg border border-border">
-          {rows.map((row) => {
+          {A.map(rows, (row) => {
             const { provider, accountId } = row;
             const name = providerLabel(provider);
 

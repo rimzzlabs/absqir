@@ -1,5 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { createPass } from "#src/lib/member-pass";
 import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
@@ -171,7 +172,7 @@ export const myRoutes = app
       limit: query.limit ?? PAGE_SIZE,
       now,
     });
-    const ids = page.items.map((row) => row.id);
+    const ids = A.map(page.items, (row) => row.id);
 
     const records = ids.length
       ? await c.var.db
@@ -181,7 +182,7 @@ export const myRoutes = app
             and(eq(attendanceRecord.personId, me.id), inArray(attendanceRecord.sessionId, ids)),
           )
       : [];
-    const byId = new Map(records.map((row) => [row.sessionId, row]));
+    const byId = new Map(A.map(records, (row) => [row.sessionId, row]));
 
     const leaves = ids.length
       ? await c.var.db
@@ -189,13 +190,13 @@ export const myRoutes = app
           .from(leaveRequest)
           .where(and(eq(leaveRequest.personId, me.id), inArray(leaveRequest.sessionId, ids)))
       : [];
-    const leaveById = new Map(leaves.map((row) => [row.sessionId, row]));
+    const leaveById = new Map(A.map(leaves, (row) => [row.sessionId, row]));
 
     const json = await toSessionJson(c.var.db, page.items, now);
 
     return c.json(
       {
-        items: json.map((row) => {
+        items: A.map(json, (row) => {
           const record = byId.get(row.id);
           const leave = leaveById.get(row.id);
 
@@ -275,7 +276,7 @@ export const myRoutes = app
       .limit(HISTORY_LIMIT);
 
     return c.json(
-      rows.map(({ record, session }) => ({
+      A.map(rows, ({ record, session }) => ({
         sessionId: session.id,
         title: session.title,
         startsAt: session.startsAt.toISOString(),

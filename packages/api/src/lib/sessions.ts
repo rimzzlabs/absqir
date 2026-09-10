@@ -1,6 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { AttendanceStatus } from "@absqir/db/schema";
+import { A } from "@mobily/ts-belt";
 import {
   and,
   asc,
@@ -99,7 +100,7 @@ export async function finalizeSession(db: Database, session: SessionRow, at: Dat
       await tx
         .insert(attendanceRecord)
         .values(
-          expected.map((personId) => ({
+          A.map(expected, (personId) => ({
             id: crypto.randomUUID(),
             sessionId: session.id,
             personId,
@@ -246,10 +247,10 @@ export async function toSessionJson(
   rows: SessionRow[],
   now: Date = new Date(),
 ): Promise<SessionJson[]> {
-  const ids = rows.map((row) => row.id);
+  const ids = A.map(rows, (row) => row.id);
   const [groups, counts] = await Promise.all([groupsBySession(db, ids), countsBySession(db, ids)]);
 
-  return rows.map((row) => ({
+  return A.map(rows, (row) => ({
     id: row.id,
     title: row.title,
     description: row.description ?? null,
@@ -372,7 +373,7 @@ export async function listSessions(db: Database, params: ListSessionsParams) {
 
   const page = pageOf(rows, params.limit, (entry) => ({ at: entry.at, id: entry.row.id }));
 
-  return { items: page.items.map((entry) => entry.row), nextCursor: page.nextCursor };
+  return { items: A.map(page.items, (entry) => entry.row), nextCursor: page.nextCursor };
 }
 
 export interface RecordJson {
@@ -400,7 +401,7 @@ export async function sessionRecords(db: Database, sessionId: string): Promise<R
 
   const expectedSet = new Set(expected);
   const registeredSet = new Set(registered);
-  const ids = [...new Set([...expected, ...records.map((row) => row.personId)])];
+  const ids = [...new Set([...expected, ...A.map(records, (row) => row.personId)])];
   if (ids.length === 0) return [];
 
   const people = await db
@@ -414,9 +415,9 @@ export async function sessionRecords(db: Database, sessionId: string): Promise<R
     .where(inArray(person.id, ids))
     .orderBy(asc(sql`lower(${person.name})`));
 
-  const byPerson = new Map(records.map((row) => [row.personId, row]));
+  const byPerson = new Map(A.map(records, (row) => [row.personId, row]));
 
-  return people.map((row) => {
+  return A.map(people, (row) => {
     const record = byPerson.get(row.id);
 
     return {

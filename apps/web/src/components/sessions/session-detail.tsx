@@ -13,6 +13,7 @@ import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import {
   CameraIcon,
   DownloadSimpleIcon,
@@ -78,7 +79,7 @@ function Header(props: { session: Session; role: RoleName }) {
             {session.lateAfterMinutes} min · opens {session.opensBeforeMinutes} min early
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
-            {session.groups.map((group) => (
+            {A.map(session.groups, (group) => (
               <Badge key={group.id} variant="outline">
                 {group.name}
               </Badge>

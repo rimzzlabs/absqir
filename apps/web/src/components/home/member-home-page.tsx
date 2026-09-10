@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, NotePencilIcon, ScanIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -72,9 +73,9 @@ function MemberHomeBody(props: MemberHomePageProps) {
   const [passFor, setPassFor] = useState<string | null>(null);
   const [leaveFor, setLeaveFor] = useState<MySession | null>(null);
 
-  const rows = sessions.data?.pages.flatMap((page) => page.items) ?? [];
-  const requests = leave.data?.pages.flatMap((page) => page.items) ?? [];
-  const pendingLeave = requests.filter((row) => row.status === "pending").length;
+  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
+  const requests = A.flatMap(leave.data?.pages ?? [], (page) => page.items);
+  const pendingLeave = A.filter(requests, (row) => row.status === "pending").length;
   const firstName = props.userName.split(" ")[0] ?? props.userName;
 
   return (

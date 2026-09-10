@@ -25,6 +25,7 @@ import {
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
@@ -52,7 +53,7 @@ const WEEKDAYS = [
 
 /** "yyyy-MM-dd" → a local midnight, so the calendar shows the right day. */
 function fromDay(value: string): Date {
-  const [y, m, d] = value.split("-").map(Number);
+  const [y, m, d] = A.map(value.split("-"), Number);
   return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
 }
 
@@ -71,7 +72,7 @@ function defaults(schedule: Schedule | null): ScheduleValues {
       endsOn: schedule.endsOn ? fromDay(schedule.endsOn) : null,
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
-      groupIds: schedule.groups.map((group) => group.id),
+      groupIds: A.map(schedule.groups, (group) => group.id),
     };
   }
 
@@ -210,14 +211,14 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FieldContent>
                   <ToggleGroup
                     multiple
-                    value={form.watch("weekdays").map(String)}
+                    value={A.map(form.watch("weekdays"), String)}
                     onValueChange={(value) =>
-                      form.setValue("weekdays", value.map(Number), { shouldValidate: true })
+                      form.setValue("weekdays", A.map(value, Number), { shouldValidate: true })
                     }
                     variant="outline"
                     className="flex-wrap"
                   >
-                    {WEEKDAYS.map((day) => (
+                    {A.map(WEEKDAYS, (day) => (
                       <ToggleGroupItem key={day.value} value={String(day.value)}>
                         {day.label}
                       </ToggleGroupItem>

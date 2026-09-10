@@ -1,3 +1,4 @@
+import { A } from "@mobily/ts-belt";
 import {
   CalendarBlankIcon,
   ChartBarIcon,
@@ -121,7 +122,7 @@ export function navFor(role: RoleName): NavGroup[] {
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => roleAtLeast(role, item.minimum)),
+      items: A.filter(group.items, (item) => roleAtLeast(role, item.minimum)),
     }))
     .filter((group) => group.items.length > 0);
 }

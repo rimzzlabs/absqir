@@ -1,5 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import { materializeSchedules } from "#src/lib/schedule";
@@ -162,7 +163,7 @@ function validTimezone(name: string) {
 }
 
 async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: ScheduleRow[]) {
-  const ids = rows.map((row) => row.id);
+  const ids = A.map(rows, (row) => row.id);
   const groups = ids.length
     ? await c.var.db
         .select({ scheduleId: scheduleGroup.scheduleId, id: group.id, name: group.name })
@@ -172,7 +173,7 @@ async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: Sched
         .orderBy(asc(group.name))
     : [];
 
-  return rows.map((row) => ({
+  return A.map(rows, (row) => ({
     id: row.id,
     title: row.title,
     description: row.description ?? null,
@@ -187,9 +188,11 @@ async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: Sched
     endsOn: row.endsOn ?? null,
     active: row.active,
     allowWalkIns: row.allowWalkIns,
-    groups: groups
-      .filter((item) => item.scheduleId === row.id)
-      .map((item) => ({ id: item.id, name: item.name })),
+    groups: pipe(
+      groups,
+      A.filter((item) => item.scheduleId === row.id),
+      A.map((item) => ({ id: item.id, name: item.name })),
+    ),
     createdAt: row.createdAt.toISOString(),
   }));
 }
@@ -213,7 +216,7 @@ async function validGroupIds(c: Parameters<typeof organizationIdOf>[0], ids: str
     .from(group)
     .where(and(eq(group.organizationId, organizationIdOf(c)), inArray(group.id, wanted)));
 
-  return rows.map((row) => row.id);
+  return A.map(rows, (row) => row.id);
 }
 
 /** Future sessions the rule spawned, untouched by anyone, go away with a change. */
@@ -272,7 +275,7 @@ export const scheduleRoutes = app
         title: body.title,
         description: body.description?.trim() || null,
         frequency: body.frequency,
-        weekdays: body.frequency === "weekly" ? [...new Set(body.weekdays)].sort() : [],
+        weekdays: body.frequency === "weekly" ? A.sort(A.uniq(body.weekdays), (a, b) => a - b) : [],
         startTime: body.startTime,
         durationMinutes: body.durationMinutes,
         lateAfterMinutes: body.lateAfterMinutes ?? 15,
@@ -287,7 +290,7 @@ export const scheduleRoutes = app
       if (groupIds.length) {
         await tx
           .insert(scheduleGroup)
-          .values(groupIds.map((groupId) => ({ scheduleId: id, groupId })));
+          .values(A.map(groupIds, (groupId) => ({ scheduleId: id, groupId })));
       }
     });
 
@@ -330,7 +333,7 @@ export const scheduleRoutes = app
             ? { description: body.description?.trim() || null }
             : {}),
           frequency,
-          weekdays: frequency === "weekly" ? [...new Set(weekdays)].sort() : [],
+          weekdays: frequency === "weekly" ? A.sort(A.uniq(weekdays), (a, b) => a - b) : [],
           ...(body.startTime !== undefined ? { startTime: body.startTime } : {}),
           ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
           ...(body.lateAfterMinutes !== undefined
@@ -353,7 +356,7 @@ export const scheduleRoutes = app
         if (groupIds.length) {
           await tx
             .insert(scheduleGroup)
-            .values(groupIds.map((groupId) => ({ scheduleId: id, groupId })));
+            .values(A.map(groupIds, (groupId) => ({ scheduleId: id, groupId })));
         }
       }
     });

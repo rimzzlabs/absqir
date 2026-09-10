@@ -1,5 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { A } from "@mobily/ts-belt";
 import { and, eq, inArray } from "drizzle-orm";
 import { csvCell } from "#src/lib/csv";
 import { parsePass, verifyPass } from "#src/lib/member-pass";
@@ -386,7 +387,7 @@ async function validGroupIds(c: Parameters<typeof organizationIdOf>[0], ids: str
     .from(group)
     .where(and(eq(group.organizationId, organizationId), inArray(group.id, wanted)));
 
-  return rows.map((row) => row.id);
+  return A.map(rows, (row) => row.id);
 }
 
 const FORBIDDEN_MESSAGE = "This needs the organizer role or higher";
@@ -455,7 +456,7 @@ export const sessionRoutes = app
       if (groupIds.length) {
         await tx
           .insert(sessionGroup)
-          .values(groupIds.map((groupId) => ({ sessionId: id, groupId })));
+          .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })));
       }
     });
 
@@ -528,7 +529,7 @@ export const sessionRoutes = app
         if (groupIds.length) {
           await tx
             .insert(sessionGroup)
-            .values(groupIds.map((groupId) => ({ sessionId: id, groupId })));
+            .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })));
         }
       }
     });
@@ -643,7 +644,7 @@ export const sessionRoutes = app
     });
 
     const rows = await sessionRecords(c.var.db, id);
-    const record = rows.find((row) => row.personId === personId);
+    const record = A.getBy(rows, (row) => row.personId === personId);
     if (!record) throw new Error("Record vanished");
 
     return c.json(record, 200);
@@ -823,7 +824,7 @@ export const sessionRoutes = app
 
     const lines = [
       "name,email,identifier,status,checked_in_at,method,note",
-      ...records.map((row) =>
+      ...A.map(records, (row) =>
         [
           csvCell(row.name),
           csvCell(row.email ?? ""),

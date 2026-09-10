@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
+import { A, pipe } from "@mobily/ts-belt";
 import { CaretRightIcon, ChartBarIcon } from "@phosphor-icons/react";
 import { type AttendanceStatus, AttendanceStatusBadge } from "@/components/shared/status-badge";
 import type { HistoryRow } from "@/queries/use-my";
@@ -32,9 +33,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const total = props.history.length;
   const countNote = total === 1 ? "One closed event." : `${total} closed events.`;
   const counts = Object.fromEntries(
-    SEGMENTS.map((segment) => [
+    A.map(SEGMENTS, (segment) => [
       segment.status,
-      props.history.filter((row) => row.status === segment.status).length,
+      A.filter(props.history, (row) => row.status === segment.status).length,
     ]),
   ) as Record<AttendanceStatus, number>;
   // An excused event neither helps nor hurts.
@@ -71,24 +72,29 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
 
         <div
           role="img"
-          aria-label={SEGMENTS.map((segment) => `${counts[segment.status]} ${segment.label}`).join(
-            ", ",
-          )}
+          aria-label={A.map(
+            SEGMENTS,
+            (segment) => `${counts[segment.status]} ${segment.label}`,
+          ).join(", ")}
           className="bg-muted flex h-2 w-full overflow-hidden rounded-full"
         >
           {total > 0
-            ? SEGMENTS.filter((segment) => counts[segment.status] > 0).map((segment) => (
-                <span
-                  key={segment.status}
-                  className={segment.className}
-                  style={{ width: `${(counts[segment.status] / total) * 100}%` }}
-                />
-              ))
+            ? pipe(
+                SEGMENTS,
+                A.filter((segment) => counts[segment.status] > 0),
+                A.map((segment) => (
+                  <span
+                    key={segment.status}
+                    className={segment.className}
+                    style={{ width: `${(counts[segment.status] / total) * 100}%` }}
+                  />
+                )),
+              )
             : null}
         </div>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-          {SEGMENTS.map((segment) => (
+          {A.map(SEGMENTS, (segment) => (
             <div key={segment.status} className="flex items-center gap-2">
               <span aria-hidden className={cn("size-2 shrink-0 rounded-full", segment.className)} />
               <dt className="text-muted-foreground flex-1">{segment.label}</dt>
@@ -99,7 +105,7 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
 
         {recent.length > 0 ? (
           <ul className="divide-border border-border divide-y border-t pt-1">
-            {recent.map((row) => (
+            {A.map(recent, (row) => (
               <li key={row.sessionId} className="flex items-center gap-3 py-2 text-sm">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{row.title}</span>
