@@ -26,6 +26,11 @@ export const COMMANDS = [
     hint: "apply database migrations in a one-off container",
   },
   {
+    id: "db reset",
+    usage: "absqir db reset [--yes]",
+    hint: "delete the database volume and start again",
+  },
+  {
     id: "admin create",
     usage: "absqir admin create --email <email> --name <name> [--password <pw>] [--create-orgs]",
     hint: "create an account",
