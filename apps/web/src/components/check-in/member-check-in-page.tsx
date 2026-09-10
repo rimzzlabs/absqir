@@ -47,6 +47,7 @@ function Scanner() {
 
   // The camera stops once the reader is in; a result should not flicker.
   const camera = useCamera(submit, { enabled: !checkIn.isSuccess });
+  const progressNote = checkIn.isPending ? "Checking you in." : "";
   const error = rejected ?? checkIn.error?.message ?? null;
 
   return (
@@ -66,9 +67,7 @@ function Scanner() {
         <p aria-live="polite" className="sr-only">
           {checkIn.isSuccess
             ? `${checkIn.data.personName}, you are in for ${checkIn.data.sessionTitle}.`
-            : checkIn.isPending
-              ? "Checking you in."
-              : ""}
+            : progressNote}
         </p>
 
         <div className="mx-auto w-full max-w-md">

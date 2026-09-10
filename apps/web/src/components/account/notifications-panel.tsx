@@ -12,6 +12,7 @@ import {
   MinusIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { match } from "ts-pattern";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { useUpdateNotificationChannel } from "@/mutations/use-update-notification-channel";
@@ -85,6 +86,10 @@ function isChannel(value: string): value is NotificationChannel {
 export function NotificationsPanel(props: NotificationsPanelProps) {
   const [channel, setChannel] = useState(props.channel);
   const save = useUpdateNotificationChannel();
+  const saveNote = match(save)
+    .with({ isPending: true }, () => "Saving…")
+    .with({ isSuccess: true }, () => "Saved.")
+    .otherwise(() => null);
 
   const choose = (value: unknown) => {
     if (typeof value !== "string" || !isChannel(value) || value === channel) return;
@@ -104,13 +109,9 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
         hint={
           <>
             Applies from now on. What was already written stays where it is.
-            {save.isPending ? (
+            {saveNote ? (
               <span className="text-foreground block pt-2" role="status">
-                Saving…
-              </span>
-            ) : save.isSuccess ? (
-              <span className="text-foreground block pt-2" role="status">
-                Saved.
+                {saveNote}
               </span>
             ) : null}
           </>

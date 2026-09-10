@@ -43,6 +43,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   }, [open, form]);
 
   const approving = props.pending?.decision === "approved";
+  const decideLabel = approving ? "Approve" : "Decline";
 
   const onSubmit = (values: DecideLeaveValues) => {
     if (!props.pending) return;
@@ -96,7 +97,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
                 variant={approving ? "default" : "destructive"}
                 disabled={decide.isPending}
               >
-                {decide.isPending ? "Saving…" : approving ? "Approve" : "Decline"}
+                {decide.isPending ? "Saving…" : decideLabel}
               </Button>
             </DialogFooter>
           </form>

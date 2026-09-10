@@ -74,13 +74,17 @@ export function JoinOrganization(props: JoinOrganizationProps) {
   const [message, setMessage] = useState("");
   const [writing, setWriting] = useState(false);
 
-  const invitations = [...status.invitations].sort((a, b) =>
-    a.id === props.invitationId ? -1 : b.id === props.invitationId ? 1 : 0,
-  );
+  const invitations = status.invitations.toSorted((a, b) => {
+    if (a.id === props.invitationId) return -1;
+    if (b.id === props.invitationId) return 1;
+    return 0;
+  });
   const hasInvitations = invitations.length > 0;
   const hasEvent = Boolean(props.eventId);
   const workspace = status.workspace;
   const waiting = status.joinRequest;
+  const requestLabel = writing ? "Send request" : "Ask to join";
+  const joinLabel = workspace?.joinPolicy === "auto" ? "Join" : requestLabel;
 
   const heading = (() => {
     if (waiting) {
@@ -199,13 +203,7 @@ export function JoinOrganization(props: JoinOrganizationProps) {
                   ask.mutate({ message: message.trim() || undefined });
                 }}
               >
-                {ask.isPending
-                  ? "Sending…"
-                  : workspace.joinPolicy === "auto"
-                    ? "Join"
-                    : writing
-                      ? "Send request"
-                      : "Ask to join"}
+                {ask.isPending ? "Sending…" : joinLabel}
               </Button>
             </ItemActions>
           </Item>

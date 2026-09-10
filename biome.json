@@ -34,6 +34,7 @@
         "noUnusedVariables": "error"
       },
       "style": {
+        "noNestedTernary": "error",
         "useConsistentArrayType": {
           "level": "error",
           "options": {

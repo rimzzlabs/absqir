@@ -104,36 +104,37 @@ export function SessionRecords(props: SessionRecordsProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={row.personId}>
-                      <TableCell className="font-medium">
-                        {row.name}
-                        {row.registered ? (
-                          <Badge variant="secondary" className="ml-2">
-                            Registered
-                          </Badge>
-                        ) : row.expected ? null : (
-                          <Badge variant="secondary" className="ml-2">
-                            Walk-in
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{row.identifier ?? "—"}</TableCell>
-                      <TableCell>
-                        <AttendanceStatusBadge status={row.status} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground tabular-nums">
-                        {row.checkedInAt ? formatDate(new Date(row.checkedInAt), "time") : "—"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {row.method ? METHODS[row.method] : "—"}
-                        {row.note ? ` · ${row.note}` : ""}
-                      </TableCell>
-                      <TableCell>
-                        <RowActions session={props.session} record={row} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {rows.map((row) => {
+                    const unexpected = row.expected ? null : "Walk-in";
+                    const origin = row.registered ? "Registered" : unexpected;
+
+                    return (
+                      <TableRow key={row.personId}>
+                        <TableCell className="font-medium">
+                          {row.name}
+                          {origin ? (
+                            <Badge variant="secondary" className="ml-2">
+                              {origin}
+                            </Badge>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{row.identifier ?? "—"}</TableCell>
+                        <TableCell>
+                          <AttendanceStatusBadge status={row.status} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">
+                          {row.checkedInAt ? formatDate(new Date(row.checkedInAt), "time") : "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {row.method ? METHODS[row.method] : "—"}
+                          {row.note ? ` · ${row.note}` : ""}
+                        </TableCell>
+                        <TableCell>
+                          <RowActions session={props.session} record={row} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -272,19 +272,21 @@ export async function init(argv: string[]): Promise<number> {
         })
       : DEFAULT_EMAIL_FROM);
 
-  const chosen = values.provider
-    ? parseProviders(values.provider)
-    : guided
-      ? await ui.multiselect<ProviderId>({
-          message: "Sign-in providers, on top of the emailed code",
-          flag: "--provider",
-          options: PROVIDERS.map((provider) => ({
-            value: provider.id,
-            label: provider.label,
-            hint: "absqir asks for the keys next",
-          })),
-        })
-      : [];
+  const askProviders = async () => {
+    if (!guided) return [];
+
+    return ui.multiselect<ProviderId>({
+      message: "Sign-in providers, on top of the emailed code",
+      flag: "--provider",
+      options: PROVIDERS.map((provider) => ({
+        value: provider.id,
+        label: provider.label,
+        hint: "absqir asks for the keys next",
+      })),
+    });
+  };
+
+  const chosen = values.provider ? parseProviders(values.provider) : await askProviders();
 
   const providers = guided
     ? await askCredentials({ appUrl, chosen })

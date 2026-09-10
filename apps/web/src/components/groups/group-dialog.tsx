@@ -40,6 +40,7 @@ export function GroupDialog(props: GroupDialogProps) {
   const create = useCreateGroup();
   const update = useUpdateGroup();
   const pending = create.isPending || update.isPending;
+  const saveLabel = editing ? "Save" : "Create";
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.group));
@@ -99,7 +100,7 @@ export function GroupDialog(props: GroupDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : editing ? "Save" : "Create"}
+                {pending ? "Saving…" : saveLabel}
               </Button>
             </DialogFooter>
           </form>

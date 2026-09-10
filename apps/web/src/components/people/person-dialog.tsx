@@ -50,6 +50,8 @@ export function PersonDialog(props: PersonDialogProps) {
   const update = useUpdatePerson();
   const pending = create.isPending || update.isPending;
   const invite = form.watch("invite");
+  const addLabel = invite ? "Add and invite" : "Add";
+  const saveLabel = editing ? "Save" : addLabel;
   const email = form.watch("email");
 
   // Reopening for another person, or after a save, starts from that person.
@@ -147,7 +149,7 @@ export function PersonDialog(props: PersonDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : editing ? "Save" : invite ? "Add and invite" : "Add"}
+                {pending ? "Saving…" : saveLabel}
               </Button>
             </DialogFooter>
           </form>

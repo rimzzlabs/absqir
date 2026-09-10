@@ -95,6 +95,7 @@ export function SessionDialog(props: SessionDialogProps) {
   const create = useCreateSession();
   const update = useUpdateSession();
   const pending = create.isPending || update.isPending;
+  const saveLabel = editing ? "Save" : "Create";
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.session, props.initialStart));
@@ -283,7 +284,7 @@ export function SessionDialog(props: SessionDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : editing ? "Save" : "Create"}
+                {pending ? "Saving…" : saveLabel}
               </Button>
             </DialogFooter>
           </form>

@@ -89,6 +89,8 @@ function AgendaRow(props: {
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
   const rows = props.sessions.filter((row) => row.status !== "done").slice(0, PREVIEW);
+  const agendaHint =
+    rows.length === 0 ? "Nothing is planned for you." : "Soonest first, in your time zone.";
   const days = byDay(rows);
   const today = formatDate(new Date(), "iso");
 
@@ -99,13 +101,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
           <CalendarBlankIcon />
           Coming up
         </CardTitle>
-        <CardDescription>
-          {props.pending
-            ? "Loading your days…"
-            : rows.length === 0
-              ? "Nothing is planned for you."
-              : "Soonest first, in your time zone."}
-        </CardDescription>
+        <CardDescription>{props.pending ? "Loading your days…" : agendaHint}</CardDescription>
         <CardAction>
           <a href="/my/sessions" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             All my events

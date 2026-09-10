@@ -32,6 +32,15 @@ export interface MemberHomePageProps {
 }
 
 function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
+  const waitingNote =
+    props.pending === 1
+      ? "One request waits for a decision."
+      : `${props.pending} requests wait for a decision.`;
+  const restingNote = props.latest
+    ? "Your last request."
+    : "Cannot make an event? Ask before it starts.";
+  const badge: LeaveStatus | null = props.pending > 0 ? "pending" : props.latest;
+
   return (
     <Card size="sm">
       <CardHeader>
@@ -39,22 +48,10 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
           <NotePencilIcon />
           Leave
         </CardTitle>
-        <CardDescription>
-          {props.pending > 0
-            ? props.pending === 1
-              ? "One request waits for a decision."
-              : `${props.pending} requests wait for a decision.`
-            : props.latest
-              ? "Your last request."
-              : "Cannot make an event? Ask before it starts."}
-        </CardDescription>
-        {props.pending > 0 ? (
+        <CardDescription>{props.pending > 0 ? waitingNote : restingNote}</CardDescription>
+        {badge ? (
           <CardAction>
-            <LeaveStatusBadge status="pending" />
-          </CardAction>
-        ) : props.latest ? (
-          <CardAction>
-            <LeaveStatusBadge status={props.latest} />
+            <LeaveStatusBadge status={badge} />
           </CardAction>
         ) : null}
       </CardHeader>

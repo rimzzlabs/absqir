@@ -102,6 +102,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
   const create = useCreateSchedule();
   const update = useUpdateSchedule();
   const pending = create.isPending || update.isPending;
+  const saveLabel = editing ? "Save" : "Create";
   // A new rule starts in the zone the organizer reads times in.
   const timezone = props.schedule?.timezone ?? displayTimezone() ?? deviceTimezone();
 
@@ -325,7 +326,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : editing ? "Save" : "Create"}
+                {pending ? "Saving…" : saveLabel}
               </Button>
             </DialogFooter>
           </form>

@@ -34,6 +34,7 @@ function Identity(props: ProfilePanelProps) {
   const [readError, setReadError] = useState<Error | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const save = useUpdateProfile();
+  const pictureLabel = props.image ? "Change picture" : "Add a picture";
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -82,7 +83,7 @@ function Identity(props: ProfilePanelProps) {
             onClick={() => fileInput.current?.click()}
           >
             <CameraIcon />
-            {save.isPending ? "Saving…" : props.image ? "Change picture" : "Add a picture"}
+            {save.isPending ? "Saving…" : pictureLabel}
           </Button>
           {props.image ? (
             <Button

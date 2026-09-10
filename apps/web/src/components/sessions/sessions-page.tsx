@@ -30,6 +30,12 @@ const TEXT = parseAsString.withDefault("");
 const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
 function SessionGrid(props: { rows: Session[]; scope: ListScope; filtered: boolean }) {
+  const past = props.scope === "past";
+  const emptyTitle = past ? "Nothing has happened yet" : "Nothing is planned";
+  const emptyHint = past
+    ? "Closed events land here with their records."
+    : "Create an event, or set up a schedule that creates them for you.";
+
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -37,19 +43,9 @@ function SessionGrid(props: { rows: Session[]; scope: ListScope; filtered: boole
           <EmptyMedia variant="icon">
             <QrCodeIcon />
           </EmptyMedia>
-          <EmptyTitle>
-            {props.filtered
-              ? "Nothing matches"
-              : props.scope === "past"
-                ? "Nothing has happened yet"
-                : "Nothing is planned"}
-          </EmptyTitle>
+          <EmptyTitle>{props.filtered ? "Nothing matches" : emptyTitle}</EmptyTitle>
           <EmptyDescription>
-            {props.filtered
-              ? "Try another title, or every group."
-              : props.scope === "past"
-                ? "Closed events land here with their records."
-                : "Create an event, or set up a schedule that creates them for you."}
+            {props.filtered ? "Try another title, or every group." : emptyHint}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

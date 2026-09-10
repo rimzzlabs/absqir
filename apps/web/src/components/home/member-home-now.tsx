@@ -64,6 +64,7 @@ function Actions(props: { session: MySession; onPass: (id: string) => void }) {
 export function MemberHomeNow(props: MemberHomeNowProps) {
   const next = pickNow(props.sessions);
   const running = next?.status === "running";
+  const idleLabel = next ? "Up next" : "Nothing planned";
 
   return (
     <section
@@ -91,7 +92,7 @@ export function MemberHomeNow(props: MemberHomeNowProps) {
             {running ? (
               <span aria-hidden className="bg-primary size-1.5 animate-pulse rounded-full" />
             ) : null}
-            {running ? "Running now" : next ? "Up next" : "Nothing planned"}
+            {running ? "Running now" : idleLabel}
           </p>
           <h2
             id="home-now"

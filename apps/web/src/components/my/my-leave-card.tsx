@@ -13,6 +13,11 @@ export interface MyLeaveCardProps {
 export function MyLeaveCard(props: MyLeaveCardProps) {
   const { request } = props;
   const withdraw = useWithdrawLeave();
+  const decidedNote = request.decidedAt ? (
+    <span className="text-muted-foreground text-xs tabular-nums">
+      Decided {formatDate(new Date(request.decidedAt), "date")}
+    </span>
+  ) : null;
 
   return (
     <li className="bg-card text-card-foreground ring-foreground/10 flex h-full min-w-0 flex-col gap-3 rounded-xl p-4 ring-1">
@@ -48,11 +53,9 @@ export function MyLeaveCard(props: MyLeaveCardProps) {
           >
             {withdraw.isPending ? "Withdrawing…" : "Withdraw"}
           </Button>
-        ) : request.decidedAt ? (
-          <span className="text-muted-foreground text-xs tabular-nums">
-            Decided {formatDate(new Date(request.decidedAt), "date")}
-          </span>
-        ) : null}
+        ) : (
+          decidedNote
+        )}
       </div>
       <FormError error={withdraw.error} />
     </li>

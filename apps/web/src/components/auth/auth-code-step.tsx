@@ -30,6 +30,8 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
   const verify = useVerifyCode({ redirectTo: props.next });
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
+  const submitLabel = props.isNew ? "Create my account" : "Sign in";
+  const resendLabel = cooldown.ready ? "Send a new code" : `New code in ${cooldown.remaining}s`;
 
   return (
     <Form {...form}>
@@ -67,7 +69,7 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
         <FormError error={verify.error ?? resend.error} />
 
         <Button type="submit" disabled={verify.isPending} className="w-full">
-          {verify.isPending ? "Checking…" : props.isNew ? "Create my account" : "Sign in"}
+          {verify.isPending ? "Checking…" : submitLabel}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
@@ -87,11 +89,7 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
               )
             }
           >
-            {resend.isPending
-              ? "Sending…"
-              : cooldown.ready
-                ? "Send a new code"
-                : `New code in ${cooldown.remaining}s`}
+            {resend.isPending ? "Sending…" : resendLabel}
           </Button>
         </div>
       </form>

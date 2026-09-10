@@ -30,6 +30,7 @@ const RECENT = 5;
 /** How it has gone: the rate, the split, and the last few records. */
 export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const total = props.history.length;
+  const countNote = total === 1 ? "One closed event." : `${total} closed events.`;
   const counts = Object.fromEntries(
     SEGMENTS.map((segment) => [
       segment.status,
@@ -49,11 +50,7 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
           Your standing
         </CardTitle>
         <CardDescription>
-          {total === 0
-            ? "No closed event has your name yet."
-            : total === 1
-              ? "One closed event."
-              : `${total} closed events.`}
+          {total === 0 ? "No closed event has your name yet." : countNote}
         </CardDescription>
         <CardAction>
           <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>

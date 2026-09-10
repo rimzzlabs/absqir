@@ -17,6 +17,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
 import { expectedPersonIds, registeredPersonIds, type SessionRow } from "#src/lib/expected";
 import { notifyDueReminders, notifySessionClosed } from "#src/lib/notify";
@@ -341,11 +342,13 @@ export async function listSessions(db: Database, params: ListSessionsParams) {
     .where(
       and(
         eq(attendanceSession.organizationId, params.organizationId),
-        params.scope === "upcoming"
-          ? and(isNull(attendanceSession.closedAt), gte(attendanceSession.endsAt, now))
-          : params.scope === "past"
-            ? isPast(now)
-            : undefined,
+        match(params.scope)
+          .with("upcoming", () =>
+            and(isNull(attendanceSession.closedAt), gte(attendanceSession.endsAt, now)),
+          )
+          .with("past", () => isPast(now))
+          .with("all", () => undefined)
+          .exhaustive(),
         needle ? ilike(attendanceSession.title, needle) : undefined,
         params.groupId
           ? inArray(

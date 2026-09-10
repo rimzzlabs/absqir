@@ -28,6 +28,7 @@ export function AuthResetStep(props: AuthResetStepProps) {
   const reset = useResetPassword({ redirectTo: props.next });
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
+  const resendLabel = cooldown.ready ? "Send a new code" : `New code in ${cooldown.remaining}s`;
 
   return (
     <Form {...form}>
@@ -83,11 +84,7 @@ export function AuthResetStep(props: AuthResetStepProps) {
               )
             }
           >
-            {resend.isPending
-              ? "Sending…"
-              : cooldown.ready
-                ? "Send a new code"
-                : `New code in ${cooldown.remaining}s`}
+            {resend.isPending ? "Sending…" : resendLabel}
           </Button>
         </div>
       </form>

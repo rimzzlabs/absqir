@@ -30,6 +30,9 @@ export function TimezoneRow(props: TimezoneRowProps) {
   const device = useDeviceTimezone();
   const zones = listTimezones();
   const dirty = chosen !== props.timezone;
+  const followingLabel = device
+    ? `Following this device: ${describeTimezone(device)}.`
+    : "Following this device.";
 
   return (
     <SettingsRow
@@ -64,11 +67,7 @@ export function TimezoneRow(props: TimezoneRowProps) {
 
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <GlobeHemisphereEastIcon aria-hidden className="size-3.5" />
-          {chosen
-            ? `Times will read in ${describeTimezone(chosen)}.`
-            : device
-              ? `Following this device: ${describeTimezone(device)}.`
-              : "Following this device."}
+          {chosen ? `Times will read in ${describeTimezone(chosen)}.` : followingLabel}
         </p>
 
         <div className="flex flex-wrap gap-2">

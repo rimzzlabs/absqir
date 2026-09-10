@@ -110,12 +110,13 @@ export function usePopupMotion(
 
   const hidden = reduced ? { opacity: 0 } : { opacity: 0, scale: zoom, x: offset.x, y: offset.y };
   const visible = reduced ? { opacity: 1 } : { opacity: 1, scale: 1, x: 0, y: 0 };
+  const moving = reduced ? DURATION.fast : duration;
 
   return {
     initial: hidden,
     animate: state.open ? visible : hidden,
     transition: {
-      duration: instant ? 0 : reduced ? DURATION.fast : duration,
+      duration: instant ? 0 : moving,
       ease: EASE_OUT,
     },
   };

@@ -68,6 +68,7 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
     defaultValues: { code: "" },
   });
 
+  const resendLabel = resend.isSuccess ? "Sent again" : "Send a new code";
   const submit = form.handleSubmit((values) =>
     confirm.mutate({ newEmail: props.newEmail, code: values.code }),
   );
@@ -106,7 +107,7 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
             disabled={resend.isPending}
             onClick={() => resend.mutate(props.newEmail)}
           >
-            {resend.isPending ? "Sending…" : resend.isSuccess ? "Sent again" : "Send a new code"}
+            {resend.isPending ? "Sending…" : resendLabel}
           </Button>
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
             Use another address
