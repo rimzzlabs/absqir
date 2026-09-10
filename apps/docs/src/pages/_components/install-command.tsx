@@ -8,11 +8,11 @@ interface Runner {
   rest: string;
 }
 
-const RUNNERS: Runner[] = [
+const RUNNERS = [
   { id: "npm", runner: "npx", rest: "absqir@latest init my-absqir" },
   { id: "pnpm", runner: "pnpm dlx", rest: "absqir@latest init my-absqir" },
   { id: "bun", runner: "bunx", rest: "absqir@latest init my-absqir" },
-];
+] as const satisfies readonly Runner[];
 
 /** The command people actually type to install absqir, with the runners they
     actually use. It is not terminal decoration, so it has no window chrome and
@@ -23,7 +23,9 @@ export function InstallCommand() {
   const [copied, setCopied] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const said = useRef<number | undefined>(undefined);
-  const current = RUNNERS[active];
+  // `move` keeps `active` inside the list, so the fallback never runs. It is here
+  // because a number index proves nothing to the type checker.
+  const current = RUNNERS[active] ?? RUNNERS[0];
 
   useEffect(() => () => window.clearTimeout(said.current), []);
 

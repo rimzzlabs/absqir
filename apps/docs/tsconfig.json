@@ -1,0 +1,11 @@
+{
+  "extends": "@absqir/config/tsconfig/node.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["src", "*.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}
