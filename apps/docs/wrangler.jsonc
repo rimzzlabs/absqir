@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "absqir-docs",
+  "compatibility_date": "2026-09-07",
+  "observability": { "enabled": true },
+
+  // Vocs writes one folder per page with an index.html inside, plus 404.html.
+  // No Worker code runs: Cloudflare serves the files as they are.
+  "assets": {
+    "directory": "./dist/public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
