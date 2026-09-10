@@ -65,10 +65,14 @@ jobs:
             echo "No release to publish."
           fi
 
+  # On a manual run release-please is skipped, and GitHub skips every job
+  # downstream of a skipped job unless its condition starts with a status
+  # function. `!cancelled()` keeps the chain alive, so each job checks the
+  # results it needs by hand.
   verify:
     name: Verify the tagged commit
     needs: plan
-    if: needs.plan.outputs.tag != ''
+    if: ${{ !cancelled() && needs.plan.outputs.tag != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -84,7 +88,7 @@ jobs:
   docker:
     name: Publish the Docker image
     needs: [plan, verify]
-    if: needs.plan.outputs.tag != ''
+    if: ${{ !cancelled() && needs.plan.outputs.tag != '' && needs.verify.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -112,7 +116,7 @@ jobs:
   npm:
     name: Publish the CLI to npm
     needs: [plan, verify]
-    if: needs.plan.outputs.tag != ''
+    if: ${{ !cancelled() && needs.plan.outputs.tag != '' && needs.verify.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -138,7 +142,7 @@ jobs:
     needs: [plan, verify]
     # The hosted deployment is off until the SaaS launches. Set the repository
     # variable DEPLOY_CLOUDFLARE to "true" to turn it on.
-    if: needs.plan.outputs.tag != '' && vars.DEPLOY_CLOUDFLARE == 'true'
+    if: ${{ !cancelled() && needs.plan.outputs.tag != '' && needs.verify.result == 'success' && vars.DEPLOY_CLOUDFLARE == 'true' }}
     runs-on: ubuntu-latest
     environment:
       name: production
