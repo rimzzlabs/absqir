@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/rimzzlabs/absqir/compare/v0.1.0...v0.1.1) (2026-09-10)
+
+
+### Bug fixes
+
+* make the Docker image serve pages, and build it once for both platforms ([#8](https://github.com/rimzzlabs/absqir/issues/8)) ([f3b98f0](https://github.com/rimzzlabs/absqir/commit/f3b98f069705c93f1e0a26905a2fd8b468b7f66a))
+
 ## 0.1.0 (2026-09-10)
 
 
