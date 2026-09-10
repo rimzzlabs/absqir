@@ -4,6 +4,7 @@ import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
+import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
@@ -52,7 +53,7 @@ function Scanner() {
   const error = rejected ?? checkIn.error?.message ?? null;
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ScanIcon />
@@ -63,7 +64,7 @@ function Scanner() {
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-1 flex-col gap-4">
         {/* The region lives through every state, so a reader hears the outcome. */}
         <p aria-live="polite" className="sr-only">
           {checkIn.isSuccess
@@ -71,7 +72,7 @@ function Scanner() {
             : progressNote}
         </p>
 
-        <div className="mx-auto w-full max-w-md">
+        <div className={cn("mx-auto w-full max-w-md", checkIn.isSuccess && "my-auto")}>
           {checkIn.isSuccess ? (
             <CheckInResult result={checkIn.data} onAgain={() => checkIn.reset()} />
           ) : (
@@ -101,7 +102,7 @@ function Scanner() {
 
         {checkIn.isSuccess ? null : (
           <form
-            className="border-border flex flex-col gap-2 border-t pt-4"
+            className="border-border mt-auto flex flex-col gap-2 border-t pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               if (manual.trim()) submit(manual.trim());
@@ -143,19 +144,23 @@ function MemberCheckInBody() {
         description="Point the camera at the screen in the room. Or show your pass to the organizer."
       />
 
-      {/* Three columns once there is room: the camera, the pass, then the reading. */}
-      <div className="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      {/* The camera keeps a narrow rail of its own. Everything else stacks in the
+          wide rail, so the tall card leaves no hole under the short ones. */}
+      <div className="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[26rem_minmax(0,1fr)]">
         <Scanner />
 
-        <CheckInPass
-          sessions={rows}
-          pending={sessions.isPending}
-          error={sessions.error}
-          onPass={setPassFor}
-        />
+        <div className="@container flex flex-col gap-4">
+          <div className="grid gap-4 @2xl:grid-cols-2">
+            <CheckInPass
+              sessions={rows}
+              pending={sessions.isPending}
+              error={sessions.error}
+              onPass={setPassFor}
+            />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 2xl:col-span-1 2xl:grid-cols-1">
-          <CheckInSteps />
+            <CheckInSteps />
+          </div>
+
           <CheckInRecent />
         </div>
       </div>
