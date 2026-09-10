@@ -16,7 +16,7 @@ export interface AuthEmailStepProps {
   initialEmail: string;
   eventId: string | null;
   /** The providers the operator turned on. Empty hides the whole row. */
-  providers: AuthProviderId[];
+  providers: readonly AuthProviderId[];
   /** Where a provider sends the reader back to. */
   next: string;
   /** What went wrong on the way back from a provider, if anything. */

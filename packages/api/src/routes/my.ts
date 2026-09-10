@@ -196,38 +196,40 @@ export const myRoutes = app
 
     return c.json(
       {
-        items: A.map(json, (row) => {
-          const record = byId.get(row.id);
-          const leave = leaveById.get(row.id);
+        items: [
+          ...A.map(json, (row) => {
+            const record = byId.get(row.id);
+            const leave = leaveById.get(row.id);
 
-          return {
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            startsAt: row.startsAt,
-            endsAt: row.endsAt,
-            lateAfterMinutes: row.lateAfterMinutes,
-            opensBeforeMinutes: row.opensBeforeMinutes,
-            status: row.status,
-            groups: row.groups,
-            record: record
-              ? {
-                  status: record.status,
-                  checkedInAt: record.checkedInAt?.toISOString() ?? null,
-                  method: record.method,
-                  note: record.note ?? null,
-                }
-              : null,
-            leave: leave
-              ? {
-                  id: leave.id,
-                  status: leave.status,
-                  reason: leave.reason,
-                  decisionNote: leave.decisionNote ?? null,
-                }
-              : null,
-          };
-        }),
+            return {
+              id: row.id,
+              title: row.title,
+              description: row.description,
+              startsAt: row.startsAt,
+              endsAt: row.endsAt,
+              lateAfterMinutes: row.lateAfterMinutes,
+              opensBeforeMinutes: row.opensBeforeMinutes,
+              status: row.status,
+              groups: row.groups,
+              record: record
+                ? {
+                    status: record.status,
+                    checkedInAt: record.checkedInAt?.toISOString() ?? null,
+                    method: record.method,
+                    note: record.note ?? null,
+                  }
+                : null,
+              leave: leave
+                ? {
+                    id: leave.id,
+                    status: leave.status,
+                    reason: leave.reason,
+                    decisionNote: leave.decisionNote ?? null,
+                  }
+                : null,
+            };
+          }),
+        ],
         nextCursor: page.nextCursor,
       },
       200,
@@ -276,16 +278,18 @@ export const myRoutes = app
       .limit(HISTORY_LIMIT);
 
     return c.json(
-      A.map(rows, ({ record, session }) => ({
-        sessionId: session.id,
-        title: session.title,
-        startsAt: session.startsAt.toISOString(),
-        endsAt: session.endsAt.toISOString(),
-        status: record.status,
-        checkedInAt: record.checkedInAt?.toISOString() ?? null,
-        method: record.method,
-        note: record.note ?? null,
-      })),
+      [
+        ...A.map(rows, ({ record, session }) => ({
+          sessionId: session.id,
+          title: session.title,
+          startsAt: session.startsAt.toISOString(),
+          endsAt: session.endsAt.toISOString(),
+          status: record.status,
+          checkedInAt: record.checkedInAt?.toISOString() ?? null,
+          method: record.method,
+          note: record.note ?? null,
+        })),
+      ],
       200,
     );
   });

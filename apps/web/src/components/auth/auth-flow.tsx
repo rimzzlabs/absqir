@@ -16,7 +16,7 @@ export interface AuthFlowProps {
   /** The open event whose public page sent the reader here. */
   eventId?: string | null;
   /** The providers the operator turned on. Empty means no buttons at all. */
-  providers?: AuthProviderId[];
+  providers?: readonly AuthProviderId[];
   /** What came back from a provider that refused, read on the server. */
   callbackError?: CallbackError | null;
 }

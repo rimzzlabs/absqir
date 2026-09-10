@@ -47,7 +47,10 @@ async function organizationTimezone(db: Database, organizationId: string): Promi
 }
 
 /** The zone each account chose, for the ones that did. */
-async function userTimezones(db: Database, userIds: string[]): Promise<Map<string, string>> {
+async function userTimezones(
+  db: Database,
+  userIds: readonly string[],
+): Promise<Map<string, string>> {
   if (userIds.length === 0) return new Map();
 
   const rows = await db

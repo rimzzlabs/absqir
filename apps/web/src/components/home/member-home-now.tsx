@@ -9,12 +9,12 @@ import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import type { MySession } from "@/queries/use-my";
 
 export interface MemberHomeNowProps {
-  sessions: MySession[];
+  sessions: readonly MySession[];
   onPass: (id: string) => void;
 }
 
 /** The one event that matters right now: running, or the next scheduled one. */
-export function pickNow(sessions: MySession[]): MySession | null {
+export function pickNow(sessions: readonly MySession[]): MySession | null {
   return (
     A.getBy(sessions, (row) => row.status === "running") ??
     A.getBy(sessions, (row) => row.status === "scheduled") ??

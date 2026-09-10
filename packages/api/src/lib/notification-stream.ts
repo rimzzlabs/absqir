@@ -17,7 +17,7 @@ export const HEARTBEAT_MS = 25_000;
 
 export interface StreamEvent {
   count: number;
-  rows: ReturnType<typeof toNotificationJson>[];
+  rows: readonly ReturnType<typeof toNotificationJson>[];
 }
 
 /** The cursor a client sends back: the id of the last event it saw. */
@@ -35,7 +35,7 @@ export function cursorOf(value: string | undefined): Date | null {
 export function splitNew(
   rows: NotificationRow[],
   seen: ReadonlySet<string>,
-): { fresh: NotificationRow[]; cursor: Date | null; onCursor: Set<string> } {
+): { fresh: readonly NotificationRow[]; cursor: Date | null; onCursor: Set<string> } {
   const fresh = A.filter(rows, (row) => !seen.has(row.id));
   const last = fresh.at(-1);
   if (!last) return { fresh, cursor: null, onCursor: new Set(seen) };

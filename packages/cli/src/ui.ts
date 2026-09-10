@@ -230,7 +230,7 @@ export interface Choice<Value extends string> {
 export interface SelectParams<Value extends string> {
   message: string;
   flag: string;
-  options: Choice<Value>[];
+  options: readonly Choice<Value>[];
   initialValue?: Value;
 }
 
@@ -243,7 +243,7 @@ export function select<Value extends string>(params: SelectParams<Value>): Promi
     run: () =>
       clack.select<string>({
         message: params.message,
-        options: params.options,
+        options: [...params.options],
         initialValue: params.initialValue,
       }) as Promise<Value | symbol>,
   });
@@ -252,7 +252,7 @@ export function select<Value extends string>(params: SelectParams<Value>): Promi
 export interface MultiselectParams<Value extends string> {
   message: string;
   flag: string;
-  options: Choice<Value>[];
+  options: readonly Choice<Value>[];
 }
 
 export function multiselect<Value extends string>(
@@ -263,7 +263,7 @@ export function multiselect<Value extends string>(
     run: () =>
       clack.multiselect<string>({
         message: params.message,
-        options: params.options,
+        options: [...params.options],
         required: false,
       }) as Promise<Value[] | symbol>,
   });

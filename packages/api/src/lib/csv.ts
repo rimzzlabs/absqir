@@ -65,8 +65,8 @@ export function parseCsv(text: string): string[][] {
 }
 
 export interface CsvTable {
-  header: string[];
-  records: Record<string, string>[];
+  header: readonly string[];
+  records: readonly Record<string, string>[];
 }
 
 /** Reads the first row as lowercase column names, the rest as records. */

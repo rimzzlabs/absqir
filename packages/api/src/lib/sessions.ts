@@ -99,15 +99,15 @@ export async function finalizeSession(db: Database, session: SessionRow, at: Dat
     if (expected.length) {
       await tx
         .insert(attendanceRecord)
-        .values(
-          A.map(expected, (personId) => ({
+        .values([
+          ...A.map(expected, (personId) => ({
             id: crypto.randomUUID(),
             sessionId: session.id,
             personId,
             status: "absent" as const,
             method: "auto" as const,
           })),
-        )
+        ])
         .onConflictDoNothing({ target: [attendanceRecord.sessionId, attendanceRecord.personId] });
     }
 
@@ -173,7 +173,7 @@ export async function settle(db: Database, organizationId: string, now: Date = n
   }
 }
 
-async function groupsBySession(db: Database, sessionIds: string[]) {
+async function groupsBySession(db: Database, sessionIds: readonly string[]) {
   if (sessionIds.length === 0) return new Map<string, { id: string; name: string }[]>();
 
   const rows = await db
@@ -193,7 +193,7 @@ async function groupsBySession(db: Database, sessionIds: string[]) {
   return map;
 }
 
-async function countsBySession(db: Database, sessionIds: string[]) {
+async function countsBySession(db: Database, sessionIds: readonly string[]) {
   const map = new Map<string, SessionCounts>();
   if (sessionIds.length === 0) return map;
 
@@ -244,9 +244,9 @@ async function countsBySession(db: Database, sessionIds: string[]) {
 
 export async function toSessionJson(
   db: Database,
-  rows: SessionRow[],
+  rows: readonly SessionRow[],
   now: Date = new Date(),
-): Promise<SessionJson[]> {
+): Promise<readonly SessionJson[]> {
   const ids = A.map(rows, (row) => row.id);
   const [groups, counts] = await Promise.all([groupsBySession(db, ids), countsBySession(db, ids)]);
 
@@ -392,7 +392,10 @@ export interface RecordJson {
 }
 
 /** Everyone expected, plus anyone with a record, with what the record says. */
-export async function sessionRecords(db: Database, sessionId: string): Promise<RecordJson[]> {
+export async function sessionRecords(
+  db: Database,
+  sessionId: string,
+): Promise<readonly RecordJson[]> {
   const [expected, registered, records] = await Promise.all([
     expectedPersonIds(db, sessionId),
     registeredPersonIds(db, sessionId),

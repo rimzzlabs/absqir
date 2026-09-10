@@ -28,7 +28,7 @@ import { OrgSwitcher } from "@/components/app-shell/org-switcher";
 import { SidebarStatus } from "@/components/app-shell/sidebar-status";
 
 export interface AppSidebarProps {
-  memberships: ShellMembership[];
+  memberships: readonly ShellMembership[];
   /** Null while the account belongs to no organization. */
   active: ShellMembership | null;
   currentPath: string;

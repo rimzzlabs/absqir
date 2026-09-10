@@ -133,18 +133,20 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
 
   return c.json(
     {
-      sessions: A.map(sessions, (row) => ({
-        id: row.id,
-        title: row.title,
-        startsAt: row.startsAt,
-        endsAt: row.endsAt,
-        status: row.status,
-        scheduleId: row.scheduleId,
-        registrationOpen: row.registrationOpen,
-        groups: row.groups,
-        counts: row.counts,
-      })),
-      projected: A.sort(projected, (a, b) => a.startsAt.localeCompare(b.startsAt)),
+      sessions: [
+        ...A.map(sessions, (row) => ({
+          id: row.id,
+          title: row.title,
+          startsAt: row.startsAt,
+          endsAt: row.endsAt,
+          status: row.status,
+          scheduleId: row.scheduleId,
+          registrationOpen: row.registrationOpen,
+          groups: row.groups,
+          counts: row.counts,
+        })),
+      ],
+      projected: [...A.sort(projected, (a, b) => a.startsAt.localeCompare(b.startsAt))],
     },
     200,
   );

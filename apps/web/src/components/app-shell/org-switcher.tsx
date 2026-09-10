@@ -30,7 +30,7 @@ import { useCreateOrganization } from "@/mutations/use-create-organization";
 import { useSetActiveOrganization } from "@/mutations/use-set-active-organization";
 
 export interface OrgSwitcherProps {
-  memberships: ShellMembership[];
+  memberships: readonly ShellMembership[];
   /** Null while the account belongs to no organization. */
   active: ShellMembership | null;
   canCreateOrganizations: boolean;

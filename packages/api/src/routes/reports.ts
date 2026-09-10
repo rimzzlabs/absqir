@@ -276,7 +276,7 @@ export const reportRoutes = app
 
     const rows = await reportByPerson(c.var.db, organizationId, rangeOfQuery(query));
 
-    return c.json(rows, 200);
+    return c.json([...rows], 200);
   })
   .openapi(groupsRoute, async (c) => {
     const organizationId = organizationIdOf(c);
@@ -286,7 +286,7 @@ export const reportRoutes = app
 
     const rows = await reportByGroup(c.var.db, organizationId, rangeOfQuery(query));
 
-    return c.json(rows, 200);
+    return c.json([...rows], 200);
   })
   .openapi(sessionsRoute, async (c) => {
     const organizationId = organizationIdOf(c);
@@ -296,7 +296,7 @@ export const reportRoutes = app
 
     const rows = await reportBySession(c.var.db, organizationId, rangeOfQuery(query));
 
-    return c.json(rows, 200);
+    return c.json([...rows], 200);
   })
   .get("/reports/people.csv", (c) => csvHandler(c, "people"))
   .get("/reports/groups.csv", (c) => csvHandler(c, "groups"))

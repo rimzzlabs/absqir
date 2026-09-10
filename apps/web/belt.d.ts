@@ -1,11 +1,11 @@
 export {};
 
-// ts-belt returns readonly arrays by default. Drizzle's .values() and several
-// of our own row types want a mutable array, and ts-belt always builds a fresh
-// array at runtime, so the readonly marker buys nothing here and would force a
-// copy at every boundary. This switch is types only: no runtime change.
+// ts-belt returns readonly arrays, and that is the point: a collection this
+// code produced is not something a later caller edits in place. Keep the
+// default. Where a third-party signature demands a mutable array (Drizzle's
+// .values(), Recharts payloads), spread at that call and nowhere else.
 declare global {
   namespace Belt {
-    type UseMutableArrays = 1;
+    type UseMutableArrays = 0;
   }
 }

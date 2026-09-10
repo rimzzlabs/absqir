@@ -58,7 +58,7 @@ async function sessionIdsInRange(
   db: Database,
   organizationId: string,
   range: ReportRange,
-): Promise<string[]> {
+): Promise<readonly string[]> {
   const where = and(
     eq(attendanceSession.organizationId, organizationId),
     gte(attendanceSession.startsAt, range.from),
@@ -173,7 +173,7 @@ export async function reportByPerson(
   db: Database,
   organizationId: string,
   range: ReportRange,
-): Promise<PersonReportRow[]> {
+): Promise<readonly PersonReportRow[]> {
   const ids = await sessionIdsInRange(db, organizationId, range);
   if (ids.length === 0) return [];
 
@@ -215,7 +215,7 @@ export async function reportByGroup(
   db: Database,
   organizationId: string,
   range: ReportRange,
-): Promise<GroupReportRow[]> {
+): Promise<readonly GroupReportRow[]> {
   const ids = await sessionIdsInRange(db, organizationId, range);
 
   const groups = await db
@@ -273,7 +273,7 @@ export async function reportBySession(
   db: Database,
   organizationId: string,
   range: ReportRange,
-): Promise<SessionReportRow[]> {
+): Promise<readonly SessionReportRow[]> {
   const ids = await sessionIdsInRange(db, organizationId, range);
   if (ids.length === 0) return [];
 

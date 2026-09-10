@@ -285,15 +285,17 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     return c.json(
       {
-        items: A.map(page.items, ({ row }) => ({
-          id: row.id,
-          token: row.token,
-          userAgent: row.userAgent ?? null,
-          ipAddress: row.ipAddress ?? null,
-          createdAt: row.createdAt.toISOString(),
-          updatedAt: row.updatedAt.toISOString(),
-          current: row.id === mine.id,
-        })),
+        items: [
+          ...A.map(page.items, ({ row }) => ({
+            id: row.id,
+            token: row.token,
+            userAgent: row.userAgent ?? null,
+            ipAddress: row.ipAddress ?? null,
+            createdAt: row.createdAt.toISOString(),
+            updatedAt: row.updatedAt.toISOString(),
+            current: row.id === mine.id,
+          })),
+        ],
         nextCursor: page.nextCursor,
       },
       200,
@@ -371,11 +373,13 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
     return c.json(
       {
         hasPassword: A.some(rows, (row) => row.providerId === "credential"),
-        linked: pipe(
-          rows,
-          A.filter((row) => row.providerId !== "credential"),
-          A.map((row) => ({ accountId: row.id, provider: row.providerId })),
-        ),
+        linked: [
+          ...pipe(
+            rows,
+            A.filter((row) => row.providerId !== "credential"),
+            A.map((row) => ({ accountId: row.id, provider: row.providerId })),
+          ),
+        ],
         available: enabledSocialProviders(c.env) as string[],
       },
       200,
@@ -443,7 +447,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
           : "all",
         timezone: isTimezone(user.timezone) ? user.timezone : null,
         activeOrganizationId: session.activeOrganizationId ?? null,
-        memberships,
+        memberships: [...memberships],
       },
       200,
     );

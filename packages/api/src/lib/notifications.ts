@@ -58,9 +58,9 @@ export function reachesEmail(channel: NotificationChannel): boolean {
  * who asked for silence. Pure, so the tests need no database.
  */
 export function routeByChannel<T extends { userId: string }>(
-  rows: T[],
+  rows: readonly T[],
   channelOf: (userId: string) => NotificationChannel,
-): (T & { channel: DeliveredChannel })[] {
+): readonly (T & { channel: DeliveredChannel })[] {
   return A.flatMap(rows, (row) => {
     const channel = channelOf(row.userId);
     return channel === "none" ? [] : [{ ...row, channel }];
@@ -89,7 +89,7 @@ async function channelsFor(
  */
 export async function createNotifications(
   db: Database,
-  rows: NotificationInput[],
+  rows: readonly NotificationInput[],
 ): Promise<NotificationRow[]> {
   if (rows.length === 0) return [];
 
@@ -100,8 +100,8 @@ export async function createNotifications(
   return (
     db
       .insert(notification)
-      .values(
-        A.map(routed, (row) => ({
+      .values([
+        ...A.map(routed, (row) => ({
           id: crypto.randomUUID(),
           organizationId: row.organizationId,
           userId: row.userId,
@@ -112,7 +112,7 @@ export async function createNotifications(
           dedupeKey: row.dedupeKey ?? null,
           channel: row.channel,
         })),
-      )
+      ])
       // `where` states the partial index predicate, so Postgres can infer the
       // unique index that holds only the keyed rows.
       .onConflictDoNothing({
@@ -182,7 +182,10 @@ export function deliver(c: Context<AppEnv>, rows: NotificationRow[]): void {
 }
 
 /** The accounts that run the organization: organizer, admin, owner. */
-export async function managerUserIds(db: Database, organizationId: string): Promise<string[]> {
+export async function managerUserIds(
+  db: Database,
+  organizationId: string,
+): Promise<readonly string[]> {
   const rows = await db
     .select({ userId: member.userId, role: member.role })
     .from(member)
@@ -196,7 +199,10 @@ export async function managerUserIds(db: Database, organizationId: string): Prom
 }
 
 /** The accounts that decide who gets in: admin and owner. */
-export async function adminUserIds(db: Database, organizationId: string): Promise<string[]> {
+export async function adminUserIds(
+  db: Database,
+  organizationId: string,
+): Promise<readonly string[]> {
   const rows = await db
     .select({ userId: member.userId, role: member.role })
     .from(member)
@@ -210,7 +216,10 @@ export async function adminUserIds(db: Database, organizationId: string): Promis
 }
 
 /** The accounts behind the given directory rows. People without one drop out. */
-export async function userIdsForPeople(db: Database, personIds: string[]): Promise<string[]> {
+export async function userIdsForPeople(
+  db: Database,
+  personIds: readonly string[],
+): Promise<readonly string[]> {
   if (personIds.length === 0) return [];
 
   const rows = await db

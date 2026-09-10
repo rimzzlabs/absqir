@@ -109,7 +109,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
 }
 
 function Queue(props: {
-  rows: LeaveRequest[];
+  rows: readonly LeaveRequest[];
   scope: LeaveScope;
   onDecide: (d: Decision) => void;
 }) {

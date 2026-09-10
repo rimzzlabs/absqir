@@ -188,11 +188,13 @@ async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: Sched
     endsOn: row.endsOn ?? null,
     active: row.active,
     allowWalkIns: row.allowWalkIns,
-    groups: pipe(
-      groups,
-      A.filter((item) => item.scheduleId === row.id),
-      A.map((item) => ({ id: item.id, name: item.name })),
-    ),
+    groups: [
+      ...pipe(
+        groups,
+        A.filter((item) => item.scheduleId === row.id),
+        A.map((item) => ({ id: item.id, name: item.name })),
+      ),
+    ],
     createdAt: row.createdAt.toISOString(),
   }));
 }
@@ -250,7 +252,7 @@ export const scheduleRoutes = app
       .where(eq(schedule.organizationId, organizationIdOf(c)))
       .orderBy(asc(schedule.title));
 
-    return c.json(await withGroups(c, rows), 200);
+    return c.json([...(await withGroups(c, rows))], 200);
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "admin")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
@@ -275,7 +277,8 @@ export const scheduleRoutes = app
         title: body.title,
         description: body.description?.trim() || null,
         frequency: body.frequency,
-        weekdays: body.frequency === "weekly" ? A.sort(A.uniq(body.weekdays), (a, b) => a - b) : [],
+        weekdays:
+          body.frequency === "weekly" ? [...A.sort(A.uniq(body.weekdays), (a, b) => a - b)] : [],
         startTime: body.startTime,
         durationMinutes: body.durationMinutes,
         lateAfterMinutes: body.lateAfterMinutes ?? 15,
@@ -290,7 +293,7 @@ export const scheduleRoutes = app
       if (groupIds.length) {
         await tx
           .insert(scheduleGroup)
-          .values(A.map(groupIds, (groupId) => ({ scheduleId: id, groupId })));
+          .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
       }
     });
 
@@ -333,7 +336,7 @@ export const scheduleRoutes = app
             ? { description: body.description?.trim() || null }
             : {}),
           frequency,
-          weekdays: frequency === "weekly" ? A.sort(A.uniq(weekdays), (a, b) => a - b) : [],
+          weekdays: frequency === "weekly" ? [...A.sort(A.uniq(weekdays), (a, b) => a - b)] : [],
           ...(body.startTime !== undefined ? { startTime: body.startTime } : {}),
           ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
           ...(body.lateAfterMinutes !== undefined
@@ -356,7 +359,7 @@ export const scheduleRoutes = app
         if (groupIds.length) {
           await tx
             .insert(scheduleGroup)
-            .values(A.map(groupIds, (groupId) => ({ scheduleId: id, groupId })));
+            .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
         }
       }
     });

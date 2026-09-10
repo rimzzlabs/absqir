@@ -8,7 +8,10 @@ const { attendanceSession, sessionGroup, sessionRegistration, groupMember } = sc
 export type SessionRow = typeof attendanceSession.$inferSelect;
 
 /** Everyone in the session's groups, plus everyone who registered, once. */
-export async function expectedPersonIds(db: Database, sessionId: string): Promise<string[]> {
+export async function expectedPersonIds(
+  db: Database,
+  sessionId: string,
+): Promise<readonly string[]> {
   const [fromGroups, registered] = await Promise.all([
     db
       .selectDistinct({ personId: groupMember.personId })
@@ -24,7 +27,10 @@ export async function expectedPersonIds(db: Database, sessionId: string): Promis
   return [...new Set(A.map([...fromGroups, ...registered], (row) => row.personId))];
 }
 
-export async function registeredPersonIds(db: Database, sessionId: string): Promise<string[]> {
+export async function registeredPersonIds(
+  db: Database,
+  sessionId: string,
+): Promise<readonly string[]> {
   const rows = await db
     .select({ personId: sessionRegistration.personId })
     .from(sessionRegistration)

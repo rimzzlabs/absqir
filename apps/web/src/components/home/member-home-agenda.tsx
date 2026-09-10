@@ -18,7 +18,7 @@ import { SessionStatusBadge } from "@/components/shared/status-badge";
 import type { MySession } from "@/queries/use-my";
 
 export interface MemberHomeAgendaProps {
-  sessions: MySession[];
+  sessions: readonly MySession[];
   pending: boolean;
   onPass: (id: string) => void;
   onAskLeave: (session: MySession) => void;
@@ -34,7 +34,7 @@ interface Day {
 }
 
 /** The rows in day order, each day once. The list arrives soonest first. */
-function byDay(sessions: MySession[]): Day[] {
+function byDay(sessions: readonly MySession[]): Day[] {
   const days = new Map<string, Day>();
 
   for (const session of sessions) {

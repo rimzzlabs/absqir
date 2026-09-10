@@ -192,7 +192,7 @@ export const domainRoutes = app
     ]);
 
     return c.json(
-      { items: A.map(rows, toJson), joinPolicy: orgs[0]?.joinPolicy ?? "request" },
+      { items: [...A.map(rows, toJson)], joinPolicy: orgs[0]?.joinPolicy ?? "request" },
       200,
     );
   })

@@ -6,8 +6,8 @@ import { FormError } from "@/components/shared/form-error";
 import { useGroups } from "@/queries/use-groups";
 
 export interface GroupPickerProps {
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: readonly string[];
+  onChange: (value: readonly string[]) => void;
   disabled?: boolean;
 }
 

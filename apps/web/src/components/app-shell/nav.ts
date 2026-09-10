@@ -27,7 +27,7 @@ export interface NavItem {
 
 export interface NavGroup {
   label: string;
-  items: NavItem[];
+  items: readonly NavItem[];
 }
 
 const RANK: Record<RoleName, number> = { owner: 0, admin: 1, organizer: 2, member: 3 };

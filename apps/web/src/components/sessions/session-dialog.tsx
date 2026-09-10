@@ -66,7 +66,7 @@ function defaults(session: Session | null, initialStart?: Date | null): SessionV
       registrationOpen: session.registrationOpen,
       registrationLimit:
         session.registrationLimit === null ? "" : String(session.registrationLimit),
-      groupIds: A.map(session.groups, (group) => group.id),
+      groupIds: [...A.map(session.groups, (group) => group.id)],
     };
   }
 
@@ -221,7 +221,7 @@ export function SessionDialog(props: SessionDialogProps) {
               <FieldContent>
                 <GroupPicker
                   value={form.watch("groupIds")}
-                  onChange={(value) => form.setValue("groupIds", value, { shouldDirty: true })}
+                  onChange={(value) => form.setValue("groupIds", [...value], { shouldDirty: true })}
                 />
                 <FieldError errors={[groupError]} />
               </FieldContent>

@@ -63,12 +63,21 @@ always tell you which one bit you:
 A predicate must return a real boolean. `A.filter(rows, (row) => row.name)`
 does not compile, which is the point: write `row.name !== null`.
 
-`packages/config/belt.d.ts` sets `Belt.UseMutableArrays = 1`. That is a
-types-only switch, and it exists because Drizzle's `.values()` and most of our
-own row types want a mutable array, while ts-belt always builds a fresh array
-at run time anyway. The cost is that a `readonly` input, such as an `as const`
-list, needs a spread: `A.map([...PROVIDERS], …)`. `apps/web` carries its own
-copy of that file because it does not extend the shared tsconfig.
+ts-belt returns **readonly** arrays, and that is the point: a collection this
+code built is not something a later caller edits in place. Keep the default in
+`packages/config/belt.d.ts`. `apps/web` carries its own copy of that file
+because it does not extend the shared tsconfig.
+
+So a function that shapes a collection returns `readonly T[]`, and a parameter
+that only reads one takes `readonly T[]`. Widen the declaration rather than
+copying the array.
+
+Copy with a spread at a boundary that genuinely demands a mutable array, and
+nowhere else. There are three:
+
+- Drizzle `.values()` on an insert.
+- The `c.json()` response body, because the OpenAPI schema infers `T[]`.
+- A react-hook-form `setValue`, and any other form value that gets submitted.
 
 ## Before you push
 

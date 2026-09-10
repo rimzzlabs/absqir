@@ -148,8 +148,8 @@ export function socialProviderKeys(env: ApiEnv): SocialProviderKeyMap {
 }
 
 /** The provider ids a page renders a button for, in a stable order. */
-export function enabledSocialProviders(bindings: ApiBindings): SocialProviderId[] {
+export function enabledSocialProviders(bindings: ApiBindings): readonly SocialProviderId[] {
   const keys = socialProviderKeys(parseEnv(bindings));
 
-  return A.filter([...SOCIAL_PROVIDERS], (provider) => keys[provider] !== undefined);
+  return A.filter(SOCIAL_PROVIDERS, (provider) => keys[provider] !== undefined);
 }

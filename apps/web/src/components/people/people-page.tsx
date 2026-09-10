@@ -37,7 +37,7 @@ function StatusBadge(props: { person: Person }) {
   return <Badge variant="outline">No email</Badge>;
 }
 
-function PeopleTable(props: { rows: Person[]; canManage: boolean }) {
+function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">

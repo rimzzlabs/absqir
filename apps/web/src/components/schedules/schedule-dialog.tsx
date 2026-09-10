@@ -72,7 +72,7 @@ function defaults(schedule: Schedule | null): ScheduleValues {
       endsOn: schedule.endsOn ? fromDay(schedule.endsOn) : null,
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
-      groupIds: A.map(schedule.groups, (group) => group.id),
+      groupIds: [...A.map(schedule.groups, (group) => group.id)],
     };
   }
 
@@ -213,7 +213,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                     multiple
                     value={A.map(form.watch("weekdays"), String)}
                     onValueChange={(value) =>
-                      form.setValue("weekdays", A.map(value, Number), { shouldValidate: true })
+                      form.setValue("weekdays", [...A.map(value, Number)], { shouldValidate: true })
                     }
                     variant="outline"
                     className="flex-wrap"
@@ -296,7 +296,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
               <FieldContent>
                 <GroupPicker
                   value={form.watch("groupIds")}
-                  onChange={(value) => form.setValue("groupIds", value, { shouldDirty: true })}
+                  onChange={(value) => form.setValue("groupIds", [...value], { shouldDirty: true })}
                 />
               </FieldContent>
             </Field>

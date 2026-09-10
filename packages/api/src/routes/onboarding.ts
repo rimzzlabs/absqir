@@ -325,7 +325,7 @@ export const onboardingRoutes = app
         email: row.email,
         image: row.image ?? null,
         hasPassword: await hasCredential(c, row.id),
-        linkedProviders: await linkedProvidersOf(c, row.id),
+        linkedProviders: [...(await linkedProvidersOf(c, row.id))],
         canCreateOrganizations: row.canCreateOrganizations,
         membershipCount: memberships[0]?.value ?? 0,
         workspace,
@@ -336,11 +336,13 @@ export const onboardingRoutes = app
               createdAt: open.createdAt.toISOString(),
             }
           : null,
-        invitations: A.map(invitations, (row) => ({
-          id: row.id,
-          organizationName: row.organizationName,
-          role: row.role ?? "member",
-        })),
+        invitations: [
+          ...A.map(invitations, (row) => ({
+            id: row.id,
+            organizationName: row.organizationName,
+            role: row.role ?? "member",
+          })),
+        ],
       },
       200,
     );

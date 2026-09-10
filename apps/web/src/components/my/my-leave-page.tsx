@@ -44,7 +44,7 @@ function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
   );
 }
 
-function Grid(props: { rows: LeaveRequest[] }) {
+function Grid(props: { rows: readonly LeaveRequest[] }) {
   return (
     <ul className={GRID}>
       {A.map(props.rows, (request) => (

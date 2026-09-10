@@ -30,7 +30,7 @@ const SETTINGS: SettingInfo[] = [
 ];
 
 function settingOf(key: string): SettingInfo | undefined {
-  return A.getBy([...SETTINGS], (setting) => setting.key === key) ?? undefined;
+  return A.getBy(SETTINGS, (setting) => setting.key === key) ?? undefined;
 }
 
 function requireEnvFile(): void {
@@ -46,7 +46,7 @@ export async function configSet(argv: string[]): Promise<number> {
 
   if (flagKey && !settingOf(flagKey)) {
     throw new UsageError(
-      `Unknown key ${flagKey}. Known: ${A.map([...SETTINGS], (setting) => setting.key).join(", ")}`,
+      `Unknown key ${flagKey}. Known: ${A.map(SETTINGS, (setting) => setting.key).join(", ")}`,
     );
   }
 
@@ -61,7 +61,7 @@ export async function configSet(argv: string[]): Promise<number> {
     (await ui.select({
       message: "Which setting?",
       flag: "a KEY",
-      options: A.map([...SETTINGS], (setting) => ({
+      options: A.map(SETTINGS, (setting) => ({
         value: setting.key,
         label: setting.key,
         hint: setting.hint,

@@ -416,7 +416,7 @@ export const sessionRoutes = app
     });
 
     return c.json(
-      { items: await toSessionJson(c.var.db, page.items, now), nextCursor: page.nextCursor },
+      { items: [...(await toSessionJson(c.var.db, page.items, now))], nextCursor: page.nextCursor },
       200,
     );
   })
@@ -456,7 +456,7 @@ export const sessionRoutes = app
       if (groupIds.length) {
         await tx
           .insert(sessionGroup)
-          .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })));
+          .values([...A.map(groupIds, (groupId) => ({ sessionId: id, groupId }))]);
       }
     });
 
@@ -529,7 +529,7 @@ export const sessionRoutes = app
         if (groupIds.length) {
           await tx
             .insert(sessionGroup)
-            .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })));
+            .values([...A.map(groupIds, (groupId) => ({ sessionId: id, groupId }))]);
         }
       }
     });
@@ -609,7 +609,7 @@ export const sessionRoutes = app
     const found = await findSession(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
 
-    return c.json(await sessionRecords(c.var.db, id), 200);
+    return c.json([...(await sessionRecords(c.var.db, id))], 200);
   })
   .openapi(setRecordRoute, async (c) => {
     if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);

@@ -138,7 +138,7 @@ export async function materializeSchedules(
         if (groupIds.length) {
           await tx
             .insert(sessionGroup)
-            .values(A.map(groupIds, (groupId) => ({ sessionId: id, groupId })))
+            .values([...A.map(groupIds, (groupId) => ({ sessionId: id, groupId }))])
             .onConflictDoNothing();
         }
       });

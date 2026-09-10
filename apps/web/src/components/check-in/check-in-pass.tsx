@@ -20,7 +20,7 @@ import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import type { MySession } from "@/queries/use-my";
 
 export interface CheckInPassProps {
-  sessions: MySession[];
+  sessions: readonly MySession[];
   pending: boolean;
   error: Error | null;
   onPass: (id: string) => void;

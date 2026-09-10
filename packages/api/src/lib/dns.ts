@@ -23,7 +23,7 @@ interface DnsReply {
 const TXT = 16;
 
 /** Every TXT value on one host. Empty when the host has none, or DNS fails. */
-export async function txtRecords(host: string): Promise<string[]> {
+export async function txtRecords(host: string): Promise<readonly string[]> {
   const url = `${RESOLVER}?name=${encodeURIComponent(host)}&type=TXT`;
 
   try {

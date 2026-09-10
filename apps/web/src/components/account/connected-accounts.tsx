@@ -73,7 +73,7 @@ export function ConnectedAccounts() {
   const accountIdByProvider = new Map(A.map(linked, (row) => [row.provider, row.accountId]));
   const offered = new Set([...available, ...accountIdByProvider.keys()]);
 
-  const rows: ProviderRow[] = pipe(
+  const rows: readonly ProviderRow[] = pipe(
     [...offered],
     A.filter(isAuthProvider),
     A.map((provider) => ({

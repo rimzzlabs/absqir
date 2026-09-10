@@ -340,14 +340,16 @@ export const joinRequestRoutes = app
 
     return c.json(
       {
-        items: A.map(rows, (row) => ({
-          ...row,
-          image: row.image ?? null,
-          message: row.message ?? null,
-          decisionNote: row.decisionNote ?? null,
-          decidedAt: row.decidedAt?.toISOString() ?? null,
-          createdAt: row.createdAt.toISOString(),
-        })),
+        items: [
+          ...A.map(rows, (row) => ({
+            ...row,
+            image: row.image ?? null,
+            message: row.message ?? null,
+            decisionNote: row.decisionNote ?? null,
+            decidedAt: row.decidedAt?.toISOString() ?? null,
+            createdAt: row.createdAt.toISOString(),
+          })),
+        ],
       },
       200,
     );

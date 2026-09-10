@@ -65,7 +65,7 @@ volumes:
 
 interface OauthBlockParams {
   appUrl: string;
-  providers: ProviderCredential[];
+  providers: readonly ProviderCredential[];
 }
 
 /**
@@ -103,7 +103,7 @@ export interface EnvTemplateParams {
   resendKey: string;
   emailFrom: string;
   registrationOpen: boolean;
-  providers: ProviderCredential[];
+  providers: readonly ProviderCredential[];
 }
 
 export function envTemplate(params: EnvTemplateParams): string {
@@ -142,7 +142,7 @@ ${oauthBlock({ appUrl: params.appUrl, providers: params.providers })}
 
 export interface ProviderStepsParams {
   appUrl: string;
-  providers: ProviderCredential[];
+  providers: readonly ProviderCredential[];
 }
 
 /**
@@ -155,7 +155,7 @@ export function pendingProviderSteps(params: ProviderStepsParams): string[] {
   for (const credential of params.providers) {
     if (credential.clientId && credential.clientSecret) continue;
 
-    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === credential.id);
+    const provider = A.getBy(PROVIDERS, (entry) => entry.id === credential.id);
     if (!provider) continue;
 
     const [idKey, secretKey] = keysOf(credential.id);

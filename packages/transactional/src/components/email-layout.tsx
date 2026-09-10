@@ -27,7 +27,7 @@ export interface EmailLayoutProps {
  * brand chip is a baked tile: an image never inverts, so the mark always
  * reads.
  */
-const DARK_RULES: [string, string][] = [
+const DARK_RULES: readonly [string, string][] = [
   [".abs-page", `background-color: ${color.paperDark} !important;`],
   [
     ".abs-card",

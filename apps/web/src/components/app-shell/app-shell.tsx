@@ -23,7 +23,7 @@ export interface ShellUser {
 
 export interface AppShellProps {
   user: ShellUser;
-  memberships: ShellMembership[];
+  memberships: readonly ShellMembership[];
   /** Null while the account belongs to no organization. */
   active: ShellMembership | null;
   currentPath: string;

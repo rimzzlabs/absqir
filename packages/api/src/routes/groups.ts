@@ -203,7 +203,7 @@ async function membersOf(db: Database, groupId: string) {
 
 async function detail(db: Database, row: GroupRow) {
   const members = await membersOf(db, row.id);
-  return { ...toJson(row, members.length), members };
+  return { ...toJson(row, members.length), members: [...members] };
 }
 
 const app = new OpenAPIHono<AppEnv>();
@@ -225,10 +225,7 @@ export const groupRoutes = app
       .groupBy(group.id)
       .orderBy(asc(sql`lower(${group.name})`));
 
-    return c.json(
-      A.map(rows, ({ row, memberCount }) => toJson(row, memberCount)),
-      200,
-    );
+    return c.json([...A.map(rows, ({ row, memberCount }) => toJson(row, memberCount))], 200);
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "admin")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
@@ -339,7 +336,7 @@ export const groupRoutes = app
       if (valid.length) {
         await tx
           .insert(groupMember)
-          .values(A.map(valid, (row) => ({ groupId: id, personId: row.id })));
+          .values([...A.map(valid, (row) => ({ groupId: id, personId: row.id }))]);
       }
     });
 

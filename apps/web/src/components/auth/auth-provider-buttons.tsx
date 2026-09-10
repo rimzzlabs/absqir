@@ -7,7 +7,7 @@ import { type AuthProviderId, providerLabel } from "@/lib/auth-providers";
 
 export interface AuthProviderButtonsProps {
   /** The providers the operator turned on. Empty renders nothing at all. */
-  providers: AuthProviderId[];
+  providers: readonly AuthProviderId[];
   /** Where to land after the provider sends the reader back. */
   next: string;
 }

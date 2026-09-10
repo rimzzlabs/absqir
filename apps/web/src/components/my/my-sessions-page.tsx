@@ -23,7 +23,7 @@ const SCOPE = parseAsStringLiteral([
 const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
 function SessionGrid(props: {
-  rows: MySession[];
+  rows: readonly MySession[];
   scope: MySessionScope;
   onPass: (id: string) => void;
   onAskLeave: (session: MySession) => void;

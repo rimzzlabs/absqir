@@ -352,10 +352,7 @@ export const peopleRoutes = app
 
     const extra = await decorate(c.var.db, organizationId, rows);
 
-    return c.json(
-      A.map(rows, (row) => toJson(row, extra)),
-      200,
-    );
+    return c.json([...A.map(rows, (row) => toJson(row, extra))], 200);
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "admin")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);

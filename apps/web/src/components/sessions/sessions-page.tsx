@@ -30,7 +30,7 @@ const TEXT = parseAsString.withDefault("");
 
 const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
-function SessionGrid(props: { rows: Session[]; scope: ListScope; filtered: boolean }) {
+function SessionGrid(props: { rows: readonly Session[]; scope: ListScope; filtered: boolean }) {
   const past = props.scope === "past";
   const emptyTitle = past ? "Nothing has happened yet" : "Nothing is planned";
   const emptyHint = past

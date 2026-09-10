@@ -21,7 +21,7 @@ declare namespace App {
     /** The step the signed-in user still has to complete. */
     onboardingStep: AbsqirOnboardingStep | null;
     /** Every organization the signed-in user belongs to, oldest first. */
-    memberships: AbsqirMembership[];
+    memberships: readonly AbsqirMembership[];
     /** The membership behind the session's active organization. */
     activeMembership: AbsqirMembership | null;
   }

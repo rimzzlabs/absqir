@@ -16,8 +16,8 @@ const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
 
 function helpText(): string {
-  const width = Math.max(...A.map([...COMMANDS], (command) => command.id.length));
-  const lines = A.map([...COMMANDS], (command) => `  ${command.id.padEnd(width)}  ${command.hint}`);
+  const width = Math.max(...A.map(COMMANDS, (command) => command.id.length));
+  const lines = A.map(COMMANDS, (command) => `  ${command.id.padEnd(width)}  ${command.hint}`);
 
   return [
     `absqir ${version} — self-host the QR attendance system`,

@@ -164,7 +164,7 @@ function ChartTooltipContent({
   }
 
   const nestLabel = payload.length === 1 && indicator !== "dot";
-  const shown = A.filter([...payload], (item) => item.type !== "none");
+  const shown = A.filter(payload, (item) => item.type !== "none");
 
   return (
     <div
@@ -264,7 +264,7 @@ function ChartLegendContent({
     return null;
   }
 
-  const shown = A.filter([...payload], (item) => item.type !== "none");
+  const shown = A.filter(payload, (item) => item.type !== "none");
 
   return (
     <div

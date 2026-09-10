@@ -264,7 +264,7 @@ export const leaveRoutes = base
 
     const page = pageOf(list, limit, (row) => ({ at: row.at, id: row.request.id }));
 
-    return c.json({ items: A.map(page.items, toJson), nextCursor: page.nextCursor }, 200);
+    return c.json({ items: [...A.map(page.items, toJson)], nextCursor: page.nextCursor }, 200);
   })
   .openapi(askRoute, async (c) => {
     const organizationId = organizationIdOf(c);
@@ -352,7 +352,7 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.organizationId, organizationId), byScope[scope]))
       .orderBy(desc(leaveRequest.createdAt));
 
-    return c.json(A.map(list, toJson), 200);
+    return c.json([...A.map(list, toJson)], 200);
   })
   .openapi(decideRoute, async (c) => {
     if (roleBelow(c, "organizer")) {

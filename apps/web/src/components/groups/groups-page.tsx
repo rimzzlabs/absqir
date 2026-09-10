@@ -18,7 +18,7 @@ export interface GroupsPageProps {
   role: RoleName;
 }
 
-function GroupCards(props: { rows: Group[]; onOpen: (id: string) => void }) {
+function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => void }) {
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">

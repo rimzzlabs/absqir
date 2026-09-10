@@ -71,7 +71,7 @@ async function askAppUrl(): Promise<string> {
 }
 
 function parseProviders(values: string[]): ProviderId[] {
-  const known = A.map([...PROVIDERS], (provider) => provider.id as string);
+  const known = A.map(PROVIDERS, (provider) => provider.id as string);
 
   for (const value of values) {
     if (!known.includes(value)) {
@@ -94,11 +94,13 @@ interface AskCredentialsParams {
  * anything. An empty ID skips the secret: one half of a pair alone stops the
  * server, so both keys stay empty together.
  */
-async function askCredentials(params: AskCredentialsParams): Promise<ProviderCredential[]> {
+async function askCredentials(
+  params: AskCredentialsParams,
+): Promise<readonly ProviderCredential[]> {
   const credentials: ProviderCredential[] = [];
 
   for (const id of params.chosen) {
-    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === id);
+    const provider = A.getBy(PROVIDERS, (entry) => entry.id === id);
     if (!provider) continue;
 
     const [idKey, secretKey] = keysOf(id);
@@ -279,7 +281,7 @@ export async function init(argv: string[]): Promise<number> {
     return ui.multiselect<ProviderId>({
       message: "Sign-in providers, on top of the emailed code",
       flag: "--provider",
-      options: A.map([...PROVIDERS], (provider) => ({
+      options: A.map(PROVIDERS, (provider) => ({
         value: provider.id,
         label: provider.label,
         hint: "absqir asks for the keys next",
@@ -321,7 +323,7 @@ export async function init(argv: string[]): Promise<number> {
   for (const credential of providers) {
     if (!credential.clientId || !credential.clientSecret) continue;
 
-    const provider = A.getBy([...PROVIDERS], (entry) => entry.id === credential.id);
+    const provider = A.getBy(PROVIDERS, (entry) => entry.id === credential.id);
     if (provider) ui.success(`${provider.label} sign-in is ready.`);
   }
 

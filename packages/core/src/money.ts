@@ -56,7 +56,7 @@ export function minus(left: Money, right: Money): Money {
  * Aggregation like this belongs on the server, never in a component.
  */
 export function total(amounts: readonly Money[], currency: MoneyCurrency): Money {
-  return A.reduce([...amounts], zero(currency), (sum, amount) => add(sum, amount));
+  return A.reduce(amounts, zero(currency), (sum, amount) => add(sum, amount));
 }
 
 /**

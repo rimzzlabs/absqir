@@ -111,7 +111,7 @@ export const notificationRoutes = app
     const { scope } = c.req.valid("query");
     const rows = await listNotifications(c.var.db, user.id, organizationId, scope ?? "all");
 
-    return c.json(A.map(rows, toNotificationJson), 200);
+    return c.json([...A.map(rows, toNotificationJson)], 200);
   })
   .openapi(countRoute, async (c) => {
     const organizationId = organizationIdOf(c);

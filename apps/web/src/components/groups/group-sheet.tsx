@@ -38,7 +38,7 @@ export interface GroupSheetProps {
   canManage: boolean;
 }
 
-function sameSet(a: string[], b: string[]) {
+function sameSet(a: readonly string[], b: readonly string[]) {
   return a.length === b.length && A.every(a, (id) => b.includes(id));
 }
 
@@ -47,7 +47,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
   const people = usePeople();
   const save = useSetGroupMembers();
   const initial = useMemo(() => A.map(props.group.members, (row) => row.personId), [props.group]);
-  const [selected, setSelected] = useState<string[]>(initial);
+  const [selected, setSelected] = useState<readonly string[]>(initial);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -81,7 +81,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
           <Button
             size="sm"
             disabled={save.isPending}
-            onClick={() => save.mutate({ id: props.group.id, personIds: selected })}
+            onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
           >
             {save.isPending ? "Saving…" : "Save members"}
           </Button>
