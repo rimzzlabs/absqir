@@ -1,17 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><title>absqir</title>
-  <!-- Favicon build of the absqir mark: heavier strokes for 16 px, and a
-       media query so it holds on dark browser chrome. -->
-  <style>
-    .ink-s { stroke: #131a26; }
-    .ink-f { fill: #131a26; }
-    .acc { fill: #2563eb; }
-    @media (prefers-color-scheme: dark) {
-      .ink-s { stroke: #e7ecf4; }
-      .ink-f { fill: #e7ecf4; }
-      .acc { fill: #7ca9ff; }
-    }
-  </style>
-  <path class="ink-s" d="M36 9 H19 Q9 9 9 19 V45 Q9 55 19 55 H45 Q55 55 55 45 V28" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="acc" x="42.5" y="8" width="14" height="14" rx="4"/>
-  <rect class="ink-f" x="24" y="24" width="16" height="16" rx="4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><title>absqir</title>
+  <!-- Favicon build of the absqir mark: the fused grain on a cobalt tile, so
+       the letter stays solid at 16 px and reads on light and dark chrome. -->
+  <rect width="100" height="100" rx="22" fill="#2563eb"/>
+  <g transform="translate(22.92 18.00) scale(0.49231)">
+    <rect x="19.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="-0.2" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="9.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="19.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="19.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="29.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="29.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="39.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="49.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="-0.2" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="59.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="-0.2" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="69.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="-0.2" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="79.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="-0.2" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="89.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="-0.2" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="99.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="9.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="109.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="19.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="29.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="39.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="49.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="59.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="69.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="79.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="89.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+    <rect x="99.8" y="119.8" width="10.4" height="10.4" fill="#ffffff"/>
+  </g>
 </svg>
