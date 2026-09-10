@@ -8,6 +8,7 @@ type TopChoice =
   | "logs"
   | "upgrade"
   | "migrate"
+  | "db reset"
   | "accounts"
   | "config"
   | "doctor"
@@ -32,6 +33,7 @@ export async function menu(): Promise<string[] | null> {
       choiceOf("logs"),
       choiceOf("upgrade"),
       choiceOf("migrate"),
+      choiceOf("db reset"),
       { value: "accounts", label: "accounts", hint: "create, promote, add to an organization" },
       { value: "config", label: "config", hint: "read or change .env" },
       choiceOf("doctor"),
@@ -64,5 +66,5 @@ export async function menu(): Promise<string[] | null> {
     return action.split(" ");
   }
 
-  return [picked];
+  return picked.split(" ");
 }

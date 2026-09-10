@@ -107,6 +107,9 @@ export async function up(): Promise<number> {
 
   if (outcome.kind === "stopped") {
     ui.fail(outcome.reason);
+    ui.info(
+      "`absqir doctor` checks the password and offers the repair. `absqir db reset` starts from an empty database.",
+    );
     ui.outroError("The app stopped. Fix the cause above, then run `absqir up` again.");
     return 1;
   }

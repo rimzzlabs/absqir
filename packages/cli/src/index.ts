@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { A } from "@mobily/ts-belt";
 import { adminCreate, adminPromote, memberAdd } from "#src/commands/admin";
 import { configGet, configSet } from "#src/commands/config";
+import { dbReset } from "#src/commands/db";
 import { doctor } from "#src/commands/doctor";
 import { init } from "#src/commands/init";
 import { down, logs, migrate, up, upgrade } from "#src/commands/lifecycle";
@@ -53,6 +54,9 @@ async function dispatch(argv: string[]): Promise<number> {
       break;
     case "member":
       if (rest[0] === "add") return memberAdd(rest.slice(1));
+      break;
+    case "db":
+      if (rest[0] === "reset") return dbReset(rest.slice(1));
       break;
     case "config":
       if (rest[0] === "set") return configSet(rest.slice(1));

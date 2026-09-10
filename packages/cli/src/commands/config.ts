@@ -21,6 +21,11 @@ const SETTINGS: SettingInfo[] = [
   { key: "SECURE_COOKIES", hint: "true behind HTTPS", secret: false },
   { key: "REGISTRATION_OPEN", hint: "open sign-up to any email address", secret: false },
   { key: "ABSQIR_TAG", hint: "image tag `absqir upgrade` pulls", secret: false },
+  {
+    key: "POSTGRES_PASSWORD",
+    hint: "the password the database volume was created with",
+    secret: true,
+  },
   { key: "RESEND_API_KEY", hint: "sign-in codes travel by email", secret: true },
   { key: "EMAIL_FROM", hint: "From address on every email", secret: false },
   { key: "GITHUB_CLIENT_ID", hint: "GitHub sign-in", secret: false },

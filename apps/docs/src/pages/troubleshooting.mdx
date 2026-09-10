@@ -39,15 +39,21 @@ that the volume keeps that password, whatever `.env` says. The app meets this
 after a second `absqir init` from an older CLI, or after a `.env` was pasted
 over with a different password.
 
-Two ways out:
+`doctor` asks Postgres for the password and names this failure. On a terminal
+it offers the repair on the spot. Two ways out:
 
-1. Put the old password back into `.env`, if you still have it.
-2. Delete the volume and start again. This deletes the data in it.
+1. Put the old password back into `.env`, if you still have it:
 
-```bash
-docker compose down -v
-npx absqir up
-```
+   ```bash
+   npx absqir config set POSTGRES_PASSWORD <the old one>
+   npx absqir up
+   ```
+
+2. Delete the volume and start again. This deletes every row in it.
+
+   ```bash
+   npx absqir db reset
+   ```
 
 `absqir init` keeps the secrets of an existing `.env`, so a repeat `init`
 no longer causes this.

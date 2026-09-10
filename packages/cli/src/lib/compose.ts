@@ -64,6 +64,32 @@ export function streamCompose(options: StreamComposeOptions): ComposeStream {
   return { done, stop: () => child.kill() };
 }
 
+export interface CaptureComposeResult {
+  code: number;
+  output: string;
+}
+
+/**
+ * Runs `docker compose` and keeps its output instead of showing it, for the
+ * checks that read an answer (doctor asking Postgres for a password).
+ */
+export function captureCompose(options: RunComposeOptions): Promise<CaptureComposeResult> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("docker", ["compose", ...options.args], {
+      cwd: options.cwd ?? process.cwd(),
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const chunks: Buffer[] = [];
+
+    child.stdout.on("data", (chunk: Buffer) => chunks.push(chunk));
+    child.stderr.on("data", (chunk: Buffer) => chunks.push(chunk));
+    child.on("error", (error) => reject(error));
+    child.on("close", (code) =>
+      resolve({ code: code ?? 1, output: Buffer.concat(chunks).toString("utf8") }),
+    );
+  });
+}
+
 export function dockerAvailable(): Promise<boolean> {
   return new Promise((resolve) => {
     const child = spawn("docker", ["--version"], { stdio: "ignore" });
