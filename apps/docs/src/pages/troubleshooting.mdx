@@ -30,6 +30,28 @@ npx absqir up
 directory, or the `.env` was replaced. Run every command from the directory
 that holds `docker-compose.yml`.
 
+## Postgres refuses the password
+
+**`Postgres refused the password in DATABASE_URL`**
+
+Postgres reads `POSTGRES_PASSWORD` once, when it creates its data volume. After
+that the volume keeps that password, whatever `.env` says. The app meets this
+after a second `absqir init` from an older CLI, or after a `.env` was pasted
+over with a different password.
+
+Two ways out:
+
+1. Put the old password back into `.env`, if you still have it.
+2. Delete the volume and start again. This deletes the data in it.
+
+```bash
+docker compose down -v
+npx absqir up
+```
+
+`absqir init` keeps the secrets of an existing `.env`, so a repeat `init`
+no longer causes this.
+
 ## The sign-in code never arrives
 
 1. Read the log. Without a valid key, the server prints the code instead of

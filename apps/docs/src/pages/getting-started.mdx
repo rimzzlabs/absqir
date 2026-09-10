@@ -49,11 +49,14 @@ npx absqir config set EMAIL_FROM "absqir <onboarding@resend.dev>"
 npx absqir up
 ```
 
-Docker pulls two images and starts them. The app container applies the database
-migrations before it serves anything, so the first start takes longer than the
-ones after it.
+Docker pulls two images and starts them. The app log then follows on your
+terminal until the app answers, the way a normal start does. The app applies
+the database migrations before it serves anything, so the first start takes
+longer than the ones after it. When the app answers, `up` prints the address
+to open and the one thing to do there.
 
-Watch it come up:
+If the app stops on a fault it cannot recover from, `up` prints the cause and
+the fix instead. To follow the log again later:
 
 ```bash
 npx absqir logs
