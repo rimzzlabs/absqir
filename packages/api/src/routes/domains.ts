@@ -7,7 +7,7 @@ import {
 import { schema } from "@absqir/db";
 import { JOIN_POLICIES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, O, R } from "@mobily/ts-belt";
 import { and, asc, eq } from "drizzle-orm";
 import { txtRecords } from "#src/lib/dns";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -106,6 +106,10 @@ const verifyRoute = createRoute({
     403: forbidden,
     404: {
       description: "No such domain",
+      content: { "application/json": { schema: errorSchema } },
+    },
+    502: {
+      description: "The DNS lookup did not finish",
       content: { "application/json": { schema: errorSchema } },
     },
   },
@@ -266,7 +270,13 @@ export const domainRoutes = app
     if (found.verifiedAt) return c.json(toJson(found), 200);
 
     const wanted = domainVerificationRecord(found.verificationToken);
-    const records = await txtRecords(domainVerificationHost(found.domain));
+    const records = R.toOption(await txtRecords(domainVerificationHost(found.domain)));
+
+    // A resolver that never answered is not a record that is missing. Saying
+    // "still not verified" here would send the operator to fix working DNS.
+    if (O.isNone(records)) {
+      return c.json({ error: "The DNS lookup did not finish. Try again shortly." }, 502);
+    }
 
     if (!records.includes(wanted)) return c.json(toJson(found), 200);
 
