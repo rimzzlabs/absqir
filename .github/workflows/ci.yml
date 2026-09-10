@@ -51,6 +51,17 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build
 
+  docs:
+    name: Build (docs site)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # The Docs workflow deploys straight from main. Without this job a
+      # dependency bump that breaks the docs build only shows up at deploy.
+      - run: pnpm docs:build
+
   build-node:
     name: Build (Node target)
     runs-on: ubuntu-latest
