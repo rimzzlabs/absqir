@@ -23,42 +23,46 @@ cd my-absqir
 npx absqir up
 ```
 
-Set `RESEND_API_KEY` in the generated `.env`, then open
-http://localhost:4321 and enter your email. The code that arrives creates
-the first account, the operator's. After that, people join through
-invitations. The full guide — HTTPS, configuration, upgrades, accounts —
-lives in `apps/docs` and on the docs site at <https://absqir.rimzzlabs.com>.
+`init` asks for the address, a Resend key for the sign-in codes, and the
+sign-in providers you want. `up` starts the stack, follows the log until the
+app answers, and tells you what to do next. The first email address to sign
+in becomes the operator. After that, people join through invitations. You
+need Docker and Node 22 or newer. The full guide — HTTPS, configuration,
+upgrades, accounts — lives in `apps/docs` and on the docs site at
+<https://absqir.rimzzlabs.com>.
+
+## Status
+
+absqir is a beta at 0.3. Start from this version: 0.1 and 0.2 fixed the
+install path. Things change between versions, and `CHANGELOG.md` says what.
+
+What works today:
+
+- One door for everyone: an email code, and GitHub or Google if you turn
+  them on.
+- Organizations with roles, a people directory with CSV import, groups, and
+  invitations.
+- Events with a start, an end, a late threshold, and the groups expected. A
+  rotating QR screen for the room, and a scanner for the door.
+- A public registration page per event, and leave requests that organizers
+  approve or decline.
+- Reports with CSV export, a month and week calendar, and reminders worded in
+  each reader's own time zone.
+- An operator CLI: `init`, `up`, `doctor` with a repair for the database
+  password, `db reset`, and `admin create`.
+
+What it is not, yet: there is no hosted version, you self-host. It does not
+do payroll, and it does not track location. If something breaks, open an
+issue with the output of `npx absqir doctor`.
 
 ## About this repo
 
 A Turborepo monorepo that builds for two targets from one codebase: a Docker
-image on Node.js for self-hosting, and a Cloudflare Worker for the hosted
-version. Astro serves the site, Hono serves the API at `/api`, and both run
+image on Node.js for self-hosting, and a Cloudflare Worker kept for a hosted
+version later. Astro serves the site, Hono serves the API at `/api`, and both run
 on the same origin. Everything belongs to an organization: accounts join
 organizations with a role (`owner`, `admin`, `organizer`, `member`), the
 directory and the groups live inside them.
-
-## Where the build stands
-
-All four phases are built. One-door sign-in with email codes, onboarding,
-organizations and roles, the people directory with CSV import and
-invitations, groups, events with a start, an end, a late threshold,
-groups that are expected, a rotating QR room screen, a scanner for the
-door, per-person statuses, schedules that spawn events, the member's own
-events and history, a public registration page per event that also
-creates accounts, leave requests that organizers approve or decline, and
-now attendance reports with CSV export, a month and week calendar, and
-notifications with reminders before an event, worded in each reader's
-own time zone.
-
-| Phase | Delivers                                                                  |
-| ----- | ------------------------------------------------------------------------- |
-| 1     | Accounts, onboarding, organizations, roles, people, groups, invitations   |
-| 2     | Events with a start, an end, a late threshold, statuses, two-way check-in |
-| 3     | Public registration for events, leave requests                            |
-| 4     | Reports, CSV export, calendar, notifications and reminders                |
-
-Next: the first public release. See `CONTRIBUTING.md` to build it locally.
 
 ## How the QR stays honest
 
