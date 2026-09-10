@@ -411,19 +411,24 @@ a release.
 1. A pull request into `main` runs lint, format, types, tests, both target
    builds, a Docker build, and the commit message check.
 2. Merging the release pull request tags the version and writes `CHANGELOG.md`.
-3. The tag runs the full check again, then publishes the Docker image to
-   `ghcr.io` (amd64 and arm64) and the `absqir` CLI to npm.
-4. The Cloudflare deploy job stays off until the repository variable
-   `DEPLOY_CLOUDFLARE` is `true`.
+3. The tag publishes the Docker image to `ghcr.io` (amd64 and arm64) and the
+   `absqir` CLI to npm. The tagged commit is the squash merge of a pull request
+   CI already checked, so nothing runs twice.
+4. A failed publish runs again from the Actions page: start the Release
+   workflow by hand with the tag as input.
 
-Set these repository secrets before the first release:
+The CLI publishes through npm trusted publishing, so no npm token lives in the
+repository. The Docker image publishes with the built-in `GITHUB_TOKEN`. The
+docs site needs two repository secrets:
 
-| Secret                  | Used for                                   |
-| ----------------------- | ------------------------------------------ |
-| `NPM_TOKEN`             | `npm publish` of the CLI                   |
-| `CLOUDFLARE_API_TOKEN`  | `wrangler deploy`, only with the flag on   |
-| `CLOUDFLARE_ACCOUNT_ID` | `wrangler deploy`, only with the flag on   |
-| `DATABASE_URL`          | `drizzle-kit migrate` on Cloudflare deploy |
+| Secret                  | Used for                           |
+| ----------------------- | ---------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | the docs site deploy on Cloudflare |
+| `CLOUDFLARE_ACCOUNT_ID` | the docs site deploy on Cloudflare |
+
+Dependabot opens one grouped pull request a week for the GitHub Actions and
+one for npm minor and patch updates. Major npm updates arrive on their own.
+| `DATABASE_URL` | `drizzle-kit migrate` on Cloudflare deploy |
 
 ## Pages and the session
 
