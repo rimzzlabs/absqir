@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/rimzzlabs/absqir/compare/v0.2.0...v0.3.0) (2026-09-10)
+
+
+### Features
+
+* **cli:** let doctor check the database password and repair it ([#14](https://github.com/rimzzlabs/absqir/issues/14)) ([47563d1](https://github.com/rimzzlabs/absqir/commit/47563d13dc8011116f4f0bd39fc56dbaf40e75ed))
+
 ## [0.2.0](https://github.com/rimzzlabs/absqir/compare/v0.1.2...v0.2.0) (2026-09-10)
 
 
