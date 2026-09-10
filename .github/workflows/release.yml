@@ -3,6 +3,15 @@ name: Release
 on:
   push:
     branches: [main]
+  # A failed publish cannot be retried from the Actions page: a re-run repeats
+  # release-please, which sees the tag and reports nothing new, so every
+  # publish job skips. Run the workflow by hand with an existing tag instead.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "An existing tag to publish, for example v0.1.0"
+        required: true
+        type: string
 
 concurrency:
   group: release-${{ github.ref }}
@@ -17,6 +26,7 @@ permissions:
 jobs:
   release-please:
     name: Release pull request
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       released: ${{ steps.release.outputs.release_created }}
@@ -28,15 +38,42 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+  plan:
+    name: Pick the tag to publish
+    needs: release-please
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+    steps:
+      - name: Take the tag from the input, or from the release just created
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          RELEASED: ${{ needs.release-please.outputs.released }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            case "$INPUT_TAG" in
+              v[0-9]*) echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT" ;;
+              *) echo "::error::The tag must look like v0.1.0, got '$INPUT_TAG'"; exit 1 ;;
+            esac
+          elif [ "$RELEASED" = "true" ]; then
+            echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release to publish."
+          fi
+
   verify:
     name: Verify the tagged commit
-    needs: release-please
-    if: needs.release-please.outputs.released == 'true'
+    needs: plan
+    if: needs.plan.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
+          ref: ${{ needs.plan.outputs.tag }}
       - uses: ./.github/actions/setup
       - run: pnpm check
       - run: pnpm format:check
@@ -46,48 +83,48 @@ jobs:
 
   docker:
     name: Publish the Docker image
-    needs: [release-please, verify]
-    if: needs.release-please.outputs.released == 'true'
+    needs: [plan, verify]
+    if: needs.plan.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+          ref: ${{ needs.plan.outputs.tag }}
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push (amd64 + arm64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository }}:${{ needs.release-please.outputs.tag }}
+            ghcr.io/${{ github.repository }}:${{ needs.plan.outputs.tag }}
             ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   npm:
     name: Publish the CLI to npm
-    needs: [release-please, verify]
-    if: needs.release-please.outputs.released == 'true'
+    needs: [plan, verify]
+    if: needs.plan.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
+          ref: ${{ needs.plan.outputs.tag }}
       - uses: ./.github/actions/setup
       - run: pnpm --filter absqir build
       - name: Set the CLI version from the tag
         working-directory: packages/cli
         run: npm version --no-git-tag-version "${TAG#v}"
         env:
-          TAG: ${{ needs.release-please.outputs.tag }}
+          TAG: ${{ needs.plan.outputs.tag }}
       - name: Point npm at the registry token
         run: echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
       - name: Publish
@@ -98,10 +135,10 @@ jobs:
 
   deploy:
     name: Deploy to Cloudflare
-    needs: [release-please, verify]
+    needs: [plan, verify]
     # The hosted deployment is off until the SaaS launches. Set the repository
     # variable DEPLOY_CLOUDFLARE to "true" to turn it on.
-    if: needs.release-please.outputs.released == 'true' && vars.DEPLOY_CLOUDFLARE == 'true'
+    if: needs.plan.outputs.tag != '' && vars.DEPLOY_CLOUDFLARE == 'true'
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -109,7 +146,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
+          ref: ${{ needs.plan.outputs.tag }}
       - uses: ./.github/actions/setup
 
       - name: Build

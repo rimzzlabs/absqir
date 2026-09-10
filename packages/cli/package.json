@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "absqir": "./dist/index.js"
+    "absqir": "dist/index.js"
   },
   "imports": {
     "#src/*": "./src/*.ts"
