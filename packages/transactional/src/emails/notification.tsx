@@ -3,9 +3,9 @@ import {
   EmailFallbackLink,
   EmailHeading,
   EmailText,
-} from "@/components/email-content";
-import { EmailLayout } from "@/components/email-layout";
-import { color } from "@/theme";
+} from "#src/components/email-content";
+import { EmailLayout } from "#src/components/email-layout";
+import { color } from "#src/theme";
 
 export interface NotificationEmailProps {
   title: string;

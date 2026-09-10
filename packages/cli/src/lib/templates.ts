@@ -1,4 +1,4 @@
-import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "@/lib/providers";
+import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 
 export const DEFAULT_APP_URL = "http://localhost:4321";
 

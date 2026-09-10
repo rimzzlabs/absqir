@@ -1,6 +1,6 @@
 import { Button, Heading, Text } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
-import { color, font } from "@/theme";
+import { color, font } from "#src/theme";
 
 const heading: CSSProperties = {
   color: color.ink,

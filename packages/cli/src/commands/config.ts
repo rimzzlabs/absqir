@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { usageOf } from "@/lib/commands";
-import { readEnvValue, setEnvValue } from "@/lib/env-file";
-import { UsageError } from "@/lib/errors";
-import * as ui from "@/ui";
+import { usageOf } from "#src/lib/commands";
+import { readEnvValue, setEnvValue } from "#src/lib/env-file";
+import { UsageError } from "#src/lib/errors";
+import * as ui from "#src/ui";
 
 const ENV_PATH = ".env";
 

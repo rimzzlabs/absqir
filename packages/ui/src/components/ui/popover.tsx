@@ -5,7 +5,7 @@ import {
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function Popover({ actionsRef, ...props }: PopoverPrimitive.Root.Props) {
   const actions = usePopupActionsRef(actionsRef);

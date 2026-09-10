@@ -1,10 +1,10 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
-import { organizationGuard, organizationIdOf, requireRole } from "@/lib/org-access";
-import { occurrencesBetween } from "@/lib/schedule";
-import { settle, toSessionJson } from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
+import { occurrencesBetween } from "#src/lib/schedule";
+import { settle, toSessionJson } from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const { attendanceSession, schedule } = schema;
 

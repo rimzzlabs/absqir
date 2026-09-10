@@ -2,14 +2,14 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import type * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "#src/components/ui/button";
 import {
   DURATION,
   MotionFade,
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 /** How far the panel travels from its edge while it fades. */
 const SHEET_OFFSET = {

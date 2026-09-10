@@ -1,13 +1,13 @@
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import { cn } from "cn";
 import type * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "#src/components/ui/button";
 import {
   MotionFade,
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function AlertDialog({ actionsRef, ...props }: AlertDialogPrimitive.Root.Props) {
   const actions = usePopupActionsRef(actionsRef);

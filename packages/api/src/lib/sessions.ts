@@ -17,11 +17,11 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import { decodeCursor, pageOf } from "@/lib/cursor";
-import { expectedPersonIds, registeredPersonIds, type SessionRow } from "@/lib/expected";
-import { notifyDueReminders, notifySessionClosed } from "@/lib/notify";
-import { materializeSchedules } from "@/lib/schedule";
-import { isBackfill, needsFinalising, type SessionStatus, statusOf } from "@/lib/session-status";
+import { decodeCursor, pageOf } from "#src/lib/cursor";
+import { expectedPersonIds, registeredPersonIds, type SessionRow } from "#src/lib/expected";
+import { notifyDueReminders, notifySessionClosed } from "#src/lib/notify";
+import { materializeSchedules } from "#src/lib/schedule";
+import { isBackfill, needsFinalising, type SessionStatus, statusOf } from "#src/lib/session-status";
 
 const {
   attendanceSession,

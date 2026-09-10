@@ -4,10 +4,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": [],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "types": []
   },
   "include": ["src", "*.config.ts", "tests"],
   "exclude": ["dist", "node_modules"]

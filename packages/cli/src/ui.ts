@@ -1,6 +1,6 @@
 import * as clack from "@clack/prompts";
 import pc from "picocolors";
-import { CancelError, UsageError } from "@/lib/errors";
+import { CancelError, UsageError } from "#src/lib/errors";
 
 /**
  * Rich mode draws clack boxes and colour. Plain mode writes one fact per line,

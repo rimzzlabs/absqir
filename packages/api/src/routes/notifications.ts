@@ -1,9 +1,14 @@
 import { NOTIFICATION_TYPES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { notificationStream } from "@/lib/notification-stream";
-import { listNotifications, markRead, toNotificationJson, unreadCount } from "@/lib/notifications";
-import { organizationGuard, organizationIdOf } from "@/lib/org-access";
-import type { AppEnv } from "@/types";
+import { notificationStream } from "#src/lib/notification-stream";
+import {
+  listNotifications,
+  markRead,
+  toNotificationJson,
+  unreadCount,
+} from "#src/lib/notifications";
+import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
+import type { AppEnv } from "#src/types";
 
 const notificationSchema = z.object({
   id: z.string(),

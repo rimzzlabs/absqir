@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeClock } from "@/components/ui/date-picker";
+import { normalizeClock } from "#src/components/ui/date-picker";
 
 describe("normalizeClock", () => {
   it("pads what a person types in a hurry", () => {

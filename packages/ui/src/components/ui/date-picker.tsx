@@ -4,10 +4,10 @@ import { CalendarBlankIcon, ClockIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { format, isValid, setHours, setMinutes } from "date-fns";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "#src/components/ui/button";
+import { Calendar } from "#src/components/ui/calendar";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "#src/components/ui/input-group";
+import { Popover, PopoverContent, PopoverTrigger } from "#src/components/ui/popover";
 
 /* ---------------------------------- date --------------------------------- */
 

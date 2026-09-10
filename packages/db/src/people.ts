@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import type { Database } from "@/index";
-import { person } from "@/schema";
+import type { Database } from "#src/index";
+import { person } from "#src/schema";
 
 export interface EnsurePersonParams {
   organizationId: string;

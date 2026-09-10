@@ -1,12 +1,12 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, eq, inArray } from "drizzle-orm";
-import { csvCell } from "@/lib/csv";
-import { parsePass, verifyPass } from "@/lib/member-pass";
-import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "@/lib/org-access";
-import { createQrToken, verifyQrToken } from "@/lib/qr-token";
-import { randomSecret } from "@/lib/schedule";
-import { acceptsCheckIns, statusForCheckIn, statusOf } from "@/lib/session-status";
+import { csvCell } from "#src/lib/csv";
+import { parsePass, verifyPass } from "#src/lib/member-pass";
+import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
+import { createQrToken, verifyQrToken } from "#src/lib/qr-token";
+import { randomSecret } from "#src/lib/schedule";
+import { acceptsCheckIns, statusForCheckIn, statusOf } from "#src/lib/session-status";
 import {
   existingRecord,
   finalizeSession,
@@ -18,8 +18,8 @@ import {
   settle,
   toSessionJson,
   upsertRecord,
-} from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+} from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const { attendanceSession, sessionGroup, group, member } = schema;
 

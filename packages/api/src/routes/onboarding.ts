@@ -4,12 +4,12 @@ import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/dom
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
-import { forwardCookies } from "@/lib/auth-forward";
-import { avatarSchema } from "@/lib/avatar";
-import { findPublicSession, registerForSession } from "@/lib/events";
-import { activateOrganization, setOnboardingStep } from "@/lib/onboarding";
-import { isSlug } from "@/lib/slug";
-import type { AppEnv } from "@/types";
+import { forwardCookies } from "#src/lib/auth-forward";
+import { avatarSchema } from "#src/lib/avatar";
+import { findPublicSession, registerForSession } from "#src/lib/events";
+import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
+import { isSlug } from "#src/lib/slug";
+import type { AppEnv } from "#src/types";
 
 const { user, account, invitation, organization, member } = schema;
 

@@ -8,7 +8,7 @@ import {
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function Select<Value, Multiple extends boolean | undefined = false>({
   actionsRef,

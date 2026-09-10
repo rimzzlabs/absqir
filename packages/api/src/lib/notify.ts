@@ -3,7 +3,7 @@ import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
-import { expectedPersonIds, type SessionRow } from "@/lib/expected";
+import { expectedPersonIds, type SessionRow } from "#src/lib/expected";
 import {
   adminUserIds,
   createNotifications,
@@ -11,7 +11,7 @@ import {
   type NotificationInput,
   type NotificationRow,
   userIdsForPeople,
-} from "@/lib/notifications";
+} from "#src/lib/notifications";
 
 const { attendanceSession, schedule, user } = schema;
 

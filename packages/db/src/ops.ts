@@ -1,7 +1,13 @@
 import { and, eq } from "drizzle-orm";
-import { createDb } from "@/index";
-import { ensurePersonForUser } from "@/people";
-import { member, type OnboardingStep, type OrganizationRole, organization, user } from "@/schema";
+import { createDb } from "#src/index";
+import { ensurePersonForUser } from "#src/people";
+import {
+  member,
+  type OnboardingStep,
+  type OrganizationRole,
+  organization,
+  user,
+} from "#src/schema";
 
 /**
  * Operator actions the CLI triggers inside a one-off container. They live

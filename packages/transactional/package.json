@@ -4,14 +4,32 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./emails/otp": "./dist/emails/otp.js",
-    "./emails/invitation": "./dist/emails/invitation.js",
-    "./emails/notification": "./dist/emails/notification.js"
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./emails/otp": {
+      "development": "./src/emails/otp.tsx",
+      "default": "./dist/emails/otp.js"
+    },
+    "./emails/invitation": {
+      "development": "./src/emails/invitation.tsx",
+      "default": "./dist/emails/invitation.js"
+    },
+    "./emails/notification": {
+      "development": "./src/emails/notification.tsx",
+      "default": "./dist/emails/notification.js"
+    }
+  },
+  "imports": {
+    "#src/components/*": "./src/components/*.tsx",
+    "#src/emails/*": "./src/emails/*.tsx",
+    "#src/*": "./src/*.ts"
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "email dev --dir ./src/emails --port 3001",
+    "dev": "tsdown --watch",
+    "dev:email": "email dev --dir ./src/emails --port 3001",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

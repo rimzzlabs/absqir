@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { readEnvValue, setEnvValue } from "@/lib/env-file";
+import { readEnvValue, setEnvValue } from "#src/lib/env-file";
 
 function makeEnvFile(content: string): string {
   const dir = mkdtempSync(join(tmpdir(), "absqir-cli-"));

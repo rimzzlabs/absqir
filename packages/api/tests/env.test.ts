@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ApiBindings } from "@/bindings";
-import { docsEnabled, enabledSocialProviders, isProduction, parseEnv } from "@/env";
+import type { ApiBindings } from "#src/bindings";
+import { docsEnabled, enabledSocialProviders, isProduction, parseEnv } from "#src/env";
 
 const SECRET = "a".repeat(32);
 

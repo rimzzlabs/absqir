@@ -5,7 +5,7 @@ import {
   needsFinalising,
   statusForCheckIn,
   statusOf,
-} from "@/lib/session-status";
+} from "#src/lib/session-status";
 
 const at = (iso: string) => new Date(iso);
 

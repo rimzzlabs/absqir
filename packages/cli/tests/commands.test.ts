@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMMANDS, usageOf } from "@/lib/commands";
+import { COMMANDS, usageOf } from "#src/lib/commands";
 
 describe("COMMANDS", () => {
   it("holds one entry per command id", () => {

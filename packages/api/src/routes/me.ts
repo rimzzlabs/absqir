@@ -4,11 +4,11 @@ import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
-import { enabledSocialProviders } from "@/env";
-import { forwardCookies } from "@/lib/auth-forward";
-import { avatarSchema } from "@/lib/avatar";
-import { decodeCursor, pageOf } from "@/lib/cursor";
-import type { AppEnv } from "@/types";
+import { enabledSocialProviders } from "#src/env";
+import { forwardCookies } from "#src/lib/auth-forward";
+import { avatarSchema } from "#src/lib/avatar";
+import { decodeCursor, pageOf } from "#src/lib/cursor";
+import type { AppEnv } from "#src/types";
 
 const { account, member, organization, session, user } = schema;
 

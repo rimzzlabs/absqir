@@ -4,11 +4,11 @@ import { ensurePersonForUser } from "@absqir/db/people";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
-import { deliver } from "@/lib/notifications";
-import { notifyJoinDecided, notifyJoinRequested } from "@/lib/notify";
-import { activateOrganization, setOnboardingStep } from "@/lib/onboarding";
-import { organizationGuard, organizationIdOf, requireRole } from "@/lib/org-access";
-import type { AppEnv } from "@/types";
+import { deliver } from "#src/lib/notifications";
+import { notifyJoinDecided, notifyJoinRequested } from "#src/lib/notify";
+import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
+import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
+import type { AppEnv } from "#src/types";
 
 const { joinRequest, member, organization, user } = schema;
 

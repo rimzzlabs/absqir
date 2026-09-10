@@ -2,7 +2,7 @@ import { isRoleName, type RoleName, roleAtLeast } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { and, eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
-import type { AppEnv } from "@/types";
+import type { AppEnv } from "#src/types";
 
 const { member, session: sessionTable } = schema;
 

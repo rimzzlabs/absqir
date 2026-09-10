@@ -4,7 +4,7 @@ import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
 import type { Mailer } from "@absqir/transactional";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Context } from "hono";
-import type { AppEnv } from "@/types";
+import type { AppEnv } from "#src/types";
 
 const { notification, member, person, user, organization } = schema;
 

@@ -2,7 +2,7 @@ import type { Auth, RoleName, Session } from "@absqir/auth";
 import type { Database } from "@absqir/db";
 import type { Mailer } from "@absqir/transactional";
 import type { RequestIdVariables } from "hono/request-id";
-import type { ApiBindings } from "@/bindings";
+import type { ApiBindings } from "#src/bindings";
 
 export interface AppEnv {
   Bindings: ApiBindings;

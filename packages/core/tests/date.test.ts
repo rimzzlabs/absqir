@@ -7,7 +7,7 @@ import {
   parseDisplayDay,
   setDisplayTimezoneResolver,
   startOfDay,
-} from "@/date";
+} from "#src/date";
 
 const noon = new Date("2026-09-09T12:00:00Z");
 

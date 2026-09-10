@@ -1,9 +1,9 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
-import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "@/lib/org-access";
-import { materializeSchedules } from "@/lib/schedule";
-import type { AppEnv } from "@/types";
+import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
+import { materializeSchedules } from "#src/lib/schedule";
+import type { AppEnv } from "#src/types";
 
 const { schedule, scheduleGroup, group, attendanceSession } = schema;
 

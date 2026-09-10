@@ -7,7 +7,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { emailOTP, organization } from "better-auth/plugins";
 import { and, count, eq, gt } from "drizzle-orm";
-import { ac, roles } from "@/roles";
+import { ac, roles } from "#src/roles";
 
 const ONE_MINUTE = 60;
 const ONE_HOUR = ONE_MINUTE * 60;
@@ -417,4 +417,4 @@ export function authErrorOf(error: unknown): { status: number; message: string }
   return { status, message };
 }
 
-export { ac, isRoleName, ROLE_NAMES, type RoleName, roleAtLeast, roles } from "@/roles";
+export { ac, isRoleName, ROLE_NAMES, type RoleName, roleAtLeast, roles } from "#src/roles";

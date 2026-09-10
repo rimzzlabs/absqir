@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { envTemplate, pendingProviderSteps } from "@/lib/templates";
+import { envTemplate, pendingProviderSteps } from "#src/lib/templates";
 
 const BASE = {
   secret: "s".repeat(32),

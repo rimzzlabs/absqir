@@ -2,8 +2,8 @@ import { schema } from "@absqir/db";
 import { domainOpensRegistration } from "@absqir/db/domains";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt } from "drizzle-orm";
-import { parseEnv } from "@/env";
-import type { AppEnv } from "@/types";
+import { parseEnv } from "#src/env";
+import type { AppEnv } from "#src/types";
 
 const { user, account, invitation, attendanceSession } = schema;
 

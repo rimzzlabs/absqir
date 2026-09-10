@@ -1,5 +1,5 @@
-import { type CommandId, commandInfo } from "@/lib/commands";
-import * as ui from "@/ui";
+import { type CommandId, commandInfo } from "#src/lib/commands";
+import * as ui from "#src/ui";
 
 type TopChoice =
   | "init"

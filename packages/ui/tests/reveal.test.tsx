@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Reveal } from "@/components/reveal";
+import { Reveal } from "#src/components/reveal";
 
 function setReducedMotion(reduced: boolean) {
   vi.stubGlobal(

@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import type { AppEnv } from "@/types";
+import type { AppEnv } from "#src/types";
 
 const route = createRoute({
   method: "get",

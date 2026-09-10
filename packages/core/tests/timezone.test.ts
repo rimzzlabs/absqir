@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeTimezone, isTimezone, listTimezones, timezoneOffset } from "@/timezone";
+import { describeTimezone, isTimezone, listTimezones, timezoneOffset } from "#src/timezone";
 
 describe("timezone", () => {
   it("accepts a zone the runtime knows and nothing else", () => {

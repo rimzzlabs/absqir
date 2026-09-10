@@ -8,9 +8,9 @@ import { schema } from "@absqir/db";
 import { JOIN_POLICIES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, asc, eq } from "drizzle-orm";
-import { txtRecords } from "@/lib/dns";
-import { organizationGuard, organizationIdOf, requireRole } from "@/lib/org-access";
-import type { AppEnv } from "@/types";
+import { txtRecords } from "#src/lib/dns";
+import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
+import type { AppEnv } from "#src/types";
 
 const { organization, organizationDomain } = schema;
 

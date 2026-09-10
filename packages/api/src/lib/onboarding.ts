@@ -2,8 +2,8 @@ import { schema } from "@absqir/db";
 import type { OnboardingStep } from "@absqir/db/schema";
 import { eq } from "drizzle-orm";
 import type { Context } from "hono";
-import { forwardCookies } from "@/lib/auth-forward";
-import type { AppEnv } from "@/types";
+import { forwardCookies } from "#src/lib/auth-forward";
+import type { AppEnv } from "#src/types";
 
 const { user } = schema;
 

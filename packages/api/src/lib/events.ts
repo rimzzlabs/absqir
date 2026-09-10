@@ -2,8 +2,8 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { ensurePersonForUser } from "@absqir/db/people";
 import { and, count, eq } from "drizzle-orm";
-import { statusOf } from "@/lib/session-status";
-import type { SessionRow } from "@/lib/sessions";
+import { statusOf } from "#src/lib/session-status";
+import type { SessionRow } from "#src/lib/sessions";
 
 const { attendanceSession, sessionRegistration, member, organization } = schema;
 

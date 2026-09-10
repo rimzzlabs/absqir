@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { UsageError } from "@/lib/errors";
-import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "@/lib/providers";
+import { UsageError } from "#src/lib/errors";
+import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 import {
   COMPOSE_TEMPLATE,
   DEFAULT_APP_URL,
@@ -13,8 +13,8 @@ import {
   type ProviderCredential,
   pendingProviderSteps,
   RESEND,
-} from "@/lib/templates";
-import * as ui from "@/ui";
+} from "#src/lib/templates";
+import * as ui from "#src/ui";
 
 function validateAppUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;

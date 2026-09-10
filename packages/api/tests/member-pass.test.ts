@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createPass, parsePass, verifyPass } from "@/lib/member-pass";
+import { createPass, parsePass, verifyPass } from "#src/lib/member-pass";
 
 const secret = "s".repeat(64);
 

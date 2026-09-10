@@ -2,13 +2,13 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
-import { decodeCursor, pageOf } from "@/lib/cursor";
-import { deliver } from "@/lib/notifications";
-import { notifyLeaveDecided, notifyLeaveRequested } from "@/lib/notify";
-import { organizationGuard, organizationIdOf, roleBelow } from "@/lib/org-access";
-import { statusOf } from "@/lib/session-status";
-import { findSession, isExpected, personForUser, upsertRecord } from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+import { decodeCursor, pageOf } from "#src/lib/cursor";
+import { deliver } from "#src/lib/notifications";
+import { notifyLeaveDecided, notifyLeaveRequested } from "#src/lib/notify";
+import { organizationGuard, organizationIdOf, roleBelow } from "#src/lib/org-access";
+import { statusOf } from "#src/lib/session-status";
+import { findSession, isExpected, personForUser, upsertRecord } from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const { leaveRequest, attendanceSession, person } = schema;
 

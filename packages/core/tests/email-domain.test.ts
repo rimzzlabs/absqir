@@ -5,7 +5,7 @@ import {
   isClaimableDomain,
   isPublicEmailDomain,
   normalizeDomain,
-} from "@/email-domain";
+} from "#src/email-domain";
 
 describe("normalizeDomain", () => {
   it("keeps one spelling for the same domain", () => {

@@ -10,46 +10,6 @@ import { defineConfig, fontProviders } from "astro/config";
 // glue (bindings, execution context) per target at build time.
 const deployTarget = process.env.DEPLOY_TARGET === "node" ? "node" : "cloudflare";
 
-// The Base UI parts the design system reaches for. Listed once, bundled once.
-const BASE_UI_PARTS = [
-  "accordion",
-  "alert-dialog",
-  "avatar",
-  "button",
-  "checkbox",
-  "collapsible",
-  "dialog",
-  "input",
-  "menu",
-  "merge-props",
-  "popover",
-  "radio",
-  "radio-group",
-  "scroll-area",
-  "select",
-  "separator",
-  "switch",
-  "tabs",
-  "toast",
-  "toggle",
-  "toggle-group",
-  "tooltip",
-  "use-render",
-];
-
-const UI_DEPS = [
-  ...BASE_UI_PARTS.map((part) => `@absqir/ui > @base-ui/react/${part}`),
-  "@absqir/ui > @base-ui/react",
-  "@absqir/ui > @base-ui/react/types",
-  "@absqir/ui > class-variance-authority",
-  "@absqir/ui > cn",
-  "@absqir/ui > cmdk",
-  "@absqir/ui > react-day-picker",
-  "@absqir/ui > date-fns",
-  "@absqir/ui > input-otp",
-  "@absqir/ui > motion/react",
-];
-
 // Every page depends on the reader's session, so the whole site renders per
 // request. One server serves the assets, the pages, and the Hono API from a
 // single origin.
@@ -60,7 +20,8 @@ export default defineConfig({
     react({
       // Keep Babel and the React Compiler away from Vite's pre-bundled deps.
       // Without this filter, Babel re-parses 500KB+ files in .vite/deps on
-      // every request that touches them.
+      // every request that touches them. The workspace packages resolve to
+      // real paths outside node_modules, so they still get the compiler.
       exclude: ["**/node_modules/**"],
       babel: {
         plugins: [["babel-plugin-react-compiler", { target: "19" }]],
@@ -97,13 +58,16 @@ export default defineConfig({
   ],
   server: { port: 4321 },
   vite: {
-    // The workspace packages stay excluded so tsdown rebuilds show up without
-    // a re-optimize. Their third-party imports are listed in `include` (the
-    // "a > b" form resolves b through a's node_modules), so Vite bundles them
-    // in one pass at startup instead of discovering them one page load at a
-    // time, where each discovery forces a full reload.
+    // Each @absqir/* package declares a "development" export that points at
+    // its TypeScript source. Vite resolves that condition in dev, so it reads
+    // the packages as ordinary source: it crawls them in the startup scan,
+    // finds every third-party import in one pass, and hot-reloads an edit in
+    // packages/* without a tsdown rebuild. `astro build` resolves the
+    // "production" condition instead and gets the bundled dist output.
+    //
+    // The lists below name only what this app imports directly. Do not add
+    // entries for what a workspace package imports. The scan finds those.
     optimizeDeps: {
-      exclude: ["@absqir/api", "@absqir/core", "@absqir/db", "@absqir/ui"],
       include: [
         "react",
         "react-dom",
@@ -118,8 +82,6 @@ export default defineConfig({
         "input-otp",
         "qrcode",
         "jsqr",
-        ...UI_DEPS,
-        "@absqir/core > date-fns",
       ],
     },
     ssr: {
@@ -148,23 +110,9 @@ export default defineConfig({
           "better-auth/api",
           "better-auth/plugins",
           "better-auth/adapters/drizzle",
-          "@absqir/api > @hono/zod-openapi",
-          "@absqir/api > @scalar/hono-api-reference",
-          "@absqir/api > @t3-oss/env-core",
-          "@absqir/api > drizzle-orm",
-          "@absqir/api > hono/streaming",
-          "@absqir/db > drizzle-orm",
-          "@absqir/db > drizzle-orm/node-postgres",
-          "@absqir/db > drizzle-orm/pg-core",
-          "@absqir/db > pg",
-          "@absqir/api > @absqir/transactional > @react-email/components",
-          "@absqir/api > @absqir/transactional > resend",
           "input-otp",
           "qrcode",
           "jsqr",
-          ...UI_DEPS,
-          "@absqir/ui > react-day-picker > @date-fns/tz",
-          "@absqir/core > date-fns",
         ],
       },
     },

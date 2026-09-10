@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { EmailHeading, EmailNote, EmailText } from "@/components/email-content";
-import { EmailLayout } from "@/components/email-layout";
-import { color, font } from "@/theme";
+import { EmailHeading, EmailNote, EmailText } from "#src/components/email-content";
+import { EmailLayout } from "#src/components/email-layout";
+import { color, font } from "#src/theme";
 
 export type OtpEmailPurpose = "sign-in" | "email-verification" | "forget-password" | "change-email";
 

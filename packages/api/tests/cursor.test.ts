@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeCursor, encodeCursor, pageOf } from "@/lib/cursor";
+import { decodeCursor, encodeCursor, pageOf } from "#src/lib/cursor";
 
 describe("cursor", () => {
   it("round-trips through a url-safe string", () => {

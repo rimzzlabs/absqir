@@ -12,7 +12,7 @@ import {
   toMinorUnits,
   total,
   zero,
-} from "@/money";
+} from "#src/money";
 
 describe("money", () => {
   it("keeps amounts as bigint minor units", () => {

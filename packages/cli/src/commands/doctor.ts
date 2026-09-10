@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
-import { dockerAvailable } from "@/lib/compose";
-import { readEnvValue } from "@/lib/env-file";
-import { callbackUrl, keysOf, PROVIDERS } from "@/lib/providers";
-import * as ui from "@/ui";
+import { dockerAvailable } from "#src/lib/compose";
+import { readEnvValue } from "#src/lib/env-file";
+import { callbackUrl, keysOf, PROVIDERS } from "#src/lib/providers";
+import * as ui from "#src/ui";
 
 const MIN_SECRET_LENGTH = 32;
 

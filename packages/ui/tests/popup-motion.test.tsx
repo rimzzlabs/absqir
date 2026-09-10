@@ -8,7 +8,7 @@ import {
   useFadeMotion,
   usePopupActionsRef,
   usePopupMotion,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function setReducedMotion(reduced: boolean) {
   vi.stubGlobal(

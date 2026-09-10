@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createQrToken, QR_TOKEN_WINDOW_SECONDS, verifyQrToken } from "@/lib/qr-token";
+import { createQrToken, QR_TOKEN_WINDOW_SECONDS, verifyQrToken } from "#src/lib/qr-token";
 
 const secret = "a".repeat(64);
 const sessionId = "session-1";

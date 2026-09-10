@@ -1,6 +1,6 @@
 import { Body, Head, Html, Img, Preview } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
-import { CONTENT_WIDTH, color, font } from "@/theme";
+import { CONTENT_WIDTH, color, font } from "#src/theme";
 
 export interface EmailLayoutProps {
   /** The line the inbox shows beside the subject. */

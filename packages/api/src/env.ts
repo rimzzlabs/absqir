@@ -1,7 +1,7 @@
 import { SOCIAL_PROVIDERS, type SocialProviderId, type SocialProviderKeyMap } from "@absqir/auth";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
-import type { ApiBindings } from "@/bindings";
+import type { ApiBindings } from "#src/bindings";
 
 const schema = z
   .object({

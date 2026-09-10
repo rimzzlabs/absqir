@@ -1,8 +1,8 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import type { MiddlewareHandler } from "hono";
-import { docsEnabled, parseEnv } from "@/env";
-import type { AppEnv } from "@/types";
+import { docsEnabled, parseEnv } from "#src/env";
+import type { AppEnv } from "#src/types";
 
 /**
  * The OpenAPI document lists every route and every schema, so it stays off in

@@ -1,5 +1,5 @@
-import { runCompose } from "@/lib/compose";
-import * as ui from "@/ui";
+import { runCompose } from "#src/lib/compose";
+import * as ui from "#src/ui";
 
 interface StackStepParams {
   title: string;

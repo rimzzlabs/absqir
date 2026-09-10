@@ -2,16 +2,16 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
 import type { Context } from "hono";
-import { forwardCookies } from "@/lib/auth-forward";
+import { forwardCookies } from "#src/lib/auth-forward";
 import {
   findPublicSession,
   registerForSession,
   registrationCount,
   takesRegistrations,
-} from "@/lib/events";
-import { statusOf } from "@/lib/session-status";
-import { personForUser } from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+} from "#src/lib/events";
+import { statusOf } from "#src/lib/session-status";
+import { personForUser } from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const { sessionRegistration } = schema;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { occurrencesBetween } from "@/lib/schedule";
+import { occurrencesBetween } from "#src/lib/schedule";
 
 const base = {
   id: "rule",

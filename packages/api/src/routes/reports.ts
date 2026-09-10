@@ -1,17 +1,17 @@
 import type { Database } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
-import { csvCell } from "@/lib/csv";
-import { organizationGuard, organizationIdOf, requireRole } from "@/lib/org-access";
+import { csvCell } from "#src/lib/csv";
+import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import {
   type ReportRange,
   reportByGroup,
   reportByPerson,
   reportBySession,
   reportSummary,
-} from "@/lib/reports";
-import { settle } from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+} from "#src/lib/reports";
+import { settle } from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const countsSchema = z.object({
   present: z.number(),

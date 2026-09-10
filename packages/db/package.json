@@ -4,12 +4,33 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./schema": "./dist/schema.js",
-    "./migrate": "./dist/migrate.js",
-    "./ops": "./dist/ops.js",
-    "./people": "./dist/people.js",
-    "./domains": "./dist/domains.js"
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "development": "./src/schema.ts",
+      "default": "./dist/schema.js"
+    },
+    "./migrate": {
+      "development": "./src/migrate.ts",
+      "default": "./dist/migrate.js"
+    },
+    "./ops": {
+      "development": "./src/ops.ts",
+      "default": "./dist/ops.js"
+    },
+    "./people": {
+      "development": "./src/people.ts",
+      "default": "./dist/people.js"
+    },
+    "./domains": {
+      "development": "./src/domains.ts",
+      "default": "./dist/domains.js"
+    }
+  },
+  "imports": {
+    "#src/*": "./src/*.ts"
   },
   "scripts": {
     "build": "tsdown",

@@ -6,7 +6,7 @@ import {
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function DropdownMenu({ actionsRef, ...props }: MenuPrimitive.Root.Props) {
   const actions = usePopupActionsRef(actionsRef);

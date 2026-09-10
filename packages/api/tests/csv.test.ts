@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { csvCell, csvToRecords, parseCsv } from "@/lib/csv";
+import { csvCell, csvToRecords, parseCsv } from "#src/lib/csv";
 
 describe("csvCell", () => {
   it("quotes every cell and doubles inner quotes", () => {

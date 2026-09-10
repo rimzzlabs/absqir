@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isSlug, toSlug } from "@/lib/slug";
+import { isSlug, toSlug } from "#src/lib/slug";
 
 describe("toSlug", () => {
   it("lowercases and hyphenates", () => {

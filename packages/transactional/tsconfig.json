@@ -1,9 +1,6 @@
 {
   "extends": "@absqir/config/tsconfig/node.json",
   "compilerOptions": {
-    "paths": {
-      "@/*": ["./src/*"]
-    },
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "lib": ["ES2023", "DOM"]

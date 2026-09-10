@@ -5,12 +5,35 @@
   "type": "module",
   "exports": {
     "./styles.css": "./src/styles/globals.css",
-    "./lib/utils": "./dist/lib/utils.js",
-    "./motion-provider": "./dist/components/motion-provider.js",
-    "./reveal": "./dist/components/reveal.js",
-    "./hooks/*": "./dist/hooks/*.js",
-    "./*": "./dist/components/ui/*.js",
-    "./form": "./dist/components/ui/form.js"
+    "./lib/utils": {
+      "development": "./src/lib/utils.ts",
+      "default": "./dist/lib/utils.js"
+    },
+    "./motion-provider": {
+      "development": "./src/components/motion-provider.tsx",
+      "default": "./dist/components/motion-provider.js"
+    },
+    "./reveal": {
+      "development": "./src/components/reveal.tsx",
+      "default": "./dist/components/reveal.js"
+    },
+    "./hooks/*": {
+      "development": "./src/hooks/*.ts",
+      "default": "./dist/hooks/*.js"
+    },
+    "./*": {
+      "development": "./src/components/ui/*.tsx",
+      "default": "./dist/components/ui/*.js"
+    },
+    "./form": {
+      "development": "./src/components/ui/form.tsx",
+      "default": "./dist/components/ui/form.js"
+    }
+  },
+  "imports": {
+    "#src/components/*": "./src/components/*.tsx",
+    "#src/hooks/*": "./src/hooks/*.ts",
+    "#src/lib/*": "./src/lib/*.ts"
   },
   "scripts": {
     "build": "tsdown",

@@ -1,9 +1,9 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { createPass } from "@/lib/member-pass";
-import { organizationGuard, organizationIdOf } from "@/lib/org-access";
-import { statusOf } from "@/lib/session-status";
+import { createPass } from "#src/lib/member-pass";
+import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
+import { statusOf } from "#src/lib/session-status";
 import {
   findSession,
   isPast,
@@ -11,8 +11,8 @@ import {
   personForUser,
   settle,
   toSessionJson,
-} from "@/lib/sessions";
-import type { AppEnv } from "@/types";
+} from "#src/lib/sessions";
+import type { AppEnv } from "#src/types";
 
 const { attendanceSession, attendanceRecord, leaveRequest } = schema;
 

@@ -16,7 +16,7 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-} from "@/components/ui/field";
+} from "#src/components/ui/field";
 
 export { FormProvider as Form, useFormContext };
 

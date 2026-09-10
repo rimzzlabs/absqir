@@ -6,8 +6,8 @@ import {
   type NotificationRow,
   toNotificationJson,
   unreadCount,
-} from "@/lib/notifications";
-import type { AppEnv } from "@/types";
+} from "#src/lib/notifications";
+import type { AppEnv } from "#src/types";
 
 /** How often an open stream asks the database. The delay a reader sees. */
 export const POLL_MS = 5_000;

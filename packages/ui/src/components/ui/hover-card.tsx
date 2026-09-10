@@ -6,7 +6,7 @@ import {
   MotionPopup,
   PopupActionsProvider,
   usePopupActionsRef,
-} from "@/components/ui/popup-motion";
+} from "#src/components/ui/popup-motion";
 
 function HoverCard({ actionsRef, ...props }: PreviewCardPrimitive.Root.Props) {
   const actions = usePopupActionsRef(actionsRef);

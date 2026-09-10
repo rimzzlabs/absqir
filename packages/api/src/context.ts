@@ -1,8 +1,8 @@
 import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
 import { createMailer, type Mailer } from "@absqir/transactional";
-import type { ApiBindings } from "@/bindings";
-import { type ApiEnv, parseEnv, secureCookies, socialProviderKeys } from "@/env";
+import type { ApiBindings } from "#src/bindings";
+import { type ApiEnv, parseEnv, secureCookies, socialProviderKeys } from "#src/env";
 
 export interface RequestContext {
   db: Database;

@@ -4,8 +4,8 @@ import {
   EmailHeading,
   EmailNote,
   EmailText,
-} from "@/components/email-content";
-import { EmailLayout } from "@/components/email-layout";
+} from "#src/components/email-content";
+import { EmailLayout } from "#src/components/email-layout";
 
 export interface InvitationEmailProps {
   organizationName: string;

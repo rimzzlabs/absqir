@@ -4,6 +4,11 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "verbatimModuleSyntax": true,
+    // Do not add `customConditions: ["development"]` here. Vite reads the
+    // @absqir/* source in dev, but TypeScript must keep reading the built
+    // .d.ts files: inferring the Hono AppType from packages/api/src exceeds
+    // the inference limit and collapses every RPC call to `unknown`.
+    // `pnpm dev:all` runs the tsdown watchers that keep those .d.ts fresh.
     "paths": {
       "@/*": ["./src/*"],
       "@app-runtime": ["./src/lib/runtime/runtime-cloudflare.ts"]

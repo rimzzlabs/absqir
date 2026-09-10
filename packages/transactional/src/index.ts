@@ -1,9 +1,9 @@
 import { render } from "@react-email/render";
 import type { ReactElement } from "react";
 import { Resend } from "resend";
-import { InvitationEmail, type InvitationEmailProps } from "@/emails/invitation";
-import { NotificationEmail, type NotificationEmailProps } from "@/emails/notification";
-import { OtpEmail, type OtpEmailProps, type OtpEmailPurpose } from "@/emails/otp";
+import { InvitationEmail, type InvitationEmailProps } from "#src/emails/invitation";
+import { NotificationEmail, type NotificationEmailProps } from "#src/emails/notification";
+import { OtpEmail, type OtpEmailProps, type OtpEmailPurpose } from "#src/emails/otp";
 
 export interface CreateMailerOptions {
   apiKey: string;

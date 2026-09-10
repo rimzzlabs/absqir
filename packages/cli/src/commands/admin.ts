@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
-import { usageOf } from "@/lib/commands";
-import { runCompose } from "@/lib/compose";
-import { UsageError } from "@/lib/errors";
-import * as ui from "@/ui";
+import { usageOf } from "#src/lib/commands";
+import { runCompose } from "#src/lib/compose";
+import { UsageError } from "#src/lib/errors";
+import * as ui from "#src/ui";
 
 const ROLES = ["owner", "admin", "organizer", "member"] as const;
 

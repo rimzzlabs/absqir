@@ -1,7 +1,7 @@
 import { claimableDomainOfEmail, normalizeDomain } from "@absqir/core/email-domain";
 import { and, eq, isNotNull } from "drizzle-orm";
-import type { Database } from "@/index";
-import { type JoinPolicy, joinRequest, organization, organizationDomain } from "@/schema";
+import type { Database } from "#src/index";
+import { type JoinPolicy, joinRequest, organization, organizationDomain } from "#src/schema";
 
 export interface DomainMatch {
   organizationId: string;

@@ -3,9 +3,9 @@ import { type Database, schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
-import { csvToRecords } from "@/lib/csv";
-import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "@/lib/org-access";
-import type { AppEnv } from "@/types";
+import { csvToRecords } from "#src/lib/csv";
+import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
+import type { AppEnv } from "#src/types";
 
 const { person, member, group, groupMember, invitation } = schema;
 

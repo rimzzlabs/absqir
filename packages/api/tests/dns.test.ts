@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { txtRecords } from "@/lib/dns";
+import { txtRecords } from "#src/lib/dns";
 
 function reply(body: unknown, ok = true) {
   return vi.fn().mockResolvedValue({ ok, json: async () => body });

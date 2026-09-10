@@ -7,8 +7,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev:all": "turbo run dev --filter=@absqir/web --filter=@absqir/api",
-    "dev:email": "turbo run dev --filter=@absqir/transactional",
+    "dev": "turbo run dev --filter=@absqir/web",
+    "dev:all": "turbo run dev --filter=@absqir/web...",
+    "dev:email": "turbo run dev:email --filter=@absqir/transactional",
     "docs:dev": "pnpm --filter @absqir/docs dev",
     "docs:build": "pnpm --filter @absqir/docs build",
     "docs:preview": "pnpm --filter @absqir/docs preview",

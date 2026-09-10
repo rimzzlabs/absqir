@@ -2,8 +2,8 @@ import type { Context, MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
-import { isProduction, parseEnv } from "@/env";
-import type { AppEnv } from "@/types";
+import { isProduction, parseEnv } from "#src/env";
+import type { AppEnv } from "#src/types";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const DOCS_PATHS = new Set(["/api/reference", "/api/openapi.json"]);

@@ -176,12 +176,17 @@ pnpm db:push
 7. Start the stack.
 
 ```bash
-pnpm dev:all
+pnpm dev
 ```
 
 - Site and API: http://localhost:4321
 - API reference: http://localhost:4321/api/reference
-- Email preview: http://localhost:3001
+
+In dev the site reads each `packages/*` workspace straight from its
+TypeScript source, so an edit there hot-reloads with no build step. Run
+`pnpm dev:all` instead if you want the `tsdown` watchers as well: they keep
+the `.d.ts` files fresh, which the editor needs to see a new export. Run
+`pnpm dev:email` for the email preview on http://localhost:3001.
 
 Without `RESEND_API_KEY` the server prints every sign-in code and invitation
 link to its log, so you can sign up on a laptop with no mail account.
@@ -196,7 +201,9 @@ before you push. The repo squash-merges pull requests.
 
 | Command              | Action                                              |
 | -------------------- | --------------------------------------------------- |
-| `pnpm dev:all`       | Web, API watcher, and the email preview             |
+| `pnpm dev`           | The site and the API, with hot reload               |
+| `pnpm dev:all`       | The same, plus the package type watchers            |
+| `pnpm dev:email`     | The email preview on port 3001                      |
 | `pnpm docs:dev`      | The docs site with hot reload                       |
 | `pnpm docs:build`    | Build the static docs site                          |
 | `pnpm docs:preview`  | Serve the built docs site                           |

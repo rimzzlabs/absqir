@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { adminCreate, adminPromote, memberAdd } from "@/commands/admin";
-import { configGet, configSet } from "@/commands/config";
-import { doctor } from "@/commands/doctor";
-import { init } from "@/commands/init";
-import { down, logs, migrate, up, upgrade } from "@/commands/lifecycle";
-import { COMMANDS } from "@/lib/commands";
-import { CancelError, UsageError } from "@/lib/errors";
-import { menu } from "@/menu";
-import * as ui from "@/ui";
+import { adminCreate, adminPromote, memberAdd } from "#src/commands/admin";
+import { configGet, configSet } from "#src/commands/config";
+import { doctor } from "#src/commands/doctor";
+import { init } from "#src/commands/init";
+import { down, logs, migrate, up, upgrade } from "#src/commands/lifecycle";
+import { COMMANDS } from "#src/lib/commands";
+import { CancelError, UsageError } from "#src/lib/errors";
+import { menu } from "#src/menu";
+import * as ui from "#src/ui";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };

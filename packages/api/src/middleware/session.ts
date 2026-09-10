@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
-import { createRequestContext } from "@/context";
-import type { AppEnv } from "@/types";
+import { createRequestContext } from "#src/context";
+import type { AppEnv } from "#src/types";
 
 /** Builds the per-invocation context, then reads the session from the cookie. */
 export function requestContext(): MiddlewareHandler<AppEnv> {

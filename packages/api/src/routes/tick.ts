@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { parseEnv } from "@/env";
-import { runTick } from "@/lib/tick";
-import type { AppEnv } from "@/types";
+import { parseEnv } from "#src/env";
+import { runTick } from "#src/lib/tick";
+import type { AppEnv } from "#src/types";
 
 const errorSchema = z.object({ error: z.string() });
 

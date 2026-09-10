@@ -4,15 +4,45 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./money": "./dist/money.js",
-    "./date": "./dist/date.js",
-    "./query-keys": "./dist/query-keys.js",
-    "./user-agent": "./dist/user-agent.js",
-    "./check-in-link": "./dist/check-in-link.js",
-    "./notification-channel": "./dist/notification-channel.js",
-    "./timezone": "./dist/timezone.js",
-    "./email-domain": "./dist/email-domain.js"
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./money": {
+      "development": "./src/money.ts",
+      "default": "./dist/money.js"
+    },
+    "./date": {
+      "development": "./src/date.ts",
+      "default": "./dist/date.js"
+    },
+    "./query-keys": {
+      "development": "./src/query-keys.ts",
+      "default": "./dist/query-keys.js"
+    },
+    "./user-agent": {
+      "development": "./src/user-agent.ts",
+      "default": "./dist/user-agent.js"
+    },
+    "./check-in-link": {
+      "development": "./src/check-in-link.ts",
+      "default": "./dist/check-in-link.js"
+    },
+    "./notification-channel": {
+      "development": "./src/notification-channel.ts",
+      "default": "./dist/notification-channel.js"
+    },
+    "./timezone": {
+      "development": "./src/timezone.ts",
+      "default": "./dist/timezone.js"
+    },
+    "./email-domain": {
+      "development": "./src/email-domain.ts",
+      "default": "./dist/email-domain.js"
+    }
+  },
+  "imports": {
+    "#src/*": "./src/*.ts"
   },
   "scripts": {
     "build": "tsdown",

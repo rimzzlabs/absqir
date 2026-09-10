@@ -1,8 +1,8 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, count, eq, gt } from "drizzle-orm";
-import { organizationGuard, organizationIdOf, roleOf } from "@/lib/org-access";
-import type { AppEnv } from "@/types";
+import { organizationGuard, organizationIdOf, roleOf } from "#src/lib/org-access";
+import type { AppEnv } from "#src/types";
 
 const { organization, member, person, group, invitation } = schema;
 

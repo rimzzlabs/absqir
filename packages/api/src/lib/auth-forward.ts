@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import type { AppEnv } from "@/types";
+import type { AppEnv } from "#src/types";
 
 /**
  * A Better Auth call made on the caller's behalf can refresh the session
