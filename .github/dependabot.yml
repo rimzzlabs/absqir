@@ -22,6 +22,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     open-pull-requests-limit: 5
+    ignore:
+      # vocs pins the waku it supports. Its client root calls a router hook
+      # that waku 1.0.0-rc.0 removed, and the docs site died on the first
+      # client script. Lift this when a vocs release names the RC.
+      - dependency-name: waku
     groups:
       minor-and-patch:
         patterns: ["*"]
