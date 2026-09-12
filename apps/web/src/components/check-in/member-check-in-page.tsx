@@ -15,6 +15,7 @@ import { CheckInSteps } from "@/components/check-in/check-in-steps";
 import { ScanViewfinder } from "@/components/check-in/scan-viewfinder";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
+import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay";
 import { PageHeader } from "@/components/shared/page-header";
 import { useCamera } from "@/components/shared/use-camera";
 import { useCheckIn } from "@/mutations/use-check-in";
@@ -48,7 +49,10 @@ function Scanner() {
   };
 
   // The camera stops once the reader is in; a result should not flicker.
-  const camera = useCamera(submit, { enabled: !checkIn.isSuccess });
+  const camera = useCamera(submit, {
+    enabled: !checkIn.isSuccess,
+    fallback: "Paste the link printed under the code on the room screen.",
+  });
   const progressNote = checkIn.isPending ? "Checking you in." : "";
   const error = rejected ?? checkIn.error?.message ?? null;
 
@@ -79,18 +83,11 @@ function Scanner() {
             <ScanViewfinder
               video={camera.video}
               active={camera.active}
-              error={camera.error}
+              error={camera.fault?.message ?? null}
               busy={checkIn.isPending}
             />
           )}
         </div>
-
-        {!checkIn.isSuccess && camera.error ? (
-          <Alert>
-            <AlertTitle>No camera</AlertTitle>
-            <AlertDescription>{camera.error}</AlertDescription>
-          </Alert>
-        ) : null}
 
         {!checkIn.isSuccess && error ? (
           <Alert variant="destructive">
@@ -128,6 +125,8 @@ function Scanner() {
           </form>
         )}
       </CardContent>
+
+      <CameraBlockedOverlay fault={camera.fault} onRetry={camera.retry} />
     </Card>
   );
 }

@@ -65,7 +65,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
       {props.error ? (
         <p className="text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center text-sm">
           <VideoCameraSlashIcon aria-hidden className="size-8" />
-          No camera here. Paste the link below instead.
+          {props.error}
         </p>
       ) : null}
 

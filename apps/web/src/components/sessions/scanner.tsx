@@ -6,6 +6,7 @@ import { A } from "@mobily/ts-belt";
 import { CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { Providers } from "@/components/providers";
+import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge, SessionStatusBadge } from "@/components/shared/status-badge";
 import { useCamera } from "@/components/shared/use-camera";
@@ -57,7 +58,9 @@ function ScannerBody(props: ScannerProps) {
     );
   };
 
-  const camera = useCamera(submit);
+  const camera = useCamera(submit, {
+    fallback: "Ask the member for the pass code under their QR, then type it below.",
+  });
   const data = session.data;
 
   return (
@@ -83,19 +86,21 @@ function ScannerBody(props: ScannerProps) {
 
       <div className="bg-muted relative aspect-square overflow-hidden rounded-2xl">
         <video ref={camera.video} muted playsInline className="size-full object-cover" />
-        {!camera.active && !camera.error ? (
+        {!camera.active && !camera.fault ? (
           <p className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm">
             Opening the camera…
           </p>
         ) : null}
       </div>
 
-      {camera.error ? (
+      {camera.fault ? (
         <Alert>
-          <AlertTitle>No camera</AlertTitle>
-          <AlertDescription>{camera.error}</AlertDescription>
+          <AlertTitle>The camera is not available</AlertTitle>
+          <AlertDescription>{camera.fault.message}</AlertDescription>
         </Alert>
       ) : null}
+
+      <CameraBlockedOverlay fault={camera.fault} onRetry={camera.retry} />
 
       <form
         className="flex gap-2"

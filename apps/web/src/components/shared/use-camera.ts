@@ -1,9 +1,57 @@
 import jsQR from "jsqr";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseCameraOptions {
+  /**
+   * What the reader can do instead, named exactly. Each scanner takes a
+   * different thing by hand, so the hook states the cause and the caller
+   * states the way out. Example: "Paste the link from the room screen below."
+   */
+  fallback: string;
   /** False releases the camera, for a page that is done scanning. */
   enabled?: boolean;
+}
+
+/**
+ * Why the camera did not open. Only `refused` can be undone from the browser,
+ * so it is the one the coach mark answers.
+ */
+export type CameraFaultKind = "refused" | "insecure" | "missing" | "busy" | "unknown";
+
+export interface CameraFault {
+  kind: CameraFaultKind;
+  /** The cause and the way out, in one sentence for the reader. */
+  message: string;
+}
+
+const INSECURE = "The camera needs an https address.";
+
+/**
+ * Reads the fault. A page served over plain http gets no camera at all, and
+ * some engines report that as a refusal, so the address is checked before the
+ * name of the fault.
+ */
+function causeOf(cause: unknown): Omit<CameraFault, "message"> & { cause: string } {
+  if (!window.isSecureContext) return { kind: "insecure", cause: INSECURE };
+
+  const name = cause instanceof Error ? cause.name : "";
+
+  if (name === "NotAllowedError") {
+    return { kind: "refused", cause: "Camera access was refused." };
+  }
+
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return { kind: "missing", cause: "No camera was found on this device." };
+  }
+
+  if (name === "NotReadableError") {
+    return {
+      kind: "busy",
+      cause: "The camera is busy in another app. Close that app, then retry.",
+    };
+  }
+
+  return { kind: "unknown", cause: "The camera could not be opened." };
 }
 
 /**
@@ -11,12 +59,19 @@ export interface UseCameraOptions {
  * its frames. The same code seen on many frames calls back many times; the
  * caller decides what a repeat means.
  */
-export function useCamera(onCode: (code: string) => void, options: UseCameraOptions = {}) {
+export function useCamera(onCode: (code: string) => void, options: UseCameraOptions) {
   const enabled = options.enabled ?? true;
+  const { fallback } = options;
   const video = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [fault, setFault] = useState<CameraFault | null>(null);
   const [active, setActive] = useState(false);
   const callback = useRef(onCode);
+
+  /**
+   * Asks the browser again, for a reader who just changed the permission.
+   * Forgetting the fault is what starts a fresh attempt.
+   */
+  const retry = useCallback(() => setFault(null), []);
 
   useEffect(() => {
     callback.current = onCode;
@@ -24,13 +79,32 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
 
   useEffect(() => {
     const element = video.current;
-    if (!element || !enabled) return;
+    // A recorded fault ends the attempt. retry() clears it to start another.
+    if (!element || !enabled || fault) return;
+
+    // Outside a secure context the browser hides mediaDevices, so reading
+    // getUserMedia off it throws before any promise exists to catch it.
+    const devices = navigator.mediaDevices;
+    if (!devices?.getUserMedia) {
+      const secure = window.isSecureContext;
+      setFault({
+        kind: secure ? "missing" : "insecure",
+        message: `${secure ? "This browser has no camera." : INSECURE} ${fallback}`,
+      });
+      return;
+    }
 
     let stream: MediaStream | null = null;
     let frame = 0;
     let stopped = false;
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d", { willReadFrequently: true });
+
+    const release = () => {
+      if (!stream) return;
+      for (const track of stream.getTracks()) track.stop();
+      stream = null;
+    };
 
     const tick = () => {
       if (stopped) return;
@@ -49,35 +123,36 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
       frame = requestAnimationFrame(tick);
     };
 
-    navigator.mediaDevices
+    devices
       .getUserMedia({ video: { facingMode: "environment" }, audio: false })
       .then((media) => {
+        stream = media;
         if (stopped) {
-          for (const track of media.getTracks()) track.stop();
+          release();
           return;
         }
-        stream = media;
+
         element.srcObject = media;
         return element.play().then(() => {
+          setFault(null);
           setActive(true);
           frame = requestAnimationFrame(tick);
         });
       })
-      .catch((cause: unknown) => {
-        setError(
-          cause instanceof Error && cause.name === "NotAllowedError"
-            ? "Camera access was refused. Allow it in the browser, or paste below instead."
-            : "No camera could be opened. Paste below instead.",
-        );
+      .catch((reason: unknown) => {
+        // play() can fail after the camera opened. Hand it back either way.
+        release();
+        const { kind, cause } = causeOf(reason);
+        setFault({ kind, message: `${cause} ${fallback}` });
       });
 
     return () => {
       stopped = true;
       setActive(false);
       cancelAnimationFrame(frame);
-      if (stream) for (const track of stream.getTracks()) track.stop();
+      release();
     };
-  }, [enabled]);
+  }, [enabled, fallback, fault]);
 
-  return { video, error, active };
+  return { video, fault, active, retry };
 }
