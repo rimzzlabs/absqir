@@ -1,5 +1,6 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import { deleteOrganizations, soleOwnerships } from "@absqir/db/accounts";
 import { domainOpensRegistration, seedOwnerDomain } from "@absqir/db/domains";
 import { ensurePersonForUser } from "@absqir/db/people";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
@@ -33,6 +34,9 @@ export type SocialProviderKeyMap = Partial<Record<SocialProviderId, SocialProvid
 /** The code the sign-up door throws with. The sign-in page maps it to its own copy. */
 export const NO_INVITATION_CODE = "NO_INVITATION";
 
+/** The code the account door throws with when the last owner tries to leave. */
+export const LAST_OWNER_CODE = "LAST_OWNER";
+
 export interface OtpEmail {
   email: string;
   otp: string;
@@ -49,6 +53,10 @@ export interface InvitationEmail {
 
 /** The cookie the public event page sets before it sends a visitor to sign in. */
 export const EVENT_COOKIE = "absqir-event";
+
+/** Matches MAX_AVATAR_BYTES and AVATAR_DATA_URL in packages/api. */
+const MAX_LOGO_BYTES = 48_000;
+const LOGO_DATA_URL = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/;
 
 function cookieValue(header: string | null | undefined, name: string): string | null {
   if (!header) return null;
@@ -176,6 +184,31 @@ export function createAuth(options: CreateAuthOptions) {
       },
     }),
     user: {
+      deleteUser: {
+        enabled: true,
+        // An organization with no owner can never be administered again, so
+        // the last owner of a populated one is refused here. An organization
+        // this account holds alone goes with it, and every table under one
+        // cascades, so nothing is orphaned.
+        beforeDelete: async (account) => {
+          const owned = await soleOwnerships(db, account.id);
+          const populated = owned.filter((row) => row.otherMembers > 0);
+
+          if (populated.length > 0) {
+            const names = populated.map((row) => row.name).join(", ");
+
+            throw new APIError("BAD_REQUEST", {
+              code: LAST_OWNER_CODE,
+              message: `You are the only owner of ${names}. Make somebody else an owner, or delete the organization first.`,
+            });
+          }
+
+          await deleteOrganizations(
+            db,
+            owned.map((row) => row.organizationId),
+          );
+        },
+      },
       additionalFields: {
         onboardingStep: {
           type: "string",
@@ -224,6 +257,17 @@ export function createAuth(options: CreateAuthOptions) {
           });
         },
         organizationHooks: {
+          // Better Auth takes any string as the logo. This instance stores a
+          // small data URL of its own, the way an avatar is stored, so a
+          // remote address or an oversized picture is refused here.
+          beforeUpdateOrganization: async ({ organization: fields }) => {
+            const logo = fields.logo;
+            if (typeof logo !== "string") return;
+
+            if (logo.length > MAX_LOGO_BYTES || !LOGO_DATA_URL.test(logo)) {
+              throw new APIError("BAD_REQUEST", { message: "That logo is not a small picture." });
+            }
+          },
           // Every member is also a person in the directory. An imported or
           // invited row under the same email is claimed here.
           afterAcceptInvitation: async ({ organization: org, user }) => {

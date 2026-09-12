@@ -4,8 +4,10 @@ import { authClient } from "@/lib/auth-client";
 
 export interface UpdateOrganizationInput {
   organizationId: string;
-  name: string;
-  slug: string;
+  name?: string;
+  slug?: string;
+  /** Undefined leaves the logo alone; null removes it. */
+  logo?: string | null;
 }
 
 export function useUpdateOrganization() {
@@ -13,10 +15,11 @@ export function useUpdateOrganization() {
 
   return useMutation({
     mutationKey: organizationMutationKeys.update(),
-    mutationFn: async ({ organizationId, name, slug }: UpdateOrganizationInput) => {
+    mutationFn: async (values: UpdateOrganizationInput) => {
+      const { organizationId, ...fields } = values;
       const { data, error } = await authClient.organization.update({
         organizationId,
-        data: { name, slug },
+        data: fields,
       });
 
       if (error || !data) {
@@ -27,7 +30,8 @@ export function useUpdateOrganization() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: organizationKeys.all });
-      // The shell shows the name; a reload is the honest way to refresh it.
+      // The shell shows the name and the logo; a reload is the honest way to
+      // refresh them.
       window.location.reload();
     },
   });

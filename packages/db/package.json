@@ -20,6 +20,10 @@
       "development": "./src/ops.ts",
       "default": "./dist/ops.js"
     },
+    "./accounts": {
+      "development": "./src/accounts.ts",
+      "default": "./dist/accounts.js"
+    },
     "./people": {
       "development": "./src/people.ts",
       "default": "./dist/people.js"

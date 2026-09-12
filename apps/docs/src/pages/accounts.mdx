@@ -53,12 +53,14 @@ invitations and, when allowed, a form to create an organization.
 
 **Settings** is one page for everyone, whatever their role. A list of
 sections sits on the left. Owners and admins see the organization sections,
-**Members**, **Invitations** and **Organization**. Everyone sees the
-sections about themselves:
+**Members**, **Invitations**, **Requests**, **Domains** and
+**Organization**. Everyone sees the sections about themselves:
 
-- **Profile**: the name and the picture organizers see, and the email. A
-  new address receives a 6 digit code. Nothing changes until the code is
-  entered, and an address that another account uses is refused.
+- **Profile**: the name and the picture organizers see, the email, and the
+  time zone. A new address receives a 6 digit code. Nothing changes until
+  the code is entered, and an address that another account uses is refused.
+  A danger zone at the foot of the tab leaves the organization, or deletes
+  the account.
 - **Preferences**: choices that belong to the browser, not to the account.
   The theme (system, light or dark) and animation (follow the device, on,
   or off). A phone and a room screen can differ.
@@ -88,12 +90,46 @@ picture. The color comes from the name, so the same name always shows the
 same color, and the letters keep a contrast above 7:1 in both themes.
 
 A change of email or password needs a session read less than an hour ago.
-An older session is told to sign in again first. Deleting an account is not
-offered yet.
+An older session is told to sign in again first.
 
 Tabs, filters and searches live in the address bar: `/sessions?scope=past`,
 `/people?q=grace`, `/settings?tab=security`. A link carries the view with
 it, and the back button returns to the previous one.
+
+## The organization tab
+
+Owners and admins get an **Organization** tab. It holds four blocks:
+
+- The logo, the name, and the day the organization started. The logo is a
+  small picture, shrunk to 128px in the browser. It shows in the workspace
+  switcher at the top of the sidebar.
+- The name and the slug, saved together.
+- The slug and the organization ID, each with a copy button. The operator
+  types the slug on the command line. Quote the ID when you report a
+  problem.
+- **At a glance**: the members, the people, the groups, and the invitations
+  that still wait.
+
+A danger zone closes the tab. An owner or an admin can leave the
+organization. An owner can delete it. Deletion asks for the slug first, and
+it takes the directory, the groups, the events, and every attendance record
+with it. The members keep their accounts.
+
+## Delete an account
+
+The danger zone on the **Profile** tab deletes the account. Type the email
+address to confirm. An account with a password must give it. An account
+that signs in with a code needs a session less than an hour old, so sign
+out and sign in again if absqir refuses.
+
+The profile, the devices, and the memberships go. Attendance records stay,
+with nobody behind them, so a report of a past event still adds up. An
+organization this account owns alone, with no other member, goes with the
+account.
+
+The last owner of an organization that still has members cannot delete the
+account, and cannot leave. Make somebody else an owner first, or delete the
+organization.
 
 ## Organizations and roles
 

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CameraIcon, XIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { AccountDangerZone } from "@/components/account/account-danger-zone";
 import { EmailChange } from "@/components/account/email-change";
 import { TimezoneRow } from "@/components/account/timezone-row";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
@@ -24,6 +25,8 @@ export interface ProfilePanelProps {
   role: RoleName | null;
   /** The stored zone. Null follows the device. */
   timezone: string | null;
+  /** Null alongside a null role. The danger zone offers to leave it. */
+  organization: { id: string; name: string; slug: string } | null;
 }
 
 /**
@@ -167,13 +170,17 @@ function EmailRow(props: { email: string }) {
 /** Who you are to the people who run attendance. */
 export function ProfilePanel(props: ProfilePanelProps) {
   return (
-    <SettingsSection title="Profile" description="Your name and picture, as organizers see them.">
-      <Identity {...props} />
-      <div className="border-border border-t">
-        <NameRow name={props.name} />
-        <EmailRow email={props.email} />
-        <TimezoneRow timezone={props.timezone} />
-      </div>
-    </SettingsSection>
+    <div className="space-y-12">
+      <SettingsSection title="Profile" description="Your name and picture, as organizers see them.">
+        <Identity {...props} />
+        <div className="border-border border-t">
+          <NameRow name={props.name} />
+          <EmailRow email={props.email} />
+          <TimezoneRow timezone={props.timezone} />
+        </div>
+      </SettingsSection>
+
+      <AccountDangerZone email={props.email} role={props.role} organization={props.organization} />
+    </div>
   );
 }

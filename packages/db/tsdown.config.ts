@@ -6,6 +6,7 @@ export default defineConfig((options) => ({
     "src/schema.ts",
     "src/migrate.ts",
     "src/ops.ts",
+    "src/accounts.ts",
     "src/people.ts",
     "src/domains.ts",
   ],
