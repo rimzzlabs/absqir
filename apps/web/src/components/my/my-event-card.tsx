@@ -4,16 +4,14 @@ import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { ClockIcon, TicketIcon, UsersThreeIcon } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
-import { MyEventDetails, STRETCHED_TRIGGER } from "@/components/my/my-event-details";
 import { opensAtOf } from "@/components/my/opens-at";
 import { AttendanceStatusBadge, EventStatusBadge } from "@/components/shared/status-badge";
+import { STRETCHED_LINK } from "@/components/shared/stretched-link";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface MyEventCardProps {
   event: MyEvent;
   onPass: (id: string) => void;
-  onAskLeave: (event: MyEvent) => void;
 }
 
 /** What the card ends with: my record, my pass, or when the door opens. */
@@ -54,23 +52,19 @@ function Outcome(props: MyEventCardProps) {
   return <AttendanceStatusBadge status={null} />;
 }
 
-/** One event that expects me, as a card in the grid. A click opens its details. */
+/** One event that expects me, as a card in the grid. A click opens the event. */
 export function MyEventCard(props: MyEventCardProps) {
   const { event } = props;
   const startsAt = new Date(event.startsAt);
   const endsAt = new Date(event.endsAt);
   const sameDay = formatDate(startsAt, "iso") === formatDate(endsAt, "iso");
   const running = event.status === "running";
-  const card = useRef<HTMLLIElement>(null);
-  const [open, setOpen] = useState(false);
 
   return (
     <li
-      ref={card}
       className={cn(
-        "bg-card text-card-foreground relative flex h-full min-w-0 flex-col gap-3 rounded-xl p-4 ring-1 transition-[box-shadow,background-color]",
+        "bg-card text-card-foreground relative flex h-full min-w-0 flex-col gap-3 rounded-xl p-4 ring-1 transition-[box-shadow,background-color] hover:bg-accent/40",
         running ? "ring-primary/50" : "ring-foreground/10",
-        open ? "bg-accent/40" : "hover:bg-accent/40",
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -82,22 +76,12 @@ export function MyEventCard(props: MyEventCardProps) {
       </div>
 
       <div className="min-w-0">
-        <MyEventDetails
-          event={event}
-          open={open}
-          onOpenChange={setOpen}
-          anchor={card}
-          onPass={props.onPass}
-          onAskLeave={props.onAskLeave}
-          trigger={
-            <button
-              type="button"
-              className={cn(STRETCHED_TRIGGER, "line-clamp-2 text-sm leading-snug font-medium")}
-            >
-              {event.title}
-            </button>
-          }
-        />
+        <a
+          href={`/events/${event.id}`}
+          className={cn(STRETCHED_LINK, "line-clamp-2 block text-sm leading-snug font-medium")}
+        >
+          {event.title}
+        </a>
         <p className="text-muted-foreground mt-0.5 text-xs">
           {formatDate(startsAt, "weekdayDate")}
         </p>

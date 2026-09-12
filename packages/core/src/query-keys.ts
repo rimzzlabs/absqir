@@ -144,6 +144,8 @@ export const myKeys = {
   events: () => [...myKeys.all, "events"] as const,
   eventsPage: (scope: string, limit: number | null = null) =>
     [...myKeys.events(), scope, limit] as const,
+  /** One event with its roster. Under `events()`, so the same prefix clears it. */
+  event: (id: string) => [...myKeys.events(), "detail", id] as const,
   pass: (id: string) => [...myKeys.all, "pass", id] as const,
   history: () => [...myKeys.all, "history"] as const,
 };
