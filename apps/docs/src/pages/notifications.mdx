@@ -81,10 +81,6 @@ Reading a page settles the organization it belongs to, so a small instance
 needs no scheduler at all. The heartbeat only makes the same work eager, so a
 reminder arrives while nobody is looking.
 
-Reading a page settles the organization it belongs to, so a small instance
-needs no cron at all. The heartbeat only makes the work eager, so a reminder
-arrives while nobody is looking.
-
 **Docker and Node.** The server runs the heartbeat itself, once a minute.
 Nothing to configure.
 
@@ -104,6 +100,12 @@ cross-site form post and refuses it. The route answers `404` while
 `CRON_SECRET` is unset, and `401` when the token is wrong. The answer says
 how many organizations it settled and how many notifications it wrote.
 
-Any scheduler works: a Cloudflare Cron Trigger, a cron entry on a server, a
-systemd timer. Once a minute is plenty; once every five minutes still puts
-the hour reminder inside its window.
+Any scheduler that can make that call works: a GitHub Actions workflow, a cron
+entry on a server, or a systemd timer. Once a minute is plenty, and once every
+five minutes still puts the hour reminder inside its window.
+
+A Cloudflare Cron Trigger on the absqir Worker does nothing, because a trigger
+calls a `scheduled()` handler and absqir exports only a `fetch` handler. A
+second small Worker whose trigger fetches the endpoint does work.
+
+See [Deploy to Cloudflare](/cloudflare) for the whole path.
