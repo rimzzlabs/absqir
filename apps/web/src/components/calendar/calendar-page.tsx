@@ -22,8 +22,8 @@ import { match } from "ts-pattern";
 import { type CalendarEntry, entriesByDay } from "@/components/calendar/calendar-entries";
 import { CalendarGrid } from "@/components/calendar/calendar-grid";
 import { DaySheet } from "@/components/calendar/day-sheet";
+import { EventDialog } from "@/components/events/event-dialog";
 import { Providers } from "@/components/providers";
-import { SessionDialog } from "@/components/sessions/session-dialog";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
 import { parseAsLocalDate } from "@/lib/url-state";
@@ -81,7 +81,7 @@ function CalendarBody() {
   const setView = (next: CalendarView) => void setParams({ view: next });
   const setCursor = (next: Date) => void setParams({ date: next });
   const [openDay, setOpenDay] = useState<Date | null>(null);
-  const [newSessionDay, setNewSessionDay] = useState<Date | null>(null);
+  const [newEventDay, setNewEventDay] = useState<Date | null>(null);
 
   const range = useMemo(() => visibleRange(view, cursor), [view, cursor]);
   const calendar = useCalendar(startOfDay(range.from), endOfDay(range.to));
@@ -92,7 +92,7 @@ function CalendarBody() {
   );
 
   const entries = useMemo(
-    () => entriesByDay(calendar.data ?? { sessions: [], projected: [] }),
+    () => entriesByDay(calendar.data ?? { events: [], projected: [] }),
     [calendar.data],
   );
 
@@ -101,8 +101,8 @@ function CalendarBody() {
   };
 
   const openEntry = (entry: CalendarEntry) => {
-    if (entry.kind === "session") {
-      window.location.href = `/sessions/${entry.session.id}`;
+    if (entry.kind === "event") {
+      window.location.href = `/events/${entry.event.id}`;
       return;
     }
 
@@ -115,7 +115,7 @@ function CalendarBody() {
         title="Calendar"
         description="Every event on one grid, with the ones your schedules still owe."
         actions={
-          <Button size="sm" onClick={() => setNewSessionDay(new Date())}>
+          <Button size="sm" onClick={() => setNewEventDay(new Date())}>
             <PlusIcon />
             New event
           </Button>
@@ -160,7 +160,7 @@ function CalendarBody() {
             view={view}
             entries={entries}
             onOpenDay={setOpenDay}
-            onNewSession={setNewSessionDay}
+            onNewEvent={setNewEventDay}
             onOpenEntry={openEntry}
           />
         ))}
@@ -169,17 +169,17 @@ function CalendarBody() {
         day={openDay}
         entries={entries}
         onClose={() => setOpenDay(null)}
-        onNewSession={(day) => {
+        onNewEvent={(day) => {
           setOpenDay(null);
-          setNewSessionDay(day);
+          setNewEventDay(day);
         }}
       />
 
-      <SessionDialog
-        open={newSessionDay !== null}
-        onOpenChange={(open) => !open && setNewSessionDay(null)}
-        session={null}
-        initialStart={newSessionDay}
+      <EventDialog
+        open={newEventDay !== null}
+        onOpenChange={(open) => !open && setNewEventDay(null)}
+        event={null}
+        initialStart={newEventDay}
       />
     </>
   );

@@ -7,8 +7,8 @@ import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forwardCookies } from "#src/lib/auth-forward";
 import { avatarSchema } from "#src/lib/avatar";
-import { findPublicSession, registerForSession } from "#src/lib/events";
 import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
+import { findPublicEvent, registerForEvent } from "#src/lib/public-events";
 import { isSlug } from "#src/lib/slug";
 import type { AppEnv } from "#src/types";
 
@@ -31,7 +31,7 @@ const statusSchema = z.object({
   membershipCount: z.number(),
   /**
    * The workspace that claimed this account's email domain and takes people
-   * from it. Named only here, behind a session: at the sign-in door the
+   * from it. Named only here, behind an event: at the sign-in door the
    * address is not proven yet.
    */
   workspace: z
@@ -66,7 +66,7 @@ const stepResult = z.object({ step: stepSchema });
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 
@@ -195,11 +195,11 @@ const eventRoute = createRoute({
   method: "post",
   path: "/onboarding/event",
   tags: ["onboarding"],
-  summary: "Step 3d: join through an open session's public page",
-  description: "Joins the organization as a member, registers for the session, and finishes.",
+  summary: "Step 3d: join through an open event's public page",
+  description: "Joins the organization as a member, registers for the event, and finishes.",
   request: {
     body: {
-      content: { "application/json": { schema: z.object({ sessionId: z.string().min(1) }) } },
+      content: { "application/json": { schema: z.object({ eventId: z.string().min(1) }) } },
     },
   },
   responses: {
@@ -211,11 +211,11 @@ const eventRoute = createRoute({
     },
     401: unauthorized,
     404: {
-      description: "No such open session",
+      description: "No such open event",
       content: { "application/json": { schema: errorSchema } },
     },
     409: {
-      description: "The session is over or full",
+      description: "The event is over or full",
       content: { "application/json": { schema: errorSchema } },
     },
   },
@@ -465,23 +465,23 @@ export const onboardingRoutes = app
   })
   .openapi(eventRoute, async (c) => {
     const current = userOf(c);
-    const { sessionId } = c.req.valid("json");
+    const { eventId } = c.req.valid("json");
 
-    const found = await findPublicSession(c.var.db, sessionId);
-    if (!found?.session.registrationOpen) {
+    const found = await findPublicEvent(c.var.db, eventId);
+    if (!found?.event.registrationOpen) {
       return c.json({ error: "This event does not take registrations." }, 404);
     }
 
-    const result = await registerForSession(c.var.db, { session: found.session, user: current });
+    const result = await registerForEvent(c.var.db, { event: found.event, user: current });
     if (!result.ok) {
       const message = result.reason === "full" ? "This event is full." : "This event is over.";
       return c.json({ error: message }, 409);
     }
 
-    await activateOrganization(c, found.session.organizationId);
+    await activateOrganization(c, found.event.organizationId);
     await setOnboardingStep(c, current.id, "done");
 
-    return c.json({ step: "done" as const, organizationId: found.session.organizationId }, 200);
+    return c.json({ step: "done" as const, organizationId: found.event.organizationId }, 200);
   })
   .openapi(finishRoute, async (c) => {
     const current = userOf(c);

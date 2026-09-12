@@ -29,7 +29,7 @@ export function MyLeaveCard(props: MyLeaveCardProps) {
       </div>
 
       <div className="min-w-0">
-        <p className="line-clamp-2 text-sm leading-snug font-medium">{request.sessionTitle}</p>
+        <p className="line-clamp-2 text-sm leading-snug font-medium">{request.eventTitle}</p>
         <p className="text-muted-foreground mt-0.5 text-xs">
           {formatRange(new Date(request.startsAt), new Date(request.endsAt))}
         </p>

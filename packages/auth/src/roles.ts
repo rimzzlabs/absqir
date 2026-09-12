@@ -10,7 +10,7 @@ const statements = {
   ...defaultStatements,
   person: ["create", "read", "update", "delete", "import"],
   group: ["create", "read", "update", "delete"],
-  session: ["create", "read", "update", "delete", "scan"],
+  event: ["create", "read", "update", "delete", "scan"],
   schedule: ["create", "read", "update", "delete"],
   leave: ["read", "approve"],
   report: ["read", "export"],
@@ -26,7 +26,7 @@ export const owner = ac.newRole({
   ac: ["create", "read", "update", "delete"],
   person: ["create", "read", "update", "delete", "import"],
   group: ["create", "read", "update", "delete"],
-  session: ["create", "read", "update", "delete", "scan"],
+  event: ["create", "read", "update", "delete", "scan"],
   schedule: ["create", "read", "update", "delete"],
   leave: ["read", "approve"],
   report: ["read", "export"],
@@ -40,7 +40,7 @@ export const admin = ac.newRole({
   ac: ["read"],
   person: ["create", "read", "update", "delete", "import"],
   group: ["create", "read", "update", "delete"],
-  session: ["create", "read", "update", "delete", "scan"],
+  event: ["create", "read", "update", "delete", "scan"],
   schedule: ["create", "read", "update", "delete"],
   leave: ["read", "approve"],
   report: ["read", "export"],
@@ -49,14 +49,14 @@ export const admin = ac.newRole({
 export const organizer = ac.newRole({
   person: ["read"],
   group: ["read"],
-  session: ["create", "read", "update", "scan"],
+  event: ["create", "read", "update", "scan"],
   schedule: ["read"],
   leave: ["read"],
   report: ["read"],
 });
 
 export const member = ac.newRole({
-  session: ["read"],
+  event: ["read"],
 });
 
 export const roles = { owner, admin, organizer, member };

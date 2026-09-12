@@ -30,7 +30,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
-import { type ScheduleValues, scheduleSchema } from "@/lib/session-schemas";
+import { type ScheduleValues, scheduleSchema } from "@/lib/event-schemas";
 import { useCreateSchedule } from "@/mutations/use-create-schedule";
 import { useUpdateSchedule } from "@/mutations/use-update-schedule";
 import type { Schedule } from "@/queries/use-schedules";

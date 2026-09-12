@@ -12,19 +12,19 @@ import { useMyPass } from "@/queries/use-my";
 
 export interface PassDialogProps {
   /** Null keeps the dialog closed. */
-  sessionId: string | null;
+  eventId: string | null;
   onClose: () => void;
 }
 
 /** The member's own QR code for one event, to show at the door. */
 export function PassDialog(props: PassDialogProps) {
-  const pass = useMyPass(props.sessionId);
+  const pass = useMyPass(props.eventId);
 
   return (
-    <Dialog open={props.sessionId !== null} onOpenChange={(open) => !open && props.onClose()}>
+    <Dialog open={props.eventId !== null} onOpenChange={(open) => !open && props.onClose()}>
       <DialogContent className="text-center">
         <DialogHeader>
-          <DialogTitle>{pass.data?.sessionTitle ?? "Your pass"}</DialogTitle>
+          <DialogTitle>{pass.data?.eventTitle ?? "Your pass"}</DialogTitle>
           <DialogDescription>
             Show this to the organizer at the door. It is yours alone.
           </DialogDescription>

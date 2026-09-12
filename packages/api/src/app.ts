@@ -20,9 +20,9 @@ import { notificationRoutes } from "#src/routes/notifications";
 import { onboardingRoutes } from "#src/routes/onboarding";
 import { organizationRoutes } from "#src/routes/organizations";
 import { peopleRoutes } from "#src/routes/people";
+import { publicEventRoutes } from "#src/routes/public-events";
 import { reportRoutes } from "#src/routes/reports";
 import { scheduleRoutes } from "#src/routes/schedules";
-import { sessionRoutes } from "#src/routes/sessions";
 import { tickRoutes } from "#src/routes/tick";
 import type { AppEnv } from "#src/types";
 
@@ -53,10 +53,10 @@ const routes = app
   .route("/", organizationRoutes)
   .route("/", peopleRoutes)
   .route("/", groupRoutes)
-  .route("/", sessionRoutes)
+  .route("/", eventRoutes)
   .route("/", scheduleRoutes)
   .route("/", myRoutes)
-  .route("/", eventRoutes)
+  .route("/", publicEventRoutes)
   .route("/", leaveRoutes)
   .route("/", reportRoutes)
   .route("/", calendarRoutes)

@@ -15,9 +15,9 @@ import {
 } from "@/components/reports/report-range";
 import { ReportSummaryCards } from "@/components/reports/report-summary";
 import {
+  EventReportTable,
   GroupReportTable,
   PeopleReportTable,
-  SessionReportTable,
 } from "@/components/reports/report-tables";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
@@ -26,18 +26,18 @@ import { useGroups } from "@/queries/use-groups";
 import {
   type ReportRange,
   reportCsvHref,
+  useReportEvents,
   useReportGroups,
   useReportPeople,
-  useReportSessions,
   useReportSummary,
 } from "@/queries/use-reports";
 
-type ReportTab = "people" | "groups" | "sessions";
+type ReportTab = "people" | "groups" | "events";
 
 const TABS: { value: ReportTab; label: string }[] = [
   { value: "people", label: "By person" },
   { value: "groups", label: "By group" },
-  { value: "sessions", label: "By event" },
+  { value: "events", label: "By event" },
 ];
 
 const PARAMS = {
@@ -53,7 +53,7 @@ const PARAMS = {
   tab: parseAsStringLiteral([
     "people",
     "groups",
-    "sessions",
+    "events",
   ] as const satisfies ReportTab[]).withDefault("people"),
 };
 
@@ -99,7 +99,7 @@ function ReportsBody() {
   const summary = useReportSummary(range);
   const people = useReportPeople(range);
   const byGroup = useReportGroups(range);
-  const bySession = useReportSessions(range);
+  const byEvent = useReportEvents(range);
 
   return (
     <>
@@ -147,7 +147,7 @@ function ReportsBody() {
 
       {tab === "people" ? <PeopleReportTable query={people} /> : null}
       {tab === "groups" ? <GroupReportTable query={byGroup} /> : null}
-      {tab === "sessions" ? <SessionReportTable query={bySession} /> : null}
+      {tab === "events" ? <EventReportTable query={byEvent} /> : null}
     </>
   );
 }

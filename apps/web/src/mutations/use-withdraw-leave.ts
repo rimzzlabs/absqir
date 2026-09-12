@@ -17,7 +17,7 @@ export function useWithdrawLeave() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveKeys.all });
-      void queryClient.invalidateQueries({ queryKey: myKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: myKeys.events() });
     },
   });
 }

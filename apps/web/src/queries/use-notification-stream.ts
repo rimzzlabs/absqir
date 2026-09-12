@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const STREAM_PATH = "/api/notifications/stream";
 
-const eventSchema = z.object({
+const publicEventSchema = z.object({
   count: z.number(),
   rows: z.array(z.object({ id: z.string() })),
 });
@@ -44,7 +44,7 @@ export function useNotificationStream() {
         return;
       }
 
-      const parsed = eventSchema.safeParse(payload);
+      const parsed = publicEventSchema.safeParse(payload);
       if (!parsed.success) return;
 
       queryClient.setQueryData(notificationKeys.unread(), { count: parsed.data.count });

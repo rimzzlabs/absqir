@@ -9,9 +9,9 @@ import { match, P } from "ts-pattern";
 import { ratePercent, StatusBar } from "@/components/reports/report-summary";
 import { FormError } from "@/components/shared/form-error";
 import type {
+  EventReportRow,
   GroupReportRow,
   PersonReportRow,
-  SessionReportRow,
   useReportPeople,
 } from "@/queries/use-reports";
 
@@ -162,7 +162,7 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
   );
 }
 
-export function SessionReportTable(props: { query: Query<SessionReportRow> }) {
+export function EventReportTable(props: { query: Query<EventReportRow> }) {
   return (
     <ReportQuery
       query={props.query}
@@ -187,9 +187,9 @@ export function SessionReportTable(props: { query: Query<SessionReportRow> }) {
             </TableHeader>
             <TableBody>
               {A.map(rows, (row) => (
-                <TableRow key={row.sessionId}>
+                <TableRow key={row.eventId}>
                   <TableCell className="font-medium">
-                    <a href={`/sessions/${row.sessionId}`} className="hover:underline">
+                    <a href={`/events/${row.eventId}`} className="hover:underline">
                       {row.title}
                     </a>
                     <p className="text-muted-foreground text-xs">

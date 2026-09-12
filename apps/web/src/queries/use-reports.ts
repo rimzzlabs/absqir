@@ -24,7 +24,7 @@ function rangeKey(range: ReportRange): string {
 }
 
 /** Where the browser downloads the same table as a spreadsheet. */
-export function reportCsvHref(table: "people" | "groups" | "sessions", range: ReportRange): string {
+export function reportCsvHref(table: "people" | "groups" | "events", range: ReportRange): string {
   const params = new URLSearchParams(toQuery(range));
 
   return `/api/reports/${table}.csv?${params.toString()}`;
@@ -78,11 +78,11 @@ export function useReportGroups(range: ReportRange) {
   });
 }
 
-export function useReportSessions(range: ReportRange) {
+export function useReportEvents(range: ReportRange) {
   return useQuery({
-    queryKey: reportKeys.sessions(rangeKey(range)),
+    queryKey: reportKeys.events(rangeKey(range)),
     queryFn: async (ctx: QueryFunctionContext) => {
-      const response = await api.reports.sessions.$get(
+      const response = await api.reports.events.$get(
         { query: toQuery(range) },
         { init: { signal: ctx.signal } },
       );
@@ -97,4 +97,4 @@ export function useReportSessions(range: ReportRange) {
 export type ReportSummary = NonNullable<ReturnType<typeof useReportSummary>["data"]>;
 export type PersonReportRow = NonNullable<ReturnType<typeof useReportPeople>["data"]>[number];
 export type GroupReportRow = NonNullable<ReturnType<typeof useReportGroups>["data"]>[number];
-export type SessionReportRow = NonNullable<ReturnType<typeof useReportSessions>["data"]>[number];
+export type EventReportRow = NonNullable<ReturnType<typeof useReportEvents>["data"]>[number];

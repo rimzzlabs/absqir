@@ -5,9 +5,9 @@ import { A, pipe } from "@mobily/ts-belt";
 import { addDays, addMinutes, isAfter, isBefore, startOfDay } from "date-fns";
 import { and, eq, gte, inArray } from "drizzle-orm";
 
-const { schedule, scheduleGroup, attendanceSession, sessionGroup } = schema;
+const { schedule, scheduleGroup, event: eventTable, eventGroup } = schema;
 
-/** How far ahead a schedule spawns sessions. */
+/** How far ahead a schedule spawns events. */
 export const HORIZON_DAYS = 14;
 
 type ScheduleRow = typeof schedule.$inferSelect;
@@ -69,9 +69,9 @@ function randomSecret(): string {
 }
 
 /**
- * Creates the sessions every active schedule of an organization owes for
+ * Creates the events every active schedule of an organization owes for
  * the next HORIZON_DAYS. Idempotent: the unique index on (schedule, start)
- * stops a repeat. Called when sessions are listed, so no cron is needed
+ * stops a repeat. Called when events are listed, so no cron is needed
  * for the schedule to keep up; a cron in a later phase only makes it eager.
  */
 export async function materializeSchedules(
@@ -91,11 +91,9 @@ export async function materializeSchedules(
 
   const [existing, groups] = await Promise.all([
     db
-      .select({ scheduleId: attendanceSession.scheduleId, startsAt: attendanceSession.startsAt })
-      .from(attendanceSession)
-      .where(
-        and(inArray(attendanceSession.scheduleId, ruleIds), gte(attendanceSession.startsAt, now)),
-      ),
+      .select({ scheduleId: eventTable.scheduleId, startsAt: eventTable.startsAt })
+      .from(eventTable)
+      .where(and(inArray(eventTable.scheduleId, ruleIds), gte(eventTable.startsAt, now))),
     db
       .select({ scheduleId: scheduleGroup.scheduleId, groupId: scheduleGroup.groupId })
       .from(scheduleGroup)
@@ -119,7 +117,7 @@ export async function materializeSchedules(
 
       await db.transaction(async (tx) => {
         await tx
-          .insert(attendanceSession)
+          .insert(eventTable)
           .values({
             id,
             organizationId,
@@ -137,8 +135,8 @@ export async function materializeSchedules(
 
         if (groupIds.length) {
           await tx
-            .insert(sessionGroup)
-            .values([...A.map(groupIds, (groupId) => ({ sessionId: id, groupId }))])
+            .insert(eventGroup)
+            .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))])
             .onConflictDoNothing();
         }
       });

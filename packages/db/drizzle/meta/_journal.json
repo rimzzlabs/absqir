@@ -64,6 +64,13 @@
       "when": 1788986156008,
       "tag": "0008_optimal_shiver_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788986157008,
+      "tag": "0009_rename_session_to_event",
+      "breakpoints": true
     }
   ]
 }

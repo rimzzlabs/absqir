@@ -24,7 +24,7 @@ export interface NotificationInput {
 
 /** Types worth an email. The rest live in the app, where the reader looks. */
 const EMAILED: ReadonlySet<NotificationType> = new Set([
-  "session-reminder",
+  "event-reminder",
   "leave-decided",
   "leave-requested",
   "join-requested",
@@ -32,8 +32,8 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
 ]);
 
 const ACTIONS: Record<NotificationType, string> = {
-  "session-reminder": "Open my events",
-  "session-closed": "Open the event",
+  "event-reminder": "Open my events",
+  "event-closed": "Open the event",
   "leave-requested": "Open the queue",
   "leave-decided": "Open my leave",
   "join-requested": "Open the requests",

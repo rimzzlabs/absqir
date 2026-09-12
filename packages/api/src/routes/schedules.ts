@@ -6,7 +6,7 @@ import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#sr
 import { materializeSchedules } from "#src/lib/schedule";
 import type { AppEnv } from "#src/types";
 
-const { schedule, scheduleGroup, group, attendanceSession } = schema;
+const { schedule, scheduleGroup, group, event: eventTable } = schema;
 
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -65,7 +65,7 @@ const errorSchema = z.object({ error: z.string() });
 const idParam = z.object({ id: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {
@@ -100,7 +100,7 @@ const createRouteDef = createRoute({
   method: "post",
   path: "/schedules",
   tags: ["schedules"],
-  summary: "Create a schedule. Sessions for the next two weeks appear at once",
+  summary: "Create a schedule. Events for the next two weeks appear at once",
   request: { body: { content: { "application/json": { schema: scheduleInput } } } },
   responses: {
     201: {
@@ -117,7 +117,7 @@ const updateRoute = createRoute({
   method: "patch",
   path: "/schedules/{id}",
   tags: ["schedules"],
-  summary: "Edit a schedule. Future sessions it spawned are replaced",
+  summary: "Edit a schedule. Future events it spawned are replaced",
   request: {
     params: idParam,
     body: { content: { "application/json": { schema: scheduleInput.partial() } } },
@@ -138,7 +138,7 @@ const removeRoute = createRoute({
   method: "delete",
   path: "/schedules/{id}",
   tags: ["schedules"],
-  summary: "Delete a schedule and the future sessions it spawned",
+  summary: "Delete a schedule and the future events it spawned",
   request: { params: idParam },
   responses: {
     200: {
@@ -221,16 +221,16 @@ async function validGroupIds(c: Parameters<typeof organizationIdOf>[0], ids: str
   return A.map(rows, (row) => row.id);
 }
 
-/** Future sessions the rule spawned, untouched by anyone, go away with a change. */
-async function dropFutureSessions(c: Parameters<typeof organizationIdOf>[0], scheduleId: string) {
+/** Future events the rule spawned, untouched by anyone, go away with a change. */
+async function dropFutureEvents(c: Parameters<typeof organizationIdOf>[0], scheduleId: string) {
   await c.var.db
-    .delete(attendanceSession)
+    .delete(eventTable)
     .where(
       and(
-        eq(attendanceSession.scheduleId, scheduleId),
-        gte(attendanceSession.startsAt, new Date()),
-        isNull(attendanceSession.openedAt),
-        isNull(attendanceSession.closedAt),
+        eq(eventTable.scheduleId, scheduleId),
+        gte(eventTable.startsAt, new Date()),
+        isNull(eventTable.openedAt),
+        isNull(eventTable.closedAt),
       ),
     );
 }
@@ -364,7 +364,7 @@ export const scheduleRoutes = app
       }
     });
 
-    await dropFutureSessions(c, id);
+    await dropFutureEvents(c, id);
     await materializeSchedules(c.var.db, organizationId);
 
     const updated = await findSchedule(c, id);
@@ -381,7 +381,7 @@ export const scheduleRoutes = app
     const found = await findSchedule(c, id);
     if (!found) return c.json({ error: "Not found" }, 404);
 
-    await dropFutureSessions(c, id);
+    await dropFutureEvents(c, id);
     await c.var.db.delete(schedule).where(eq(schedule.id, id));
 
     return c.json({ deleted: true as const }, 200);

@@ -1,4 +1,4 @@
-import { scheduleKeys, scheduleMutationKeys, sessionListKeys } from "@absqir/core/query-keys";
+import { eventKeys, scheduleKeys, scheduleMutationKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -33,7 +33,7 @@ export function useCreateSchedule() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: scheduleKeys.all });
-      void queryClient.invalidateQueries({ queryKey: sessionListKeys.all });
+      void queryClient.invalidateQueries({ queryKey: eventKeys.all });
     },
   });
 }

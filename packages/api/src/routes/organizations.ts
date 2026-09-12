@@ -34,7 +34,7 @@ const currentRoute = createRoute({
       content: { "application/json": { schema: currentSchema } },
     },
     401: {
-      description: "No active session",
+      description: "No active event",
       content: { "application/json": { schema: errorSchema } },
     },
     403: {

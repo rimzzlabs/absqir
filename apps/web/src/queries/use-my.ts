@@ -3,25 +3,25 @@ import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack
 import QRCode from "qrcode";
 import { api, apiError } from "@/lib/api";
 
-export type MySessionScope = "upcoming" | "past";
+export type MyEventScope = "upcoming" | "past";
 
-export interface MySessionsFilter {
-  scope: MySessionScope;
+export interface MyEventsFilter {
+  scope: MyEventScope;
   /** Rows per page. The server's default when absent. */
   limit?: number;
 }
 
 /**
- * The sessions that expect me, one page at a time. Upcoming ones soonest
+ * The events that expect me, one page at a time. Upcoming ones soonest
  * first, past ones newest first. A running one moves through its statuses
  * on the clock, so the list refetches on its own.
  */
-export function useMySessions(filter: MySessionsFilter = { scope: "upcoming" }) {
+export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
   return useInfiniteQuery({
-    queryKey: myKeys.sessionsPage(filter.scope, filter.limit ?? null),
+    queryKey: myKeys.eventsPage(filter.scope, filter.limit ?? null),
     initialPageParam: null as string | null,
     queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
-      const response = await api.my.sessions.$get(
+      const response = await api.my.events.$get(
         {
           query: {
             scope: filter.scope,
@@ -41,13 +41,13 @@ export function useMySessions(filter: MySessionsFilter = { scope: "upcoming" }) 
   });
 }
 
-export function useMyPass(sessionId: string | null) {
+export function useMyPass(eventId: string | null) {
   return useQuery({
-    queryKey: myKeys.pass(sessionId ?? ""),
-    enabled: sessionId !== null,
+    queryKey: myKeys.pass(eventId ?? ""),
+    enabled: eventId !== null,
     queryFn: async (ctx: QueryFunctionContext) => {
-      const response = await api.my.sessions[":id"].pass.$get(
-        { param: { id: sessionId ?? "" } },
+      const response = await api.my.events[":id"].pass.$get(
+        { param: { id: eventId ?? "" } },
         { init: { signal: ctx.signal } },
       );
 
@@ -73,7 +73,7 @@ export function useMyHistory() {
   });
 }
 
-export type MySession = NonNullable<
-  ReturnType<typeof useMySessions>["data"]
+export type MyEvent = NonNullable<
+  ReturnType<typeof useMyEvents>["data"]
 >["pages"][number]["items"][number];
 export type HistoryRow = NonNullable<ReturnType<typeof useMyHistory>["data"]>[number];

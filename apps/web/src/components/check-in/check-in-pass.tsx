@@ -17,31 +17,31 @@ import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
-import type { MySession } from "@/queries/use-my";
+import type { MyEvent } from "@/queries/use-my";
 
 export interface CheckInPassProps {
-  sessions: readonly MySession[];
+  events: readonly MyEvent[];
   pending: boolean;
   error: Error | null;
   onPass: (id: string) => void;
 }
 
 /** One event that accepts a pass right now. */
-function RunningRow(props: { session: MySession; onPass: (id: string) => void }) {
-  const { session } = props;
+function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
+  const { event } = props;
 
   return (
     <li className="ring-primary/40 bg-primary/5 flex flex-col gap-3 rounded-lg p-3 ring-1">
       <div className="min-w-0">
-        <p className="text-sm leading-snug font-medium">{session.title}</p>
+        <p className="text-sm leading-snug font-medium">{event.title}</p>
         <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">
-          Runs until {formatDate(new Date(session.endsAt), "time")}
+          Runs until {formatDate(new Date(event.endsAt), "time")}
         </p>
       </div>
 
-      {session.groups.length > 0 ? (
+      {event.groups.length > 0 ? (
         <div className="flex flex-wrap gap-1">
-          {A.map(session.groups, (group) => (
+          {A.map(event.groups, (group) => (
             <Badge key={group.id} variant="outline">
               {group.name}
             </Badge>
@@ -49,17 +49,17 @@ function RunningRow(props: { session: MySession; onPass: (id: string) => void })
         </div>
       ) : null}
 
-      {session.record ? (
+      {event.record ? (
         <div className="flex items-center gap-2">
-          <AttendanceStatusBadge status={session.record.status} />
-          {session.record.checkedInAt ? (
+          <AttendanceStatusBadge status={event.record.status} />
+          {event.record.checkedInAt ? (
             <span className="text-muted-foreground text-xs tabular-nums">
-              at {formatDate(new Date(session.record.checkedInAt), "time")}
+              at {formatDate(new Date(event.record.checkedInAt), "time")}
             </span>
           ) : null}
         </div>
       ) : (
-        <Button size="sm" className="w-fit" onClick={() => props.onPass(session.id)}>
+        <Button size="sm" className="w-fit" onClick={() => props.onPass(event.id)}>
           <TicketIcon />
           My pass
         </Button>
@@ -69,17 +69,17 @@ function RunningRow(props: { session: MySession; onPass: (id: string) => void })
 }
 
 /** The event the reader waits for, and the minute its door opens. */
-function NextBlock(props: { session: MySession }) {
-  const opensAt = opensAtOf(props.session);
+function NextBlock(props: { event: MyEvent }) {
+  const opensAt = opensAtOf(props.event);
 
   return (
     <div className="border-border rounded-lg border border-dashed p-3">
       <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
         Up next
       </p>
-      <p className="mt-1 text-sm leading-snug font-medium">{props.session.title}</p>
+      <p className="mt-1 text-sm leading-snug font-medium">{props.event.title}</p>
       <p className="text-muted-foreground mt-0.5 text-xs">
-        {formatRange(new Date(props.session.startsAt), new Date(props.session.endsAt))}
+        {formatRange(new Date(props.event.startsAt), new Date(props.event.endsAt))}
       </p>
       <p className="mt-2 flex items-center gap-1.5 text-xs font-medium">
         <ClockIcon aria-hidden className="shrink-0" />
@@ -95,8 +95,8 @@ function NextBlock(props: { session: MySession }) {
  * pass, and says when the next door opens while nothing runs.
  */
 export function CheckInPass(props: CheckInPassProps) {
-  const running = A.filter(props.sessions, (row) => row.status === "running");
-  const next = A.getBy(props.sessions, (row) => row.status === "scheduled");
+  const running = A.filter(props.events, (row) => row.status === "running");
+  const next = A.getBy(props.events, (row) => row.status === "scheduled");
 
   return (
     <Card>
@@ -109,7 +109,7 @@ export function CheckInPass(props: CheckInPassProps) {
           When the organizer scans instead of the room screen, hold this up. One pass per event.
         </CardDescription>
         <CardAction>
-          <a href="/my/sessions" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             My events
             <CaretRightIcon />
           </a>
@@ -146,8 +146,8 @@ export function CheckInPass(props: CheckInPassProps) {
               <div className="flex flex-col gap-3">
                 {running.length > 0 ? (
                   <ul className="flex flex-col gap-2">
-                    {A.map(running, (session) => (
-                      <RunningRow key={session.id} session={session} onPass={props.onPass} />
+                    {A.map(running, (event) => (
+                      <RunningRow key={event.id} event={event} onPass={props.onPass} />
                     ))}
                   </ul>
                 ) : (
@@ -156,7 +156,7 @@ export function CheckInPass(props: CheckInPassProps) {
                   </p>
                 )}
 
-                {next ? <NextBlock session={next} /> : null}
+                {next ? <NextBlock event={next} /> : null}
               </div>
             );
           })}

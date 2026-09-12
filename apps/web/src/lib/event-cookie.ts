@@ -5,11 +5,11 @@ import type { AstroCookies } from "astro";
 const MAX_AGE_SECONDS = 60 * 60;
 
 /**
- * Remembers which open session brought a stranger here. The sign-up door on
+ * Remembers which open event brought a stranger here. The sign-up door on
  * the server reads it before it lets a new account through.
  */
-export function setEventCookie(cookies: AstroCookies, sessionId: string): void {
-  cookies.set(EVENT_COOKIE, sessionId, {
+export function setEventCookie(cookies: AstroCookies, eventId: string): void {
+  cookies.set(EVENT_COOKIE, eventId, {
     path: "/",
     httpOnly: true,
     sameSite: "lax",

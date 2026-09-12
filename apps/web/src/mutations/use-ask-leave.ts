@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 export interface AskLeaveInput {
-  sessionId: string;
+  eventId: string;
   reason: string;
 }
 
@@ -23,7 +23,7 @@ export function useAskLeave() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveKeys.all });
       // Each of my events carries its own request, so the cards refresh too.
-      void queryClient.invalidateQueries({ queryKey: myKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: myKeys.events() });
     },
   });
 }

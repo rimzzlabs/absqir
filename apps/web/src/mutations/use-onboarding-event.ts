@@ -8,17 +8,17 @@ export function useOnboardingEvent() {
 
   return useMutation({
     mutationKey: [...authMutationKeys.onboarding(), "event"],
-    mutationFn: async (sessionId: string) => {
-      const response = await api.onboarding.event.$post({ json: { sessionId } });
+    mutationFn: async (eventId: string) => {
+      const response = await api.onboarding.event.$post({ json: { eventId } });
 
       if (!response.ok) throw await apiError(response, "Could not register you.");
 
-      return { ...(await response.json()), sessionId };
+      return { ...(await response.json()), eventId };
     },
     onSuccess: (data) => {
       queryClient.removeQueries({ queryKey: onboardingKeys.all });
       queryClient.removeQueries({ queryKey: meKeys.all });
-      window.location.assign(`/e/${data.sessionId}`);
+      window.location.assign(`/e/${data.eventId}`);
     },
   });
 }

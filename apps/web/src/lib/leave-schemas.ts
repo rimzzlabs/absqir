@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const askLeaveSchema = z.object({
-  sessionId: z.string().min(1, "Pick a session."),
+  eventId: z.string().min(1, "Pick an event."),
   reason: z.string().trim().min(1, "Give a reason.").max(500, "Keep it under 500 characters."),
 });
 

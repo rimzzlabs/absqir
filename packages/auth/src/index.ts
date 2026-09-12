@@ -323,19 +323,19 @@ export function createAuth(options: CreateAuthOptions) {
 
             if (registrationOpen) return;
 
-            // The third door: an open session's public page. The page sets a
-            // cookie with the session id; the session must still take people.
+            // The third door: an open event's public page. The page sets a
+            // cookie with the event id; the event must still take people.
             const eventId = cookieValue(context?.headers?.get("cookie"), EVENT_COOKIE);
 
             if (eventId) {
               const open = await db
-                .select({ id: schema.attendanceSession.id })
-                .from(schema.attendanceSession)
+                .select({ id: schema.event.id })
+                .from(schema.event)
                 .where(
                   and(
-                    eq(schema.attendanceSession.id, eventId),
-                    eq(schema.attendanceSession.registrationOpen, true),
-                    gt(schema.attendanceSession.endsAt, new Date()),
+                    eq(schema.event.id, eventId),
+                    eq(schema.event.registrationOpen, true),
+                    gt(schema.event.endsAt, new Date()),
                   ),
                 )
                 .limit(1);

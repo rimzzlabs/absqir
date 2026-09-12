@@ -6,46 +6,46 @@ import { A } from "@mobily/ts-belt";
 import { ClockIcon, ScanIcon, TicketIcon } from "@phosphor-icons/react";
 import { opensAtOf } from "@/components/my/opens-at";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
-import type { MySession } from "@/queries/use-my";
+import type { MyEvent } from "@/queries/use-my";
 
 export interface MemberHomeNowProps {
-  sessions: readonly MySession[];
+  events: readonly MyEvent[];
   onPass: (id: string) => void;
 }
 
 /** The one event that matters right now: running, or the next scheduled one. */
-export function pickNow(sessions: readonly MySession[]): MySession | null {
+export function pickNow(events: readonly MyEvent[]): MyEvent | null {
   return (
-    A.getBy(sessions, (row) => row.status === "running") ??
-    A.getBy(sessions, (row) => row.status === "scheduled") ??
+    A.getBy(events, (row) => row.status === "running") ??
+    A.getBy(events, (row) => row.status === "scheduled") ??
     null
   );
 }
 
-function Actions(props: { session: MySession; onPass: (id: string) => void }) {
-  const { session } = props;
+function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
+  const { event } = props;
 
-  if (session.record) {
+  if (event.record) {
     return (
       <div className="flex items-center gap-3">
-        <AttendanceStatusBadge status={session.record.status} />
-        {session.record.checkedInAt ? (
+        <AttendanceStatusBadge status={event.record.status} />
+        {event.record.checkedInAt ? (
           <span className="text-muted-foreground text-sm tabular-nums">
-            at {formatDate(new Date(session.record.checkedInAt), "time")}
+            at {formatDate(new Date(event.record.checkedInAt), "time")}
           </span>
         ) : null}
       </div>
     );
   }
 
-  if (session.status === "running") {
+  if (event.status === "running") {
     return (
       <div className="flex flex-wrap gap-2">
         <a href="/check-in" className={buttonVariants({ size: "lg" })}>
           <ScanIcon />
           Check in
         </a>
-        <Button size="lg" variant="outline" onClick={() => props.onPass(session.id)}>
+        <Button size="lg" variant="outline" onClick={() => props.onPass(event.id)}>
           <TicketIcon />
           My pass
         </Button>
@@ -56,14 +56,14 @@ function Actions(props: { session: MySession; onPass: (id: string) => void }) {
   return (
     <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
       <ClockIcon aria-hidden />
-      Check-in opens {formatDate(opensAtOf(session), "weekdayDateTime")}
+      Check-in opens {formatDate(opensAtOf(event), "weekdayDateTime")}
     </p>
   );
 }
 
 /** The panel at the top of a member's home: what runs now, or what comes next. */
 export function MemberHomeNow(props: MemberHomeNowProps) {
-  const next = pickNow(props.sessions);
+  const next = pickNow(props.events);
   const running = next?.status === "running";
   const idleLabel = next ? "Up next" : "Nothing planned";
 
@@ -117,7 +117,7 @@ export function MemberHomeNow(props: MemberHomeNowProps) {
           ) : null}
         </div>
 
-        {next ? <Actions session={next} onPass={props.onPass} /> : null}
+        {next ? <Actions event={next} onPass={props.onPass} /> : null}
       </div>
     </section>
   );

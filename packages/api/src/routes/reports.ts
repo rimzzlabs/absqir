@@ -3,15 +3,15 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A } from "@mobily/ts-belt";
 import type { Context } from "hono";
 import { csvCell } from "#src/lib/csv";
+import { settle } from "#src/lib/events";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import {
   type ReportRange,
+  reportByEvent,
   reportByGroup,
   reportByPerson,
-  reportBySession,
   reportSummary,
 } from "#src/lib/reports";
-import { settle } from "#src/lib/sessions";
 import type { AppEnv } from "#src/types";
 
 const countsSchema = z.object({
@@ -24,8 +24,8 @@ const countsSchema = z.object({
 const summarySchema = z.object({
   from: z.string(),
   to: z.string(),
-  sessions: z.number(),
-  closedSessions: z.number(),
+  events: z.number(),
+  closedEvents: z.number(),
   people: z.number(),
   counts: countsSchema,
   attendanceRate: z.number().nullable(),
@@ -50,8 +50,8 @@ const groupRowSchema = z.object({
   attendanceRate: z.number().nullable(),
 });
 
-const sessionRowSchema = z.object({
-  sessionId: z.string(),
+const eventRowSchema = z.object({
+  eventId: z.string(),
   title: z.string(),
   startsAt: z.string(),
   endsAt: z.string(),
@@ -70,7 +70,7 @@ const rangeQuery = z.object({
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {
@@ -82,7 +82,7 @@ const summaryRoute = createRoute({
   method: "get",
   path: "/reports/summary",
   tags: ["reports"],
-  summary: "Totals for every session that starts inside the range",
+  summary: "Totals for every event that starts inside the range",
   request: { query: rangeQuery },
   responses: {
     200: { description: "Totals", content: { "application/json": { schema: summarySchema } } },
@@ -123,16 +123,16 @@ const groupsRoute = createRoute({
   },
 });
 
-const sessionsRoute = createRoute({
+const eventsRoute = createRoute({
   method: "get",
-  path: "/reports/sessions",
+  path: "/reports/events",
   tags: ["reports"],
-  summary: "One row per session, newest first",
+  summary: "One row per event, newest first",
   request: { query: rangeQuery },
   responses: {
     200: {
       description: "Rows",
-      content: { "application/json": { schema: z.array(sessionRowSchema) } },
+      content: { "application/json": { schema: z.array(eventRowSchema) } },
     },
     401: unauthorized,
     403: forbidden,
@@ -170,7 +170,7 @@ function percent(rate: number | null): string {
   return rate === null ? "" : `${Math.round(rate * 100)}%`;
 }
 
-type CsvTable = "people" | "groups" | "sessions";
+type CsvTable = "people" | "groups" | "events";
 
 async function csvLines(
   db: Database,
@@ -218,10 +218,10 @@ async function csvLines(
     ];
   }
 
-  const rows = await reportBySession(db, organizationId, range);
+  const rows = await reportByEvent(db, organizationId, range);
 
   return [
-    "session,starts_at,ends_at,closed,present,late,excused,absent,attendance_rate",
+    "event,starts_at,ends_at,closed,present,late,excused,absent,attendance_rate",
     ...A.map(rows, (row) =>
       [
         csvCell(row.title),
@@ -288,16 +288,16 @@ export const reportRoutes = app
 
     return c.json([...rows], 200);
   })
-  .openapi(sessionsRoute, async (c) => {
+  .openapi(eventsRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const query = c.req.valid("query");
 
     await settle(c.var.db, organizationId);
 
-    const rows = await reportBySession(c.var.db, organizationId, rangeOfQuery(query));
+    const rows = await reportByEvent(c.var.db, organizationId, rangeOfQuery(query));
 
     return c.json([...rows], 200);
   })
   .get("/reports/people.csv", (c) => csvHandler(c, "people"))
   .get("/reports/groups.csv", (c) => csvHandler(c, "groups"))
-  .get("/reports/sessions.csv", (c) => csvHandler(c, "sessions"));
+  .get("/reports/events.csv", (c) => csvHandler(c, "events"));

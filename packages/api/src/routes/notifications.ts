@@ -24,7 +24,7 @@ const notificationSchema = z.object({
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {

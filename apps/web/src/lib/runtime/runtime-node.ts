@@ -96,7 +96,7 @@ export function getRuntime(_locals: App.Locals): AppRuntime {
 
   cached = runtime;
 
-  // One process, one heartbeat: schedules spawn, ended sessions close, and
+  // One process, one heartbeat: schedules spawn, ended events close, and
   // reminders go out without anyone opening a page.
   startTickerFor(bindings, db);
 

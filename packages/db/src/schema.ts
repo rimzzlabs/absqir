@@ -19,7 +19,7 @@ export function isOnboardingStep(value: unknown): value is OnboardingStep {
   return typeof value === "string" && (ONBOARDING_STEPS as readonly string[]).includes(value);
 }
 
-/** What a record says about one person at one session. */
+/** What a record says about one person at one event. */
 export const ATTENDANCE_STATUSES = ["present", "late", "excused", "absent"] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 
@@ -29,8 +29,8 @@ export type AttendanceMethod = (typeof ATTENDANCE_METHODS)[number];
 
 /** What a notification is about. The web app renders one icon per type. */
 export const NOTIFICATION_TYPES = [
-  "session-reminder",
-  "session-closed",
+  "event-reminder",
+  "event-closed",
   "leave-requested",
   "leave-decided",
   "join-requested",
@@ -292,7 +292,7 @@ export const person = pgTable(
   ],
 );
 
-/** A team, a division, a class, a cohort. Sessions expect a group to show up. */
+/** A team, a division, a class, a cohort. Events expect a group to show up. */
 export const group = pgTable(
   "group",
   {
@@ -326,8 +326,8 @@ export const groupMember = pgTable(
 );
 
 /**
- * A rule that creates sessions ahead of time: every weekday at nine, every
- * Tuesday evening. Times are wall-clock in `timezone`; the sessions it
+ * A rule that creates events ahead of time: every weekday at nine, every
+ * Tuesday evening. Times are wall-clock in `timezone`; the events it
  * spawns carry absolute instants.
  */
 export const schedule = pgTable(
@@ -380,8 +380,8 @@ export const scheduleGroup = pgTable(
  * otherwise scheduled. Closing writes an absent record for every expected
  * person without one, so reports never depend on later group changes.
  */
-export const attendanceSession = pgTable(
-  "attendance_session",
+export const event = pgTable(
+  "event",
   {
     id: text("id").primaryKey(),
     organizationId: text("organization_id")
@@ -404,7 +404,7 @@ export const attendanceSession = pgTable(
     registrationLimit: integer("registration_limit"),
     /** Set when an organizer opens check-in ahead of the window. */
     openedAt: timestamp("opened_at", { withTimezone: true }),
-    /** Set when the session closed, by hand or by the clock. */
+    /** Set when the event closed, by hand or by the clock. */
     closedAt: timestamp("closed_at", { withTimezone: true }),
     /** HMAC key for the rotating QR token and the member passes. Never leaves the server. */
     secret: text("secret").notNull(),
@@ -413,49 +413,49 @@ export const attendanceSession = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("attendance_session_organization_starts_idx").on(table.organizationId, table.startsAt),
-    uniqueIndex("attendance_session_schedule_starts_idx")
+    index("event_organization_starts_idx").on(table.organizationId, table.startsAt),
+    uniqueIndex("event_schedule_starts_idx")
       .on(table.scheduleId, table.startsAt)
       .where(sql`${table.scheduleId} is not null`),
   ],
 );
 
-export const sessionGroup = pgTable(
-  "session_group",
+export const eventGroup = pgTable(
+  "event_group",
   {
-    sessionId: text("session_id")
+    eventId: text("event_id")
       .notNull()
-      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+      .references(() => event.id, { onDelete: "cascade" }),
     groupId: text("group_id")
       .notNull()
       .references(() => group.id, { onDelete: "cascade" }),
   },
   (table) => [
-    primaryKey({ columns: [table.sessionId, table.groupId] }),
-    index("session_group_group_idx").on(table.groupId),
+    primaryKey({ columns: [table.eventId, table.groupId] }),
+    index("event_group_group_idx").on(table.groupId),
   ],
 );
 
-/** Someone who signed up for an open session through its public page. */
-export const sessionRegistration = pgTable(
-  "session_registration",
+/** Someone who signed up for an open event through its public page. */
+export const eventRegistration = pgTable(
+  "event_registration",
   {
-    sessionId: text("session_id")
+    eventId: text("event_id")
       .notNull()
-      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+      .references(() => event.id, { onDelete: "cascade" }),
     personId: text("person_id")
       .notNull()
       .references(() => person.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    primaryKey({ columns: [table.sessionId, table.personId] }),
-    index("session_registration_person_idx").on(table.personId),
+    primaryKey({ columns: [table.eventId, table.personId] }),
+    index("event_registration_person_idx").on(table.personId),
   ],
 );
 
 /**
- * A member asks to be excused from a session. An approval writes an excused
+ * A member asks to be excused from an event. An approval writes an excused
  * record; a decline leaves the record alone.
  */
 export const leaveRequest = pgTable(
@@ -465,9 +465,9 @@ export const leaveRequest = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    sessionId: text("session_id")
+    eventId: text("event_id")
       .notNull()
-      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+      .references(() => event.id, { onDelete: "cascade" }),
     personId: text("person_id")
       .notNull()
       .references(() => person.id, { onDelete: "cascade" }),
@@ -480,19 +480,19 @@ export const leaveRequest = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("leave_request_session_person_idx").on(table.sessionId, table.personId),
+    uniqueIndex("leave_request_event_person_idx").on(table.eventId, table.personId),
     index("leave_request_organization_status_idx").on(table.organizationId, table.status),
   ],
 );
 
-/** One person at one session. Absent rows are written when the session closes. */
+/** One person at one event. Absent rows are written when the event closes. */
 export const attendanceRecord = pgTable(
   "attendance_record",
   {
     id: text("id").primaryKey(),
-    sessionId: text("session_id")
+    eventId: text("event_id")
       .notNull()
-      .references(() => attendanceSession.id, { onDelete: "cascade" }),
+      .references(() => event.id, { onDelete: "cascade" }),
     personId: text("person_id")
       .notNull()
       .references(() => person.id, { onDelete: "cascade" }),
@@ -506,14 +506,14 @@ export const attendanceRecord = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("attendance_record_session_person_idx").on(table.sessionId, table.personId),
+    uniqueIndex("attendance_record_event_person_idx").on(table.eventId, table.personId),
     index("attendance_record_person_idx").on(table.personId),
   ],
 );
 
 /**
- * Something that happened that concerns one person: a session starts soon,
- * a leave request waits for a decision, a session closed. In-app always;
+ * Something that happened that concerns one person: an event starts soon,
+ * a leave request waits for a decision, an event closed. In-app always;
  * email as well when the instance has a mailer.
  */
 export const notification = pgTable(
@@ -533,7 +533,7 @@ export const notification = pgTable(
     href: text("href"),
     /**
      * Makes a repeated write a no-op: a reminder is one row per person per
-     * session per kind, however often the tick runs.
+     * event per kind, however often the tick runs.
      */
     dedupeKey: text("dedupe_key"),
     /**

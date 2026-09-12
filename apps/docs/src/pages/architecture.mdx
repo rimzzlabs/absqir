@@ -51,7 +51,7 @@ sends an unfinished account back to onboarding on every page.
 
 ## Data model
 
-Better Auth owns `user`, `session`, `account`, `verification`,
+Better Auth owns `user`, `event`, `account`, `verification`,
 `organization`, `member`, and `invitation`. absqir adds:
 
 - `person` — the directory. A row can exist before the person has an
@@ -59,11 +59,11 @@ Better Auth owns `user`, `session`, `account`, `verification`,
   and identifier are unique inside the organization.
 - `group` and `group_member` — teams, divisions, cohorts.
 - `schedule` and `schedule_group` — rules that spawn events.
-- `attendance_session` and `session_group` — one moment people are expected,
+- `event` and `event_group` — one moment people are expected,
   and which groups.
 - `attendance_record` — one row per person per event: status, method,
   time, note. Absent rows are written when the event closes.
-- `session_registration` — who signed up through an event's public page.
+- `event_registration` — who signed up through an event's public page.
 - `leave_request` — a member asks to be excused; an approval writes an
   excused record.
 - `notification` — what one person is told, with a key that makes a repeat
@@ -76,16 +76,16 @@ Everything an organization owns cascades on delete.
 <RotatingToken />
 
 The room screen encodes a link carrying a token: an HMAC-SHA256 over the
-session id and the current 20-second time window, keyed by a per-session
+event id and the current 20-second time window, keyed by a per-event
 secret that never leaves the server. The screen fetches a fresh token when
 the window ends, so a photo of the code expires within seconds, and the
 server accepts the current window and the one before it. Only a signed-in
 member on the list can check in with it.
 
-The member's pass is the other direction: an HMAC over the session id and
+The member's pass is the other direction: an HMAC over the event id and
 the person id with the same secret. The organizer's scanner reads it and the
 server checks the signature before it writes anything. See
-[Events and check-in](/sessions).
+[Events and check-in](/events).
 
 ## Security posture
 

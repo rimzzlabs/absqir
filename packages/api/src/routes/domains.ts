@@ -21,7 +21,7 @@ const MAX_DOMAINS = 20;
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {

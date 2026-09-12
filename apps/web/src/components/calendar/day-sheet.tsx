@@ -5,14 +5,14 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { type CalendarEntry, dayKey } from "@/components/calendar/calendar-entries";
-import { SessionStatusBadge } from "@/components/shared/status-badge";
+import { EventStatusBadge } from "@/components/shared/status-badge";
 
 export interface DaySheetProps {
   /** Null keeps the sheet closed. */
   day: Date | null;
   entries: Map<string, CalendarEntry[]>;
   onClose: () => void;
-  onNewSession: (day: Date) => void;
+  onNewEvent: (day: Date) => void;
 }
 
 /** Everything on one day, with the room to say more than a cell can. */
@@ -33,26 +33,26 @@ export function DaySheet(props: DaySheetProps) {
 
         <div className="space-y-3 px-4">
           {A.map(entries, (entry) =>
-            entry.kind === "session" ? (
+            entry.kind === "event" ? (
               <a
                 key={entry.key}
-                href={`/sessions/${entry.session.id}`}
+                href={`/events/${entry.event.id}`}
                 className="border-border hover:bg-muted/40 block rounded-lg border p-3"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-medium">{entry.session.title}</span>
-                  <SessionStatusBadge status={entry.session.status} />
+                  <span className="font-medium">{entry.event.title}</span>
+                  <EventStatusBadge status={entry.event.status} />
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm tabular-nums">
                   {formatDate(entry.startsAt, "time")} to {formatDate(entry.endsAt, "time")}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  {entry.session.counts.expected} expected · {entry.session.counts.present} present
-                  · {entry.session.counts.late} late · {entry.session.counts.absent} absent
+                  {entry.event.counts.expected} expected · {entry.event.counts.present} present ·{" "}
+                  {entry.event.counts.late} late · {entry.event.counts.absent} absent
                 </p>
-                {entry.session.groups.length > 0 ? (
+                {entry.event.groups.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {A.map(entry.session.groups, (group) => (
+                    {A.map(entry.event.groups, (group) => (
                       <Badge key={group.id} variant="outline">
                         {group.name}
                       </Badge>
@@ -82,7 +82,7 @@ export function DaySheet(props: DaySheetProps) {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => props.day && props.onNewSession(props.day)}
+            onClick={() => props.day && props.onNewEvent(props.day)}
           >
             <PlusIcon />
             New event on this day
