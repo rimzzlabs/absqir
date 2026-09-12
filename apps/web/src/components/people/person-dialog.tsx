@@ -1,17 +1,18 @@
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@absqir/ui/dialog";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@absqir/ui/responsive-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -81,80 +82,85 @@ export function PersonDialog(props: PersonDialogProps) {
   };
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit person" : "Add a person"}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{editing ? "Edit person" : "Add a person"}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {editing
               ? "Changes apply to the directory. The account, if any, keeps its own name."
               : "A directory entry. Tick the box to email an invitation right away."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField
-              control={form.control}
-              name="name"
-              label="Full name"
-              render={(field) => <Input {...field} id="person-name" autoFocus />}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              label="Email"
-              description="Needed for an invitation. Optional otherwise."
-              render={(field) => <Input {...field} id="person-email" type="email" />}
-            />
-            <FormField
-              control={form.control}
-              name="identifier"
-              label="Identifier"
-              description="Employee or member number. Optional."
-              render={(field) => <Input {...field} id="person-identifier" autoComplete="off" />}
-            />
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+            noValidate
+          >
+            <ResponsiveDialogBody>
+              <FormField
+                control={form.control}
+                name="name"
+                label="Full name"
+                render={(field) => <Input {...field} id="person-name" autoFocus />}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                label="Email"
+                description="Needed for an invitation. Optional otherwise."
+                render={(field) => <Input {...field} id="person-email" type="email" />}
+              />
+              <FormField
+                control={form.control}
+                name="identifier"
+                label="Identifier"
+                description="Employee or member number. Optional."
+                render={(field) => <Input {...field} id="person-identifier" autoComplete="off" />}
+              />
 
-            {editing ? null : (
-              <>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="person-invite"
-                    checked={invite}
-                    disabled={!email}
-                    onCheckedChange={(checked) => form.setValue("invite", checked === true)}
-                  />
-                  <Label htmlFor="person-invite">Send an invitation to sign in</Label>
-                </div>
+              {editing ? null : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="person-invite"
+                      checked={invite}
+                      disabled={!email}
+                      onCheckedChange={(checked) => form.setValue("invite", checked === true)}
+                    />
+                    <Label htmlFor="person-invite">Send an invitation to sign in</Label>
+                  </div>
 
-                {invite ? (
-                  <Field>
-                    <FieldLabel htmlFor="person-role">Role</FieldLabel>
-                    <FieldContent>
-                      <RoleSelect
-                        id="person-role"
-                        value={form.watch("role")}
-                        onChange={(value) => form.setValue("role", value)}
-                      />
-                    </FieldContent>
-                  </Field>
-                ) : null}
-              </>
-            )}
+                  {invite ? (
+                    <Field>
+                      <FieldLabel htmlFor="person-role">Role</FieldLabel>
+                      <FieldContent>
+                        <RoleSelect
+                          id="person-role"
+                          value={form.watch("role")}
+                          onChange={(value) => form.setValue("role", value)}
+                        />
+                      </FieldContent>
+                    </Field>
+                  ) : null}
+                </>
+              )}
 
-            <FormError error={create.error ?? update.error} />
-
-            <DialogFooter>
+              <FormError error={create.error ?? update.error} />
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
                 {pending ? "Saving…" : saveLabel}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

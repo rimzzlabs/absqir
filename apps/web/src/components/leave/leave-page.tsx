@@ -1,15 +1,16 @@
 import { formatDate, formatRange } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@absqir/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Form, FormField } from "@absqir/ui/form";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@absqir/ui/responsive-dialog";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
@@ -60,36 +61,42 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && props.onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+    <ResponsiveDialog open={open} onOpenChange={(next) => !next && props.onClose()}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             {approving ? "Approve" : "Decline"} {props.pending?.request.personName}
-          </DialogTitle>
-          <DialogDescription>
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {approving
               ? "The record for this event shows excused instead of absent."
               : "The record stays as it is. The member sees your note."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <p className="text-muted-foreground text-sm">
-              <span className="text-foreground font-medium">
-                {props.pending?.request.eventTitle}
-              </span>
-              {" · "}
-              {props.pending?.request.reason}
-            </p>
-            <FormField
-              control={form.control}
-              name="note"
-              label="Note"
-              description="Optional. The member sees it."
-              render={(field) => <Textarea {...field} id="leave-note" rows={2} autoFocus />}
-            />
-            <FormError error={decide.error} />
-            <DialogFooter>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+            noValidate
+          >
+            <ResponsiveDialogBody>
+              <p className="text-muted-foreground text-sm">
+                <span className="text-foreground font-medium">
+                  {props.pending?.request.eventTitle}
+                </span>
+                {" · "}
+                {props.pending?.request.reason}
+              </p>
+              <FormField
+                control={form.control}
+                name="note"
+                label="Note"
+                description="Optional. The member sees it."
+                render={(field) => <Textarea {...field} id="leave-note" rows={2} autoFocus />}
+              />
+              <FormError error={decide.error} />
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={props.onClose}>
                 Cancel
               </Button>
@@ -100,11 +107,11 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
               >
                 {decide.isPending ? "Saving…" : decideLabel}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 

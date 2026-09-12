@@ -1,12 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@absqir/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -17,6 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@absqir/ui/responsive-dialog";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@absqir/ui/sidebar";
 import { A } from "@mobily/ts-belt";
 import { BuildingsIcon, CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react";
@@ -135,22 +136,24 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={creating} onOpenChange={setCreating}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New organization</DialogTitle>
-              <DialogDescription>
+        <ResponsiveDialog open={creating} onOpenChange={setCreating}>
+          <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>New organization</ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
                 You become its owner. Invite people from the settings page.
-              </DialogDescription>
-            </DialogHeader>
-            <OrganizationForm
-              submitLabel="Create organization"
-              pending={create.isPending}
-              onSubmit={(values) => create.mutate(values)}
-            />
-            <FormError error={create.error ?? setActive.error} />
-          </DialogContent>
-        </Dialog>
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody>
+              <OrganizationForm
+                submitLabel="Create organization"
+                pending={create.isPending}
+                onSubmit={(values) => create.mutate(values)}
+              />
+              <FormError error={create.error ?? setActive.error} />
+            </ResponsiveDialogBody>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
       </SidebarMenuItem>
     </SidebarMenu>
   );

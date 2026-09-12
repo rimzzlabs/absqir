@@ -14,6 +14,7 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -72,67 +73,75 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
   const dirty = !sameSet(selected, initial);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">
-          {selected.length} {selected.length === 1 ? "person" : "people"}
-        </p>
-        {props.canManage && dirty ? (
-          <Button
-            size="sm"
-            disabled={save.isPending}
-            onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
-          >
-            {save.isPending ? "Saving…" : "Save members"}
-          </Button>
+    <>
+      {/* The count, the save button and the filter stay put. Only the list scrolls. */}
+      <div className="flex shrink-0 flex-col gap-3 px-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">
+            {selected.length} {selected.length === 1 ? "person" : "people"}
+          </p>
+          {props.canManage && dirty ? (
+            <Button
+              size="sm"
+              disabled={save.isPending}
+              onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
+            >
+              {save.isPending ? "Saving…" : "Save members"}
+            </Button>
+          ) : null}
+        </div>
+
+        {props.canManage ? (
+          <Input
+            type="search"
+            placeholder="Filter the directory"
+            aria-label="Filter the directory"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
         ) : null}
+
+        <FormError error={people.error ?? save.error} />
       </div>
 
-      {props.canManage ? (
-        <Input
-          type="search"
-          placeholder="Filter the directory"
-          aria-label="Filter the directory"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      ) : null}
-
-      <FormError error={people.error ?? save.error} />
-
-      <ul className="border-border divide-border min-h-0 flex-1 divide-y overflow-y-auto rounded-lg border">
-        {people.isPending ? (
-          <li className="p-3">
-            <Skeleton className="h-5 w-40" />
-          </li>
-        ) : null}
-        {A.map(rows, (person) => {
-          const checked = selected.includes(person.id);
-          if (!props.canManage && !checked) return null;
-
-          return (
-            <li key={person.id} className="flex items-center gap-3 px-3 py-2">
-              {props.canManage ? (
-                <Checkbox
-                  id={`member-${person.id}`}
-                  checked={checked}
-                  onCheckedChange={(value) => toggle(person.id, value === true)}
-                />
-              ) : null}
-              <Label htmlFor={`member-${person.id}`} className="flex-1 cursor-pointer font-normal">
-                <span className="block">{person.name}</span>
-                <span className="text-muted-foreground block text-xs">
-                  {person.email ?? person.identifier ?? "no email"}
-                </span>
-              </Label>
+      <SheetBody>
+        <ul className="border-border divide-border divide-y rounded-lg border">
+          {people.isPending ? (
+            <li className="p-3">
+              <Skeleton className="h-5 w-40" />
             </li>
-          );
-        })}
-        {!people.isPending && rows.length === 0 ? (
-          <li className="text-muted-foreground p-3 text-sm">Nobody matches.</li>
-        ) : null}
-      </ul>
-    </div>
+          ) : null}
+          {A.map(rows, (person) => {
+            const checked = selected.includes(person.id);
+            if (!props.canManage && !checked) return null;
+
+            return (
+              <li key={person.id} className="flex items-center gap-3 px-3 py-2">
+                {props.canManage ? (
+                  <Checkbox
+                    id={`member-${person.id}`}
+                    checked={checked}
+                    onCheckedChange={(value) => toggle(person.id, value === true)}
+                  />
+                ) : null}
+                <Label
+                  htmlFor={`member-${person.id}`}
+                  className="flex-1 cursor-pointer font-normal"
+                >
+                  <span className="block">{person.name}</span>
+                  <span className="text-muted-foreground block text-xs">
+                    {person.email ?? person.identifier ?? "no email"}
+                  </span>
+                </Label>
+              </li>
+            );
+          })}
+          {!people.isPending && rows.length === 0 ? (
+            <li className="text-muted-foreground p-3 text-sm">Nobody matches.</li>
+          ) : null}
+        </ul>
+      </SheetBody>
+    </>
   );
 }
 
@@ -165,9 +174,7 @@ export function GroupSheet(props: GroupSheetProps) {
                 <SheetDescription>{data.description ?? "No description."}</SheetDescription>
               </SheetHeader>
 
-              <div className="flex min-h-0 flex-1 flex-col px-4">
-                <MemberPicker group={data} canManage={props.canManage} />
-              </div>
+              <MemberPicker group={data} canManage={props.canManage} />
 
               {props.canManage ? (
                 <SheetFooter className="flex-row justify-end">
