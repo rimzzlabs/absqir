@@ -1,3 +1,5 @@
+"use client";
+
 import { A } from "@mobily/ts-belt";
 import { cn } from "cn";
 import * as React from "react";
@@ -327,6 +329,13 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
   return configLabelKey in config ? config[configLabelKey] : config[key];
 }
+
+/**
+ * recharts is a dependency of this package alone, so a consumer reaches the
+ * primitives through here. One copy means one React context, which the chart
+ * parts rely on.
+ */
+export * as Recharts from "recharts";
 
 export {
   ChartContainer,

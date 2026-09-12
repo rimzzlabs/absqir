@@ -20,7 +20,7 @@ const isMember = activeMembership?.role === "member";
         timezone={user?.timezone ?? null}
       />
     ) : (
-      <HomePage client:load userName={user?.name ?? ""} />
+      <HomePage client:load userName={user?.name ?? ""} userEmail={user?.email ?? ""} />
     )
   }
 </DashboardLayout>

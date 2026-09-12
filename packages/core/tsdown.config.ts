@@ -11,6 +11,7 @@ export default defineConfig((options) => ({
     "src/notification-channel.ts",
     "src/timezone.ts",
     "src/email-domain.ts",
+    "src/attendance-series.ts",
   ],
   format: "esm",
   platform: "neutral",
