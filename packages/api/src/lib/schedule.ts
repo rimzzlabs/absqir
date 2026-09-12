@@ -1,7 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { addDays, addMinutes, isAfter, isBefore, startOfDay } from "date-fns";
 import { and, eq, gte, inArray } from "drizzle-orm";
 
@@ -136,7 +136,13 @@ export async function materializeSchedules(
         if (groupIds.length) {
           await tx
             .insert(eventGroup)
-            .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))])
+            .values(
+              pipe(
+                groupIds,
+                A.map((groupId) => ({ eventId: id, groupId })),
+                F.toMutable,
+              ),
+            )
             .onConflictDoNothing();
         }
       });

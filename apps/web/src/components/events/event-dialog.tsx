@@ -18,7 +18,7 @@ import {
 } from "@absqir/ui/responsive-dialog";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -66,7 +66,11 @@ function defaults(event: Event | null, initialStart?: Date | null): EventValues 
       allowWalkIns: event.allowWalkIns,
       registrationOpen: event.registrationOpen,
       registrationLimit: event.registrationLimit === null ? "" : String(event.registrationLimit),
-      groupIds: [...A.map(event.groups, (group) => group.id)],
+      groupIds: pipe(
+        event.groups,
+        A.map((group) => group.id),
+        F.toMutable,
+      ),
     };
   }
 

@@ -26,7 +26,7 @@ import {
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FormError } from "@/components/shared/form-error";
@@ -73,7 +73,11 @@ function defaults(schedule: Schedule | null): ScheduleValues {
       endsOn: schedule.endsOn ? fromDay(schedule.endsOn) : null,
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
-      groupIds: [...A.map(schedule.groups, (group) => group.id)],
+      groupIds: pipe(
+        schedule.groups,
+        A.map((group) => group.id),
+        F.toMutable,
+      ),
     };
   }
 
@@ -221,7 +225,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                       multiple
                       value={A.map(form.watch("weekdays"), String)}
                       onValueChange={(value) =>
-                        form.setValue("weekdays", [...A.map(value, Number)], {
+                        form.setValue("weekdays", pipe(value, A.map(Number), F.toMutable), {
                           shouldValidate: true,
                         })
                       }

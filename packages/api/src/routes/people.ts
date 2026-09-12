@@ -1,7 +1,7 @@
 import { authErrorOf, isRoleName } from "@absqir/auth";
 import { type Database, schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { csvToRecords } from "#src/lib/csv";
@@ -352,7 +352,14 @@ export const peopleRoutes = app
 
     const extra = await decorate(c.var.db, organizationId, rows);
 
-    return c.json([...A.map(rows, (row) => toJson(row, extra))], 200);
+    return c.json(
+      pipe(
+        rows,
+        A.map((row) => toJson(row, extra)),
+        F.toMutable,
+      ),
+      200,
+    );
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "admin")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);

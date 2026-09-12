@@ -1,7 +1,8 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { statusOf } from "#src/lib/event-status";
 import {
   type EventJson,
@@ -17,6 +18,7 @@ import {
 } from "#src/lib/events";
 import { createPass } from "#src/lib/member-pass";
 import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
+import { whenAny } from "#src/lib/query";
 import { buildRoster } from "#src/lib/roster";
 import type { AppEnv } from "#src/types";
 
@@ -81,22 +83,26 @@ function toMyEvent(
     opensBeforeMinutes: row.opensBeforeMinutes,
     status: row.status,
     groups: row.groups,
-    record: record
-      ? {
-          status: record.status,
-          checkedInAt: record.checkedInAt?.toISOString() ?? null,
-          method: record.method,
-          note: record.note ?? null,
-        }
-      : null,
-    leave: leave
-      ? {
-          id: leave.id,
-          status: leave.status,
-          reason: leave.reason,
-          decisionNote: leave.decisionNote ?? null,
-        }
-      : null,
+    record: pipe(
+      O.fromNullable(record),
+      O.map((mine) => ({
+        status: mine.status,
+        checkedInAt: mine.checkedInAt?.toISOString() ?? null,
+        method: mine.method,
+        note: mine.note ?? null,
+      })),
+      O.toNullable,
+    ),
+    leave: pipe(
+      O.fromNullable(leave),
+      O.map((asked) => ({
+        id: asked.id,
+        status: asked.status,
+        reason: asked.reason,
+        decisionNote: asked.decisionNote ?? null,
+      })),
+      O.toNullable,
+    ),
   };
 }
 
@@ -254,27 +260,33 @@ export const myRoutes = app
     });
     const ids = A.map(page.items, (row) => row.id);
 
-    const records = ids.length
-      ? await c.var.db
-          .select()
-          .from(attendanceRecord)
-          .where(and(eq(attendanceRecord.personId, me.id), inArray(attendanceRecord.eventId, ids)))
-      : [];
+    const records = await whenAny(ids, (some) =>
+      c.var.db
+        .select()
+        .from(attendanceRecord)
+        .where(
+          and(eq(attendanceRecord.personId, me.id), inArray(attendanceRecord.eventId, [...some])),
+        ),
+    );
     const byId = new Map(A.map(records, (row) => [row.eventId, row]));
 
-    const leaves = ids.length
-      ? await c.var.db
-          .select()
-          .from(leaveRequest)
-          .where(and(eq(leaveRequest.personId, me.id), inArray(leaveRequest.eventId, ids)))
-      : [];
+    const leaves = await whenAny(ids, (some) =>
+      c.var.db
+        .select()
+        .from(leaveRequest)
+        .where(and(eq(leaveRequest.personId, me.id), inArray(leaveRequest.eventId, [...some]))),
+    );
     const leaveById = new Map(A.map(leaves, (row) => [row.eventId, row]));
 
     const json = await toEventJson(c.var.db, page.items, now);
 
     return c.json(
       {
-        items: [...A.map(json, (row) => toMyEvent(row, byId.get(row.id), leaveById.get(row.id)))],
+        items: pipe(
+          json,
+          A.map((row) => toMyEvent(row, byId.get(row.id), leaveById.get(row.id))),
+          F.toMutable,
+        ),
         nextCursor: page.nextCursor,
       },
       200,
@@ -317,19 +329,21 @@ export const myRoutes = app
     const event = json[0];
     if (!event) throw new Error("toEventJson returned no row");
 
-    const names = expectedIds.length
-      ? await c.var.db
-          .select({ id: person.id, name: person.name })
-          .from(person)
-          .where(inArray(person.id, [...expectedIds]))
-          .orderBy(asc(sql`lower(${person.name})`))
-      : [];
+    const names = await whenAny(expectedIds, (some) =>
+      c.var.db
+        .select({ id: person.id, name: person.name })
+        .from(person)
+        .where(inArray(person.id, [...some]))
+        .orderBy(asc(sql`lower(${person.name})`)),
+    );
 
     const roster = buildRoster({
       expected: names,
       meId: me.id,
       checkedIn: A.filterMap(records, ({ row }) =>
-        row.status === "present" || row.status === "late" ? row.personId : undefined,
+        match(row.status)
+          .with("present", "late", () => row.personId)
+          .otherwise(() => undefined),
       ),
     });
     const mine = A.find(records, ({ row }) => row.personId === me.id)?.row;
@@ -379,8 +393,9 @@ export const myRoutes = app
       .limit(HISTORY_LIMIT);
 
     return c.json(
-      [
-        ...A.map(rows, ({ record, event }) => ({
+      pipe(
+        rows,
+        A.map(({ record, event }) => ({
           eventId: event.id,
           title: event.title,
           startsAt: event.startsAt.toISOString(),
@@ -390,7 +405,8 @@ export const myRoutes = app
           method: record.method,
           note: record.note ?? null,
         })),
-      ],
+        F.toMutable,
+      ),
       200,
     );
   });

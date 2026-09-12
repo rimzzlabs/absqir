@@ -1,6 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import { materializeSchedules } from "#src/lib/schedule";
@@ -278,7 +278,14 @@ export const scheduleRoutes = app
         description: body.description?.trim() || null,
         frequency: body.frequency,
         weekdays:
-          body.frequency === "weekly" ? [...A.sort(A.uniq(body.weekdays), (a, b) => a - b)] : [],
+          body.frequency === "weekly"
+            ? pipe(
+                body.weekdays,
+                A.uniq,
+                A.sort((a, b) => a - b),
+                F.toMutable,
+              )
+            : [],
         startTime: body.startTime,
         durationMinutes: body.durationMinutes,
         lateAfterMinutes: body.lateAfterMinutes ?? 15,
@@ -291,9 +298,13 @@ export const scheduleRoutes = app
       });
 
       if (groupIds.length) {
-        await tx
-          .insert(scheduleGroup)
-          .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
+        await tx.insert(scheduleGroup).values(
+          pipe(
+            groupIds,
+            A.map((groupId) => ({ scheduleId: id, groupId })),
+            F.toMutable,
+          ),
+        );
       }
     });
 
@@ -336,7 +347,15 @@ export const scheduleRoutes = app
             ? { description: body.description?.trim() || null }
             : {}),
           frequency,
-          weekdays: frequency === "weekly" ? [...A.sort(A.uniq(weekdays), (a, b) => a - b)] : [],
+          weekdays:
+            frequency === "weekly"
+              ? pipe(
+                  weekdays,
+                  A.uniq,
+                  A.sort((a, b) => a - b),
+                  F.toMutable,
+                )
+              : [],
           ...(body.startTime !== undefined ? { startTime: body.startTime } : {}),
           ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
           ...(body.lateAfterMinutes !== undefined
@@ -357,9 +376,13 @@ export const scheduleRoutes = app
       if (groupIds) {
         await tx.delete(scheduleGroup).where(eq(scheduleGroup.scheduleId, id));
         if (groupIds.length) {
-          await tx
-            .insert(scheduleGroup)
-            .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
+          await tx.insert(scheduleGroup).values(
+            pipe(
+              groupIds,
+              A.map((groupId) => ({ scheduleId: id, groupId })),
+              F.toMutable,
+            ),
+          );
         }
       }
     });

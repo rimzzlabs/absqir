@@ -1,6 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { settle, toEventJson } from "#src/lib/events";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -133,8 +133,9 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
 
   return c.json(
     {
-      events: [
-        ...A.map(events, (row) => ({
+      events: pipe(
+        events,
+        A.map((row) => ({
           id: row.id,
           title: row.title,
           startsAt: row.startsAt,
@@ -145,8 +146,13 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
           groups: row.groups,
           counts: row.counts,
         })),
-      ],
-      projected: [...A.sort(projected, (a, b) => a.startsAt.localeCompare(b.startsAt))],
+        F.toMutable,
+      ),
+      projected: pipe(
+        projected,
+        A.sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+        F.toMutable,
+      ),
     },
     200,
   );

@@ -1,6 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, eq, inArray } from "drizzle-orm";
 import { csvCell } from "#src/lib/csv";
 import { acceptsCheckIns, statusForCheckIn, statusOf } from "#src/lib/event-status";
@@ -457,9 +457,13 @@ export const eventRoutes = app
       });
 
       if (groupIds.length) {
-        await tx
-          .insert(eventGroup)
-          .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))]);
+        await tx.insert(eventGroup).values(
+          pipe(
+            groupIds,
+            A.map((groupId) => ({ eventId: id, groupId })),
+            F.toMutable,
+          ),
+        );
       }
     });
 
@@ -532,9 +536,13 @@ export const eventRoutes = app
       if (groupIds) {
         await tx.delete(eventGroup).where(eq(eventGroup.eventId, id));
         if (groupIds.length) {
-          await tx
-            .insert(eventGroup)
-            .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))]);
+          await tx.insert(eventGroup).values(
+            pipe(
+              groupIds,
+              A.map((groupId) => ({ eventId: id, groupId })),
+              F.toMutable,
+            ),
+          );
         }
       }
     });

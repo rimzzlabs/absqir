@@ -1,6 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, desc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
@@ -264,7 +264,10 @@ export const leaveRoutes = base
 
     const page = pageOf(list, limit, (row) => ({ at: row.at, id: row.request.id }));
 
-    return c.json({ items: [...A.map(page.items, toJson)], nextCursor: page.nextCursor }, 200);
+    return c.json(
+      { items: pipe(page.items, A.map(toJson), F.toMutable), nextCursor: page.nextCursor },
+      200,
+    );
   })
   .openapi(askRoute, async (c) => {
     const organizationId = organizationIdOf(c);
@@ -352,7 +355,7 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.organizationId, organizationId), byScope[scope]))
       .orderBy(desc(leaveRequest.createdAt));
 
-    return c.json([...A.map(list, toJson)], 200);
+    return c.json(pipe(list, A.map(toJson), F.toMutable), 200);
   })
   .openapi(decideRoute, async (c) => {
     if (roleBelow(c, "organizer")) {

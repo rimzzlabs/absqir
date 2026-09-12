@@ -7,7 +7,7 @@ import {
 import { schema } from "@absqir/db";
 import { JOIN_POLICIES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, O, R } from "@mobily/ts-belt";
+import { A, F, O, pipe, R } from "@mobily/ts-belt";
 import { and, asc, eq } from "drizzle-orm";
 import { txtRecords } from "#src/lib/dns";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -196,7 +196,10 @@ export const domainRoutes = app
     ]);
 
     return c.json(
-      { items: [...A.map(rows, toJson)], joinPolicy: orgs[0]?.joinPolicy ?? "request" },
+      {
+        items: pipe(rows, A.map(toJson), F.toMutable),
+        joinPolicy: orgs[0]?.joinPolicy ?? "request",
+      },
       200,
     );
   })
