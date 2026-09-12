@@ -46,16 +46,16 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
 
   return (
     <AlertDialog open={props.open} onOpenChange={close}>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader>
+      <AlertDialogContent className="gap-6 p-5 sm:max-w-md">
+        <AlertDialogHeader className="gap-2">
           <AlertDialogTitle>{props.title}</AlertDialogTitle>
           <AlertDialogDescription>{props.description}</AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           {props.children}
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor={fieldId}>
               Type <span className="text-foreground font-medium">{props.phrase}</span> to confirm
             </Label>
@@ -73,7 +73,8 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
           <FormError error={props.error} />
         </div>
 
-        <AlertDialogFooter>
+        {/* The footer bleeds to the edge, so it tracks the padding above. */}
+        <AlertDialogFooter className="-mx-5 -mb-5 p-5">
           <AlertDialogCancel>Keep it</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"

@@ -180,7 +180,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
         </div>
       </SettingsSection>
 
-      <AccountDangerZone email={props.email} role={props.role} organization={props.organization} />
+      <AccountDangerZone role={props.role} organization={props.organization} />
     </div>
   );
 }

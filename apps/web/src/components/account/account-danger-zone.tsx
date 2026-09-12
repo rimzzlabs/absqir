@@ -10,8 +10,10 @@ import { useSoleOwner } from "@/lib/use-sole-owner";
 import { useDeleteAccount } from "@/mutations/use-delete-account";
 import { useCredentials } from "@/queries/use-credentials";
 
+/** Short enough to type once, and impossible to press by accident. */
+const CONFIRM_PHRASE = "Delete my account";
+
 export interface AccountDangerZoneProps {
-  email: string;
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
   organization: { id: string; name: string; slug: string } | null;
@@ -59,18 +61,18 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
         title="Delete your account?"
         description={
           hasPassword
-            ? "Give your password, then copy your address below. You cannot sign in again."
-            : "Copy your address below. You cannot sign in again."
+            ? "Give your password, then type the words below. You cannot sign in again."
+            : "Type the words below. You cannot sign in again."
         }
-        phrase={props.email}
-        phraseLabel="email address"
+        phrase={CONFIRM_PHRASE}
+        phraseLabel="phrase"
         confirmLabel="Delete forever"
         pending={remove.isPending}
         error={remove.error}
         onConfirm={() => remove.mutate(hasPassword ? { password } : {})}
       >
         {hasPassword ? (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor={passwordId}>Password</Label>
             <Input
               id={passwordId}
