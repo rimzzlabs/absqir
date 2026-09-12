@@ -1,7 +1,15 @@
 import { formatDate } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@absqir/ui/sheet";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@absqir/ui/sheet";
 import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { type CalendarEntry, dayKey } from "@/components/calendar/calendar-entries";
@@ -31,7 +39,7 @@ export function DaySheet(props: DaySheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-3 px-4">
+        <SheetBody>
           {A.map(entries, (entry) =>
             entry.kind === "event" ? (
               <a
@@ -78,7 +86,9 @@ export function DaySheet(props: DaySheetProps) {
               </div>
             ),
           )}
+        </SheetBody>
 
+        <SheetFooter>
           <Button
             variant="outline"
             className="w-full"
@@ -87,7 +97,7 @@ export function DaySheet(props: DaySheetProps) {
             <PlusIcon />
             New event on this day
           </Button>
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

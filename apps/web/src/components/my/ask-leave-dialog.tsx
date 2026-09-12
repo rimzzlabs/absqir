@@ -1,14 +1,15 @@
 import { formatRange } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@absqir/ui/dialog";
 import { Form, FormField } from "@absqir/ui/form";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@absqir/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -81,91 +82,97 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
   };
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ask for leave</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Ask for leave</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             An organizer decides. If approved, the event shows you as excused.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            {preset ? (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Event</p>
-                <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
-                  <p className="text-sm font-medium">{preset.title}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatRange(new Date(preset.startsAt), new Date(preset.endsAt))}
-                  </p>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+            noValidate
+          >
+            <ResponsiveDialogBody>
+              {preset ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Event</p>
+                  <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
+                    <p className="text-sm font-medium">{preset.title}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatRange(new Date(preset.startsAt), new Date(preset.endsAt))}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <FormField
-                control={form.control}
-                name="eventId"
-                label="Event"
-                render={(field) => (
-                  <Select
-                    items={A.map(options, (option) => ({
-                      value: option.value,
-                      label: option.label,
-                    }))}
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value ?? "")}
-                  >
-                    <SelectTrigger id="leave-event" className="w-full">
-                      <SelectValue placeholder="Pick an event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Upcoming events</SelectLabel>
-                        {options.length === 0 ? (
-                          <p className="text-muted-foreground px-1.5 py-1 text-sm">
-                            Nothing ahead of you to ask about.
-                          </p>
-                        ) : (
-                          A.map(options, (option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              <span className="flex flex-col">
-                                <span>{option.label}</span>
-                                <SelectItemDescription>{option.hint}</SelectItemDescription>
-                              </span>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="reason"
-              label="Reason"
-              render={(field) => (
-                <Textarea
-                  {...field}
-                  id="leave-reason"
-                  rows={3}
-                  placeholder="Doctor's appointment"
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="eventId"
+                  label="Event"
+                  render={(field) => (
+                    <Select
+                      items={A.map(options, (option) => ({
+                        value: option.value,
+                        label: option.label,
+                      }))}
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value ?? "")}
+                    >
+                      <SelectTrigger id="leave-event" className="w-full">
+                        <SelectValue placeholder="Pick an event" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Upcoming events</SelectLabel>
+                          {options.length === 0 ? (
+                            <p className="text-muted-foreground px-1.5 py-1 text-sm">
+                              Nothing ahead of you to ask about.
+                            </p>
+                          ) : (
+                            A.map(options, (option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <span className="flex flex-col">
+                                  <span>{option.label}</span>
+                                  <SelectItemDescription>{option.hint}</SelectItemDescription>
+                                </span>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               )}
-            />
-            <FormError error={ask.error} />
-            <DialogFooter>
+              <FormField
+                control={form.control}
+                name="reason"
+                label="Reason"
+                render={(field) => (
+                  <Textarea
+                    {...field}
+                    id="leave-reason"
+                    rows={3}
+                    placeholder="Doctor's appointment"
+                  />
+                )}
+              />
+              <FormError error={ask.error} />
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={ask.isPending}>
                 {ask.isPending ? "Sending…" : "Send"}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

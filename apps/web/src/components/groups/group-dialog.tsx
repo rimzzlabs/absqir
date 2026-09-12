@@ -1,14 +1,15 @@
 import { Button } from "@absqir/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@absqir/ui/dialog";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@absqir/ui/responsive-dialog";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
@@ -61,51 +62,56 @@ export function GroupDialog(props: GroupDialogProps) {
   };
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit group" : "New group"}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{editing ? "Edit group" : "New group"}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {editing ? "Rename it or change its description." : "Give it a name. Add people after."}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField
-              control={form.control}
-              name="name"
-              label="Name"
-              render={(field) => (
-                <Input
-                  {...field}
-                  id="group-name"
-                  placeholder="Engineering, Batch 12, Volunteers"
-                  autoFocus
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              label="Description"
-              description="Optional."
-              render={(field) => <Textarea {...field} id="group-description" rows={3} />}
-            />
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+            noValidate
+          >
+            <ResponsiveDialogBody>
+              <FormField
+                control={form.control}
+                name="name"
+                label="Name"
+                render={(field) => (
+                  <Input
+                    {...field}
+                    id="group-name"
+                    placeholder="Engineering, Batch 12, Volunteers"
+                    autoFocus
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                label="Description"
+                description="Optional."
+                render={(field) => <Textarea {...field} id="group-description" rows={3} />}
+              />
 
-            <FormError error={create.error ?? update.error} />
-
-            <DialogFooter>
+              <FormError error={create.error ?? update.error} />
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
                 {pending ? "Saving…" : saveLabel}
               </Button>
-            </DialogFooter>
+            </ResponsiveDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
