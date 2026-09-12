@@ -41,6 +41,8 @@ export const organizationMutationKeys = {
   acceptInvitation: () => [...organizationMutationKeys.all, "accept-invitation"] as const,
   updateMemberRole: () => [...organizationMutationKeys.all, "update-member-role"] as const,
   removeMember: () => [...organizationMutationKeys.all, "remove-member"] as const,
+  leave: () => [...organizationMutationKeys.all, "leave"] as const,
+  delete: () => [...organizationMutationKeys.all, "delete"] as const,
 };
 
 export const domainKeys = {
@@ -219,6 +221,7 @@ export const accountMutationKeys = {
   setPassword: () => [...accountMutationKeys.all, "set-password"] as const,
   linkProvider: () => [...accountMutationKeys.all, "link-provider"] as const,
   unlinkProvider: () => [...accountMutationKeys.all, "unlink-provider"] as const,
+  deleteAccount: () => [...accountMutationKeys.all, "delete-account"] as const,
 };
 
 /** Mutation keys, so a pending sign-in can be observed from anywhere. */

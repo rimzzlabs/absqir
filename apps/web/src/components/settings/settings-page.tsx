@@ -21,7 +21,7 @@ import { DomainsPanel } from "@/components/settings/domains-panel";
 import { InvitationsPanel } from "@/components/settings/invitations-panel";
 import { JoinRequestsPanel } from "@/components/settings/join-requests-panel";
 import { MembersTable } from "@/components/settings/members-table";
-import { OrganizationSettings } from "@/components/settings/organization-settings";
+import { OrganizationPanel } from "@/components/settings/organization-panel";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
 import { SettingsNav, type SettingsNavGroup } from "@/components/settings/settings-nav";
 import { SettingsSection } from "@/components/settings/settings-section";
@@ -147,16 +147,7 @@ function SettingsBody(props: SettingsPageProps) {
       </SettingsSection>
     ),
     organization:
-      role && organization ? (
-        <SettingsSection
-          title="Organization"
-          description="The name people see, and the slug that appears in links."
-        >
-          <div className="pt-6">
-            <OrganizationSettings role={role} organization={organization} />
-          </div>
-        </SettingsSection>
-      ) : null,
+      role && organization ? <OrganizationPanel role={role} organization={organization} /> : null,
     profile: (
       <ProfilePanel
         name={props.user.name}
@@ -165,6 +156,7 @@ function SettingsBody(props: SettingsPageProps) {
         createdAt={props.user.createdAt}
         role={role}
         timezone={props.user.timezone}
+        organization={organization}
       />
     ),
     preferences: <PreferencesPanel />,

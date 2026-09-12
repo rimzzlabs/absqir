@@ -3,10 +3,16 @@ import { A } from "@mobily/ts-belt";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
+export interface UseMembersOptions {
+  /** Off until the caller needs the list, such as an owner-only check. */
+  enabled?: boolean;
+}
+
 /** The accounts in the active organization, with their roles. */
-export function useMembers() {
+export function useMembers(options?: UseMembersOptions) {
   return useQuery({
     queryKey: organizationKeys.members(),
+    enabled: options?.enabled ?? true,
     queryFn: async (ctx: QueryFunctionContext) => {
       const { data, error } = await authClient.organization.listMembers({
         query: { limit: 500, sortBy: "createdAt", sortDirection: "asc" },
