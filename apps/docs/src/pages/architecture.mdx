@@ -10,7 +10,8 @@ absqir is one codebase that runs on two targets. Astro renders the pages,
 Hono serves the API under `/api`, and both share one origin — so there is
 no CORS and the session cookie stays `SameSite=Lax`. The Docker image runs
 it on Node.js against your Postgres. The same code deploys to Cloudflare
-Workers, which is how the hosted version will run.
+Workers against a hosted Postgres, which
+[Deploy to Cloudflare](/cloudflare) walks through.
 
 ```mermaid
 flowchart LR
@@ -22,7 +23,7 @@ flowchart LR
   end
   Platform["Platform access<br/>database, rate limit, env"]
   Node["Node and Postgres<br/>the Docker image you run"]
-  Workers["Cloudflare Workers<br/>how the hosted version will run"]
+  Workers["Cloudflare Workers<br/>and a hosted Postgres"]
 
   Browser --> origin
   origin --> Platform
