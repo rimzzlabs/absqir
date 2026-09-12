@@ -122,7 +122,7 @@ export async function notifyDueReminders(
           type: "event-reminder",
           title,
           body: whenLine(event, zones.get(userId) ?? timezone),
-          href: "/my/events",
+          href: `/events/${event.id}`,
           dedupeKey: `event-reminder:${event.id}:${kind}`,
         });
       }

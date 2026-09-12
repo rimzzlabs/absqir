@@ -394,12 +394,15 @@ const FORBIDDEN_MESSAGE = "This needs the organizer role or higher";
 
 const app = new OpenAPIHono<AppEnv>();
 
-// Reads and self check-in are for every member. Writes check the role inline.
+// Self check-in is for every member. Every other read and write checks the
+// role inline. A member reads their own events through `/my/events`.
 app.use("/events", organizationGuard());
 app.use("/events/*", organizationGuard());
 
 export const eventRoutes = app
   .openapi(listRoute, async (c) => {
+    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+
     const organizationId = organizationIdOf(c);
     const query = c.req.valid("query");
     const now = new Date();
@@ -467,6 +470,8 @@ export const eventRoutes = app
     return c.json(json, 201);
   })
   .openapi(detailRoute, async (c) => {
+    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const now = new Date();

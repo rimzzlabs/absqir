@@ -1,14 +1,28 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A } from "@mobily/ts-belt";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { statusOf } from "#src/lib/event-status";
-import { findEvent, isPast, listEvents, personForUser, settle, toEventJson } from "#src/lib/events";
+import {
+  type EventJson,
+  expectedPersonIds,
+  findEvent,
+  isExpected,
+  isPast,
+  listEvents,
+  personForUser,
+  type RecordRow,
+  settle,
+  toEventJson,
+} from "#src/lib/events";
 import { createPass } from "#src/lib/member-pass";
 import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
+import { buildRoster } from "#src/lib/roster";
 import type { AppEnv } from "#src/types";
 
-const { event: eventTable, attendanceRecord, leaveRequest } = schema;
+const { event: eventTable, attendanceRecord, leaveRequest, person } = schema;
+
+type LeaveRow = typeof leaveRequest.$inferSelect;
 
 const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
@@ -44,6 +58,57 @@ const myEventSchema = z.object({
       decisionNote: z.string().nullable(),
     })
     .nullable(),
+});
+
+type MyEventJson = z.infer<typeof myEventSchema>;
+
+/**
+ * The member's view of one event. Built field by field on purpose: the
+ * organizer's `EventJson` carries head counts a member must not read.
+ */
+function toMyEvent(
+  row: EventJson,
+  record: RecordRow | undefined,
+  leave: LeaveRow | undefined,
+): MyEventJson {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    startsAt: row.startsAt,
+    endsAt: row.endsAt,
+    lateAfterMinutes: row.lateAfterMinutes,
+    opensBeforeMinutes: row.opensBeforeMinutes,
+    status: row.status,
+    groups: row.groups,
+    record: record
+      ? {
+          status: record.status,
+          checkedInAt: record.checkedInAt?.toISOString() ?? null,
+          method: record.method,
+          note: record.note ?? null,
+        }
+      : null,
+    leave: leave
+      ? {
+          id: leave.id,
+          status: leave.status,
+          reason: leave.reason,
+          decisionNote: leave.decisionNote ?? null,
+        }
+      : null,
+  };
+}
+
+const attendeeSchema = z.object({ id: z.string(), name: z.string() });
+
+const myEventDetailSchema = myEventSchema.extend({
+  /** Everyone expected, by name. Never the email and never the identifier. */
+  attendees: z.array(attendeeSchema),
+  /** Everyone expected, even the names past the cap. */
+  expectedTotal: z.number(),
+  /** How many of them checked in. No per-person status. */
+  checkedInCount: z.number(),
 });
 
 const historySchema = z.object({
@@ -95,6 +160,28 @@ const eventsRoute = createRoute({
     },
     401: unauthorized,
     403: forbidden,
+  },
+});
+
+const detailRoute = createRoute({
+  method: "get",
+  path: "/my/events/{id}",
+  tags: ["me"],
+  summary: "One event that expects me, with the names of everyone else expected",
+  description:
+    "Names and one head count. No email, no identifier, and no per-person status. The answer is 404 when the event does not expect me, the same as the pass.",
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    200: {
+      description: "The event, my record, my leave, and who else is on the list",
+      content: { "application/json": { schema: myEventDetailSchema } },
+    },
+    401: unauthorized,
+    403: forbidden,
+    404: {
+      description: "No such event, or I am not expected",
+      content: { "application/json": { schema: errorSchema } },
+    },
   },
 });
 
@@ -187,44 +274,67 @@ export const myRoutes = app
 
     return c.json(
       {
-        items: [
-          ...A.map(json, (row) => {
-            const record = byId.get(row.id);
-            const leave = leaveById.get(row.id);
-
-            return {
-              id: row.id,
-              title: row.title,
-              description: row.description,
-              startsAt: row.startsAt,
-              endsAt: row.endsAt,
-              lateAfterMinutes: row.lateAfterMinutes,
-              opensBeforeMinutes: row.opensBeforeMinutes,
-              status: row.status,
-              groups: row.groups,
-              record: record
-                ? {
-                    status: record.status,
-                    checkedInAt: record.checkedInAt?.toISOString() ?? null,
-                    method: record.method,
-                    note: record.note ?? null,
-                  }
-                : null,
-              leave: leave
-                ? {
-                    id: leave.id,
-                    status: leave.status,
-                    reason: leave.reason,
-                    decisionNote: leave.decisionNote ?? null,
-                  }
-                : null,
-            };
-          }),
-        ],
+        items: [...A.map(json, (row) => toMyEvent(row, byId.get(row.id), leaveById.get(row.id)))],
         nextCursor: page.nextCursor,
       },
       200,
     );
+  })
+  .openapi(detailRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    const { id } = c.req.valid("param");
+    if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+    const me = await personForUser(c.var.db, organizationId, user.id);
+    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+
+    const now = new Date();
+    await settle(c.var.db, organizationId, now);
+
+    const found = await findEvent(c.var.db, organizationId, id);
+    if (!found) return c.json({ error: "Not found" }, 404);
+
+    // An event that never expected this reader tells them nothing, not even
+    // that it exists. The same rule as the pass.
+    const expected = await isExpected(c.var.db, id, me.id);
+    if (!expected) return c.json({ error: "Not found" }, 404);
+
+    const [json, expectedIds, records, leaves] = await Promise.all([
+      toEventJson(c.var.db, [found], now),
+      expectedPersonIds(c.var.db, id),
+      c.var.db
+        .select({ row: attendanceRecord })
+        .from(attendanceRecord)
+        .where(eq(attendanceRecord.eventId, id)),
+      c.var.db
+        .select()
+        .from(leaveRequest)
+        .where(and(eq(leaveRequest.eventId, id), eq(leaveRequest.personId, me.id)))
+        .limit(1),
+    ]);
+
+    const event = json[0];
+    if (!event) throw new Error("toEventJson returned no row");
+
+    const names = expectedIds.length
+      ? await c.var.db
+          .select({ id: person.id, name: person.name })
+          .from(person)
+          .where(inArray(person.id, [...expectedIds]))
+          .orderBy(asc(sql`lower(${person.name})`))
+      : [];
+
+    const roster = buildRoster({
+      expected: names,
+      meId: me.id,
+      checkedIn: A.filterMap(records, ({ row }) =>
+        row.status === "present" || row.status === "late" ? row.personId : undefined,
+      ),
+    });
+    const mine = A.find(records, ({ row }) => row.personId === me.id)?.row;
+
+    return c.json({ ...toMyEvent(event, mine, leaves[0]), ...roster }, 200);
   })
   .openapi(passRoute, async (c) => {
     const organizationId = organizationIdOf(c);

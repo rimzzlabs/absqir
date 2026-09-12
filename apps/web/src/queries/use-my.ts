@@ -41,6 +41,28 @@ export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
   });
 }
 
+/**
+ * One event that expects me, with the names of everyone else expected. The
+ * answer is 404 when the event does not expect me, so a member cannot read a
+ * roster by guessing an id.
+ */
+export function useMyEvent(eventId: string) {
+  return useQuery({
+    queryKey: myKeys.event(eventId),
+    queryFn: async (ctx: QueryFunctionContext) => {
+      const response = await api.my.events[":id"].$get(
+        { param: { id: eventId } },
+        { init: { signal: ctx.signal } },
+      );
+
+      if (!response.ok) throw await apiError(response, "Could not load this event.");
+
+      return response.json();
+    },
+    refetchInterval: 30_000,
+  });
+}
+
 export function useMyPass(eventId: string | null) {
   return useQuery({
     queryKey: myKeys.pass(eventId ?? ""),
@@ -76,4 +98,5 @@ export function useMyHistory() {
 export type MyEvent = NonNullable<
   ReturnType<typeof useMyEvents>["data"]
 >["pages"][number]["items"][number];
+export type MyEventDetail = NonNullable<ReturnType<typeof useMyEvent>["data"]>;
 export type HistoryRow = NonNullable<ReturnType<typeof useMyHistory>["data"]>[number];

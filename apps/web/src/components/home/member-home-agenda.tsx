@@ -12,16 +12,13 @@ import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
-import { MyEventDetails, STRETCHED_TRIGGER } from "@/components/my/my-event-details";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { STRETCHED_LINK } from "@/components/shared/stretched-link";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface MemberHomeAgendaProps {
   events: readonly MyEvent[];
   pending: boolean;
-  onPass: (id: string) => void;
-  onAskLeave: (event: MyEvent) => void;
 }
 
 /** Enough to fill the column without a scroll. */
@@ -48,40 +45,18 @@ function byDay(events: readonly MyEvent[]): Day[] {
   return [...days.values()];
 }
 
-/** One line of the agenda. A click opens the event's details. */
-function AgendaRow(props: {
-  event: MyEvent;
-  onPass: (id: string) => void;
-  onAskLeave: (event: MyEvent) => void;
-}) {
+/** One line of the agenda. A click opens the event. */
+function AgendaRow(props: { event: MyEvent }) {
   const { event } = props;
-  const row = useRef<HTMLLIElement>(null);
-  const [open, setOpen] = useState(false);
 
   return (
-    <li
-      ref={row}
-      className={cn(
-        "relative -mx-2 flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
-        open ? "bg-accent/60" : "hover:bg-accent/60",
-      )}
-    >
+    <li className="relative -mx-2 flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-accent/60">
       <span className="text-muted-foreground w-11 shrink-0 text-xs tabular-nums">
         {formatDate(new Date(event.startsAt), "time")}
       </span>
-      <MyEventDetails
-        event={event}
-        open={open}
-        onOpenChange={setOpen}
-        anchor={row}
-        onPass={props.onPass}
-        onAskLeave={props.onAskLeave}
-        trigger={
-          <button type="button" className={cn(STRETCHED_TRIGGER, "flex-1 truncate font-medium")}>
-            {event.title}
-          </button>
-        }
-      />
+      <a href={`/events/${event.id}`} className={cn(STRETCHED_LINK, "flex-1 truncate font-medium")}>
+        {event.title}
+      </a>
       <EventStatusBadge status={event.status} />
     </li>
   );
@@ -136,12 +111,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
                 </div>
                 <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {A.map(day.rows, (event) => (
-                    <AgendaRow
-                      key={event.id}
-                      event={event}
-                      onPass={props.onPass}
-                      onAskLeave={props.onAskLeave}
-                    />
+                    <AgendaRow key={event.id} event={event} />
                   ))}
                 </ul>
               </li>

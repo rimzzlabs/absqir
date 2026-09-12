@@ -7,7 +7,6 @@ import { QrCodeIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
 import { MyEventCard } from "@/components/my/my-event-card";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
@@ -26,7 +25,6 @@ function EventGrid(props: {
   rows: readonly MyEvent[];
   scope: MyEventScope;
   onPass: (id: string) => void;
-  onAskLeave: (event: MyEvent) => void;
 }) {
   if (props.rows.length === 0) {
     return (
@@ -51,12 +49,7 @@ function EventGrid(props: {
   return (
     <ul className={GRID}>
       {A.map(props.rows, (event) => (
-        <MyEventCard
-          key={event.id}
-          event={event}
-          onPass={props.onPass}
-          onAskLeave={props.onAskLeave}
-        />
+        <MyEventCard key={event.id} event={event} onPass={props.onPass} />
       ))}
     </ul>
   );
@@ -67,7 +60,6 @@ function MyEventsBody() {
   const events = useMyEvents({ scope });
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
-  const [leaveFor, setLeaveFor] = useState<MyEvent | null>(null);
 
   return (
     <>
@@ -94,7 +86,7 @@ function MyEventsBody() {
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
-            <EventGrid rows={rows} scope={scope} onPass={setPassFor} onAskLeave={setLeaveFor} />
+            <EventGrid rows={rows} scope={scope} onPass={setPassFor} />
 
             {events.hasNextPage ? (
               <div className="flex justify-center">
@@ -112,11 +104,6 @@ function MyEventsBody() {
         .otherwise(() => null)}
 
       <PassDialog eventId={passFor} onClose={() => setPassFor(null)} />
-      <AskLeaveDialog
-        open={leaveFor !== null}
-        onOpenChange={(open) => !open && setLeaveFor(null)}
-        event={leaveFor}
-      />
     </>
   );
 }
