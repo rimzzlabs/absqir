@@ -6,7 +6,7 @@ import type { AppEnv } from "#src/types";
 export function requestContext(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const origin = new URL(c.req.url).origin;
-    const { db, auth, mailer, close } = createRequestContext(c.env, origin);
+    const { db, auth, mailer, close } = createRequestContext(c.env, origin, c.req.header("origin"));
 
     c.set("db", db);
     c.set("auth", auth);

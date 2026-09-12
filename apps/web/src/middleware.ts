@@ -60,7 +60,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const runtime = getRuntime(context.locals);
-  const { auth, db, close } = createRequestContext(runtime.bindings, context.url.origin);
+  const { auth, db, close } = createRequestContext(
+    runtime.bindings,
+    context.url.origin,
+    context.request.headers.get("origin"),
+  );
 
   context.locals.user = null;
   context.locals.session = null;
