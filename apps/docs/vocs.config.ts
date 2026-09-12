@@ -28,7 +28,7 @@ export default defineConfig({
       text: "Using absqir",
       items: [
         { text: "Accounts and organizations", link: "/accounts" },
-        { text: "Events and check-in", link: "/sessions" },
+        { text: "Events and check-in", link: "/events" },
         { text: "Reports and calendar", link: "/reports" },
         { text: "Notifications and reminders", link: "/notifications" },
       ],

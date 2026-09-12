@@ -3,25 +3,22 @@ import { schema } from "@absqir/db";
 import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
 
-const { attendanceSession, sessionGroup, sessionRegistration, groupMember } = schema;
+const { event: eventTable, eventGroup, eventRegistration, groupMember } = schema;
 
-export type SessionRow = typeof attendanceSession.$inferSelect;
+export type EventRow = typeof eventTable.$inferSelect;
 
-/** Everyone in the session's groups, plus everyone who registered, once. */
-export async function expectedPersonIds(
-  db: Database,
-  sessionId: string,
-): Promise<readonly string[]> {
+/** Everyone in the event's groups, plus everyone who registered, once. */
+export async function expectedPersonIds(db: Database, eventId: string): Promise<readonly string[]> {
   const [fromGroups, registered] = await Promise.all([
     db
       .selectDistinct({ personId: groupMember.personId })
-      .from(sessionGroup)
-      .innerJoin(groupMember, eq(groupMember.groupId, sessionGroup.groupId))
-      .where(eq(sessionGroup.sessionId, sessionId)),
+      .from(eventGroup)
+      .innerJoin(groupMember, eq(groupMember.groupId, eventGroup.groupId))
+      .where(eq(eventGroup.eventId, eventId)),
     db
-      .select({ personId: sessionRegistration.personId })
-      .from(sessionRegistration)
-      .where(eq(sessionRegistration.sessionId, sessionId)),
+      .select({ personId: eventRegistration.personId })
+      .from(eventRegistration)
+      .where(eq(eventRegistration.eventId, eventId)),
   ]);
 
   return [...new Set(A.map([...fromGroups, ...registered], (row) => row.personId))];
@@ -29,12 +26,12 @@ export async function expectedPersonIds(
 
 export async function registeredPersonIds(
   db: Database,
-  sessionId: string,
+  eventId: string,
 ): Promise<readonly string[]> {
   const rows = await db
-    .select({ personId: sessionRegistration.personId })
-    .from(sessionRegistration)
-    .where(eq(sessionRegistration.sessionId, sessionId));
+    .select({ personId: eventRegistration.personId })
+    .from(eventRegistration)
+    .where(eq(eventRegistration.eventId, eventId));
 
   return A.map(rows, (row) => row.personId);
 }

@@ -19,7 +19,7 @@ import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay
 import { PageHeader } from "@/components/shared/page-header";
 import { useCamera } from "@/components/shared/use-camera";
 import { useCheckIn } from "@/mutations/use-check-in";
-import { useMySessions } from "@/queries/use-my";
+import { useMyEvents } from "@/queries/use-my";
 
 /** The same link seen again within this window is one scan, not two. */
 const REPEAT_MS = 4000;
@@ -72,7 +72,7 @@ function Scanner() {
         {/* The region lives through every state, so a reader hears the outcome. */}
         <p aria-live="polite" className="sr-only">
           {checkIn.isSuccess
-            ? `${checkIn.data.personName}, you are in for ${checkIn.data.sessionTitle}.`
+            ? `${checkIn.data.personName}, you are in for ${checkIn.data.eventTitle}.`
             : progressNote}
         </p>
 
@@ -132,8 +132,8 @@ function Scanner() {
 }
 
 function MemberCheckInBody() {
-  const sessions = useMySessions();
-  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
+  const events = useMyEvents();
+  const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
 
   return (
@@ -151,9 +151,9 @@ function MemberCheckInBody() {
         <div className="@container flex flex-col gap-4">
           <div className="grid gap-4 @2xl:grid-cols-2">
             <CheckInPass
-              sessions={rows}
-              pending={sessions.isPending}
-              error={sessions.error}
+              events={rows}
+              pending={events.isPending}
+              error={events.error}
               onPass={setPassFor}
             />
 
@@ -164,7 +164,7 @@ function MemberCheckInBody() {
         </div>
       </div>
 
-      <PassDialog sessionId={passFor} onClose={() => setPassFor(null)} />
+      <PassDialog eventId={passFor} onClose={() => setPassFor(null)} />
     </>
   );
 }

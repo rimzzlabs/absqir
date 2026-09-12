@@ -4,9 +4,9 @@ import type { Mailer } from "@absqir/transactional";
 import type { ApiBindings } from "#src/bindings";
 import { createMailerFor } from "#src/context";
 import { parseEnv } from "#src/env";
+import { settle } from "#src/lib/events";
 import { emailNotifications } from "#src/lib/notifications";
 import { notifyDueReminders } from "#src/lib/notify";
-import { settle } from "#src/lib/sessions";
 
 const { organization } = schema;
 
@@ -23,7 +23,7 @@ export interface TickResult {
 }
 
 /**
- * The heartbeat: spawn the sessions the schedules owe, close the ones the
+ * The heartbeat: spawn the events the schedules owe, close the ones the
  * clock ended, and send the reminders that fell due, for every organization.
  * Reading a page settles one organization already, so this only makes the
  * work eager, and the reminders arrive without anyone looking.

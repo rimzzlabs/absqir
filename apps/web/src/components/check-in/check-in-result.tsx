@@ -25,7 +25,7 @@ export function CheckInResult(props: CheckInResultProps) {
         <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
           {result.already ? `Already in, ${result.personName}` : `You are in, ${result.personName}`}
         </h2>
-        <p className="text-muted-foreground mt-1 text-sm">{result.sessionTitle}</p>
+        <p className="text-muted-foreground mt-1 text-sm">{result.eventTitle}</p>
       </div>
 
       <div className="flex items-center gap-2 text-sm">

@@ -14,5 +14,5 @@ const token = Astro.url.searchParams.get("t");
 ---
 
 <AuthLayout title="Check in — absqir">
-  <CheckInPage client:load sessionId={id} token={token} />
+  <CheckInPage client:load eventId={id} token={token} />
 </AuthLayout>

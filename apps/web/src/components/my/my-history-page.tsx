@@ -84,7 +84,7 @@ function HistoryBody() {
                   </TableHeader>
                   <TableBody>
                     {A.map(rows, (row) => (
-                      <TableRow key={row.sessionId}>
+                      <TableRow key={row.eventId}>
                         <TableCell className="font-medium">{row.title}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {formatRange(new Date(row.startsAt), new Date(row.endsAt))}

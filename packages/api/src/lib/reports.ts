@@ -3,12 +3,12 @@ import { schema } from "@absqir/db";
 import { A } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 
-const { attendanceSession, attendanceRecord, person, group, groupMember, sessionGroup } = schema;
+const { event: eventTable, attendanceRecord, person, group, groupMember, eventGroup } = schema;
 
 export interface ReportRange {
   from: Date;
   to: Date;
-  /** Only sessions that expect this group. Null means every session. */
+  /** Only events that expect this group. Null means every event. */
   groupId: string | null;
 }
 
@@ -53,25 +53,25 @@ const statusCountColumns = {
   ),
 };
 
-/** Sessions of the organization that start inside the range, oldest first. */
-async function sessionIdsInRange(
+/** Events of the organization that start inside the range, oldest first. */
+async function eventIdsInRange(
   db: Database,
   organizationId: string,
   range: ReportRange,
 ): Promise<readonly string[]> {
   const where = and(
-    eq(attendanceSession.organizationId, organizationId),
-    gte(attendanceSession.startsAt, range.from),
-    lte(attendanceSession.startsAt, range.to),
+    eq(eventTable.organizationId, organizationId),
+    gte(eventTable.startsAt, range.from),
+    lte(eventTable.startsAt, range.to),
   );
 
   const rows = range.groupId
     ? await db
-        .selectDistinct({ id: attendanceSession.id })
-        .from(attendanceSession)
-        .innerJoin(sessionGroup, eq(sessionGroup.sessionId, attendanceSession.id))
-        .where(and(where, eq(sessionGroup.groupId, range.groupId)))
-    : await db.select({ id: attendanceSession.id }).from(attendanceSession).where(where);
+        .selectDistinct({ id: eventTable.id })
+        .from(eventTable)
+        .innerJoin(eventGroup, eq(eventGroup.eventId, eventTable.id))
+        .where(and(where, eq(eventGroup.groupId, range.groupId)))
+    : await db.select({ id: eventTable.id }).from(eventTable).where(where);
 
   return A.map(rows, (row) => row.id);
 }
@@ -79,9 +79,9 @@ async function sessionIdsInRange(
 export interface ReportSummary {
   from: string;
   to: string;
-  sessions: number;
-  /** Sessions that already closed, so their absent rows exist. */
-  closedSessions: number;
+  events: number;
+  /** Events that already closed, so their absent rows exist. */
+  closedEvents: number;
   people: number;
   counts: StatusCounts;
   attendanceRate: number | null;
@@ -106,8 +106,8 @@ export interface GroupReportRow {
   attendanceRate: number | null;
 }
 
-export interface SessionReportRow {
-  sessionId: string;
+export interface EventReportRow {
+  eventId: string;
   title: string;
   startsAt: string;
   endsAt: string;
@@ -121,18 +121,18 @@ export async function reportSummary(
   organizationId: string,
   range: ReportRange,
 ): Promise<ReportSummary> {
-  const ids = await sessionIdsInRange(db, organizationId, range);
+  const ids = await eventIdsInRange(db, organizationId, range);
 
   const base = {
     from: range.from.toISOString(),
     to: range.to.toISOString(),
-    sessions: ids.length,
+    events: ids.length,
   };
 
   if (ids.length === 0) {
     return {
       ...base,
-      closedSessions: 0,
+      closedEvents: 0,
       people: 0,
       counts: { ...EMPTY },
       attendanceRate: null,
@@ -147,11 +147,11 @@ export async function reportSummary(
         people: sql<number>`count(distinct ${attendanceRecord.personId})`.mapWith(Number),
       })
       .from(attendanceRecord)
-      .where(inArray(attendanceRecord.sessionId, ids)),
+      .where(inArray(attendanceRecord.eventId, ids)),
     db
       .select({ value: sql<number>`count(*)`.mapWith(Number) })
-      .from(attendanceSession)
-      .where(and(inArray(attendanceSession.id, ids), isNotNull(attendanceSession.closedAt))),
+      .from(eventTable)
+      .where(and(inArray(eventTable.id, ids), isNotNull(eventTable.closedAt))),
   ]);
 
   const row = totals[0];
@@ -161,7 +161,7 @@ export async function reportSummary(
 
   return {
     ...base,
-    closedSessions: closed[0]?.value ?? 0,
+    closedEvents: closed[0]?.value ?? 0,
     people: row?.people ?? 0,
     counts,
     attendanceRate: attendanceRate(counts),
@@ -174,7 +174,7 @@ export async function reportByPerson(
   organizationId: string,
   range: ReportRange,
 ): Promise<readonly PersonReportRow[]> {
-  const ids = await sessionIdsInRange(db, organizationId, range);
+  const ids = await eventIdsInRange(db, organizationId, range);
   if (ids.length === 0) return [];
 
   const rows = await db
@@ -187,7 +187,7 @@ export async function reportByPerson(
     })
     .from(attendanceRecord)
     .innerJoin(person, eq(person.id, attendanceRecord.personId))
-    .where(inArray(attendanceRecord.sessionId, ids))
+    .where(inArray(attendanceRecord.eventId, ids))
     .groupBy(person.id, person.name, person.email, person.identifier)
     .orderBy(asc(sql`lower(${person.name})`));
 
@@ -216,7 +216,7 @@ export async function reportByGroup(
   organizationId: string,
   range: ReportRange,
 ): Promise<readonly GroupReportRow[]> {
-  const ids = await sessionIdsInRange(db, organizationId, range);
+  const ids = await eventIdsInRange(db, organizationId, range);
 
   const groups = await db
     .select({ id: group.id, name: group.name })
@@ -242,7 +242,7 @@ export async function reportByGroup(
           .innerJoin(groupMember, eq(groupMember.personId, attendanceRecord.personId))
           .where(
             and(
-              inArray(attendanceRecord.sessionId, ids),
+              inArray(attendanceRecord.eventId, ids),
               inArray(
                 groupMember.groupId,
                 A.map(groups, (row) => row.id),
@@ -269,43 +269,43 @@ export async function reportByGroup(
   });
 }
 
-export async function reportBySession(
+export async function reportByEvent(
   db: Database,
   organizationId: string,
   range: ReportRange,
-): Promise<readonly SessionReportRow[]> {
-  const ids = await sessionIdsInRange(db, organizationId, range);
+): Promise<readonly EventReportRow[]> {
+  const ids = await eventIdsInRange(db, organizationId, range);
   if (ids.length === 0) return [];
 
-  const [sessions, rows] = await Promise.all([
+  const [events, rows] = await Promise.all([
     db
       .select({
-        id: attendanceSession.id,
-        title: attendanceSession.title,
-        startsAt: attendanceSession.startsAt,
-        endsAt: attendanceSession.endsAt,
-        closedAt: attendanceSession.closedAt,
+        id: eventTable.id,
+        title: eventTable.title,
+        startsAt: eventTable.startsAt,
+        endsAt: eventTable.endsAt,
+        closedAt: eventTable.closedAt,
       })
-      .from(attendanceSession)
-      .where(inArray(attendanceSession.id, ids))
-      .orderBy(desc(attendanceSession.startsAt)),
+      .from(eventTable)
+      .where(inArray(eventTable.id, ids))
+      .orderBy(desc(eventTable.startsAt)),
     db
-      .select({ sessionId: attendanceRecord.sessionId, ...statusCountColumns })
+      .select({ eventId: attendanceRecord.eventId, ...statusCountColumns })
       .from(attendanceRecord)
-      .where(inArray(attendanceRecord.sessionId, ids))
-      .groupBy(attendanceRecord.sessionId),
+      .where(inArray(attendanceRecord.eventId, ids))
+      .groupBy(attendanceRecord.eventId),
   ]);
 
-  const bySession = new Map(A.map(rows, (row) => [row.sessionId, row]));
+  const byEvent = new Map(A.map(rows, (row) => [row.eventId, row]));
 
-  return A.map(sessions, (row) => {
-    const found = bySession.get(row.id);
+  return A.map(events, (row) => {
+    const found = byEvent.get(row.id);
     const counts: StatusCounts = found
       ? { present: found.present, late: found.late, excused: found.excused, absent: found.absent }
       : { ...EMPTY };
 
     return {
-      sessionId: row.id,
+      eventId: row.id,
       title: row.title,
       startsAt: row.startsAt.toISOString(),
       endsAt: row.endsAt.toISOString(),

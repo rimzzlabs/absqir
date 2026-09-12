@@ -88,19 +88,19 @@ The command prints an id. Paste it into `apps/web/wrangler.jsonc`:
 `localConnectionString` is only for `pnpm dev` on your own machine. The
 deployed Worker never reads it.
 
-## 5. Create the session store
+## 5. Create the event store
 
-The Astro adapter asks for a KV namespace bound as `SESSION`, and
+The Astro adapter asks for a KV namespace bound as `EVENT`, and
 `wrangler.jsonc` does not list one. Create it:
 
 ```bash
-pnpm --filter @absqir/web exec wrangler kv namespace create SESSION
+pnpm --filter @absqir/web exec wrangler kv namespace create EVENT
 ```
 
 Add the id it prints to `apps/web/wrangler.jsonc`:
 
 ```jsonc
-"kv_namespaces": [{ "binding": "SESSION", "id": "paste-the-id-here" }]
+"kv_namespaces": [{ "binding": "EVENT", "id": "paste-the-id-here" }]
 ```
 
 ## 6. Set the secrets

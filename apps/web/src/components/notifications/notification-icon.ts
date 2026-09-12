@@ -11,8 +11,8 @@ import type { Notification } from "@/queries/use-notifications";
 
 /** One icon per kind, shared by the page and the header card. */
 export const NOTIFICATION_ICONS: Record<Notification["type"], Icon> = {
-  "session-reminder": QrCodeIcon,
-  "session-closed": SealCheckIcon,
+  "event-reminder": QrCodeIcon,
+  "event-closed": SealCheckIcon,
   "leave-requested": NotePencilIcon,
   "leave-decided": CheckCircleIcon,
   "join-requested": UserPlusIcon,

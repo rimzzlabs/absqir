@@ -4,7 +4,7 @@ import { TZDate } from "@date-fns/tz";
 import { A } from "@mobily/ts-belt";
 import { format } from "date-fns";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
-import { expectedPersonIds, type SessionRow } from "#src/lib/expected";
+import { type EventRow, expectedPersonIds } from "#src/lib/expected";
 import {
   adminUserIds,
   createNotifications,
@@ -14,20 +14,20 @@ import {
   userIdsForPeople,
 } from "#src/lib/notifications";
 
-const { attendanceSession, schedule, user } = schema;
+const { event: eventTable, schedule, user } = schema;
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
 /**
- * A session that starts sooner than this gets the hour reminder only. It
- * stops a session created at short notice from firing both at once.
+ * An event that starts sooner than this gets the hour reminder only. It
+ * stops an event created at short notice from firing both at once.
  */
 const BOTH_REMINDERS_GAP_MS = 2 * HOUR_MS;
 
 /**
- * Sessions carry absolute instants, so the wording of a reminder needs a
+ * Events carry absolute instants, so the wording of a reminder needs a
  * zone to read in. A reader who chose one on their account gets theirs; for
  * the rest, schedules are the only place an organization states one, so the
  * most used one wins, and UTC covers an organization without any.
@@ -61,9 +61,9 @@ async function userTimezones(
   return new Map(A.flatMap(rows, (row) => (row.timezone ? [[row.id, row.timezone] as const] : [])));
 }
 
-function whenLine(session: SessionRow, timezone: string): string {
-  const start = new TZDate(session.startsAt, timezone);
-  const end = new TZDate(session.endsAt, timezone);
+function whenLine(event: EventRow, timezone: string): string {
+  const start = new TZDate(event.startsAt, timezone);
+  const end = new TZDate(event.endsAt, timezone);
 
   return `${format(start, "EEE d MMM, HH:mm")} to ${format(end, "HH:mm")} (${timezone}).`;
 }
@@ -71,8 +71,8 @@ function whenLine(session: SessionRow, timezone: string): string {
 type ReminderKind = "day" | "hour";
 
 /**
- * Tells everyone expected that a session is near: once the day before, once
- * the hour before. The dedupe key holds the session and the kind, so a tick
+ * Tells everyone expected that an event is near: once the day before, once
+ * the hour before. The dedupe key holds the event and the kind, so a tick
  * every minute still sends one of each.
  */
 export async function notifyDueReminders(
@@ -82,13 +82,13 @@ export async function notifyDueReminders(
 ): Promise<NotificationRow[]> {
   const upcoming = await db
     .select()
-    .from(attendanceSession)
+    .from(eventTable)
     .where(
       and(
-        eq(attendanceSession.organizationId, organizationId),
-        isNull(attendanceSession.closedAt),
-        gt(attendanceSession.startsAt, now),
-        lte(attendanceSession.startsAt, new Date(now.getTime() + DAY_MS)),
+        eq(eventTable.organizationId, organizationId),
+        isNull(eventTable.closedAt),
+        gt(eventTable.startsAt, now),
+        lte(eventTable.startsAt, new Date(now.getTime() + DAY_MS)),
       ),
     );
 
@@ -97,15 +97,15 @@ export async function notifyDueReminders(
   const timezone = await organizationTimezone(db, organizationId);
   const rows: NotificationInput[] = [];
 
-  for (const session of upcoming) {
-    const untilStart = session.startsAt.getTime() - now.getTime();
+  for (const event of upcoming) {
+    const untilStart = event.startsAt.getTime() - now.getTime();
 
     const kinds: ReminderKind[] = [];
     if (untilStart > BOTH_REMINDERS_GAP_MS) kinds.push("day");
     if (untilStart <= HOUR_MS) kinds.push("hour");
     if (kinds.length === 0) continue;
 
-    const personIds = await expectedPersonIds(db, session.id);
+    const personIds = await expectedPersonIds(db, event.id);
     const userIds = await userIdsForPeople(db, personIds);
     if (userIds.length === 0) continue;
 
@@ -113,19 +113,17 @@ export async function notifyDueReminders(
 
     for (const kind of kinds) {
       const title =
-        kind === "hour"
-          ? `${session.title} starts within the hour`
-          : `${session.title} is coming up`;
+        kind === "hour" ? `${event.title} starts within the hour` : `${event.title} is coming up`;
 
       for (const userId of userIds) {
         rows.push({
           organizationId,
           userId,
-          type: "session-reminder",
+          type: "event-reminder",
           title,
-          body: whenLine(session, zones.get(userId) ?? timezone),
-          href: "/my/sessions",
-          dedupeKey: `session-reminder:${session.id}:${kind}`,
+          body: whenLine(event, zones.get(userId) ?? timezone),
+          href: "/my/events",
+          dedupeKey: `event-reminder:${event.id}:${kind}`,
         });
       }
     }
@@ -134,20 +132,20 @@ export async function notifyDueReminders(
   return createNotifications(db, rows);
 }
 
-export interface SessionClosedCounts {
+export interface EventClosedCounts {
   present: number;
   late: number;
   excused: number;
   absent: number;
 }
 
-/** Tells the organizers a session closed, and how it went. */
-export async function notifySessionClosed(
+/** Tells the organizers an event closed, and how it went. */
+export async function notifyEventClosed(
   db: Database,
-  session: SessionRow,
-  counts: SessionClosedCounts,
+  event: EventRow,
+  counts: EventClosedCounts,
 ): Promise<NotificationRow[]> {
-  const userIds = await managerUserIds(db, session.organizationId);
+  const userIds = await managerUserIds(db, event.organizationId);
   if (userIds.length === 0) return [];
 
   const body = `${counts.present} present, ${counts.late} late, ${counts.excused} excused, ${counts.absent} absent.`;
@@ -155,13 +153,13 @@ export async function notifySessionClosed(
   return createNotifications(
     db,
     A.map(userIds, (userId) => ({
-      organizationId: session.organizationId,
+      organizationId: event.organizationId,
       userId,
-      type: "session-closed" as const,
-      title: `${session.title} closed`,
+      type: "event-closed" as const,
+      title: `${event.title} closed`,
       body,
-      href: `/sessions/${session.id}`,
-      dedupeKey: `session-closed:${session.id}`,
+      href: `/events/${event.id}`,
+      dedupeKey: `event-closed:${event.id}`,
     })),
   );
 }
@@ -170,7 +168,7 @@ export interface LeaveRequestedParams {
   organizationId: string;
   requestId: string;
   personName: string;
-  sessionTitle: string;
+  eventTitle: string;
   reason: string;
 }
 
@@ -188,7 +186,7 @@ export async function notifyLeaveRequested(
       organizationId: params.organizationId,
       userId,
       type: "leave-requested" as const,
-      title: `${params.personName} asks to miss ${params.sessionTitle}`,
+      title: `${params.personName} asks to miss ${params.eventTitle}`,
       body: params.reason,
       href: "/leave",
       dedupeKey: `leave-requested:${params.requestId}:${userId}`,
@@ -201,7 +199,7 @@ export interface LeaveDecidedParams {
   requestId: string;
   /** The account behind the person who asked. Null when they have none. */
   userId: string | null;
-  sessionTitle: string;
+  eventTitle: string;
   decision: "approved" | "declined";
   note: string | null;
 }
@@ -220,11 +218,11 @@ export async function notifyLeaveDecided(
       organizationId: params.organizationId,
       userId: params.userId,
       type: "leave-decided",
-      title: `Your leave for ${params.sessionTitle} was ${params.decision}`,
+      title: `Your leave for ${params.eventTitle} was ${params.decision}`,
       body:
         params.note ??
         (approved
-          ? "The record for this session says excused."
+          ? "The record for this event says excused."
           : "The record stays as it is. Talk to an organizer if that is wrong."),
       href: "/my/leave",
       dedupeKey: `leave-decided:${params.requestId}`,

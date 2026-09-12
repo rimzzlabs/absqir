@@ -3,7 +3,7 @@
  * written inline, and a cache read then stops matching the cache write.
  */
 export const sessionKeys = {
-  all: ["session"] as const,
+  all: ["event"] as const,
   current: () => [...sessionKeys.all, "current"] as const,
 };
 
@@ -98,32 +98,32 @@ export const groupMutationKeys = {
   setMembers: () => [...groupMutationKeys.all, "set-members"] as const,
 };
 
-export interface SessionListFilter {
+export interface EventListFilter {
   scope: "upcoming" | "past" | "all";
   q: string;
   groupId: string;
 }
 
-export const sessionListKeys = {
-  all: ["sessions"] as const,
+export const eventKeys = {
+  all: ["events"] as const,
   /** Every page of every list. Mutations invalidate this prefix. */
-  lists: () => [...sessionListKeys.all, "list"] as const,
-  list: (filter: SessionListFilter) => [...sessionListKeys.lists(), filter] as const,
-  detail: (id: string) => [...sessionListKeys.all, "detail", id] as const,
-  records: (id: string) => [...sessionListKeys.all, "records", id] as const,
-  qrToken: (id: string) => [...sessionListKeys.all, "qr-token", id] as const,
+  lists: () => [...eventKeys.all, "list"] as const,
+  list: (filter: EventListFilter) => [...eventKeys.lists(), filter] as const,
+  detail: (id: string) => [...eventKeys.all, "detail", id] as const,
+  records: (id: string) => [...eventKeys.all, "records", id] as const,
+  qrToken: (id: string) => [...eventKeys.all, "qr-token", id] as const,
 };
 
-export const sessionMutationKeys = {
-  all: ["session-mutations"] as const,
-  create: () => [...sessionMutationKeys.all, "create"] as const,
-  update: () => [...sessionMutationKeys.all, "update"] as const,
-  remove: () => [...sessionMutationKeys.all, "remove"] as const,
-  open: () => [...sessionMutationKeys.all, "open"] as const,
-  close: () => [...sessionMutationKeys.all, "close"] as const,
-  setRecord: () => [...sessionMutationKeys.all, "set-record"] as const,
-  checkIn: () => [...sessionMutationKeys.all, "check-in"] as const,
-  scan: () => [...sessionMutationKeys.all, "scan"] as const,
+export const eventMutationKeys = {
+  all: ["event-mutations"] as const,
+  create: () => [...eventMutationKeys.all, "create"] as const,
+  update: () => [...eventMutationKeys.all, "update"] as const,
+  remove: () => [...eventMutationKeys.all, "remove"] as const,
+  open: () => [...eventMutationKeys.all, "open"] as const,
+  close: () => [...eventMutationKeys.all, "close"] as const,
+  setRecord: () => [...eventMutationKeys.all, "set-record"] as const,
+  checkIn: () => [...eventMutationKeys.all, "check-in"] as const,
+  scan: () => [...eventMutationKeys.all, "scan"] as const,
 };
 
 export const scheduleKeys = {
@@ -141,22 +141,22 @@ export const scheduleMutationKeys = {
 export const myKeys = {
   all: ["my"] as const,
   /** Every page of every scope. Mutations invalidate this prefix. */
-  sessions: () => [...myKeys.all, "sessions"] as const,
-  sessionsPage: (scope: string, limit: number | null = null) =>
-    [...myKeys.sessions(), scope, limit] as const,
+  events: () => [...myKeys.all, "events"] as const,
+  eventsPage: (scope: string, limit: number | null = null) =>
+    [...myKeys.events(), scope, limit] as const,
   pass: (id: string) => [...myKeys.all, "pass", id] as const,
   history: () => [...myKeys.all, "history"] as const,
 };
 
-export const eventKeys = {
+export const publicEventKeys = {
   all: ["events"] as const,
-  detail: (id: string) => [...eventKeys.all, "detail", id] as const,
+  detail: (id: string) => [...publicEventKeys.all, "detail", id] as const,
 };
 
-export const eventMutationKeys = {
+export const publicEventMutationKeys = {
   all: ["event-mutations"] as const,
-  register: () => [...eventMutationKeys.all, "register"] as const,
-  withdraw: () => [...eventMutationKeys.all, "withdraw"] as const,
+  register: () => [...publicEventMutationKeys.all, "register"] as const,
+  withdraw: () => [...publicEventMutationKeys.all, "withdraw"] as const,
 };
 
 export const leaveKeys = {
@@ -180,7 +180,7 @@ export const reportKeys = {
   summary: (range: string) => [...reportKeys.all, "summary", range] as const,
   people: (range: string) => [...reportKeys.all, "people", range] as const,
   groups: (range: string) => [...reportKeys.all, "groups", range] as const,
-  sessions: (range: string) => [...reportKeys.all, "sessions", range] as const,
+  events: (range: string) => [...reportKeys.all, "events", range] as const,
 };
 
 export const calendarKeys = {

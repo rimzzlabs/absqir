@@ -5,7 +5,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { useOnboardingEvent } from "@/mutations/use-onboarding-event";
-import { useEvent } from "@/queries/use-event";
+import { usePublicEvent } from "@/queries/use-public-event";
 
 export interface OnboardingEventCardProps {
   eventId: string;
@@ -13,7 +13,7 @@ export interface OnboardingEventCardProps {
 
 /** Step 3 through a public event page: one card, one button. */
 export function OnboardingEventCard(props: OnboardingEventCardProps) {
-  const event = useEvent(props.eventId);
+  const event = usePublicEvent(props.eventId);
   const join = useOnboardingEvent();
 
   return match(event)

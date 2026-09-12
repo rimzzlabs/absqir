@@ -1,0 +1,8 @@
+---
+import { MyEventsPage } from "@/components/my/my-events-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+---
+
+<DashboardLayout title="My events">
+  <MyEventsPage client:load />
+</DashboardLayout>

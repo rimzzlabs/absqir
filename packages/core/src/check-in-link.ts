@@ -1,14 +1,14 @@
 import { O, pipe } from "@mobily/ts-belt";
 
 export interface CheckInLink {
-  sessionId: string;
+  eventId: string;
   token: string;
 }
 
 const LINK_PATH = /^\/a\/([^/]+)$/;
 
 /**
- * Reads what the room screen encodes: a link to /a/<session> with the
+ * Reads what the room screen encodes: a link to /a/<event> with the
  * rotating token in `t`. Anything else, a pass or a stray URL, is None.
  */
 export function parseCheckInLink(text: string, origin = "http://localhost"): O.Option<CheckInLink> {
@@ -22,6 +22,6 @@ export function parseCheckInLink(text: string, origin = "http://localhost"): O.O
         O.fromNullable(url.searchParams.get("t")),
       ),
     ),
-    O.map(([id, token]) => ({ sessionId: decodeURIComponent(id), token })),
+    O.map(([id, token]) => ({ eventId: decodeURIComponent(id), token })),
   );
 }

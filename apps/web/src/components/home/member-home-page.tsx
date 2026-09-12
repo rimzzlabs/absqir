@@ -23,7 +23,7 @@ import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
 import { type LeaveStatus, LeaveStatusBadge } from "@/components/shared/status-badge";
 import { useMyLeave } from "@/queries/use-leave";
-import { type MySession, useMyHistory, useMySessions } from "@/queries/use-my";
+import { type MyEvent, useMyEvents, useMyHistory } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
   userName: string;
@@ -67,13 +67,13 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
 }
 
 function MemberHomeBody(props: MemberHomePageProps) {
-  const sessions = useMySessions();
+  const events = useMyEvents();
   const history = useMyHistory();
   const leave = useMyLeave({ scope: "all" });
   const [passFor, setPassFor] = useState<string | null>(null);
-  const [leaveFor, setLeaveFor] = useState<MySession | null>(null);
+  const [leaveFor, setLeaveFor] = useState<MyEvent | null>(null);
 
-  const rows = A.flatMap(sessions.data?.pages ?? [], (page) => page.items);
+  const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
   const requests = A.flatMap(leave.data?.pages ?? [], (page) => page.items);
   const pendingLeave = A.filter(requests, (row) => row.status === "pending").length;
   const firstName = props.userName.split(" ")[0] ?? props.userName;
@@ -102,16 +102,16 @@ function MemberHomeBody(props: MemberHomePageProps) {
         }
       />
 
-      {match(sessions)
+      {match(events)
         .with({ isPending: true }, () => <Skeleton className="h-44 rounded-2xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
-        .with({ data: P.nonNullable }, () => <MemberHomeNow sessions={rows} onPass={setPassFor} />)
+        .with({ data: P.nonNullable }, () => <MemberHomeNow events={rows} onPass={setPassFor} />)
         .otherwise(() => null)}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
         <MemberHomeAgenda
-          sessions={rows}
-          pending={sessions.isPending}
+          events={rows}
+          pending={events.isPending}
           onPass={setPassFor}
           onAskLeave={setLeaveFor}
         />
@@ -133,11 +133,11 @@ function MemberHomeBody(props: MemberHomePageProps) {
         </div>
       </div>
 
-      <PassDialog sessionId={passFor} onClose={() => setPassFor(null)} />
+      <PassDialog eventId={passFor} onClose={() => setPassFor(null)} />
       <AskLeaveDialog
         open={leaveFor !== null}
         onOpenChange={(open) => !open && setLeaveFor(null)}
-        session={leaveFor}
+        event={leaveFor}
       />
     </>
   );

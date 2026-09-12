@@ -4,21 +4,21 @@ import { A } from "@mobily/ts-belt";
 import { and, desc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
+import { statusOf } from "#src/lib/event-status";
+import { findEvent, isExpected, personForUser, upsertRecord } from "#src/lib/events";
 import { deliver } from "#src/lib/notifications";
 import { notifyLeaveDecided, notifyLeaveRequested } from "#src/lib/notify";
 import { organizationGuard, organizationIdOf, roleBelow } from "#src/lib/org-access";
-import { statusOf } from "#src/lib/session-status";
-import { findSession, isExpected, personForUser, upsertRecord } from "#src/lib/sessions";
 import type { AppEnv } from "#src/types";
 
-const { leaveRequest, attendanceSession, person } = schema;
+const { leaveRequest, event: eventTable, person } = schema;
 
 const leaveStatus = z.enum(["pending", "approved", "declined"]);
 
 const leaveSchema = z.object({
   id: z.string(),
-  sessionId: z.string(),
-  sessionTitle: z.string(),
+  eventId: z.string(),
+  eventTitle: z.string(),
   startsAt: z.string(),
   endsAt: z.string(),
   personId: z.string(),
@@ -43,7 +43,7 @@ const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {
@@ -83,13 +83,13 @@ const askRoute = createRoute({
   method: "post",
   path: "/my/leave",
   tags: ["leave"],
-  summary: "Ask to be excused from a session that expects me",
+  summary: "Ask to be excused from an event that expects me",
   request: {
     body: {
       content: {
         "application/json": {
           schema: z.object({
-            sessionId: z.string().min(1),
+            eventId: z.string().min(1),
             reason: z.string().trim().min(1).max(500),
           }),
         },
@@ -102,7 +102,7 @@ const askRoute = createRoute({
     403: forbidden,
     404: notFound,
     409: {
-      description: "The session is over, I am not expected, or a request exists",
+      description: "The event is over, I am not expected, or a request exists",
       content: { "application/json": { schema: errorSchema } },
     },
   },
@@ -177,17 +177,17 @@ const decideRoute = createRoute({
 
 type Row = {
   request: typeof leaveRequest.$inferSelect;
-  session: typeof attendanceSession.$inferSelect;
+  event: typeof eventTable.$inferSelect;
   personName: string;
 };
 
 function toJson(row: Row) {
   return {
     id: row.request.id,
-    sessionId: row.session.id,
-    sessionTitle: row.session.title,
-    startsAt: row.session.startsAt.toISOString(),
-    endsAt: row.session.endsAt.toISOString(),
+    eventId: row.event.id,
+    eventTitle: row.event.title,
+    startsAt: row.event.startsAt.toISOString(),
+    endsAt: row.event.endsAt.toISOString(),
     personId: row.request.personId,
     personName: row.personName,
     reason: row.request.reason,
@@ -218,12 +218,12 @@ function rows(c: Context<AppEnv>) {
   return c.var.db
     .select({
       request: leaveRequest,
-      session: attendanceSession,
+      event: eventTable,
       personName: person.name,
       at: createdAtText,
     })
     .from(leaveRequest)
-    .innerJoin(attendanceSession, eq(attendanceSession.id, leaveRequest.sessionId))
+    .innerJoin(eventTable, eq(eventTable.id, leaveRequest.eventId))
     .innerJoin(person, eq(person.id, leaveRequest.personId));
 }
 
@@ -269,23 +269,23 @@ export const leaveRoutes = base
   .openapi(askRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    const { sessionId, reason } = c.req.valid("json");
+    const { eventId, reason } = c.req.valid("json");
     if (!user) return c.json({ error: "Unauthorized" }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
     if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
 
-    const session = await findSession(c.var.db, organizationId, sessionId);
-    if (!session) return c.json({ error: "Not found" }, 404);
-    if (statusOf(session) === "done") return c.json({ error: "This event is over." }, 409);
-    if (!(await isExpected(c.var.db, sessionId, me.id))) {
+    const event = await findEvent(c.var.db, organizationId, eventId);
+    if (!event) return c.json({ error: "Not found" }, 404);
+    if (statusOf(event) === "done") return c.json({ error: "This event is over." }, 409);
+    if (!(await isExpected(c.var.db, eventId, me.id))) {
       return c.json({ error: "You are not expected at this event." }, 409);
     }
 
     const existing = await c.var.db
       .select({ id: leaveRequest.id })
       .from(leaveRequest)
-      .where(and(eq(leaveRequest.sessionId, sessionId), eq(leaveRequest.personId, me.id)))
+      .where(and(eq(leaveRequest.eventId, eventId), eq(leaveRequest.personId, me.id)))
       .limit(1);
     if (existing[0]) {
       return c.json({ error: "You already asked for leave from this event." }, 409);
@@ -296,7 +296,7 @@ export const leaveRoutes = base
     await c.var.db.insert(leaveRequest).values({
       id,
       organizationId,
-      sessionId,
+      eventId,
       personId: me.id,
       reason,
     });
@@ -310,7 +310,7 @@ export const leaveRoutes = base
         organizationId,
         requestId: id,
         personName: me.name,
-        sessionTitle: session.title,
+        eventTitle: event.title,
         reason,
       }),
     );
@@ -386,7 +386,7 @@ export const leaveRoutes = base
 
     if (decision === "approved") {
       await upsertRecord(c.var.db, {
-        sessionId: row.session.id,
+        eventId: row.event.id,
         personId: row.request.personId,
         status: "excused",
         method: "manual",
@@ -411,7 +411,7 @@ export const leaveRoutes = base
         organizationId,
         requestId: id,
         userId: asker[0]?.userId ?? null,
-        sessionTitle: row.session.title,
+        eventTitle: row.event.title,
         decision,
         note: note ?? null,
       }),

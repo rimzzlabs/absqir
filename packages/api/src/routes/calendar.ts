@@ -2,12 +2,12 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { settle, toEventJson } from "#src/lib/events";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import { occurrencesBetween } from "#src/lib/schedule";
-import { settle, toSessionJson } from "#src/lib/sessions";
 import type { AppEnv } from "#src/types";
 
-const { attendanceSession, schedule } = schema;
+const { event: eventTable, schedule } = schema;
 
 const groupRef = z.object({ id: z.string(), name: z.string() });
 
@@ -20,7 +20,7 @@ const countsSchema = z.object({
   absent: z.number(),
 });
 
-const daySessionSchema = z.object({
+const dayEventSchema = z.object({
   id: z.string(),
   title: z.string(),
   startsAt: z.string(),
@@ -32,7 +32,7 @@ const daySessionSchema = z.object({
   counts: countsSchema,
 });
 
-/** A session a schedule will spawn later. It has no row yet, so no id. */
+/** An event a schedule will spawn later. It has no row yet, so no id. */
 const projectedSchema = z.object({
   scheduleId: z.string(),
   title: z.string(),
@@ -41,7 +41,7 @@ const projectedSchema = z.object({
 });
 
 const calendarSchema = z.object({
-  sessions: z.array(daySessionSchema),
+  events: z.array(dayEventSchema),
   projected: z.array(projectedSchema),
 });
 
@@ -50,8 +50,8 @@ const errorSchema = z.object({ error: z.string() });
 const calendarRoute = createRoute({
   method: "get",
   path: "/calendar",
-  tags: ["sessions"],
-  summary: "Sessions that touch the range, plus the ones schedules still owe",
+  tags: ["events"],
+  summary: "Events that touch the range, plus the ones schedules still owe",
   request: {
     query: z.object({
       from: z.iso.datetime({ offset: true }),
@@ -60,11 +60,11 @@ const calendarRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Sessions and projections, soonest first",
+      description: "Events and projections, soonest first",
       content: { "application/json": { schema: calendarSchema } },
     },
     401: {
-      description: "No active session",
+      description: "No active event",
       content: { "application/json": { schema: errorSchema } },
     },
     403: {
@@ -91,19 +91,19 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
 
   const rows = await c.var.db
     .select()
-    .from(attendanceSession)
+    .from(eventTable)
     .where(
       and(
-        eq(attendanceSession.organizationId, organizationId),
-        lte(attendanceSession.startsAt, to),
-        gte(attendanceSession.endsAt, from),
+        eq(eventTable.organizationId, organizationId),
+        lte(eventTable.startsAt, to),
+        gte(eventTable.endsAt, from),
       ),
     )
-    .orderBy(asc(attendanceSession.startsAt));
+    .orderBy(asc(eventTable.startsAt));
 
-  const sessions = await toSessionJson(c.var.db, rows, now);
+  const events = await toEventJson(c.var.db, rows, now);
 
-  // Schedules only spawn sessions a fortnight ahead. Browsing a later month
+  // Schedules only spawn events a fortnight ahead. Browsing a later month
   // still shows what those rules will produce, marked as not created yet.
   const rules = await c.var.db
     .select()
@@ -133,8 +133,8 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
 
   return c.json(
     {
-      sessions: [
-        ...A.map(sessions, (row) => ({
+      events: [
+        ...A.map(events, (row) => ({
           id: row.id,
           title: row.title,
           startsAt: row.startsAt,

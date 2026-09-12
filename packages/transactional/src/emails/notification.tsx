@@ -55,7 +55,7 @@ NotificationEmail.PreviewProps = {
   title: "Morning standup starts in an hour",
   body: "Tue 9 Sep, 09:00 to 10:00. Check in from the room screen, or show your pass.",
   organizationName: "Yayasan Contoh",
-  url: "http://localhost:4321/my/sessions",
+  url: "http://localhost:4321/my/events",
   action: "Open my events",
   appUrl: "http://localhost:4321",
 } satisfies NotificationEmailProps;

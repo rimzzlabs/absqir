@@ -7,7 +7,7 @@ function row(id: string, createdAt: string): NotificationRow {
     id,
     organizationId: "org",
     userId: "user",
-    type: "session-reminder",
+    type: "event-reminder",
     title: id,
     body: null,
     href: null,

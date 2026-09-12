@@ -17,7 +17,7 @@ import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useCheckIn } from "@/mutations/use-check-in";
 
 export interface CheckInPageProps {
-  sessionId: string;
+  eventId: string;
   /** From the scanned URL. Null when the page was opened by hand. */
   token: string | null;
 }
@@ -45,8 +45,8 @@ function CheckInBody(props: CheckInPageProps) {
   const { mutate } = checkIn;
 
   useEffect(() => {
-    if (props.token) mutate({ sessionId: props.sessionId, token: props.token });
-  }, [props.sessionId, props.token, mutate]);
+    if (props.token) mutate({ eventId: props.eventId, token: props.token });
+  }, [props.eventId, props.token, mutate]);
 
   if (!props.token) {
     return (
@@ -61,10 +61,7 @@ function CheckInBody(props: CheckInPageProps) {
         <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
           Open the scanner
         </a>
-        <a
-          href="/my/sessions"
-          className={buttonVariants({ variant: "ghost", className: "w-full" })}
-        >
+        <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
           My events
         </a>
       </div>
@@ -85,10 +82,7 @@ function CheckInBody(props: CheckInPageProps) {
         <a href="/check-in" className={buttonVariants({ variant: "outline", className: "w-full" })}>
           Scan it myself
         </a>
-        <a
-          href="/my/sessions"
-          className={buttonVariants({ variant: "ghost", className: "w-full" })}
-        >
+        <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
           My events
         </a>
       </div>
@@ -102,7 +96,7 @@ function CheckInBody(props: CheckInPageProps) {
           title={
             result.already ? `Already in, ${result.personName}` : `You are in, ${result.personName}`
           }
-          description={result.sessionTitle}
+          description={result.eventTitle}
         />
         <div className="border-border flex items-center gap-3 rounded-lg border p-3 text-sm">
           <AttendanceStatusBadge status={result.status} />
@@ -114,7 +108,7 @@ function CheckInBody(props: CheckInPageProps) {
           You can close this page. The record is saved.
         </p>
         <a
-          href="/my/sessions"
+          href="/my/events"
           className={buttonVariants({ variant: "outline", className: "w-full" })}
         >
           My events

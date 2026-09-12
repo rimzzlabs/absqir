@@ -45,7 +45,7 @@ export const MANAGER_NAV: NavGroup[] = [
   {
     label: "Attendance",
     items: [
-      { href: "/sessions", label: "Events", icon: QrCodeIcon, minimum: "organizer" },
+      { href: "/events", label: "Events", icon: QrCodeIcon, minimum: "organizer" },
       { href: "/calendar", label: "Calendar", icon: CalendarBlankIcon, minimum: "organizer" },
       { href: "/schedules", label: "Schedules", icon: RepeatIcon, minimum: "organizer" },
     ],
@@ -87,7 +87,7 @@ export const MEMBER_NAV: NavGroup[] = [
   {
     label: "Me",
     items: [
-      { href: "/my/sessions", label: "My events", icon: QrCodeIcon, minimum: "member" },
+      { href: "/my/events", label: "My events", icon: QrCodeIcon, minimum: "member" },
       { href: "/my/history", label: "History", icon: ClockCounterClockwiseIcon, minimum: "member" },
       { href: "/my/leave", label: "My leave", icon: NotePencilIcon, minimum: "member" },
     ],

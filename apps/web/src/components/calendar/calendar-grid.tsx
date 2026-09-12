@@ -36,7 +36,7 @@ function EntryLine(props: { entry: CalendarEntry; onOpen: (entry: CalendarEntry)
           aria-hidden
           className={cn(
             "size-1.5 shrink-0 rounded-full",
-            STATUS_DOT[entry.session.status] ?? "bg-muted-foreground",
+            STATUS_DOT[entry.event.status] ?? "bg-muted-foreground",
           )}
         />
       )}
@@ -53,7 +53,7 @@ export interface CalendarGridProps {
   view: "month" | "week";
   entries: Map<string, CalendarEntry[]>;
   onOpenDay: (day: Date) => void;
-  onNewSession: (day: Date) => void;
+  onNewEvent: (day: Date) => void;
   onOpenEntry: (entry: CalendarEntry) => void;
 }
 
@@ -107,7 +107,7 @@ export function CalendarGrid(props: CalendarGridProps) {
 
                 <button
                   type="button"
-                  onClick={() => props.onNewSession(day)}
+                  onClick={() => props.onNewEvent(day)}
                   aria-label={`New event on ${formatDate(day, "date")}`}
                   className="text-muted-foreground hover:bg-muted rounded p-0.5 opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100"
                 >

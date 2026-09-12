@@ -8,8 +8,8 @@ import type { AppEnv } from "#src/types";
 const { user } = schema;
 
 /**
- * Moves an account to a step and re-issues the session cookie. The cookie
- * cache still carries the old user row, so a forced session read is what
+ * Moves an account to a step and re-issues the event cookie. The cookie
+ * cache still carries the old user row, so a forced event read is what
  * makes the next page see the new step at once.
  */
 export async function setOnboardingStep(
@@ -31,7 +31,7 @@ export async function setOnboardingStep(
   forwardCookies(c, refreshed.headers);
 }
 
-/** Points the session at one organization, so the next page opens in it. */
+/** Points the event at one organization, so the next page opens in it. */
 export async function activateOrganization(
   c: Context<AppEnv>,
   organizationId: string,

@@ -2,7 +2,7 @@ import { calendarKeys } from "@absqir/core/query-keys";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
-/** Everything that touches the visible range, sessions and projections. */
+/** Everything that touches the visible range, events and projections. */
 export function useCalendar(from: Date, to: Date) {
   const query = { from: from.toISOString(), to: to.toISOString() };
 
@@ -15,12 +15,12 @@ export function useCalendar(from: Date, to: Date) {
 
       return response.json();
     },
-    // A session moves through its statuses on the clock.
+    // An event moves through its statuses on the clock.
     refetchInterval: 60_000,
   });
 }
 
 type Calendar = NonNullable<ReturnType<typeof useCalendar>["data"]>;
 
-export type CalendarSession = Calendar["sessions"][number];
-export type ProjectedSession = Calendar["projected"][number];
+export type CalendarEvent = Calendar["events"][number];
+export type ProjectedEvent = Calendar["projected"][number];

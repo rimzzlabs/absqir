@@ -76,7 +76,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <p className="text-muted-foreground text-sm">
               <span className="text-foreground font-medium">
-                {props.pending?.request.sessionTitle}
+                {props.pending?.request.eventTitle}
               </span>
               {" · "}
               {props.pending?.request.reason}
@@ -151,8 +151,8 @@ function Queue(props: {
             <TableRow key={row.id}>
               <TableCell className="font-medium">{row.personName}</TableCell>
               <TableCell>
-                <a href={`/sessions/${row.sessionId}`} className="hover:underline">
-                  {row.sessionTitle}
+                <a href={`/events/${row.eventId}`} className="hover:underline">
+                  {row.eventTitle}
                 </a>
                 <p className="text-muted-foreground text-xs">
                   {formatRange(new Date(row.startsAt), new Date(row.endsAt))}

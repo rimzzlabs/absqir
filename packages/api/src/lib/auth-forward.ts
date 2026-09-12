@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import type { AppEnv } from "#src/types";
 
 /**
- * A Better Auth call made on the caller's behalf can refresh the session
+ * A Better Auth call made on the caller's behalf can refresh the event
  * cookie (for example after the active organization changes). Copy every
  * Set-Cookie it produced onto our response so the browser sees the update.
  */

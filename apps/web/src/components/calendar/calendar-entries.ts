@@ -1,14 +1,14 @@
 import { formatDate } from "@absqir/core/date";
 import { A } from "@mobily/ts-belt";
-import type { CalendarSession, ProjectedSession } from "@/queries/use-calendar";
+import type { CalendarEvent, ProjectedEvent } from "@/queries/use-calendar";
 
 /** One line in a day cell: a real event, or one a schedule still owes. */
 export type CalendarEntry =
-  | { kind: "session"; key: string; startsAt: Date; endsAt: Date; session: CalendarSession }
+  | { kind: "event"; key: string; startsAt: Date; endsAt: Date; event: CalendarEvent }
   | { kind: "projected"; key: string; startsAt: Date; endsAt: Date; title: string };
 
 export function entryTitle(entry: CalendarEntry): string {
-  return entry.kind === "session" ? entry.session.title : entry.title;
+  return entry.kind === "event" ? entry.event.title : entry.title;
 }
 
 /** The map key for a day, in the display zone, so a cell holds the account's own day. */
@@ -18,18 +18,18 @@ export function dayKey(date: Date): string {
 
 /** Everything the calendar knows, bucketed by the day it starts on. */
 export function entriesByDay(data: {
-  sessions: CalendarSession[];
-  projected: ProjectedSession[];
+  events: CalendarEvent[];
+  projected: ProjectedEvent[];
 }): Map<string, CalendarEntry[]> {
   const entries: CalendarEntry[] = [
     ...A.map(
-      data.sessions,
-      (session): CalendarEntry => ({
-        kind: "session",
-        key: session.id,
-        startsAt: new Date(session.startsAt),
-        endsAt: new Date(session.endsAt),
-        session,
+      data.events,
+      (event): CalendarEntry => ({
+        kind: "event",
+        key: event.id,
+        startsAt: new Date(event.startsAt),
+        endsAt: new Date(event.endsAt),
+        event,
       }),
     ),
     ...A.map(

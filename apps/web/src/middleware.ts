@@ -35,7 +35,7 @@ function isOrgFreePath(path: string): boolean {
   );
 }
 
-/** The session id in a public event path, or null. */
+/** The event id in a public event path, or null. */
 function eventIdOf(path: string): string | null {
   const match = /^\/e\/([^/]+)$/.exec(path);
   return match?.[1] ?? null;

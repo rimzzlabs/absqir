@@ -67,15 +67,15 @@ directory and the groups live inside them.
 ## How the QR stays honest
 
 The room screen's token, in `packages/api/src/lib/qr-token.ts`, is an HMAC
-over the session id and the current 20 second time window, keyed by a
-per-session secret that never leaves the server. The screen fetches a fresh
+over the event id and the current 20 second time window, keyed by a
+per-event secret that never leaves the server. The screen fetches a fresh
 token when the window ends, so a photo of the code stops working almost at
 once. The server accepts the current window and the one before it, so a scan
 near a rotation still checks in. Only a signed-in member on the list checks
 in with it, so a borrowed identifier gets nobody in.
 
 The member's pass, in `packages/api/src/lib/member-pass.ts`, goes the other
-way: an HMAC over the session id and the person id, shown as a QR code on
+way: an HMAC over the event id and the person id, shown as a QR code on
 the member's phone and read by the organizer's scanner.
 
 ## Stack
@@ -104,25 +104,25 @@ apps/
   web/
     src/
       components/      Islands. One folder per feature: auth, onboarding,
-                       app-shell, people, groups, sessions, schedules,
+                       app-shell, people, groups, events, schedules,
                        check-in, my, settings, home, shared
       layouts/         Astro shells: auth, dashboard
       lib/             Clients, schemas, query client, runtime glue
       mutations/       One hook per action
       queries/         One hook per read
       pages/           sign-in, onboarding, invite, the dashboard modules, api
-      middleware.ts    Session, memberships, and onboarding into locals, plus
+      middleware.ts    Event, memberships, and onboarding into locals, plus
                        the route guards
     docker-entry.mjs   Container entrypoint: migrate, then serve
   docs/                Vocs docs site and landing page
 packages/
   api/
     src/
-      lib/             QR token, member pass, session clock, schedules,
+      lib/             QR token, member pass, event clock, schedules,
                        org access, slugs, CSV
-      middleware/      Security, request context, session
+      middleware/      Security, request context, event
       routes/          One file per resource: auth-flow, onboarding, me,
-                       organizations, people, groups, sessions, schedules, my
+                       organizations, people, groups, events, schedules, my
       context.ts       Shared by Hono and the Astro middleware
     tests/
   auth/                Better Auth instance, email codes, organizations,
@@ -138,7 +138,7 @@ Tests live in a `tests/` folder beside `src/`, never mixed into it.
 ```
 
 The site imports the API and mounts it in `src/pages/api/[...path].ts`. One
-build, one deploy, one origin. Same-origin removes CORS and keeps session
+build, one deploy, one origin. Same-origin removes CORS and keeps event
 cookies on `SameSite=Lax`.
 
 ## Develop
@@ -434,29 +434,29 @@ Dependabot opens one grouped pull request a week for the GitHub Actions and
 one for npm minor and patch updates. Major npm updates arrive on their own.
 | `DATABASE_URL` | `drizzle-kit migrate` on Cloudflare deploy |
 
-## Pages and the session
+## Pages and the event
 
 Every page renders per request because each one depends on the reader.
 
-| Path                     | Who can open it | Behaviour                                  |
-| ------------------------ | --------------- | ------------------------------------------ |
-| `/`                      | Signed in       | Dashboard: create and list sessions        |
-| `/sessions/[id]`         | Signed in       | Live check-ins, toggle, CSV export, delete |
-| `/sessions/[id]/display` | Signed in       | Full-screen rotating QR for the projector  |
-| `/a/[id]`                | Anyone          | Check-in form, opened from a scanned QR    |
-| `/sign-in`               | Signed out      | Signed-in readers go to `/`                |
-| `/sign-up`               | Signed out      | Signed-in readers go to `/`                |
+| Path                   | Who can open it | Behaviour                                  |
+| ---------------------- | --------------- | ------------------------------------------ |
+| `/`                    | Signed in       | Dashboard: create and list events          |
+| `/events/[id]`         | Signed in       | Live check-ins, toggle, CSV export, delete |
+| `/events/[id]/display` | Signed in       | Full-screen rotating QR for the projector  |
+| `/a/[id]`              | Anyone          | Check-in form, opened from a scanned QR    |
+| `/sign-in`             | Signed out      | Signed-in readers go to `/`                |
+| `/sign-up`             | Signed out      | Signed-in readers go to `/`                |
 
 The middleware sends a signed-out reader of a private page to
-`/sign-in?next=…`. The ownership check runs in the API, so a session page for
-another user's session renders an error, not the data.
+`/sign-in?next=…`. The ownership check runs in the API, so an event page for
+another user's event renders an error, not the data.
 
-`src/middleware.ts` reads the session once per request, puts the user on
+`src/middleware.ts` reads the event once per request, puts the user on
 `Astro.locals`, and applies the guard. The page passes that user into the island
 as a prop, so the panel never flashes a signed-out state before hydrating.
 Every page answer carries `Cache-Control: private, no-store`.
 
-## How the session stays alive
+## How the login session stays alive
 
 There is no refresh token here, and none is needed. Better Auth uses a **rolling
 database session**: an opaque token in an HttpOnly cookie, with a row in the
@@ -480,7 +480,7 @@ Three things keep it working:
   it as a side effect.
 - **`useSession()`** refetches on window focus, on reconnect, and every four
   minutes, which is just under the five minute cookie cache. An open tab
-  therefore keeps its own session alive.
+  therefore keeps its own event alive.
 - **"Keep me signed in"** maps to Better Auth's `rememberMe`. Unchecked, the
   cookie dies when the browser closes.
 
@@ -510,6 +510,6 @@ const signOut = useSignOut();
 ```
 
 Every key comes from the factory in `@absqir/core/query-keys`. Do not write an
-inline `["session"]` array anywhere: keys drift, and a cache read then stops
+inline `["events"]` array anywhere: keys drift, and a cache read then stops
 matching the cache write. `queryFn` is the one place the frontend throws,
 because TanStack Query turns a throw into error state for the UI.

@@ -13,15 +13,15 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { MySessionDetails, STRETCHED_TRIGGER } from "@/components/my/my-session-details";
-import { SessionStatusBadge } from "@/components/shared/status-badge";
-import type { MySession } from "@/queries/use-my";
+import { MyEventDetails, STRETCHED_TRIGGER } from "@/components/my/my-event-details";
+import { EventStatusBadge } from "@/components/shared/status-badge";
+import type { MyEvent } from "@/queries/use-my";
 
 export interface MemberHomeAgendaProps {
-  sessions: readonly MySession[];
+  events: readonly MyEvent[];
   pending: boolean;
   onPass: (id: string) => void;
-  onAskLeave: (session: MySession) => void;
+  onAskLeave: (event: MyEvent) => void;
 }
 
 /** Enough to fill the column without a scroll. */
@@ -30,18 +30,18 @@ const PREVIEW = 8;
 interface Day {
   iso: string;
   at: Date;
-  rows: MySession[];
+  rows: MyEvent[];
 }
 
 /** The rows in day order, each day once. The list arrives soonest first. */
-function byDay(sessions: readonly MySession[]): Day[] {
+function byDay(events: readonly MyEvent[]): Day[] {
   const days = new Map<string, Day>();
 
-  for (const session of sessions) {
-    const at = new Date(session.startsAt);
+  for (const event of events) {
+    const at = new Date(event.startsAt);
     const iso = formatDate(at, "iso");
     const day = days.get(iso) ?? { iso, at, rows: [] };
-    day.rows.push(session);
+    day.rows.push(event);
     days.set(iso, day);
   }
 
@@ -50,11 +50,11 @@ function byDay(sessions: readonly MySession[]): Day[] {
 
 /** One line of the agenda. A click opens the event's details. */
 function AgendaRow(props: {
-  session: MySession;
+  event: MyEvent;
   onPass: (id: string) => void;
-  onAskLeave: (session: MySession) => void;
+  onAskLeave: (event: MyEvent) => void;
 }) {
-  const { session } = props;
+  const { event } = props;
   const row = useRef<HTMLLIElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -67,10 +67,10 @@ function AgendaRow(props: {
       )}
     >
       <span className="text-muted-foreground w-11 shrink-0 text-xs tabular-nums">
-        {formatDate(new Date(session.startsAt), "time")}
+        {formatDate(new Date(event.startsAt), "time")}
       </span>
-      <MySessionDetails
-        session={session}
+      <MyEventDetails
+        event={event}
         open={open}
         onOpenChange={setOpen}
         anchor={row}
@@ -78,18 +78,18 @@ function AgendaRow(props: {
         onAskLeave={props.onAskLeave}
         trigger={
           <button type="button" className={cn(STRETCHED_TRIGGER, "flex-1 truncate font-medium")}>
-            {session.title}
+            {event.title}
           </button>
         }
       />
-      <SessionStatusBadge status={session.status} />
+      <EventStatusBadge status={event.status} />
     </li>
   );
 }
 
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
-  const rows = A.filter(props.sessions, (row) => row.status !== "done").slice(0, PREVIEW);
+  const rows = A.filter(props.events, (row) => row.status !== "done").slice(0, PREVIEW);
   const agendaHint =
     rows.length === 0 ? "Nothing is planned for you." : "Soonest first, in your time zone.";
   const days = byDay(rows);
@@ -104,7 +104,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
         </CardTitle>
         <CardDescription>{props.pending ? "Loading your days…" : agendaHint}</CardDescription>
         <CardAction>
-          <a href="/my/sessions" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             All my events
             <CaretRightIcon />
           </a>
@@ -135,10 +135,10 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
                   </span>
                 </div>
                 <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  {A.map(day.rows, (session) => (
+                  {A.map(day.rows, (event) => (
                     <AgendaRow
-                      key={session.id}
-                      session={session}
+                      key={event.id}
+                      event={event}
                       onPass={props.onPass}
                       onAskLeave={props.onAskLeave}
                     />

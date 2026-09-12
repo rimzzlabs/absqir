@@ -1,6 +1,6 @@
 /**
  * The pass a member shows at the door: a QR the organizer's scanner reads.
- * Signed with the session secret, bound to one person and one session, so
+ * Signed with the event secret, bound to one person and one event, so
  * a screenshot passed around only ever checks in the person it names.
  */
 const PREFIX = "absqir1";
@@ -28,19 +28,19 @@ function base64Url(bytes: Uint8Array): string {
 
 export interface PassParams {
   secret: string;
-  sessionId: string;
+  eventId: string;
   personId: string;
 }
 
 export async function createPass(params: PassParams): Promise<string> {
-  const payload = `${params.sessionId}.${params.personId}`;
+  const payload = `${params.eventId}.${params.personId}`;
   const signature = await sign(params.secret, payload);
 
   return `${PREFIX}:${payload}.${signature}`;
 }
 
 export interface ParsedPass {
-  sessionId: string;
+  eventId: string;
   personId: string;
   signature: string;
 }
@@ -51,14 +51,14 @@ export function parsePass(code: string): ParsedPass | null {
   const parts = code.slice(PREFIX.length + 1).split(".");
   if (parts.length !== 3) return null;
 
-  const [sessionId, personId, signature] = parts;
-  if (!sessionId || !personId || !signature) return null;
+  const [eventId, personId, signature] = parts;
+  if (!eventId || !personId || !signature) return null;
 
-  return { sessionId, personId, signature };
+  return { eventId, personId, signature };
 }
 
 export async function verifyPass(secret: string, pass: ParsedPass): Promise<boolean> {
-  const expected = await sign(secret, `${pass.sessionId}.${pass.personId}`);
+  const expected = await sign(secret, `${pass.eventId}.${pass.personId}`);
 
   return expected === pass.signature;
 }

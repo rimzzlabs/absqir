@@ -1,5 +1,5 @@
 ---
-import { EventPage } from "@/components/events/event-page";
+import { PublicEventPage } from "@/components/public-event/public-event-page";
 import AuthLayout from "@/layouts/auth-layout.astro";
 import { setEventCookie } from "@/lib/event-cookie";
 
@@ -15,5 +15,5 @@ setEventCookie(Astro.cookies, id);
 ---
 
 <AuthLayout title="Register — absqir">
-  <EventPage client:load eventId={id} signedIn={Astro.locals.user !== null} />
+  <PublicEventPage client:load eventId={id} signedIn={Astro.locals.user !== null} />
 </AuthLayout>

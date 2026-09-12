@@ -1,6 +1,6 @@
 import { A } from "@mobily/ts-belt";
 /**
- * The QR code rotates: the token is an HMAC over the session id and the
+ * The QR code rotates: the token is an HMAC over the event id and the
  * current time window. A screenshot of the code therefore expires within one
  * window, while a phone camera pointed at the live screen always works.
  */
@@ -10,7 +10,7 @@ const encoder = new TextEncoder();
 
 interface SignWindowParams {
   secret: string;
-  sessionId: string;
+  eventId: string;
   window: number;
 }
 
@@ -23,7 +23,7 @@ async function signWindow(params: SignWindowParams): Promise<string> {
     ["sign"],
   );
 
-  const payload = encoder.encode(`${params.sessionId}.${params.window}`);
+  const payload = encoder.encode(`${params.eventId}.${params.window}`);
   const signature = await crypto.subtle.sign("HMAC", key, payload);
 
   return base64Url(new Uint8Array(signature).slice(0, 16));
@@ -42,7 +42,7 @@ function windowAt(now: Date): number {
 
 export interface CreateQrTokenParams {
   secret: string;
-  sessionId: string;
+  eventId: string;
   now?: Date;
 }
 
@@ -56,14 +56,14 @@ export async function createQrToken(params: CreateQrTokenParams): Promise<QrToke
   const window = windowAt(now);
 
   return {
-    token: await signWindow({ secret: params.secret, sessionId: params.sessionId, window }),
+    token: await signWindow({ secret: params.secret, eventId: params.eventId, window }),
     expiresAt: new Date((window + 1) * QR_TOKEN_WINDOW_SECONDS * 1000),
   };
 }
 
 export interface VerifyQrTokenParams {
   secret: string;
-  sessionId: string;
+  eventId: string;
   token: string;
   now?: Date;
 }
@@ -78,7 +78,7 @@ export async function verifyQrToken(params: VerifyQrTokenParams): Promise<boolea
 
   const candidates = await Promise.all(
     A.map([current, current - 1], (window) =>
-      signWindow({ secret: params.secret, sessionId: params.sessionId, window }),
+      signWindow({ secret: params.secret, eventId: params.eventId, window }),
     ),
   );
 

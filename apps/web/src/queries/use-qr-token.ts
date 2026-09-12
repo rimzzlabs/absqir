@@ -1,4 +1,4 @@
-import { sessionListKeys } from "@absqir/core/query-keys";
+import { eventKeys } from "@absqir/core/query-keys";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { api, apiError } from "@/lib/api";
@@ -7,12 +7,12 @@ import { api, apiError } from "@/lib/api";
 const EARLY_MS = 500;
 const MIN_INTERVAL_MS = 1000;
 
-export function useQrToken(sessionId: string) {
+export function useQrToken(eventId: string) {
   return useQuery({
-    queryKey: sessionListKeys.qrToken(sessionId),
+    queryKey: eventKeys.qrToken(eventId),
     queryFn: async (ctx: QueryFunctionContext) => {
-      const response = await api.sessions[":id"]["qr-token"].$get(
-        { param: { id: sessionId } },
+      const response = await api.events[":id"]["qr-token"].$get(
+        { param: { id: eventId } },
         { init: { signal: ctx.signal } },
       );
 

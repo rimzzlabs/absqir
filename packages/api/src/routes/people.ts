@@ -41,7 +41,7 @@ const FORBIDDEN_MESSAGE = "This needs the admin role or higher";
 const idParam = z.object({ id: z.string() });
 
 const unauthorized = {
-  description: "No active session",
+  description: "No active event",
   content: { "application/json": { schema: errorSchema } },
 } as const;
 const forbidden = {

@@ -1,10 +1,10 @@
 import { Badge } from "@absqir/ui/badge";
 import { cn } from "@absqir/ui/lib/utils";
 
-export type SessionStatus = "scheduled" | "running" | "done";
+export type EventStatus = "scheduled" | "running" | "done";
 export type AttendanceStatus = "present" | "late" | "excused" | "absent";
 
-const SESSION: Record<SessionStatus, { label: string; className: string }> = {
+const EVENT: Record<EventStatus, { label: string; className: string }> = {
   scheduled: { label: "Scheduled", className: "" },
   running: {
     label: "Running",
@@ -32,8 +32,8 @@ const ATTENDANCE: Record<AttendanceStatus, { label: string; className: string }>
   },
 };
 
-export function SessionStatusBadge(props: { status: SessionStatus }) {
-  const item = SESSION[props.status];
+export function EventStatusBadge(props: { status: EventStatus }) {
+  const item = EVENT[props.status];
 
   return (
     <Badge variant="outline" className={cn(item.className)}>

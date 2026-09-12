@@ -28,33 +28,33 @@ import { FormError } from "@/components/shared/form-error";
 import { type AskLeaveValues, askLeaveSchema } from "@/lib/leave-schemas";
 import { useAskLeave } from "@/mutations/use-ask-leave";
 import { useMyLeave } from "@/queries/use-leave";
-import { type MySession, useMySessions } from "@/queries/use-my";
+import { type MyEvent, useMyEvents } from "@/queries/use-my";
 
-export type AskLeaveTarget = Pick<MySession, "id" | "title" | "startsAt" | "endsAt">;
+export type AskLeaveTarget = Pick<MyEvent, "id" | "title" | "startsAt" | "endsAt">;
 
 export interface AskLeaveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** An event chosen before the dialog opened. The picker stays hidden. */
-  session?: AskLeaveTarget | null;
+  event?: AskLeaveTarget | null;
 }
 
 /** Enough rows to offer every event still ahead without a second page. */
 const CHOICES = 50;
 
 export function AskLeaveDialog(props: AskLeaveDialogProps) {
-  const sessions = useMySessions({ scope: "upcoming", limit: CHOICES });
+  const events = useMyEvents({ scope: "upcoming", limit: CHOICES });
   const mine = useMyLeave({ scope: "all", limit: CHOICES });
   const ask = useAskLeave();
   const form = useForm<AskLeaveValues>({
     resolver: zodResolver(askLeaveSchema),
-    defaultValues: { sessionId: "", reason: "" },
+    defaultValues: { eventId: "", reason: "" },
   });
 
-  const preset = props.session ?? null;
+  const preset = props.event ?? null;
 
   useEffect(() => {
-    if (props.open) form.reset({ sessionId: preset?.id ?? "", reason: "" });
+    if (props.open) form.reset({ eventId: preset?.id ?? "", reason: "" });
   }, [props.open, preset, form]);
 
   // Only events still ahead, without a record, and without a request already.
@@ -62,17 +62,17 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
     pipe(
       mine.data?.pages ?? [],
       A.flatMap((page) => page.items),
-      A.map((row) => row.sessionId),
+      A.map((row) => row.eventId),
     ),
   );
   const options = pipe(
-    sessions.data?.pages ?? [],
+    events.data?.pages ?? [],
     A.flatMap((page) => page.items),
-    A.filter((session) => session.status !== "done" && !session.record && !asked.has(session.id)),
-    A.map((session) => ({
-      value: session.id,
-      label: session.title,
-      hint: formatRange(new Date(session.startsAt), new Date(session.endsAt)),
+    A.filter((event) => event.status !== "done" && !event.record && !asked.has(event.id)),
+    A.map((event) => ({
+      value: event.id,
+      label: event.title,
+      hint: formatRange(new Date(event.startsAt), new Date(event.endsAt)),
     })),
   );
 
@@ -104,7 +104,7 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
             ) : (
               <FormField
                 control={form.control}
-                name="sessionId"
+                name="eventId"
                 label="Event"
                 render={(field) => (
                   <Select
@@ -115,7 +115,7 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                     value={field.value}
                     onValueChange={(value) => field.onChange(value ?? "")}
                   >
-                    <SelectTrigger id="leave-session" className="w-full">
+                    <SelectTrigger id="leave-event" className="w-full">
                       <SelectValue placeholder="Pick an event" />
                     </SelectTrigger>
                     <SelectContent>

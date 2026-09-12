@@ -5,11 +5,11 @@ import { and, count, eq, gt } from "drizzle-orm";
 import { parseEnv } from "#src/env";
 import type { AppEnv } from "#src/types";
 
-const { user, account, invitation, attendanceSession } = schema;
+const { user, account, invitation, event: eventTable } = schema;
 
 const lookupBody = z.object({
   email: z.email().max(254),
-  /** The open session whose public page sent the visitor here. */
+  /** The open event whose public page sent the visitor here. */
   eventId: z.string().max(64).optional(),
 });
 
@@ -69,13 +69,13 @@ export const authFlowRoutes = new OpenAPIHono<AppEnv>().openapi(lookupRoute, asy
 
   if (body.eventId) {
     const open = await db
-      .select({ id: attendanceSession.id })
-      .from(attendanceSession)
+      .select({ id: eventTable.id })
+      .from(eventTable)
       .where(
         and(
-          eq(attendanceSession.id, body.eventId),
-          eq(attendanceSession.registrationOpen, true),
-          gt(attendanceSession.endsAt, new Date()),
+          eq(eventTable.id, body.eventId),
+          eq(eventTable.registrationOpen, true),
+          gt(eventTable.endsAt, new Date()),
         ),
       )
       .limit(1);
