@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
@@ -9,6 +10,18 @@ import { defineConfig, fontProviders } from "astro/config";
 // image builds with DEPLOY_TARGET=node. The alias below swaps the platform
 // glue (bindings, execution context) per target at build time.
 const deployTarget = process.env.DEPLOY_TARGET === "node" ? "node" : "cloudflare";
+
+// `pnpm dev:https` signs a certificate first, so a phone on the LAN reaches a
+// secure context. Without one the browser hides the camera API and the scanner
+// cannot open. Plain `pnpm dev` stays http.
+const certDir = fileURLToPath(new URL("./.certs/", import.meta.url));
+const devHttps =
+  process.env.DEV_HTTPS === "1" && existsSync(`${certDir}cert.pem`)
+    ? {
+        cert: readFileSync(`${certDir}cert.pem`),
+        key: readFileSync(`${certDir}key.pem`),
+      }
+    : undefined;
 
 // Every page depends on the reader's session, so the whole site renders per
 // request. One server serves the assets, the pages, and the Hono API from a
@@ -59,6 +72,7 @@ export default defineConfig({
   server: { port: 4321 },
   vite: {
     plugins: [tailwindcss()],
+    server: { https: devHttps },
     resolve: {
       alias: {
         "@app-runtime": fileURLToPath(

@@ -31,12 +31,79 @@ export function createMailerFor(env: ApiEnv, origin: string): Mailer | null {
     : null;
 }
 
+/** Loopback, link-local, and the three private IPv4 blocks. */
+function isPrivateIpv4(host: string): boolean {
+  const parts = host.split(".");
+  if (parts.length !== 4) return false;
+  if (!parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255)) return false;
+
+  const [a, b] = parts.map(Number) as [number, number, number, number];
+
+  return (
+    a === 127 ||
+    a === 10 ||
+    (a === 192 && b === 168) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31)
+  );
+}
+
+/**
+ * True for an address that can only be reached from this machine or this
+ * network: a laptop, or a phone on the same wifi.
+ */
+function isLocalHost(hostname: string): boolean {
+  // URL keeps an IPv6 host in brackets. Strip them before the name checks.
+  const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+
+  return (
+    host === "localhost" ||
+    host === "::1" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    isPrivateIpv4(host)
+  );
+}
+
+/**
+ * The addresses allowed to post to the API. Production trusts the one address
+ * the server answers on, and nothing else.
+ *
+ * A dev server cannot know that address. The Workers dev runtime rewrites the
+ * request URL to `https://localhost`, which drops the port and the host the
+ * browser really used, so a laptop on :4321 and a phone on the LAN both look
+ * foreign and every sign-in is refused. Development therefore also trusts the
+ * address the browser states, as long as that address is on this network.
+ *
+ * The check stays real for anything published: a page on the open internet
+ * cannot talk to a developer's machine this way. Never widen this past a
+ * private address.
+ */
+export function trustedOriginsFor(
+  env: ApiEnv,
+  origin: string,
+  requestOrigin?: string | null,
+): string[] {
+  if (env.ENVIRONMENT !== "development" || !requestOrigin) return [origin];
+
+  // A header is whatever the caller typed. Only a real, local origin joins.
+  const stated = URL.parse(requestOrigin);
+  if (!stated || !isLocalHost(stated.hostname)) return [origin];
+
+  return stated.origin === origin ? [origin] : [origin, stated.origin];
+}
+
 /**
  * One database pool and one auth instance for one Worker invocation.
  * Both the Hono app and the Astro middleware build their context here, so a
  * page render and an API call agree on how a session is read.
  */
-export function createRequestContext(bindings: ApiBindings, origin: string): RequestContext {
+export function createRequestContext(
+  bindings: ApiBindings,
+  origin: string,
+  /** The browser's own Origin header. Development trusts it; see above. */
+  requestOrigin?: string | null,
+): RequestContext {
   const env = parseEnv(bindings);
 
   const { db, close } = bindings.SHARED_DB
@@ -49,7 +116,7 @@ export function createRequestContext(bindings: ApiBindings, origin: string): Req
     db,
     secret: env.BETTER_AUTH_SECRET,
     baseURL: origin,
-    trustedOrigins: [origin],
+    trustedOrigins: trustedOriginsFor(env, origin, requestOrigin),
     useSecureCookies: secureCookies(env),
     registrationOpen: env.REGISTRATION_OPEN,
     enforceRateLimit: env.ENVIRONMENT !== "development",
