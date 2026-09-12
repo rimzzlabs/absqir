@@ -39,6 +39,10 @@
     "./email-domain": {
       "development": "./src/email-domain.ts",
       "default": "./dist/email-domain.js"
+    },
+    "./attendance-series": {
+      "development": "./src/attendance-series.ts",
+      "default": "./dist/attendance-series.js"
     }
   },
   "imports": {

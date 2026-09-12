@@ -1,4 +1,4 @@
-import { addDays, endOfDay, startOfDay, startOfMonth, subDays } from "@absqir/core/date";
+import { addDays, endOfDay, startOfDay } from "@absqir/core/date";
 import { DatePicker } from "@absqir/ui/date-picker";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import {
@@ -12,10 +12,12 @@ import {
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
+import { presetRange, type RangePreset } from "@/lib/report-window";
 import type { Group } from "@/queries/use-groups";
 import type { ReportRange } from "@/queries/use-reports";
 
-export type RangePreset = "7d" | "30d" | "month" | "custom";
+export type { RangePreset };
+export { presetRange };
 
 const PRESETS: { value: RangePreset; label: string }[] = [
   { value: "7d", label: "Last 7 days" },
@@ -25,14 +27,6 @@ const PRESETS: { value: RangePreset; label: string }[] = [
 ];
 
 const ALL_GROUPS = "all";
-
-/** Whole days in the reader's own timezone; the API takes absolute instants. */
-export function presetRange(preset: RangePreset, now: Date = new Date()) {
-  if (preset === "month") return { from: startOfMonth(now), to: endOfDay(now) };
-  if (preset === "30d") return { from: startOfDay(subDays(now, 29)), to: endOfDay(now) };
-
-  return { from: startOfDay(subDays(now, 6)), to: endOfDay(now) };
-}
 
 export interface ReportRangeControlsProps {
   preset: RangePreset;
