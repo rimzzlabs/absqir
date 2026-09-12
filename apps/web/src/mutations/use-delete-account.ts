@@ -7,7 +7,7 @@ export interface DeleteAccountInput {
    * Undefined for an account that signs in with a code or a provider. Better
    * Auth then wants a session younger than an hour instead.
    */
-  password?: string;
+  password?: string | undefined;
 }
 
 /**
@@ -18,12 +18,23 @@ export function useDeleteAccount() {
   return useMutation({
     mutationKey: accountMutationKeys.deleteAccount(),
     mutationFn: async (values: DeleteAccountInput) => {
+      // An empty string would be dropped and Better Auth would fall back to
+      // the freshness check, which deletes the account without the password
+      // the reader was asked for.
+      if (values.password !== undefined && values.password.length === 0) {
+        throw new Error("Give your password to delete the account.");
+      }
+
       const { error } = await authClient.deleteUser(
-        values.password ? { password: values.password } : {},
+        values.password === undefined ? {} : { password: values.password },
       );
 
       if (error?.code === "SESSION_EXPIRED") {
         throw new Error("You signed in a while ago. Sign out, sign in again, then delete it.");
+      }
+
+      if (error?.code === "INVALID_PASSWORD") {
+        throw new Error("That password is wrong.");
       }
 
       if (error) {

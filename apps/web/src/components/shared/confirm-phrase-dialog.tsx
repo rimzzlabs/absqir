@@ -11,7 +11,6 @@ import {
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { type ReactNode, useId, useState } from "react";
-import { FormError } from "@/components/shared/form-error";
 
 export interface ConfirmPhraseDialogProps {
   open: boolean;
@@ -23,21 +22,22 @@ export interface ConfirmPhraseDialogProps {
   /** What the phrase is, such as "organization slug". */
   phraseLabel: string;
   confirmLabel: string;
-  pending: boolean;
-  error: Error | null;
+  /** False while a field above the phrase is still empty. */
+  canConfirm?: boolean;
   /** Fields above the phrase, such as a password. */
   children?: ReactNode;
   onConfirm: () => void;
 }
 
 /**
- * A destructive confirmation that costs a moment of thought: the reader
- * copies an exact word before the button works.
+ * The first of two steps: the reader copies an exact word, and whatever
+ * else the act needs. Nothing is destroyed here. The button hands over to
+ * the last word.
  */
 export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
   const [typed, setTyped] = useState("");
   const fieldId = useId();
-  const matches = typed.trim() === props.phrase;
+  const ready = typed.trim() === props.phrase && (props.canConfirm ?? true);
 
   const close = (open: boolean) => {
     if (!open) setTyped("");
@@ -69,8 +69,6 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
               onChange={(event) => setTyped(event.target.value)}
             />
           </div>
-
-          <FormError error={props.error} />
         </div>
 
         {/* The footer bleeds to the edge, so it tracks the padding above. */}
@@ -78,10 +76,13 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
           <AlertDialogCancel>Keep it</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={!matches || props.pending}
-            onClick={props.onConfirm}
+            disabled={!ready}
+            onClick={() => {
+              setTyped("");
+              props.onConfirm();
+            }}
           >
-            {props.pending ? "Working…" : props.confirmLabel}
+            {props.confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
