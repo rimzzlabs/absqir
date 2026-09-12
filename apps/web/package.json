@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "dev:https": "node scripts/dev-cert.mjs && DEV_HTTPS=1 astro dev --host",
     "build": "astro build",
     "preview": "astro preview",
     "deploy": "wrangler deploy",

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "turbo run dev --filter=@absqir/web",
+    "dev:https": "pnpm --filter @absqir/web dev:https",
     "dev:all": "turbo run dev --filter=@absqir/web...",
     "dev:email": "turbo run dev:email --filter=@absqir/transactional",
     "docs:dev": "pnpm --filter @absqir/docs dev",
