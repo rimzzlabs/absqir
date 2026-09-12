@@ -1,0 +1,237 @@
+# Deploy to Cloudflare
+
+<div role="doc-subtitle">Run absqir on Workers, with Postgres from Neon</div>
+
+There are two ways to run absqir. [Install absqir](/getting-started) puts the
+Docker stack on a machine you keep. This page puts the same app on Cloudflare
+Workers, with a hosted Postgres, so there is no server to patch and no volume
+to back up.
+
+This path builds from a clone of the repository. The `absqir` CLI installs the
+Docker stack and does not deploy to Workers, so it takes no part here.
+
+:::note
+Both targets run the same code. The platform glue sits behind one small
+interface, picked at build time. See [Architecture](/architecture).
+:::
+
+## Before you start
+
+- A [Cloudflare](https://dash.cloudflare.com/sign-up) account. Workers, Hyperdrive
+  and KV all have a free tier.
+- A [Neon](https://neon.tech) account, or any Postgres the internet can reach.
+- Node.js 22 or newer, pnpm, and git.
+- A [Resend](https://resend.com) API key. The Worker runs with
+  `ENVIRONMENT=production`, and that refuses to start without one.
+
+## 1. Clone and install
+
+```bash
+git clone https://github.com/rimzzlabs/absqir.git
+cd absqir
+pnpm install
+```
+
+Then let wrangler sign in to your Cloudflare account:
+
+```bash
+pnpm --filter @absqir/web exec wrangler login
+```
+
+## 2. Create the database
+
+Create a project on Neon. Any region works, so pick the one nearest the people
+who will use absqir.
+
+Neon offers two connection strings. Hyperdrive pools connections for the
+Worker, so copy the **direct** string, not the pooled one.
+
+:::note
+Any Postgres works here. Railway, Render, Supabase, Amazon RDS, or your own
+server are all fine, as long as Cloudflare can reach them over TLS.
+:::
+
+## 3. Apply the migrations
+
+Migrations run from your machine, not from the Worker. Put the connection
+string in a `.env` at the root of the clone:
+
+```bash
+echo 'DATABASE_URL="postgresql://user:password@host/absqir?sslmode=require"' > .env
+pnpm db:migrate
+```
+
+This creates every table. Run it again after each upgrade that ships a new
+migration.
+
+## 4. Give the Worker the database
+
+A Worker reaches Postgres through Hyperdrive, which pools and caches the
+connections.
+
+```bash
+pnpm cf:hyperdrive -- --connection-string="postgresql://user:password@host/absqir?sslmode=require"
+```
+
+The command prints an id. Paste it into `apps/web/wrangler.jsonc`:
+
+```jsonc
+"hyperdrive": [
+  {
+    "binding": "HYPERDRIVE",
+    "id": "paste-the-id-here",
+    "localConnectionString": "postgresql://postgres:postgres@localhost:5432/absqir"
+  }
+]
+```
+
+`localConnectionString` is only for `pnpm dev` on your own machine. The
+deployed Worker never reads it.
+
+## 5. Create the session store
+
+The Astro adapter asks for a KV namespace bound as `SESSION`, and
+`wrangler.jsonc` does not list one. Create it:
+
+```bash
+pnpm --filter @absqir/web exec wrangler kv namespace create SESSION
+```
+
+Add the id it prints to `apps/web/wrangler.jsonc`:
+
+```jsonc
+"kv_namespaces": [{ "binding": "SESSION", "id": "paste-the-id-here" }]
+```
+
+## 6. Set the secrets
+
+Secrets live in Cloudflare, never in the repository. Set each one, and paste
+the value when wrangler asks:
+
+```bash
+pnpm cf:secret BETTER_AUTH_SECRET
+pnpm cf:secret RESEND_API_KEY
+pnpm cf:secret APP_URL
+```
+
+| Secret | Required | What it holds |
+| --- | --- | --- |
+| `BETTER_AUTH_SECRET` | yes | 32 characters or more. `openssl rand -base64 32` makes one. |
+| `RESEND_API_KEY` | yes | Sign-in codes and invitations travel through it. |
+| `APP_URL` | yes | The address people will type, with the scheme and no trailing slash. |
+| `CRON_SECRET` | no | 16 characters or more. Turns on `POST /api/tick`. See step 9. |
+| `GITHUB_CLIENT_ID` | no | With `GITHUB_CLIENT_SECRET`. See [Sign in with GitHub and Google](/oauth). |
+| `GOOGLE_CLIENT_ID` | no | With `GOOGLE_CLIENT_SECRET`. |
+
+`ENVIRONMENT` and `EMAIL_FROM` are plain settings, not secrets. They sit in the
+`vars` block of `apps/web/wrangler.jsonc`. Change `EMAIL_FROM` to an address on
+a domain you verified with Resend.
+
+:::warning
+`APP_URL` must match the address people reach. It goes into every reminder
+email and into the OAuth callbacks. A wrong value breaks both, and neither
+failure is loud.
+:::
+
+## 7. Deploy
+
+```bash
+pnpm deploy
+```
+
+This builds both the Worker and the static assets, then uploads them. The
+first deploy takes a few minutes. Wrangler prints the `workers.dev` address it
+published to.
+
+## 8. Put it on your own domain
+
+Open the Worker in the Cloudflare dashboard, then **Settings**, then
+**Domains and Routes**. Add a custom domain. Cloudflare issues the certificate
+and routes the traffic.
+
+Set `APP_URL` to that address if it is not already:
+
+```bash
+pnpm cf:secret APP_URL
+pnpm deploy
+```
+
+## 9. Turn on the heartbeat
+
+Three jobs run on the clock: schedules spawn their events, ended events close
+and write their absent records, and reminders go out.
+
+Reading a page settles the organization it belongs to, so a small instance
+needs no scheduler at all. Skip this step until reminders need to arrive while
+nobody is looking.
+
+A Worker holds no timer between requests, so the call comes from outside. Set
+the secret, then have any scheduler post to the endpoint once a minute:
+
+```bash
+pnpm cf:secret CRON_SECRET
+pnpm deploy
+```
+
+```bash
+curl -X POST https://absqir.example.com/api/tick \
+  -H "authorization: Bearer $CRON_SECRET" \
+  -H "content-type: application/json" \
+  -d '{}'
+```
+
+:::warning
+A Cloudflare Cron Trigger on this Worker does nothing. A trigger calls a
+`scheduled()` handler, and absqir exports only a `fetch` handler. Use a
+scheduler that makes the HTTP call above: a GitHub Actions workflow, a cron
+entry on any machine, or a second small Worker whose trigger fetches this one.
+:::
+
+The `content-type` header matters. Without it the site reads the call as a
+cross-site form post and refuses it. See
+[The heartbeat](/notifications#the-heartbeat).
+
+## 10. Take the first account
+
+Open your address and enter your email address.
+
+The first account on a fresh instance is the operator. It receives a 6 digit
+code, and the code creates the account. Onboarding then asks for a name, a
+password, an optional picture, and your first organization.
+
+:::warning
+The operator is whoever signs in first. Take the first account before you tell
+anyone the address.
+:::
+
+## Upgrading
+
+Pull the tag you want, then deploy again:
+
+```bash
+git fetch --tags
+git checkout v0.3.2
+pnpm install
+pnpm db:migrate
+pnpm deploy
+```
+
+Read [Upgrades](/upgrades) first. It lists what each version needs.
+
+## What is different from Docker
+
+| | Docker | Cloudflare |
+| --- | --- | --- |
+| Install | `npx absqir init` | clone the repository |
+| Database | Postgres in a container | Neon, or any hosted Postgres |
+| Migrations | the app applies them at start | `pnpm db:migrate` from your machine |
+| Heartbeat | the server runs it | an outside scheduler posts to `/api/tick` |
+| Upgrade | `absqir upgrade` | `git checkout`, then `pnpm deploy` |
+| Backups | back up the volume yourself | your Postgres host does it |
+
+## Next
+
+- [Run your first event](/first-event) fills the instance and takes you to a report.
+- [Configuration](/configuration) lists every setting.
+- [Sign in with GitHub and Google](/oauth) adds the buttons.
+- [Troubleshooting](/troubleshooting) answers the failures people meet first.

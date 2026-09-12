@@ -37,6 +37,7 @@ export default defineConfig({
       text: "Running your instance",
       items: [
         { text: "Configuration", link: "/configuration" },
+        { text: "Deploy to Cloudflare", link: "/cloudflare" },
         { text: "Sign in with GitHub and Google", link: "/oauth" },
         { text: "Going to production", link: "/production" },
         { text: "Upgrades", link: "/upgrades" },
