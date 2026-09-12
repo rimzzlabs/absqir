@@ -5,9 +5,12 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
 
+  // Deploying to Cloudflare? The whole path is at
+  // https://absqir.rimzzlabs.com/cloudflare
+
   // Hyperdrive pools and caches Postgres connections for the Worker.
   // Create one, then paste the id here:
-  //   pnpm cf:hyperdrive:create -- --connection-string="postgresql://..."
+  //   pnpm cf:hyperdrive -- --connection-string="postgresql://..."
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
@@ -15,6 +18,11 @@
       "localConnectionString": "postgresql://rimzzlabs:postgres@localhost:5432/absqir"
     }
   ],
+
+  // The Astro adapter binds a KV namespace as SESSION. Create one, then paste
+  // the id here, or the deploy has nowhere to keep a session:
+  //   pnpm --filter @absqir/web exec wrangler kv namespace create SESSION
+  "kv_namespaces": [{ "binding": "SESSION", "id": "replace-with-your-kv-namespace-id" }],
 
   // Edge rate limit. namespace_id is any number unique inside this Worker.
   "ratelimits": [
