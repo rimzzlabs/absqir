@@ -1,3 +1,4 @@
+import type { Translate } from "@absqir/i18n";
 import { A } from "@mobily/ts-belt";
 import { match } from "ts-pattern";
 /** Matches MAX_AVATAR_BYTES in packages/api. */
@@ -9,7 +10,7 @@ const QUALITIES = [0.85, 0.7, 0.55, 0.4];
  * Squares and shrinks a picture to 128px in the browser, so the server only
  * ever stores a small data URL. Tries WebP first, then JPEG for old engines.
  */
-export async function toAvatarDataUrl(file: File): Promise<string> {
+export async function toAvatarDataUrl(file: File, t: Translate): Promise<string> {
   const bitmap = await createImageBitmap(file);
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement("canvas");
@@ -17,7 +18,7 @@ export async function toAvatarDataUrl(file: File): Promise<string> {
   canvas.height = SIZE;
 
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("This browser cannot resize pictures.");
+  if (!context) throw new Error(t("errors:cannotResizePictures"));
 
   context.drawImage(
     bitmap,
@@ -39,7 +40,7 @@ export async function toAvatarDataUrl(file: File): Promise<string> {
     }
   }
 
-  throw new Error("That picture is too detailed to shrink. Try a simpler one.");
+  throw new Error(t("errors:pictureTooDetailed"));
 }
 
 /** Two letters for the fallback circle. */

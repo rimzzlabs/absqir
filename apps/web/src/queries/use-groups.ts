@@ -1,14 +1,16 @@
 import { groupKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 export function useGroups() {
+  const t = useTranslate();
   return useQuery({
     queryKey: groupKeys.list(),
     queryFn: async (ctx: QueryFunctionContext) => {
       const response = await api.groups.$get(undefined, { init: { signal: ctx.signal } });
 
-      if (!response.ok) throw await apiError(response, "Could not load the groups.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadGroups"));
 
       return response.json();
     },
@@ -16,6 +18,7 @@ export function useGroups() {
 }
 
 export function useGroup(id: string | null) {
+  const t = useTranslate();
   return useQuery({
     queryKey: groupKeys.detail(id ?? ""),
     enabled: id !== null,
@@ -25,7 +28,7 @@ export function useGroup(id: string | null) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the group.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadGroup"));
 
       return response.json();
     },

@@ -1,4 +1,5 @@
 import { leaveKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
@@ -7,6 +8,7 @@ export type LeaveScope = "pending" | "decided" | "all";
 
 /** The organizer's queue. */
 export function useLeaveQueue(scope: LeaveScope = "pending") {
+  const t = useTranslate();
   return useQuery({
     queryKey: leaveKeys.queue(scope),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -15,7 +17,7 @@ export function useLeaveQueue(scope: LeaveScope = "pending") {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the leave requests.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadLeaveRequests"));
 
       return response.json();
     },
@@ -31,6 +33,7 @@ export interface MyLeaveFilter {
 
 /** The member's own requests, newest first, one page at a time. */
 export function useMyLeave(filter: MyLeaveFilter = { scope: "all" }) {
+  const t = useTranslate();
   return useInfiniteQuery({
     queryKey: leaveKeys.minePage(filter.scope, filter.limit ?? null),
     initialPageParam: null as string | null,
@@ -48,7 +51,7 @@ export function useMyLeave(filter: MyLeaveFilter = { scope: "all" }) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load your leave requests.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourLeaveRequests"));
 
       return response.json();
     },

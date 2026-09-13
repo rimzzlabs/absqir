@@ -1,4 +1,5 @@
 import { eventKeys, eventMutationKeys, myKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -10,6 +11,7 @@ export interface SetRecordInput {
 }
 
 export function useSetRecord() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -20,7 +22,7 @@ export function useSetRecord() {
         json: values,
       });
 
-      if (!response.ok) throw await apiError(response, "Could not save the record.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveRecord"));
 
       return response.json();
     },

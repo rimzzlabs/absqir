@@ -38,7 +38,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
     setReadError(null);
 
     try {
-      save.mutate({ organizationId: props.organization.id, logo: await toAvatarDataUrl(file) });
+      save.mutate({ organizationId: props.organization.id, logo: await toAvatarDataUrl(file, t) });
     } catch (error) {
       setReadError(
         match(error)

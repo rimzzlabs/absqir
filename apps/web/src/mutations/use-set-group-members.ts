@@ -1,4 +1,5 @@
 import { groupKeys, groupMutationKeys, peopleKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -8,6 +9,7 @@ export interface SetGroupMembersInput {
 }
 
 export function useSetGroupMembers() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -15,7 +17,7 @@ export function useSetGroupMembers() {
     mutationFn: async ({ id, personIds }: SetGroupMembersInput) => {
       const response = await api.groups[":id"].members.$put({ param: { id }, json: { personIds } });
 
-      if (!response.ok) throw await apiError(response, "Could not save the group members.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveGroupMembers"));
 
       return response.json();
     },

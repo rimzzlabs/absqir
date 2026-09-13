@@ -1,4 +1,5 @@
 import { eventKeys, eventMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -13,6 +14,7 @@ export interface ReviewRecordInput {
  * itself worth keeping. To reject the check-in, mark the person absent.
  */
 export function useReviewRecord() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -22,7 +24,7 @@ export function useReviewRecord() {
         param: { id: eventId, personId },
       });
 
-      if (!response.ok) throw await apiError(response, "Could not clear the flag.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotClearFlag"));
 
       return response.json();
     },

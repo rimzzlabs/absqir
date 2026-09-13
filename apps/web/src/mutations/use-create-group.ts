@@ -1,4 +1,5 @@
 import { groupKeys, groupMutationKeys, organizationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -8,6 +9,7 @@ export interface CreateGroupInput {
 }
 
 export function useCreateGroup() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -15,7 +17,7 @@ export function useCreateGroup() {
     mutationFn: async (values: CreateGroupInput) => {
       const response = await api.groups.$post({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not create the group.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCreateGroup"));
 
       return response.json();
     },

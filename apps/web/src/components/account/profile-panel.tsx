@@ -54,7 +54,7 @@ function Identity(props: ProfilePanelProps) {
     setReadError(null);
 
     try {
-      save.mutate({ name: props.name, image: await toAvatarDataUrl(file) });
+      save.mutate({ name: props.name, image: await toAvatarDataUrl(file, t) });
     } catch (error) {
       setReadError(
         match(error)

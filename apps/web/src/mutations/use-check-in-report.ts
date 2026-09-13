@@ -4,6 +4,7 @@ import {
   eventKeys,
   myKeys,
 } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -16,6 +17,7 @@ export interface SendReportInput {
 
 /** The member's own report that the place check was wrong about them. */
 export function useSendCheckInReport() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -26,7 +28,7 @@ export function useSendCheckInReport() {
         json: { message, attemptId },
       });
 
-      if (!response.ok) throw await apiError(response, "Could not send the report.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSendReport"));
 
       return response.json();
     },
@@ -49,6 +51,7 @@ export interface DecideReportInput {
  * every view of that event and of the member's own events goes stale.
  */
 export function useDecideCheckInReport() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,7 +62,7 @@ export function useDecideCheckInReport() {
         json: { approve, note, status },
       });
 
-      if (!response.ok) throw await apiError(response, "Could not save the decision.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveDecision"));
 
       return response.json();
     },

@@ -1,9 +1,11 @@
 import { accountKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useInfiniteQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 /** Every browser signed in as me, this one first, then the most recent, page by page. */
 export function useDevices() {
+  const t = useTranslate();
   return useInfiniteQuery({
     queryKey: accountKeys.devices(),
     initialPageParam: null as string | null,
@@ -13,7 +15,7 @@ export function useDevices() {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not list your devices.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotListYourDevices"));
 
       return response.json();
     },

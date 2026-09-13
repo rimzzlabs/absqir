@@ -1,4 +1,5 @@
 import { joinRequestMutationKeys, meKeys, onboardingKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -12,6 +13,7 @@ export interface AskToJoinInput {
  * into it. A workspace set to `request` answers with an open request.
  */
 export function useAskToJoin() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -19,7 +21,7 @@ export function useAskToJoin() {
     mutationFn: async (input: AskToJoinInput) => {
       const response = await api["join-requests"].$post({ json: { message: input.message } });
 
-      if (!response.ok) throw await apiError(response, "Could not send the request.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSendRequest"));
 
       return response.json();
     },

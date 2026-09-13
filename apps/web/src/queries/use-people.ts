@@ -1,9 +1,11 @@
 import { peopleKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { match, P } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
 export function usePeople(query = "") {
+  const t = useTranslate();
   return useQuery({
     queryKey: peopleKeys.list(query),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -16,7 +18,7 @@ export function usePeople(query = "") {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the directory.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadDirectory"));
 
       return response.json();
     },

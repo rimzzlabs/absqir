@@ -26,7 +26,7 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
     setResizeError(null);
 
     try {
-      setImage(await toAvatarDataUrl(file));
+      setImage(await toAvatarDataUrl(file, t));
     } catch (error) {
       setResizeError(
         match(error)

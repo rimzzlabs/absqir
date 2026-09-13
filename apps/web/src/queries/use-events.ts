@@ -1,4 +1,5 @@
 import { type EventListFilter, eventKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   keepPreviousData,
   type QueryFunctionContext,
@@ -12,6 +13,7 @@ export type { EventListFilter };
 
 /** One list, page by page. The filter is the key, so a new search starts at page one. */
 export function useEvents(filter: EventListFilter) {
+  const t = useTranslate();
   return useInfiniteQuery({
     queryKey: eventKeys.list(filter),
     initialPageParam: null as string | null,
@@ -30,7 +32,7 @@ export function useEvents(filter: EventListFilter) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the events.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadEvents"));
 
       return response.json();
     },
@@ -43,6 +45,7 @@ export function useEvents(filter: EventListFilter) {
 }
 
 export function useEvent(id: string) {
+  const t = useTranslate();
   return useQuery({
     queryKey: eventKeys.detail(id),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -51,7 +54,7 @@ export function useEvent(id: string) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the event.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadEvent"));
 
       return response.json();
     },
@@ -60,6 +63,7 @@ export function useEvent(id: string) {
 }
 
 export function useEventRecords(id: string) {
+  const t = useTranslate();
   return useQuery({
     queryKey: eventKeys.records(id),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -68,7 +72,7 @@ export function useEventRecords(id: string) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the records.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadRecords"));
 
       return response.json();
     },

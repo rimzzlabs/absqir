@@ -1,9 +1,11 @@
 import { myKeys, publicEventKeys, publicEventMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 /** Puts the signed-in reader on an open event's list. */
 export function useRegisterEvent() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,7 +13,7 @@ export function useRegisterEvent() {
     mutationFn: async (id: string) => {
       const response = await api.public.events[":id"].register.$post({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not register you.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotRegisterYou"));
 
       return response.json();
     },

@@ -1,9 +1,11 @@
 import { myKeys, publicEventKeys, publicEventMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 /** Takes the signed-in reader off an open event's list. */
 export function useWithdrawEvent() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,7 +13,8 @@ export function useWithdrawEvent() {
     mutationFn: async (id: string) => {
       const response = await api.public.events[":id"].register.$delete({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not withdraw your registration.");
+      if (!response.ok)
+        throw await apiError(response, t("errors:couldNotWithdrawYourRegistration"));
 
       return response.json();
     },
