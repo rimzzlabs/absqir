@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -21,6 +22,7 @@ export interface OrganizationIdentityProps {
  * workspace switcher is rendered on the server.
  */
 export function OrganizationIdentity(props: OrganizationIdentityProps) {
+  const t = useTranslate();
   const [readError, setReadError] = useState<Error | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const current = useOrganization();
@@ -28,8 +30,8 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
 
   const logo = current.data?.logo ?? null;
   const logoLabel = match(logo)
-    .with(P.string.minLength(1), () => "Change logo" as const)
-    .otherwise(() => "Add a logo" as const);
+    .with(P.string.minLength(1), () => t("settings:organization.changeLogo"))
+    .otherwise(() => t("settings:organization.addLogo"));
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -41,7 +43,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
       setReadError(
         match(error)
           .with(P.instanceOf(Error), (error) => error)
-          .otherwise(() => new Error("Could not read that picture.")),
+          .otherwise(() => new Error(t("settings:organization.unreadable"))),
       );
     }
   };
@@ -72,7 +74,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
             .with(P.nullish, () => <Skeleton className="h-4 w-32" />)
             .otherwise((data) => (
               <span className="text-muted-foreground text-xs">
-                Started {formatDate(new Date(data.createdAt))}
+                {t("settings:organization.started", { date: formatDate(new Date(data.createdAt)) })}
               </span>
             ))}
         </div>
@@ -97,7 +99,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
               >
                 <CameraIcon />
                 {match(save.isPending)
-                  .with(true, () => "Saving…" as const)
+                  .with(true, () => t("common:actions.saving"))
                   .otherwise(() => logoLabel)}
               </Button>
               {match(logo)
@@ -111,13 +113,13 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
                     }
                   >
                     <XIcon />
-                    Remove
+                    {t("common:actions.remove")}
                   </Button>
                 ))
                 .otherwise(() => null)}
             </div>
             <p className="text-muted-foreground text-xs">
-              PNG, JPEG or WebP. Shrunk to 128px. It shows in the workspace switcher.
+              {t("settings:organization.logoFormats")}
             </p>
             <FormError error={readError ?? save.error} />
           </div>

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import type { Icon } from "@phosphor-icons/react";
@@ -6,6 +7,7 @@ import { match } from "ts-pattern";
 
 export interface SettingsNavItem<TValue extends string> {
   value: TValue;
+  /** Worded by the caller, which knows the reader's language. */
   label: string;
   icon: Icon;
 }
@@ -27,6 +29,7 @@ export interface SettingsNavProps<TValue extends string> {
  * new tab and the address bar carries the section.
  */
 export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValue>) {
+  const t = useTranslate();
   const list = useRef<HTMLElement>(null);
   const { value } = props;
 
@@ -54,7 +57,7 @@ export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValu
   return (
     <nav
       ref={list}
-      aria-label="Settings sections"
+      aria-label={t("settings:nav.label")}
       className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:gap-6 lg:self-start lg:overflow-visible lg:px-0"
     >
       {A.map(props.groups, (group) => (

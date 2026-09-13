@@ -1,4 +1,5 @@
 import { canGrantOwner, canManageAccess } from "@absqir/core/member-access";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ function asRole(role: string): RoleName {
 
 function Identity(props: { member: Member; isSelf: boolean }) {
   const { member } = props;
+  const t = useTranslate();
 
   return (
     <div className="flex items-center gap-3">
@@ -59,7 +61,9 @@ function Identity(props: { member: Member; isSelf: boolean }) {
         <p className="truncate font-medium">
           {member.user.name}
           {match(props.isSelf)
-            .with(true, () => <span className="text-muted-foreground"> (you)</span>)
+            .with(true, () => (
+              <span className="text-muted-foreground">{t("settings:members.you")}</span>
+            ))
             .otherwise(() => null)}
         </p>
         <p className="text-muted-foreground truncate text-xs">{member.user.email}</p>
@@ -109,13 +113,14 @@ function useIdentifierDraft(person: Person | undefined): IdentifierDraft {
 
 function IdentifierInput(props: { draft: IdentifierDraft; id: string; name: string }) {
   const { draft } = props;
+  const t = useTranslate();
 
   return (
     <Input
       id={props.id}
       value={draft.value}
-      aria-label={`Identifier for ${props.name}`}
-      placeholder="—"
+      aria-label={t("settings:members.identifierFor", { name: props.name })}
+      placeholder={t("settings:members.identifierPlaceholder")}
       autoComplete="off"
       className="font-mono text-xs"
       disabled={draft.pending}
@@ -172,29 +177,29 @@ function RemoveDialog(props: {
   onOpenChange: (open: boolean) => void;
 }) {
   const { member } = props;
+  const t = useTranslate();
   const remove = useRemoveMember();
 
   return (
     <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Remove {member.user.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            They lose access to this organization. Their directory entry stays, without an account
-            behind it.
-          </AlertDialogDescription>
+          <AlertDialogTitle>
+            {t("settings:members.removeTitle", { name: member.user.name })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t("settings:members.removeDescription")}</AlertDialogDescription>
         </AlertDialogHeader>
         <FormError error={remove.error} />
         <AlertDialogFooter>
-          <AlertDialogCancel>Keep</AlertDialogCancel>
+          <AlertDialogCancel>{t("settings:members.keep")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={remove.isPending}
             onClick={() => remove.mutate(member.id, { onSuccess: () => props.onOpenChange(false) })}
           >
             {match(remove.isPending)
-              .with(true, () => "Removing…" as const)
-              .otherwise(() => "Remove" as const)}
+              .with(true, () => t("settings:members.removing"))
+              .otherwise(() => t("settings:members.remove"))}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -203,13 +208,14 @@ function RemoveDialog(props: {
 }
 
 function RemoveAction(props: { member: Member }) {
+  const t = useTranslate();
   const [removing, setRemoving] = useState(false);
 
   return (
     <>
       <IconAction
         variant="ghost"
-        label={`Remove ${props.member.user.name}`}
+        label={t("settings:members.removeLabel", { name: props.member.user.name })}
         onClick={() => setRemoving(true)}
       >
         <TrashIcon />
@@ -231,6 +237,7 @@ function CardActions(props: {
   canGrantOwner: boolean;
 }) {
   const { member, person } = props;
+  const t = useTranslate();
   const [removing, setRemoving] = useState(false);
   const draft = useIdentifierDraft(person);
   const updateRole = useUpdateMemberRole();
@@ -246,14 +253,18 @@ function CardActions(props: {
       >
         <PopoverTrigger render={<Button variant="ghost" size="icon-sm" />}>
           <DotsThreeIcon weight="bold" />
-          <span className="sr-only">Identifier, role and removal for {member.user.name}</span>
+          <span className="sr-only">
+            {t("settings:members.cardActions", { name: member.user.name })}
+          </span>
         </PopoverTrigger>
         <PopoverContent align="end">
           {match(person)
             .with(P.nullish, () => null)
             .otherwise((person) => (
               <Field>
-                <FieldLabel htmlFor={`card-identifier-${person.id}`}>Identifier</FieldLabel>
+                <FieldLabel htmlFor={`card-identifier-${person.id}`}>
+                  {t("settings:members.identifier")}
+                </FieldLabel>
                 <FieldContent>
                   <IdentifierInput
                     draft={draft}
@@ -261,7 +272,7 @@ function CardActions(props: {
                     name={member.user.name}
                   />
                 </FieldContent>
-                <FieldDescription>Employee or member number.</FieldDescription>
+                <FieldDescription>{t("settings:members.identifierHint")}</FieldDescription>
                 <FormError error={draft.error} />
               </Field>
             ))}
@@ -270,7 +281,9 @@ function CardActions(props: {
             .with(true, () => (
               <>
                 <Field>
-                  <FieldLabel htmlFor={`card-role-${member.id}`}>Role</FieldLabel>
+                  <FieldLabel htmlFor={`card-role-${member.id}`}>
+                    {t("settings:members.role")}
+                  </FieldLabel>
                   <FieldContent>
                     <RoleSelect
                       id={`card-role-${member.id}`}
@@ -291,7 +304,7 @@ function CardActions(props: {
                   onClick={() => setRemoving(true)}
                 >
                   <TrashIcon />
-                  Remove from the organization
+                  {t("settings:members.removeFromOrganization")}
                 </Button>
               </>
             ))
@@ -305,6 +318,7 @@ function CardActions(props: {
 }
 
 export function MembersTable(props: MembersTableProps) {
+  const t = useTranslate();
   const members = useMembers();
   const people = usePeople();
   const grantsOwner = canGrantOwner(props.role);
@@ -325,14 +339,14 @@ export function MembersTable(props: MembersTableProps) {
   const columns: DataColumn<Member>[] = [
     {
       key: "account",
-      header: "Account",
+      header: t("settings:members.account"),
       place: "primary",
       cell: (member) => <Identity member={member} isSelf={isSelf(member)} />,
     },
     {
       // The card carries this in the popover instead, where there is room.
       key: "identifier",
-      header: "Identifier",
+      header: t("settings:members.identifier"),
       place: "none",
       cell: (member) =>
         match(directory.get(member.userId))
@@ -341,7 +355,7 @@ export function MembersTable(props: MembersTableProps) {
     },
     {
       key: "role",
-      header: "Role",
+      header: t("settings:members.role"),
       cell: (member) => (
         <RoleCell member={member} canChange={canChange(member)} canGrantOwner={grantsOwner} />
       ),
@@ -374,7 +388,7 @@ export function MembersTable(props: MembersTableProps) {
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (rows) => (
       <DataTable
-        label="Members of this organization"
+        label={t("settings:members.tableLabel")}
         columns={columns}
         rows={rows}
         getKey={(member) => member.id}

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
@@ -29,26 +30,11 @@ import {
 } from "@/mutations/use-domain-actions";
 import { type OrganizationDomain, useDomains } from "@/queries/use-domains";
 
-const POLICY_OPTIONS: { value: JoinPolicy; label: string; hint: string }[] = [
-  {
-    value: "request",
-    label: "Ask first",
-    hint: "They send a request. An admin lets them in.",
-  },
-  {
-    value: "auto",
-    label: "Straight in",
-    hint: "Anyone at a verified domain becomes a member.",
-  },
-  {
-    value: "closed",
-    label: "Invitation only",
-    hint: "The domain opens nothing. Invitations still work.",
-  },
-];
+const POLICY_OPTIONS: JoinPolicy[] = ["request", "auto", "closed"];
 
 function DomainRow(props: { row: OrganizationDomain }) {
   const { row } = props;
+  const t = useTranslate();
   const verify = useVerifyDomain();
   const release = useReleaseDomain();
 
@@ -59,14 +45,14 @@ function DomainRow(props: { row: OrganizationDomain }) {
         {match(row.verified)
           .with(true, () => (
             <Badge variant="secondary">
-              Verified
+              {t("settings:domains.verified")}
               {match(row.verifiedBy)
-                .with("email", () => " by email" as const)
-                .otherwise(() => " by DNS" as const)}
+                .with("email", () => t("settings:domains.byEmail"))
+                .otherwise(() => t("settings:domains.byDns"))}
             </Badge>
           ))
           .otherwise(() => (
-            <Badge variant="outline">Waiting for the record</Badge>
+            <Badge variant="outline">{t("settings:domains.waiting")}</Badge>
           ))}
         <div className="ml-auto flex items-center gap-2">
           {match(row.verified)
@@ -80,13 +66,13 @@ function DomainRow(props: { row: OrganizationDomain }) {
               >
                 <ArrowClockwiseIcon />
                 {match(verify.isPending)
-                  .with(true, () => "Checking…" as const)
-                  .otherwise(() => "Check now" as const)}
+                  .with(true, () => t("settings:domains.checking"))
+                  .otherwise(() => t("settings:domains.checkNow"))}
               </Button>
             ))}
           <IconAction
             variant="ghost"
-            label={`Release ${row.domain}`}
+            label={t("settings:domains.releaseLabel", { domain: row.domain })}
             disabled={release.isPending}
             onClick={() => release.mutate(row.id)}
           >
@@ -99,11 +85,11 @@ function DomainRow(props: { row: OrganizationDomain }) {
         .with(true, () => null)
         .otherwise(() => (
           <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-sm">
-            <p>Add this TXT record, then press Check now.</p>
+            <p>{t("settings:domains.recordHint")}</p>
             <dl className="mt-2 grid gap-1 font-mono text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
-              <dt className="font-sans">Host</dt>
+              <dt className="font-sans">{t("settings:domains.host")}</dt>
               <dd className="text-foreground break-all">{row.recordHost}</dd>
-              <dt className="font-sans">Value</dt>
+              <dt className="font-sans">{t("settings:domains.value")}</dt>
               <dd className="text-foreground break-all">{row.recordValue}</dd>
             </dl>
           </div>
@@ -115,17 +101,15 @@ function DomainRow(props: { row: OrganizationDomain }) {
 }
 
 function ClaimForm() {
+  const t = useTranslate();
   const [domain, setDomain] = useState("");
   const claim = useClaimDomain();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Claim a domain</CardTitle>
-        <CardDescription>
-          A claim starts unverified. Add the TXT record it names, and this workspace owns the
-          domain. A mailbox provider such as gmail.com can never be claimed.
-        </CardDescription>
+        <CardTitle>{t("settings:domains.claimTitle")}</CardTitle>
+        <CardDescription>{t("settings:domains.claimDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -137,7 +121,7 @@ function ClaimForm() {
           }}
         >
           <Field className="min-w-56 flex-1">
-            <FieldLabel htmlFor="claim-domain">Domain</FieldLabel>
+            <FieldLabel htmlFor="claim-domain">{t("settings:domains.domain")}</FieldLabel>
             <FieldContent>
               <Input
                 id="claim-domain"
@@ -151,8 +135,8 @@ function ClaimForm() {
           <Button type="submit" disabled={claim.isPending}>
             <PlusIcon />
             {match(claim.isPending)
-              .with(true, () => "Claiming…" as const)
-              .otherwise(() => "Claim" as const)}
+              .with(true, () => t("settings:domains.claiming"))
+              .otherwise(() => t("settings:domains.claim"))}
           </Button>
         </form>
         <FormError error={claim.error} />
@@ -163,6 +147,7 @@ function ClaimForm() {
 
 /** Which domains this workspace owns, and what a matching account may do. */
 export function DomainsPanel() {
+  const t = useTranslate();
   const domains = useDomains();
   const setPolicy = useSetJoinPolicy();
 
@@ -176,12 +161,12 @@ export function DomainsPanel() {
         .with({ data: P.select(P.nonNullable) }, (data) => (
           <>
             <Field>
-              <FieldLabel htmlFor="join-policy">People from a verified domain</FieldLabel>
+              <FieldLabel htmlFor="join-policy">{t("settings:domains.policyLabel")}</FieldLabel>
               <FieldContent>
                 <Select
                   items={A.map(POLICY_OPTIONS, (option) => ({
-                    value: option.value,
-                    label: option.label,
+                    value: option,
+                    label: t(`settings:domains.policies.${option}`),
                   }))}
                   value={data.joinPolicy}
                   disabled={setPolicy.isPending}
@@ -194,33 +179,31 @@ export function DomainsPanel() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>When the email domain matches</SelectLabel>
+                      <SelectLabel>{t("settings:domains.policyGroup")}</SelectLabel>
                       {A.map(POLICY_OPTIONS, (option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem key={option} value={option}>
                           <span className="flex flex-col">
-                            <span>{option.label}</span>
-                            <SelectItemDescription>{option.hint}</SelectItemDescription>
+                            <span>{t(`settings:domains.policies.${option}`)}</span>
+                            <SelectItemDescription>
+                              {t(`settings:domains.policies.${option}Hint`)}
+                            </SelectItemDescription>
                           </span>
                         </SelectItem>
                       ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <FieldDescription>
-                  This decides what happens to a new account whose address ends in a domain below.
-                </FieldDescription>
+                <FieldDescription>{t("settings:domains.policyHint")}</FieldDescription>
               </FieldContent>
             </Field>
 
             <FormError error={setPolicy.error} />
 
             <section className="space-y-1">
-              <h2 className="text-sm font-medium">Domains</h2>
+              <h2 className="text-sm font-medium">{t("settings:domains.listTitle")}</h2>
               {match(data.items.length)
                 .with(0, () => (
-                  <p className="text-muted-foreground text-sm">
-                    No domain is claimed. Nobody finds this workspace by their email.
-                  </p>
+                  <p className="text-muted-foreground text-sm">{t("settings:domains.empty")}</p>
                 ))
                 .otherwise(() => (
                   <div className="border-border rounded-xl border px-4">

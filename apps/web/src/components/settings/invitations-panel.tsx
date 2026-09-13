@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
@@ -26,8 +27,9 @@ function asRole(role: string) {
 }
 
 function InviteForm() {
+  const t = useTranslate();
   const form = useForm<InviteValues>({
-    resolver: zodResolver(inviteSchema),
+    resolver: zodResolver(inviteSchema(t)),
     defaultValues: { email: "", role: "member" },
   });
   const invite = useInviteMember();
@@ -35,11 +37,8 @@ function InviteForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite someone</CardTitle>
-        <CardDescription>
-          They get an email with a link. On the other side they create an account, or sign in, and
-          land here. The invitation lasts 7 days.
-        </CardDescription>
+        <CardTitle>{t("settings:invitations.formTitle")}</CardTitle>
+        <CardDescription>{t("settings:invitations.formDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -56,11 +55,11 @@ function InviteForm() {
             <FormField
               control={form.control}
               name="email"
-              label="Email"
+              label={t("settings:invitations.email")}
               render={(field) => <Input {...field} id="invite-email" type="email" />}
             />
             <Field>
-              <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+              <FieldLabel htmlFor="invite-role">{t("settings:invitations.role")}</FieldLabel>
               <FieldContent>
                 <RoleSelect
                   id="invite-role"
@@ -72,8 +71,8 @@ function InviteForm() {
             <Button type="submit" disabled={invite.isPending}>
               <PaperPlaneTiltIcon />
               {match(invite.isPending)
-                .with(true, () => "Sending…" as const)
-                .otherwise(() => "Send" as const)}
+                .with(true, () => t("settings:invitations.sending"))
+                .otherwise(() => t("settings:invitations.send"))}
             </Button>
           </form>
         </Form>
@@ -90,6 +89,7 @@ function InviteForm() {
  */
 function InvitationActions(props: { invitation: Invitation }) {
   const { invitation } = props;
+  const t = useTranslate();
   const resend = useInviteMember();
   const cancel = useCancelInvitation();
   const busy = resend.isPending || cancel.isPending;
@@ -102,7 +102,7 @@ function InvitationActions(props: { invitation: Invitation }) {
     <div className="flex items-center justify-end gap-1">
       <IconAction
         variant="ghost"
-        label={`Send again to ${invitation.email}`}
+        label={t("settings:invitations.resendLabel", { email: invitation.email })}
         disabled={busy}
         onClick={() => resend.mutate({ email: invitation.email, role })}
       >
@@ -110,7 +110,7 @@ function InvitationActions(props: { invitation: Invitation }) {
       </IconAction>
       <IconAction
         variant="ghost"
-        label={`Cancel the invitation for ${invitation.email}`}
+        label={t("settings:invitations.cancelLabel", { email: invitation.email })}
         disabled={busy}
         onClick={() => cancel.mutate(invitation.id)}
       >
@@ -122,24 +122,25 @@ function InvitationActions(props: { invitation: Invitation }) {
 }
 
 function PendingList() {
+  const t = useTranslate();
   const invitations = useInvitations();
 
   const columns: DataColumn<Invitation>[] = [
     {
       key: "email",
-      header: "Email",
+      header: t("settings:invitations.email"),
       place: "primary",
       cell: (row) => row.email,
       cellClassName: "font-medium",
     },
     {
       key: "role",
-      header: "Role",
+      header: t("settings:invitations.role"),
       cell: (row) => <RoleBadge role={asRole(row.role)} />,
     },
     {
       key: "expires",
-      header: "Expires",
+      header: t("settings:invitations.expires"),
       cell: (row) => formatDate(new Date(row.expiresAt), "date"),
       cellClassName: "text-muted-foreground",
     },
@@ -157,10 +158,12 @@ function PendingList() {
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (rows) =>
       match(rows.length)
-        .with(0, () => <p className="text-muted-foreground text-sm">No invitation is waiting.</p>)
+        .with(0, () => (
+          <p className="text-muted-foreground text-sm">{t("settings:invitations.empty")}</p>
+        ))
         .otherwise(() => (
           <DataTable
-            label="Invitations waiting"
+            label={t("settings:invitations.tableLabel")}
             columns={columns}
             rows={rows}
             getKey={(row) => row.id}
@@ -171,11 +174,13 @@ function PendingList() {
 }
 
 export function InvitationsPanel() {
+  const t = useTranslate();
+
   return (
     <div className="space-y-6">
       <InviteForm />
       <section className="space-y-3">
-        <h2 className="text-sm font-medium">Pending</h2>
+        <h2 className="text-sm font-medium">{t("settings:invitations.pending")}</h2>
         <PendingList />
       </section>
     </div>

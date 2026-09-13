@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ function sameSet(a: readonly string[], b: readonly string[]) {
 
 /** A searchable checklist of the directory. Simple, keyboard friendly, no surprises. */
 function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
+  const t = useTranslate();
   const people = usePeople();
   const save = useSetGroupMembers();
   const initial = useMemo(() => A.map(props.group.members, (row) => row.personId), [props.group]);
@@ -79,12 +81,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
       {/* The count, the save button and the filter stay put. Only the list scrolls. */}
       <div className="flex shrink-0 flex-col gap-3 px-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">
-            {selected.length}{" "}
-            {match(selected.length)
-              .with(1, () => "person" as const)
-              .otherwise(() => "people" as const)}
-          </p>
+          <p className="text-sm font-medium">{t("common:people", { count: selected.length })}</p>
           {match(props.canManage && dirty)
             .with(true, () => (
               <Button
@@ -93,8 +90,8 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
                 onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
               >
                 {match(save.isPending)
-                  .with(true, () => "Saving…" as const)
-                  .otherwise(() => "Save members" as const)}
+                  .with(true, () => t("common:actions.saving"))
+                  .otherwise(() => t("groups:sheet.saveMembers"))}
               </Button>
             ))
             .otherwise(() => null)}
@@ -104,8 +101,8 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
           .with(true, () => (
             <Input
               type="search"
-              placeholder="Filter the directory"
-              aria-label="Filter the directory"
+              placeholder={t("groups:sheet.filter")}
+              aria-label={t("groups:sheet.filter")}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -145,7 +142,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
                 >
                   <span className="block">{person.name}</span>
                   <span className="text-muted-foreground block text-xs">
-                    {person.email ?? person.identifier ?? "no email"}
+                    {person.email ?? person.identifier ?? t("groups:sheet.noEmail")}
                   </span>
                 </Label>
               </li>
@@ -153,7 +150,9 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
           })}
           {match(!people.isPending && rows.length === 0)
             .with(true, () => (
-              <li className="text-muted-foreground p-3 text-sm">Nobody matches.</li>
+              <li className="text-muted-foreground p-3 text-sm">
+                {t("groups:sheet.nobodyMatches")}
+              </li>
             ))
             .otherwise(() => null)}
         </ul>
@@ -163,6 +162,7 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
 }
 
 export function GroupSheet(props: GroupSheetProps) {
+  const t = useTranslate();
   const group = useGroup(props.groupId);
   const remove = useRemoveGroup();
   const [editing, setEditing] = useState(false);
@@ -180,7 +180,7 @@ export function GroupSheet(props: GroupSheetProps) {
           ))
           .with({ isError: true, error: P.select() }, (error) => (
             <SheetHeader>
-              <SheetTitle>Group</SheetTitle>
+              <SheetTitle>{t("groups:sheet.fallbackTitle")}</SheetTitle>
               <FormError error={error} />
             </SheetHeader>
           ))
@@ -188,7 +188,9 @@ export function GroupSheet(props: GroupSheetProps) {
             <>
               <SheetHeader>
                 <SheetTitle>{data.name}</SheetTitle>
-                <SheetDescription>{data.description ?? "No description."}</SheetDescription>
+                <SheetDescription>
+                  {data.description ?? t("groups:sheet.noDescription")}
+                </SheetDescription>
               </SheetHeader>
 
               <MemberPicker group={data} canManage={props.canManage} />
@@ -198,11 +200,11 @@ export function GroupSheet(props: GroupSheetProps) {
                   <SheetFooter className="flex-row justify-end">
                     <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                       <PencilSimpleIcon />
-                      Edit
+                      {t("common:actions.edit")}
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setRemoving(true)}>
                       <TrashIcon />
-                      Delete
+                      {t("common:actions.delete")}
                     </Button>
                   </SheetFooter>
                 ))
@@ -213,14 +215,16 @@ export function GroupSheet(props: GroupSheetProps) {
               <AlertDialog open={removing} onOpenChange={setRemoving}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {data.name}?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {t("groups:sheet.deleteTitle", { name: data.name })}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      The people stay in the directory. Only the group goes.
+                      {t("groups:sheet.deleteDescription")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <FormError error={remove.error} />
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Keep</AlertDialogCancel>
+                    <AlertDialogCancel>{t("groups:sheet.keep")}</AlertDialogCancel>
                     <AlertDialogAction
                       variant="destructive"
                       disabled={remove.isPending}
@@ -234,8 +238,8 @@ export function GroupSheet(props: GroupSheetProps) {
                       }
                     >
                       {match(remove.isPending)
-                        .with(true, () => "Deleting…" as const)
-                        .otherwise(() => "Delete" as const)}
+                        .with(true, () => t("groups:sheet.deleting"))
+                        .otherwise(() => t("common:actions.delete"))}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

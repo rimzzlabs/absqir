@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-group";
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
@@ -12,6 +13,7 @@ interface CopyRowProps {
 }
 
 function CopyRow(props: CopyRowProps) {
+  const t = useTranslate();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -47,8 +49,8 @@ function CopyRow(props: CopyRowProps) {
                 <CopyIcon />
               ))}
             {match(copied)
-              .with(true, () => "Copied" as const)
-              .otherwise(() => "Copy" as const)}
+              .with(true, () => t("common:actions.copied"))
+              .otherwise(() => t("common:actions.copy"))}
           </Button>
         </InputGroupAddon>
       </InputGroup>
@@ -62,16 +64,18 @@ export interface OrganizationIdentifiersProps {
 
 /** The two strings an operator pastes into a terminal or a support ticket. */
 export function OrganizationIdentifiers(props: OrganizationIdentifiersProps) {
+  const t = useTranslate();
+
   return (
     <>
       <CopyRow
-        label="Slug"
-        hint="The operator names this organization by its slug: absqir member add --org <slug>."
+        label={t("settings:organization.slug")}
+        hint={t("settings:organization.slugHint")}
         value={props.organization.slug}
       />
       <CopyRow
-        label="Organization ID"
-        hint="What the API and the database call it. Quote it when you report a problem."
+        label={t("settings:organization.id")}
+        hint={t("settings:organization.idHint")}
         value={props.organization.id}
       />
     </>

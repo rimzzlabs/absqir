@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Field, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
@@ -13,17 +14,9 @@ import {
 } from "@/lib/preferences";
 import { useMotionPreference, useThemePreference } from "@/lib/use-preferences";
 
-const THEMES: { value: ThemePreference; label: string; hint: string }[] = [
-  { value: "system", label: "System", hint: "Follows the device" },
-  { value: "light", label: "Light", hint: "Always" },
-  { value: "dark", label: "Dark", hint: "Always" },
-];
+const THEMES: ThemePreference[] = ["system", "light", "dark"];
 
-const MOTIONS: { value: MotionPreference; label: string }[] = [
-  { value: "system", label: "Follow the device" },
-  { value: "on", label: "On" },
-  { value: "off", label: "Off" },
-];
+const MOTIONS: MotionPreference[] = ["system", "on", "off"];
 
 /** One tiny app frame, in one scheme: a sidebar, a header, a few lines. */
 function Pane(props: { dark: boolean; className?: string }) {
@@ -128,17 +121,21 @@ function isTheme(value: unknown): value is ThemePreference {
 
 /** Choices that belong to this browser, not to the account. */
 export function PreferencesPanel() {
+  const t = useTranslate();
   const theme = useThemePreference();
   const motion = useMotionPreference();
 
   return (
     <SettingsSection
-      title="Preferences"
-      description="Kept in this browser, not on the account. A phone and a room screen can differ."
+      title={t("settings:preferences.title")}
+      description={t("settings:preferences.description")}
     >
-      <SettingsRow label="Theme" hint="System follows the device setting and changes with it.">
+      <SettingsRow
+        label={t("settings:preferences.theme")}
+        hint={t("settings:preferences.themeHint")}
+      >
         <RadioGroup
-          aria-label="Theme"
+          aria-label={t("settings:preferences.theme")}
           value={theme}
           onValueChange={(value) => {
             if (isTheme(value)) setTheme(value);
@@ -146,15 +143,17 @@ export function PreferencesPanel() {
           className="grid grid-cols-1 gap-3 sm:grid-cols-3"
         >
           {A.map(THEMES, (option) => (
-            <FieldLabel key={option.value} htmlFor={`theme-${option.value}`}>
+            <FieldLabel key={option} htmlFor={`theme-${option}`}>
               <Field className="gap-3">
-                <Preview theme={option.value} />
+                <Preview theme={option} />
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <FieldTitle>{option.label}</FieldTitle>
-                    <p className="text-muted-foreground text-xs">{option.hint}</p>
+                    <FieldTitle>{t(`settings:preferences.themes.${option}`)}</FieldTitle>
+                    <p className="text-muted-foreground text-xs">
+                      {t(`settings:preferences.themes.${option}Hint`)}
+                    </p>
                   </div>
-                  <RadioGroupItem id={`theme-${option.value}`} value={option.value} />
+                  <RadioGroupItem id={`theme-${option}`} value={option} />
                 </div>
               </Field>
             </FieldLabel>
@@ -163,11 +162,11 @@ export function PreferencesPanel() {
       </SettingsRow>
 
       <SettingsRow
-        label="Animation"
-        hint="Off stops every transition, popup and page motion. Follow the device respects the reduce motion setting of the operating system."
+        label={t("settings:preferences.animation")}
+        hint={t("settings:preferences.animationHint")}
       >
         <ToggleGroup
-          aria-label="Animation"
+          aria-label={t("settings:preferences.animation")}
           value={[motion]}
           onValueChange={(value) => {
             const next = value[0] as MotionPreference | undefined;
@@ -176,8 +175,8 @@ export function PreferencesPanel() {
           variant="outline"
         >
           {A.map(MOTIONS, (option) => (
-            <ToggleGroupItem key={option.value} value={option.value}>
-              {option.label}
+            <ToggleGroupItem key={option} value={option}>
+              {t(`settings:preferences.motions.${option}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

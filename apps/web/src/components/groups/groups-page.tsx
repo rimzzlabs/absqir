@@ -1,4 +1,5 @@
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
@@ -22,6 +23,8 @@ export interface GroupsPageProps {
 }
 
 function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => void }) {
+  const t = useTranslate();
+
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -29,11 +32,8 @@ function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => voi
           <EmptyMedia variant="icon">
             <UsersThreeIcon />
           </EmptyMedia>
-          <EmptyTitle>No groups yet</EmptyTitle>
-          <EmptyDescription>
-            A group is a team, a division, a class, or a cohort. An event expects a group, and
-            everyone in it who does not check in is marked absent.
-          </EmptyDescription>
+          <EmptyTitle>{t("groups:emptyTitle")}</EmptyTitle>
+          <EmptyDescription>{t("groups:emptyDescription")}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -52,10 +52,7 @@ function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => voi
             <CardHeader>
               <CardTitle>{group.name}</CardTitle>
               <CardDescription>
-                {group.memberCount}{" "}
-                {match(group.memberCount)
-                  .with(1, () => "person" as const)
-                  .otherwise(() => "people" as const)}
+                {t("common:people", { count: group.memberCount })}
                 {match(group.description)
                   .with(P.string.minLength(1), (description) => ` · ${description}`)
                   .otherwise(() => "" as const)}
@@ -69,6 +66,7 @@ function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => voi
 }
 
 function GroupsBody(props: GroupsPageProps) {
+  const t = useTranslate();
   const groups = useGroups();
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -77,13 +75,13 @@ function GroupsBody(props: GroupsPageProps) {
   return (
     <>
       <PageHeader
-        title="Groups"
-        description="Who is expected where. Events in the next phase invite a whole group at once."
+        title={t("groups:title")}
+        description={t("groups:description")}
         actions={match(canManage)
           .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
-              New group
+              {t("groups:new")}
             </Button>
           ))
           .otherwise(() => null)}

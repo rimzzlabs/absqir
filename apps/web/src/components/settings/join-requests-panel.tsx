@@ -1,4 +1,5 @@
 import { relativeToNow } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import {
@@ -23,6 +24,7 @@ function initialsOf(name: string) {
 
 function RequestRow(props: { row: JoinRequest }) {
   const { row } = props;
+  const t = useTranslate();
   const decide = useDecideJoinRequest();
 
   return (
@@ -38,7 +40,10 @@ function RequestRow(props: { row: JoinRequest }) {
       <ItemContent>
         <ItemTitle>{row.name}</ItemTitle>
         <ItemDescription>
-          {row.email} · asked {relativeToNow(new Date(row.createdAt))}
+          {t("settings:requests.asked", {
+            email: row.email,
+            when: relativeToNow(new Date(row.createdAt)),
+          })}
         </ItemDescription>
         {match(row.message)
           .with(P.string.minLength(1), (message) => <ItemDescription>“{message}”</ItemDescription>)
@@ -52,7 +57,7 @@ function RequestRow(props: { row: JoinRequest }) {
           onClick={() => decide.mutate({ id: row.id, decision: "declined" })}
         >
           <XIcon />
-          Decline
+          {t("settings:requests.decline")}
         </Button>
         <Button
           size="sm"
@@ -61,8 +66,8 @@ function RequestRow(props: { row: JoinRequest }) {
         >
           <CheckIcon />
           {match(decide.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Let in" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("settings:requests.letIn"))}
         </Button>
       </ItemActions>
     </Item>
@@ -71,6 +76,7 @@ function RequestRow(props: { row: JoinRequest }) {
 
 /** Who asks to join, and the two buttons that answer them. */
 export function JoinRequestsPanel() {
+  const t = useTranslate();
   const requests = useJoinRequests("pending");
   const decide = useDecideJoinRequest();
 
@@ -82,10 +88,7 @@ export function JoinRequestsPanel() {
         .with({ data: P.select(P.nonNullable) }, (data) =>
           match(data.items.length)
             .with(0, () => (
-              <p className="text-muted-foreground text-sm">
-                Nobody is waiting. A request lands here when someone at a verified domain asks to
-                come in.
-              </p>
+              <p className="text-muted-foreground text-sm">{t("settings:requests.empty")}</p>
             ))
             .otherwise(() => (
               <div className="space-y-3">

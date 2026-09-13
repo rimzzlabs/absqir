@@ -1,3 +1,5 @@
+import type { Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,24 +25,23 @@ import { useRemovePlace } from "@/mutations/use-location-actions";
 import { type Place, useLocations } from "@/queries/use-locations";
 
 /** "2 events, 1 schedule", or an empty string when nothing points here. */
-function usage(place: Place): string {
+function usage(t: Translate, place: Place): string {
   const parts = [
     match(place.eventCount)
       .with(0, () => null)
-      .with(1, () => "1 event")
-      .otherwise((count) => `${count} events`),
+      .otherwise((count) => t("settings:places.events", { count })),
     match(place.scheduleCount)
       .with(0, () => null)
-      .with(1, () => "1 schedule")
-      .otherwise((count) => `${count} schedules`),
+      .otherwise((count) => t("settings:places.schedules", { count })),
   ];
 
-  return A.filter(parts, (part): part is string => part !== null).join(", ");
+  return A.reject(parts, (part) => part === null).join(", ");
 }
 
 function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => void }) {
   const { place } = props;
-  const inUse = usage(place);
+  const t = useTranslate();
+  const inUse = usage(t, place);
 
   return (
     <div className="border-border flex flex-wrap items-start gap-3 border-b py-4 last:border-b-0">
@@ -69,10 +70,16 @@ function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => voi
       </div>
 
       <div className="flex items-center gap-1">
-        <IconAction label={`Edit ${place.name}`} onClick={props.onEdit}>
+        <IconAction
+          label={t("settings:places.editLabel", { name: place.name })}
+          onClick={props.onEdit}
+        >
           <PencilSimpleIcon />
         </IconAction>
-        <IconAction label={`Delete ${place.name}`} onClick={props.onDelete}>
+        <IconAction
+          label={t("settings:places.deleteLabel", { name: place.name })}
+          onClick={props.onDelete}
+        >
           <TrashIcon />
         </IconAction>
       </div>
@@ -86,6 +93,7 @@ function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => voi
  * here never changes what an old check-in was judged against.
  */
 export function PlacesPanel() {
+  const t = useTranslate();
   const places = useLocations();
   const remove = useRemovePlace();
   const [editing, setEditing] = useState<Place | null>(null);
@@ -104,7 +112,7 @@ export function PlacesPanel() {
           }}
         >
           <PlusIcon />
-          New place
+          {t("settings:places.new")}
         </Button>
       </div>
 
@@ -123,11 +131,8 @@ export function PlacesPanel() {
               <EmptyMedia variant="icon">
                 <MapPinIcon />
               </EmptyMedia>
-              <EmptyTitle>No places yet</EmptyTitle>
-              <EmptyDescription>
-                Save the office, the hall, or the site. Then an event can refuse a check-in made
-                somewhere else.
-              </EmptyDescription>
+              <EmptyTitle>{t("settings:places.emptyTitle")}</EmptyTitle>
+              <EmptyDescription>{t("settings:places.emptyDescription")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ))
@@ -161,22 +166,21 @@ export function PlacesPanel() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {deleting?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("settings:places.deleteTitle", { name: deleting?.name ?? "" })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {match(deleting)
                 .with(P.nonNullable, (place) =>
-                  match(usage(place))
-                    .with("", () => "Nothing points at it yet.")
-                    .otherwise(
-                      (text) =>
-                        `${text} point at it. Events already made keep their own copy of the circle, so no past check-in changes meaning. Future events from a schedule lose the fence.`,
-                    ),
+                  match(usage(t, place))
+                    .with("", () => t("settings:places.deleteUnused"))
+                    .otherwise((usage) => t("settings:places.deleteUsed", { usage })),
                 )
                 .otherwise(() => "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={remove.isPending}
               onClick={(event) => {
@@ -189,8 +193,8 @@ export function PlacesPanel() {
               }}
             >
               {match(remove.isPending)
-                .with(true, () => "Deleting…" as const)
-                .otherwise(() => "Delete place" as const)}
+                .with(true, () => t("settings:places.deleting"))
+                .otherwise(() => t("settings:places.deletePlace"))}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

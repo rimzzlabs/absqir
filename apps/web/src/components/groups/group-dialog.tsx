@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
@@ -33,9 +34,10 @@ function defaults(group: GroupDialogProps["group"]): GroupValues {
 }
 
 export function GroupDialog(props: GroupDialogProps) {
+  const t = useTranslate();
   const editing = props.group !== null;
   const form = useForm<GroupValues>({
-    resolver: zodResolver(groupSchema),
+    resolver: zodResolver(groupSchema(t)),
     defaultValues: defaults(props.group),
   });
 
@@ -43,8 +45,8 @@ export function GroupDialog(props: GroupDialogProps) {
   const update = useUpdateGroup();
   const pending = create.isPending || update.isPending;
   const saveLabel = match(editing)
-    .with(true, () => "Save" as const)
-    .otherwise(() => "Create" as const);
+    .with(true, () => t("common:actions.save"))
+    .otherwise(() => t("groups:dialog.create"));
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.group));
@@ -70,13 +72,13 @@ export function GroupDialog(props: GroupDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
-              .with(true, () => "Edit group" as const)
-              .otherwise(() => "New group" as const)}
+              .with(true, () => t("groups:dialog.editTitle"))
+              .otherwise(() => t("groups:dialog.newTitle"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {match(editing)
-              .with(true, () => "Rename it or change its description." as const)
-              .otherwise(() => "Give it a name. Add people after." as const)}
+              .with(true, () => t("groups:dialog.editDescription"))
+              .otherwise(() => t("groups:dialog.newDescription"))}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -90,12 +92,12 @@ export function GroupDialog(props: GroupDialogProps) {
               <FormField
                 control={form.control}
                 name="name"
-                label="Name"
+                label={t("groups:dialog.name")}
                 render={(field) => (
                   <Input
                     {...field}
                     id="group-name"
-                    placeholder="Engineering, Batch 12, Volunteers"
+                    placeholder={t("groups:dialog.namePlaceholder")}
                     autoFocus
                   />
                 )}
@@ -103,8 +105,8 @@ export function GroupDialog(props: GroupDialogProps) {
               <FormField
                 control={form.control}
                 name="description"
-                label="Description"
-                description="Optional."
+                label={t("groups:dialog.description")}
+                description={t("groups:dialog.descriptionHint")}
                 render={(field) => <Textarea {...field} id="group-description" rows={3} />}
               />
 
@@ -112,11 +114,11 @@ export function GroupDialog(props: GroupDialogProps) {
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button type="submit" disabled={pending}>
                 {match(pending)
-                  .with(true, () => "Saving…" as const)
+                  .with(true, () => t("common:actions.saving"))
                   .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>

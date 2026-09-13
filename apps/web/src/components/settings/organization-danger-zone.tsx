@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { useState } from "react";
 import { ConfirmPhraseDialog } from "@/components/shared/confirm-phrase-dialog";
@@ -15,6 +16,7 @@ export interface OrganizationDangerZoneProps {
 type Stage = "idle" | "phrase" | "final";
 
 function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
+  const t = useTranslate();
   const [stage, setStage] = useState<Stage>("idle");
   const remove = useDeleteOrganization();
 
@@ -26,11 +28,11 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
   if (props.role !== "owner") {
     return (
       <DangerZoneRow
-        title="Delete this organization"
-        description="Only an owner can delete the organization."
+        title={t("settings:organization.danger.title")}
+        description={t("settings:organization.danger.ownerOnly")}
         action={
           <Button type="button" variant="outline" disabled>
-            Delete
+            {t("common:actions.delete")}
           </Button>
         }
       />
@@ -40,11 +42,11 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
   return (
     <>
       <DangerZoneRow
-        title="Delete this organization"
-        description="The directory, the groups, the events, and every attendance record go with it. Members keep their accounts and land in the waiting room."
+        title={t("settings:organization.danger.title")}
+        description={t("settings:organization.danger.description")}
         action={
           <Button type="button" variant="destructive" onClick={() => setStage("phrase")}>
-            Delete organization
+            {t("settings:organization.danger.button")}
           </Button>
         }
       />
@@ -54,11 +56,11 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title={`Delete ${props.organization.name}?`}
-        description="Copy the slug below to go on."
+        title={t("settings:organization.danger.confirmTitle", { name: props.organization.name })}
+        description={t("settings:organization.danger.confirmDescription")}
         phrase={props.organization.slug}
-        phraseLabel="organization slug"
-        confirmLabel="Continue"
+        phraseLabel={t("settings:organization.danger.phraseLabel")}
+        confirmLabel={t("settings:organization.danger.continue")}
         onConfirm={() => setStage("final")}
       />
 
@@ -67,18 +69,17 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title="Last word"
-        description={`Press the button and ${props.organization.name} is gone. Nobody can bring it back.`}
-        confirmLabel="Delete forever"
+        title={t("settings:organization.danger.lastWord")}
+        description={t("settings:organization.danger.lastWordDescription", {
+          name: props.organization.name,
+        })}
+        confirmLabel={t("settings:organization.danger.deleteForever")}
         pending={remove.isPending}
         error={remove.error}
         onConfirm={() => remove.mutate(props.organization.id)}
       >
-        <p>
-          The directory, the groups, the events, and every attendance record are erased. No report
-          of a past event survives.
-        </p>
-        <p>The members keep their accounts, and land in the waiting room.</p>
+        <p>{t("settings:organization.danger.losing")}</p>
+        <p>{t("settings:organization.danger.keeping")}</p>
       </FinalWordDialog>
     </>
   );
