@@ -6,6 +6,7 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -735,8 +736,23 @@ export const notification = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     type: text("type").$type<NotificationType>().notNull(),
+    /**
+     * The words as they stood when the row was written. A reader who changes
+     * their language reads the key below instead, so these two are the
+     * fallback for a row written before absqir kept keys.
+     */
     title: text("title").notNull(),
     body: text("body"),
+    /**
+     * What the title says, as a message key and the values it takes. Reading
+     * these at render time is what lets one row read in whatever language
+     * its reader has chosen today.
+     */
+    titleKey: text("title_key"),
+    titleParams: jsonb("title_params").$type<Record<string, string | number>>(),
+    /** The same for the body. Null when the body is somebody's own words. */
+    bodyKey: text("body_key"),
+    bodyParams: jsonb("body_params").$type<Record<string, string | number>>(),
     /** Where the notification takes the reader. */
     href: text("href"),
     /**

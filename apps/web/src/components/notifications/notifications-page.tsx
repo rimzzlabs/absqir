@@ -1,4 +1,5 @@
-import { relativeToNow } from "@absqir/core/date";
+import { displayTimezone, relativeToNow } from "@absqir/core/date";
+import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
@@ -24,6 +25,10 @@ import {
 function Row(props: { notification: Notification; onRead: (id: string) => void }) {
   const { notification } = props;
   const t = useTranslate();
+  // The words are made here, from the key the row kept, so a reader who
+  // changed their language reads the whole list in it.
+  const title = notificationTitle(t, notification);
+  const body = notificationBody(t, notification, { timezone: displayTimezone() });
   const Icon = NOTIFICATION_ICONS[notification.type];
   const unread = notification.readAt === null;
 
@@ -43,10 +48,10 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
           {match(notification.href)
             .with(P.string.minLength(1), (href) => (
               <a href={href} className="hover:underline">
-                {notification.title}
+                {title}
               </a>
             ))
-            .otherwise(() => notification.title)}
+            .otherwise(() => title)}
           {match(unread)
             .with(true, () => (
               <>
@@ -56,7 +61,7 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
             ))
             .otherwise(() => null)}
         </p>
-        {match(notification.body)
+        {match(body)
           .with(P.string.minLength(1), (body) => (
             <p className="text-muted-foreground mt-0.5 text-sm">{body}</p>
           ))

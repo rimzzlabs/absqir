@@ -16,6 +16,11 @@ const notificationSchema = z.object({
   type: z.enum(NOTIFICATION_TYPES),
   title: z.string(),
   body: z.string().nullable(),
+  /** The key the page words the row from. Null on a row written before. */
+  titleKey: z.string().nullable(),
+  titleParams: z.record(z.string(), z.union([z.string(), z.number()])).nullable(),
+  bodyKey: z.string().nullable(),
+  bodyParams: z.record(z.string(), z.union([z.string(), z.number()])).nullable(),
   href: z.string().nullable(),
   readAt: z.string().nullable(),
   createdAt: z.string(),

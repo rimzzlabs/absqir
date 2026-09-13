@@ -5,6 +5,7 @@ export default defineConfig((options) => ({
     "src/index.ts",
     "src/money.ts",
     "src/numbers.ts",
+    "src/notification-text.ts",
     "src/date.ts",
     "src/query-keys.ts",
     "src/user-agent.ts",

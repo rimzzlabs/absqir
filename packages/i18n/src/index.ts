@@ -90,6 +90,40 @@ export function i18nFor(locale: Locale): I18nInstance {
 }
 
 /**
+ * Every message a notification row can name. The row keeps the key and the
+ * values, so the words are made when somebody reads them, in whatever
+ * language that reader has chosen by then.
+ */
+export const NOTIFY_KEYS = [
+  "email:notify.reminderHour",
+  "email:notify.reminderDay",
+  "email:notify.when",
+  "email:notify.eventClosed",
+  "email:notify.eventClosedBody",
+  "email:notify.leaveRequested",
+  "email:notify.leaveApproved",
+  "email:notify.leaveDeclined",
+  "email:notify.leaveApprovedBody",
+  "email:notify.leaveDeclinedBody",
+  "email:notify.joinRequested",
+  "email:notify.joinApproved",
+  "email:notify.joinDeclined",
+  "email:notify.joinApprovedBody",
+  "email:notify.joinDeclinedBody",
+  "email:notify.checkInReported",
+  "email:notify.checkInDecidedApproved",
+  "email:notify.checkInDecidedDeclined",
+  "email:notify.checkInApprovedBody",
+  "email:notify.checkInDeclinedBody",
+] as const;
+
+export type NotifyKey = (typeof NOTIFY_KEYS)[number];
+
+export function isNotifyKey(value: unknown): value is NotifyKey {
+  return typeof value === "string" && (NOTIFY_KEYS as readonly string[]).includes(value);
+}
+
+/**
  * The message reader for one language, outside React: an Astro page, an
  * email, an API answer. `t("events:title")` names the namespace up front.
  */

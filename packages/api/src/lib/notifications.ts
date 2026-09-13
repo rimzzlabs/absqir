@@ -1,7 +1,8 @@
+import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
-import { type Locale, translatorFor } from "@absqir/i18n";
+import { type Locale, type NotifyKey, translatorFor } from "@absqir/i18n";
 import type { Mailer } from "@absqir/transactional";
 import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
@@ -17,8 +18,15 @@ export interface NotificationInput {
   organizationId: string;
   userId: string;
   type: NotificationType;
+  /** The words as they stand now, for anything that reads the row raw. */
   title: string;
   body?: string | null;
+  /** The key and the values the words are made from at read time. */
+  titleKey?: NotifyKey | null;
+  titleParams?: Record<string, string | number> | null;
+  /** Absent when the body is somebody's own words. */
+  bodyKey?: NotifyKey | null;
+  bodyParams?: Record<string, string | number> | null;
   href?: string | null;
   /** Two writes with the same key for one person make one row. */
   dedupeKey?: string | null;
@@ -136,6 +144,10 @@ export async function createNotifications(
           type: row.type,
           title: row.title,
           body: row.body ?? null,
+          titleKey: row.titleKey ?? null,
+          titleParams: row.titleParams ?? null,
+          bodyKey: row.bodyKey ?? null,
+          bodyParams: row.bodyParams ?? null,
           href: row.href ?? null,
           dedupeKey: row.dedupeKey ?? null,
           channel: row.channel,
@@ -170,7 +182,7 @@ export async function emailNotifications(
 
   const [people, organizations] = await Promise.all([
     db
-      .select({ id: user.id, email: user.email, locale: user.locale })
+      .select({ id: user.id, email: user.email, locale: user.locale, timezone: user.timezone })
       .from(user)
       .where(inArray(user.id, userIds)),
     db
@@ -181,6 +193,7 @@ export async function emailNotifications(
 
   const emailOf = new Map(A.map(people, (row) => [row.id, row.email]));
   const localeOf = new Map(A.map(people, (row) => [row.id, row.locale ?? "en"] as const));
+  const zoneOf = new Map(A.map(people, (row) => [row.id, row.timezone] as const));
   const nameOf = new Map(A.map(organizations, (row) => [row.id, row.name]));
 
   for (const row of worth) {
@@ -193,8 +206,10 @@ export async function emailNotifications(
     try {
       await mailer.sendNotification(to, {
         locale,
-        title: row.title,
-        body: row.body,
+        // The words are made here rather than read off the row, so the
+        // message says the same thing the app will say when they open it.
+        title: notificationTitle(t, row),
+        body: notificationBody(t, row, { timezone: zoneOf.get(row.userId) ?? null, locale }),
         organizationName:
           nameOf.get(row.organizationId) ?? t("email:notification.yourOrganization"),
         url: `${origin}${row.href ?? "/notifications"}`,
@@ -379,6 +394,10 @@ export function toNotificationJson(row: NotificationRow) {
     type: row.type,
     title: row.title,
     body: row.body ?? null,
+    titleKey: row.titleKey ?? null,
+    titleParams: row.titleParams ?? null,
+    bodyKey: row.bodyKey ?? null,
+    bodyParams: row.bodyParams ?? null,
     href: row.href ?? null,
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),

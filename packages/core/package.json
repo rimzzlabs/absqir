@@ -12,6 +12,10 @@
       "development": "./src/numbers.ts",
       "default": "./dist/numbers.js"
     },
+    "./notification-text": {
+      "development": "./src/notification-text.ts",
+      "default": "./dist/notification-text.js"
+    },
     "./money": {
       "development": "./src/money.ts",
       "default": "./dist/money.js"

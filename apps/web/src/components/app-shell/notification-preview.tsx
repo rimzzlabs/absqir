@@ -1,4 +1,5 @@
-import { relativeToNow } from "@absqir/core/date";
+import { displayTimezone, relativeToNow } from "@absqir/core/date";
+import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
@@ -29,6 +30,10 @@ function pick(rows: Notification[]): Notification[] {
 function PreviewRow(props: { notification: Notification; onRead: (id: string) => Promise<void> }) {
   const { notification } = props;
   const t = useTranslate();
+  // The row keeps the key it was written from, so it reads in whatever
+  // language this reader has chosen today, not the one they had then.
+  const title = notificationTitle(t, notification);
+  const line = notificationBody(t, notification, { timezone: displayTimezone() });
   const Icon = NOTIFICATION_ICONS[notification.type];
   const unread = notification.readAt === null;
 
@@ -47,7 +52,7 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
                 .otherwise(() => "text-foreground/80" as const),
             )}
           >
-            {notification.title}
+            {title}
           </span>
           {match(unread)
             .with(true, () => (
@@ -58,9 +63,9 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
             ))
             .otherwise(() => null)}
         </span>
-        {match(notification.body)
-          .with(P.string.minLength(1), (body) => (
-            <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{body}</span>
+        {match(line)
+          .with(P.string.minLength(1), (line) => (
+            <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{line}</span>
           ))
           .otherwise(() => null)}
         <span className="text-muted-foreground mt-0.5 block text-[11px]">
