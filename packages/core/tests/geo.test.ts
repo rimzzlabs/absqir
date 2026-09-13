@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   type Circle,
+  type Coordinates,
   distanceMeters,
   type Fix,
   impliedSpeedKph,
@@ -29,7 +30,7 @@ function fix(over: Partial<Fix> = {}): Fix {
  * Moves a point north. A degree of latitude is ~110.6 km this near the
  * equator, so the helper is a few metres optimistic. Fixtures only.
  */
-function north(from: { latitude: number; longitude: number }, meters: number) {
+function north<T extends Coordinates>(from: T, meters: number): T {
   return { ...from, latitude: from.latitude + meters / 111_320 };
 }
 

@@ -25,6 +25,9 @@ export const eventSchema = z
       .trim()
       .regex(/^\d*$/, "Whole numbers only.")
       .refine((value) => value === "" || Number(value) >= 1, "At least 1."),
+    /** A saved place. Empty means none. */
+    locationId: z.string(),
+    requireLocation: z.boolean(),
     groupIds: z.array(z.string()),
   })
   .refine((values) => values.endsAt > values.startsAt, {
@@ -46,6 +49,8 @@ export const scheduleSchema = z
     endsOn: z.date().nullable(),
     active: z.boolean(),
     allowWalkIns: z.boolean(),
+    locationId: z.string(),
+    requireLocation: z.boolean(),
     groupIds: z.array(z.string()),
   })
   .refine((values) => values.frequency === "daily" || values.weekdays.length > 0, {

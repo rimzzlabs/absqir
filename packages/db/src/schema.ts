@@ -88,8 +88,11 @@ export type JoinRequestStatus = (typeof JOIN_REQUEST_STATUSES)[number];
 export const LOCATION_VERDICTS = ["inside", "edge", "outside", "coarse", "missing"] as const;
 export type LocationVerdict = (typeof LOCATION_VERDICTS)[number];
 
-/** Whether the check-in was written, and the fence's part in that. */
-export const ATTEMPT_OUTCOMES = ["accepted", "refused", "repeat"] as const;
+/**
+ * Whether the check-in was written. A second scan by somebody already
+ * recorded returns before the fence runs, so it writes no attempt row.
+ */
+export const ATTEMPT_OUTCOMES = ["accepted", "refused"] as const;
 export type AttemptOutcome = (typeof ATTEMPT_OUTCOMES)[number];
 
 export {

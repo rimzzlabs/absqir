@@ -98,6 +98,18 @@ export const groupMutationKeys = {
   setMembers: () => [...groupMutationKeys.all, "set-members"] as const,
 };
 
+export const locationKeys = {
+  all: ["locations"] as const,
+  list: () => [...locationKeys.all, "list"] as const,
+};
+
+export const locationMutationKeys = {
+  all: ["location-mutations"] as const,
+  create: () => [...locationMutationKeys.all, "create"] as const,
+  update: () => [...locationMutationKeys.all, "update"] as const,
+  remove: () => [...locationMutationKeys.all, "remove"] as const,
+};
+
 export interface EventListFilter {
   scope: "upcoming" | "past" | "all";
   q: string;
@@ -124,6 +136,7 @@ export const eventMutationKeys = {
   setRecord: () => [...eventMutationKeys.all, "set-record"] as const,
   checkIn: () => [...eventMutationKeys.all, "check-in"] as const,
   scan: () => [...eventMutationKeys.all, "scan"] as const,
+  review: () => [...eventMutationKeys.all, "review"] as const,
 };
 
 export const scheduleKeys = {

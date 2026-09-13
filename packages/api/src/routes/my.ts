@@ -41,6 +41,21 @@ const myEventSchema = z.object({
   opensBeforeMinutes: z.number(),
   status: z.enum(["scheduled", "running", "done"]),
   groups: z.array(z.object({ id: z.string(), name: z.string() })),
+  /** True when this event refuses a check-in made away from the place. */
+  requireLocation: z.boolean(),
+  /**
+   * Where the event is. A member has to be told before they travel, and the
+   * circle is no secret from somebody who must stand inside it.
+   */
+  fence: z
+    .object({
+      locationId: z.string().nullable(),
+      name: z.string().nullable(),
+      latitude: z.number(),
+      longitude: z.number(),
+      radiusMeters: z.number(),
+    })
+    .nullable(),
   /** What my record says, if there is one. */
   record: z
     .object({
@@ -83,6 +98,8 @@ function toMyEvent(
     opensBeforeMinutes: row.opensBeforeMinutes,
     status: row.status,
     groups: row.groups,
+    requireLocation: row.requireLocation,
+    fence: row.fence,
     record: pipe(
       O.fromNullable(record),
       O.map((mine) => ({

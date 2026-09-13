@@ -141,7 +141,16 @@ export interface RiskReport {
  */
 const NETWORK_FAR_METERS = 500_000;
 
-function environmentReasons(input: RiskInput): RiskReason[] {
+/** The reasons whose test came back true, in the order they were listed. */
+function hits(pairs: readonly (readonly [RiskReason, boolean])[]): readonly RiskReason[] {
+  return A.filterMap(pairs, ([reason, hit]) =>
+    match(hit)
+      .with(true, () => reason)
+      .otherwise(() => undefined),
+  );
+}
+
+function environmentReasons(input: RiskInput): readonly RiskReason[] {
   const { nativeGeolocation, automated, timezoneOffsetMinutes } = input.environment;
 
   // The sun, not a timezone database. An hour of longitude is 15 degrees,
@@ -152,43 +161,31 @@ function environmentReasons(input: RiskInput): RiskReason[] {
     .with(P.number, (minutes) => Math.abs(-minutes / 60 - solarHours))
     .otherwise(() => 0);
 
-  return A.filterMap(
-    [
-      ["patched-api", !nativeGeolocation],
-      ["automated-browser", automated],
-      ["timezone-mismatch", offBy > TIMEZONE_TOLERANCE_HOURS],
-    ] as const,
-    ([reason, hit]) =>
-      match(hit)
-        .with(true, () => reason as RiskReason)
-        .otherwise(() => undefined),
-  );
+  return hits([
+    ["patched-api", !nativeGeolocation],
+    ["automated-browser", automated],
+    ["timezone-mismatch", offBy > TIMEZONE_TOLERANCE_HOURS],
+  ]);
 }
 
-function trackReasons(track: TrackReport | null): RiskReason[] {
+function trackReasons(track: TrackReport | null): readonly RiskReason[] {
   return match(track)
-    .with(P.nullish, () => [] as RiskReason[])
+    .with(P.nullish, () => [])
     .otherwise((report) =>
-      A.filterMap(
-        [
-          ["frozen-track", report.frozen],
-          ["single-fix", report.count === 1],
-          ["no-altitude", report.flat],
-          ["constant-accuracy", report.constantAccuracy],
-          // A consumer receiver never claims a metre. A mock provider does.
-          ["perfect-accuracy", report.best.accuracy > 0 && report.best.accuracy <= 1],
-        ] as const,
-        ([reason, hit]) =>
-          match(hit)
-            .with(true, () => reason as RiskReason)
-            .otherwise(() => undefined),
-      ),
+      hits([
+        ["frozen-track", report.frozen],
+        ["single-fix", report.count === 1],
+        ["no-altitude", report.flat],
+        ["constant-accuracy", report.constantAccuracy],
+        // A consumer receiver never claims a metre. A mock provider does.
+        ["perfect-accuracy", report.best.accuracy > 0 && report.best.accuracy <= 1],
+      ]),
     );
 }
 
-function historyReasons(input: RiskInput): RiskReason[] {
+function historyReasons(input: RiskInput): readonly RiskReason[] {
   return match(input.track)
-    .with(P.nullish, () => [] as RiskReason[])
+    .with(P.nullish, () => [])
     .otherwise((track) => {
       const here = { ...track.best };
 
@@ -204,38 +201,26 @@ function historyReasons(input: RiskInput): RiskReason[] {
 
       const shared = A.some(input.peers, (peer) => distanceMeters(peer, here) < SHARED_METERS);
 
-      return A.filterMap(
-        [
-          ["teleport", teleported],
-          ["shared-coordinates", shared],
-        ] as const,
-        ([reason, hit]) =>
-          match(hit)
-            .with(true, () => reason as RiskReason)
-            .otherwise(() => undefined),
-      );
+      return hits([
+        ["teleport", teleported],
+        ["shared-coordinates", shared],
+      ]);
     });
 }
 
-function networkReasons(input: RiskInput): RiskReason[] {
+function networkReasons(input: RiskInput): readonly RiskReason[] {
   return match(input.track)
-    .with(P.nullish, () => [] as RiskReason[])
+    .with(P.nullish, () => [])
     .otherwise((track) =>
-      A.filterMap(
+      hits([
         [
-          [
-            "network-far",
-            match(input.network.position)
-              .with(P.nullish, () => false)
-              .otherwise((position) => distanceMeters(position, track.best) > NETWORK_FAR_METERS),
-          ],
-          ["network-relay", input.network.relay === true],
-        ] as const,
-        ([reason, hit]) =>
-          match(hit)
-            .with(true, () => reason as RiskReason)
-            .otherwise(() => undefined),
-      ),
+          "network-far",
+          match(input.network.position)
+            .with(P.nullish, () => false)
+            .otherwise((position) => distanceMeters(position, track.best) > NETWORK_FAR_METERS),
+        ],
+        ["network-relay", input.network.relay === true],
+      ]),
     );
 }
 

@@ -6,7 +6,7 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
-import { ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { MapPinIcon, ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { match, P } from "ts-pattern";
 import { CheckInPass } from "@/components/check-in/check-in-pass";
@@ -14,11 +14,13 @@ import { CheckInRecent } from "@/components/check-in/check-in-recent";
 import { CheckInResult } from "@/components/check-in/check-in-result";
 import { CheckInSteps } from "@/components/check-in/check-in-steps";
 import { ScanViewfinder } from "@/components/check-in/scan-viewfinder";
+import { opensAtOf } from "@/components/my/opens-at";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
 import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay";
 import { PageHeader } from "@/components/shared/page-header";
 import { useCamera } from "@/components/shared/use-camera";
+import { useWarmLocation } from "@/lib/use-warm-location";
 import { useCheckIn } from "@/mutations/use-check-in";
 import { useMyEvents } from "@/queries/use-my";
 
@@ -54,8 +56,9 @@ function Scanner() {
     enabled: !checkIn.isSuccess,
     fallback: "Paste the link printed under the code on the room screen.",
   });
-  const progressNote = match(checkIn.isPending)
-    .with(true, () => "Checking you in." as const)
+  const progressNote = match(checkIn.stage)
+    .with("locating", () => "Finding where you are." as const)
+    .with("checking", () => "Checking you in." as const)
     .otherwise(() => "" as const);
   const error = rejected ?? checkIn.error?.message ?? null;
 
@@ -93,6 +96,21 @@ function Scanner() {
               />
             ))}
         </div>
+
+        {/* The permission prompt appears here and nowhere else, so the reason
+            for it is written next to it. */}
+        {match(checkIn.stage)
+          .with("locating", () => (
+            <Alert>
+              <MapPinIcon />
+              <AlertTitle>Finding where you are</AlertTitle>
+              <AlertDescription>
+                This event checks that you are at the place. Allow location, and hold still for a
+                moment.
+              </AlertDescription>
+            </Alert>
+          ))
+          .otherwise(() => null)}
 
         {match(Boolean(!checkIn.isSuccess && error))
           .with(true, () => (
@@ -144,6 +162,18 @@ function MemberCheckInBody() {
   const events = useMyEvents();
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
+
+  // Raise the permission prompt now, while the member is still walking up to
+  // the screen, rather than after the scan when the code is already ticking.
+  const now = Date.now();
+  const fenceIsNear = A.some(
+    rows,
+    (event) =>
+      event.requireLocation &&
+      opensAtOf(event).getTime() <= now &&
+      new Date(event.endsAt).getTime() >= now,
+  );
+  useWarmLocation(fenceIsNear);
 
   return (
     <>

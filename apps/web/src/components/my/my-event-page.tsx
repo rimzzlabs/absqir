@@ -8,6 +8,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import {
   CalendarBlankIcon,
+  MapPinIcon,
   NotePencilIcon,
   ScanIcon,
   TicketIcon,
@@ -89,6 +90,22 @@ function Header(props: { event: MyEventDetail }) {
               You registered for this one.
             </p>
           ))}
+
+        {/* A member who learns about the fence only by being refused at the
+            door has been told too late. */}
+        {match(event.fence)
+          .with(P.nonNullable, (fence) => (
+            <p className="text-muted-foreground mt-2 flex items-start gap-1.5 text-sm">
+              <MapPinIcon aria-hidden className="mt-0.5 shrink-0" />
+              <span>
+                {fence.name ?? "A set place"}
+                {match(event.requireLocation)
+                  .with(true, () => ` · check in within ${fence.radiusMeters} m of it`)
+                  .otherwise(() => "")}
+              </span>
+            </p>
+          ))
+          .otherwise(() => null)}
 
         {match(event.description)
           .with(P.string.minLength(1), (description) => (

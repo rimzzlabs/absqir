@@ -78,6 +78,53 @@ The member's pass, in `packages/api/src/lib/member-pass.ts`, goes the other
 way: an HMAC over the event id and the person id, shown as a QR code on
 the member's phone and read by the organizer's scanner.
 
+## Where the check-in happened
+
+An organizer can attach a **place** to an event, or to a schedule, and ask
+absqir to refuse a check-in made somewhere else. Places live under
+**Settings > Places**: a point, a radius, and a name. An event copies the
+circle when it is created, so moving or deleting a place never changes what
+a past check-in was judged against.
+
+Read `packages/core/src/location-risk.ts` before you change any of this. The
+short version:
+
+**A browser cannot tell a real satellite fix from a fake one.** An Android
+fake-GPS app writes the system mock-location provider, and the web
+Geolocation API has no `isMock` field, so the page receives an ordinary
+looking fix. An override made through the developer-tools protocol sits
+below the page, and `getCurrentPosition` still reads as native code. Only a
+browser extension that replaces `navigator.geolocation` leaves a mark, and
+that is the rarest of the three attacks.
+
+So the fence is not the anchor. The rotating code on the room screen is: to
+hold a valid token you had to see the live screen. The fence closes the one
+gap that code leaves, which is the member who photographs the screen and
+sends it to a friend across town.
+
+The server scores every accepted reading against a set of signals: a burst
+of readings that never moved, an accuracy no receiver reports, no altitude,
+a device clock belonging to another part of the world, a network address far
+from the claimed spot, a jump no aircraft could make since the last
+check-in, coordinates identical to another person's. Each one is weak alone
+and cheap to defeat alone. Together, and repeated across every event a
+person attends, they leave a pattern that is tiring to fake.
+
+**Only the geometry refuses.** Every other signal flags the record for the
+organizer and lets the check-in through. A soft signal that locks a door
+falls on the member indoors with an old phone far more often than on the one
+person gaming it, and the cheat can try again while the honest member
+cannot. Flagged records show in the event's **Where** column with the
+reasons, and the organizer clears the flag or marks the person absent.
+
+Every attempt, accepted or refused, is written to `check_in_attempt`. The
+refused rows are the point: one is a member in the wrong place, and thirty
+across a term, each a little nearer the fence, is somebody finding the line.
+
+`packages/api/src/lib/risk-provider.ts` is the seam for a paid
+device-intelligence service. None ships with absqir, because a self-host
+must work with no account anywhere.
+
 ## Stack
 
 | Layer    | Tool                                                          |
@@ -236,6 +283,11 @@ Two sources, because two runtimes read them.
 - `apps/web/.dev.vars` holds the local secrets. Never commit this file.
 - `.env` at the root holds `DATABASE_URL` for drizzle-kit only. The Worker does
   not read it.
+
+The map that picks a place uses OpenStreetMap raster tiles, which need no
+account and no key. Set `PUBLIC_MAP_TILE_URL` and
+`PUBLIC_MAP_TILE_ATTRIBUTION` to your own tile server before you put real
+traffic through it.
 
 `@t3-oss/env-core` validates the Worker variables in `packages/api/src/env.ts`.
 A missing or short secret stops the request with a clear message.

@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
+import { PlacePicker } from "@/components/shared/place-picker";
 import { type EventValues, eventSchema } from "@/lib/event-schemas";
 import { useCreateEvent } from "@/mutations/use-create-event";
 import { useUpdateEvent } from "@/mutations/use-update-event";
@@ -69,6 +70,8 @@ function defaults(event: Event | null, initialStart?: Date | null): EventValues 
       registrationLimit: match(event.registrationLimit)
         .with(null, () => "")
         .otherwise((registrationLimit) => String(registrationLimit)),
+      locationId: event.fence?.locationId ?? "",
+      requireLocation: event.requireLocation,
       groupIds: pipe(
         event.groups,
         A.map((group) => group.id),
@@ -91,6 +94,8 @@ function defaults(event: Event | null, initialStart?: Date | null): EventValues 
     allowWalkIns: false,
     registrationOpen: false,
     registrationLimit: "",
+    locationId: "",
+    requireLocation: false,
     groupIds: [],
   };
 }
@@ -126,6 +131,9 @@ export function EventDialog(props: EventDialogProps) {
       registrationLimit: match(values.registrationOpen && values.registrationLimit !== "")
         .with(true, () => Number(values.registrationLimit))
         .otherwise(() => null),
+      locationId: values.locationId || null,
+      // Without a place there is nothing to be outside of.
+      requireLocation: values.requireLocation && values.locationId !== "",
       groupIds: values.groupIds,
     };
 
@@ -264,6 +272,16 @@ export function EventDialog(props: EventDialogProps) {
                   <FieldError errors={[groupError]} />
                 </FieldContent>
               </Field>
+
+              <PlacePicker
+                idPrefix="event"
+                locationId={form.watch("locationId")}
+                requireLocation={form.watch("requireLocation")}
+                onChange={(value) => {
+                  form.setValue("locationId", value.locationId, { shouldDirty: true });
+                  form.setValue("requireLocation", value.requireLocation, { shouldDirty: true });
+                }}
+              />
 
               <div className="flex items-center gap-2">
                 <Checkbox

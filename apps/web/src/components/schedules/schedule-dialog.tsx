@@ -32,6 +32,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
+import { PlacePicker } from "@/components/shared/place-picker";
 import { type ScheduleValues, scheduleSchema } from "@/lib/event-schemas";
 import { useCreateSchedule } from "@/mutations/use-create-schedule";
 import { useUpdateSchedule } from "@/mutations/use-update-schedule";
@@ -76,6 +77,8 @@ function defaults(schedule: Schedule | null): ScheduleValues {
         .otherwise(() => null),
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
+      locationId: schedule.locationId ?? "",
+      requireLocation: schedule.requireLocation,
       groupIds: pipe(
         schedule.groups,
         A.map((group) => group.id),
@@ -97,6 +100,8 @@ function defaults(schedule: Schedule | null): ScheduleValues {
     endsOn: null,
     active: true,
     allowWalkIns: false,
+    locationId: "",
+    requireLocation: false,
     groupIds: [],
   };
 }
@@ -142,6 +147,9 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
       ),
       active: values.active,
       allowWalkIns: values.allowWalkIns,
+      locationId: values.locationId || null,
+      // Without a place there is nothing to be outside of.
+      requireLocation: values.requireLocation && values.locationId !== "",
       groupIds: values.groupIds,
     };
 
@@ -368,6 +376,18 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                   <Label htmlFor="schedule-walk-ins">Allow walk-ins</Label>
                 </div>
               </div>
+
+              {/* Every event this rule spawns inherits the place. Moving the
+                  place later moves the events it has not spawned yet. */}
+              <PlacePicker
+                idPrefix="schedule"
+                locationId={form.watch("locationId")}
+                requireLocation={form.watch("requireLocation")}
+                onChange={(value) => {
+                  form.setValue("locationId", value.locationId, { shouldDirty: true });
+                  form.setValue("requireLocation", value.requireLocation, { shouldDirty: true });
+                }}
+              />
 
               <FormError error={create.error ?? update.error} />
             </ResponsiveDialogBody>
