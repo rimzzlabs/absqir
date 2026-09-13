@@ -18,6 +18,7 @@ import {
 } from "@absqir/ui/dropdown-menu";
 import {
   DotsThreeIcon,
+  GearIcon,
   PaperPlaneTiltIcon,
   PencilSimpleIcon,
   TrashIcon,
@@ -32,6 +33,37 @@ import type { Person } from "@/queries/use-people";
 
 export interface PersonRowActionsProps {
   person: Person;
+  /** The row of the signed-in account. Settings owns its name and email. */
+  isSelf: boolean;
+}
+
+function Trigger(props: { name: string }) {
+  return (
+    <DropdownMenuTrigger
+      render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${props.name}`} />}
+    >
+      <DotsThreeIcon weight="bold" />
+    </DropdownMenuTrigger>
+  );
+}
+
+/**
+ * The signed-in account edits its own name and email on the settings page, so
+ * the directory offers the way there instead of a second form for the same
+ * two fields.
+ */
+function SelfActions(props: { person: Person }) {
+  return (
+    <DropdownMenu>
+      <Trigger name={props.person.name} />
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem render={<a href="/settings?tab=profile" />}>
+          <GearIcon />
+          Edit in settings
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function PersonRowActions(props: PersonRowActionsProps) {
@@ -44,16 +76,12 @@ export function PersonRowActions(props: PersonRowActionsProps) {
   const canInvite = person.email !== null && person.role === null;
   const isOwner = person.role === "owner";
 
+  if (props.isSelf) return <SelfActions person={person} />;
+
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${person.name}`} />
-          }
-        >
-          <DotsThreeIcon weight="bold" />
-        </DropdownMenuTrigger>
+        <Trigger name={person.name} />
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditing(true)}>
             <PencilSimpleIcon />

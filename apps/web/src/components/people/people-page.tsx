@@ -1,8 +1,10 @@
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
+import { Checkbox } from "@absqir/ui/checkbox";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Input } from "@absqir/ui/input";
+import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import {
@@ -11,7 +13,7 @@ import {
   PlusIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
-import { parseAsString, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useDeferredValue, useState } from "react";
 import { match, P } from "ts-pattern";
 import { ImportDialog } from "@/components/people/import-dialog";
@@ -25,6 +27,17 @@ import { type Person, usePeople } from "@/queries/use-people";
 
 export interface PeoplePageProps {
   role: RoleName;
+  /** The signed-in account. Its own row is the one the toggle hides. */
+  currentUserId: string | null;
+}
+
+/**
+ * Every member is also a person, so the reader always finds themselves in the
+ * directory. That row is about the reader, not about who they expect at an
+ * event, so it stays out of the list until they ask for it.
+ */
+function isSelf(person: Person, currentUserId: string | null) {
+  return currentUserId !== null && person.userId === currentUserId;
 }
 
 function StatusBadge(props: { person: Person }) {
@@ -35,6 +48,17 @@ function StatusBadge(props: { person: Person }) {
   if (person.email) return <Badge variant="outline">Not invited</Badge>;
 
   return <Badge variant="outline">No email</Badge>;
+}
+
+function NameCell(props: { person: Person; self: boolean }) {
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      {props.person.name}
+      {match(props.self)
+        .with(true, () => <Badge variant="secondary">You</Badge>)
+        .otherwise(() => null)}
+    </span>
+  );
 }
 
 function GroupsCell(props: { person: Person }) {
@@ -53,20 +77,22 @@ function GroupsCell(props: { person: Person }) {
   );
 }
 
-const ACTIONS_COLUMN: DataColumn<Person> = {
-  key: "actions",
-  place: "action",
-  headClassName: "w-12",
-  cell: (person) => <PersonRowActions person={person} />,
-};
+function actionsColumn(currentUserId: string | null): DataColumn<Person> {
+  return {
+    key: "actions",
+    place: "action",
+    headClassName: "w-12",
+    cell: (person) => <PersonRowActions person={person} isSelf={isSelf(person, currentUserId)} />,
+  };
+}
 
-function peopleColumns(canManage: boolean): DataColumn<Person>[] {
+function peopleColumns(canManage: boolean, currentUserId: string | null): DataColumn<Person>[] {
   const base: DataColumn<Person>[] = [
     {
       key: "name",
       header: "Name",
       place: "primary",
-      cell: (person) => person.name,
+      cell: (person) => <NameCell person={person} self={isSelf(person, currentUserId)} />,
       cellClassName: "font-medium",
     },
     {
@@ -94,11 +120,15 @@ function peopleColumns(canManage: boolean): DataColumn<Person>[] {
   ];
 
   return match(canManage)
-    .with(true, () => [...base, ACTIONS_COLUMN])
+    .with(true, () => [...base, actionsColumn(currentUserId)])
     .otherwise(() => base);
 }
 
-function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
+function PeopleTable(props: {
+  rows: readonly Person[];
+  canManage: boolean;
+  currentUserId: string | null;
+}) {
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -118,7 +148,7 @@ function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
   return (
     <DataTable
       label="People in the directory"
-      columns={peopleColumns(props.canManage)}
+      columns={peopleColumns(props.canManage, props.currentUserId)}
       rows={props.rows}
       getKey={(person) => person.id}
     />
@@ -127,11 +157,17 @@ function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
 
 function PeopleBody(props: PeoplePageProps) {
   const [query, setQuery] = useQueryState("q", parseAsString.withDefault(""));
+  const [showSelf, setShowSelf] = useQueryState("me", parseAsBoolean.withDefault(false));
   const deferred = useDeferredValue(query.trim());
   const people = usePeople(deferred);
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
   const canManage = props.role === "owner" || props.role === "admin";
+
+  const visible = (rows: readonly Person[]) =>
+    match(showSelf)
+      .with(true, () => rows)
+      .otherwise(() => A.reject(rows, (person) => isSelf(person, props.currentUserId)));
 
   return (
     <>
@@ -154,23 +190,40 @@ function PeopleBody(props: PeoplePageProps) {
           .otherwise(() => null)}
       />
 
-      <div className="relative max-w-sm">
-        <MagnifyingGlassIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-        <Input
-          type="search"
-          placeholder="Search by name, email, or identifier"
-          aria-label="Search people"
-          className="pl-8"
-          value={query}
-          onChange={(event) => void setQuery(event.target.value || null)}
-        />
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="relative min-w-56 flex-1 sm:max-w-sm sm:flex-none">
+          <MagnifyingGlassIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+          <Input
+            type="search"
+            placeholder="Search by name, email, or identifier"
+            aria-label="Search people"
+            className="pl-8"
+            value={query}
+            onChange={(event) => void setQuery(event.target.value || null)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="people-show-self"
+            checked={showSelf}
+            onCheckedChange={(checked) => void setShowSelf(checked === true || null)}
+          />
+          <Label htmlFor="people-show-self" className="text-muted-foreground font-normal">
+            Show my own row
+          </Label>
+        </div>
       </div>
 
       {match(people)
         .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) => (
-          <PeopleTable rows={rows} canManage={canManage} />
+          <PeopleTable
+            rows={visible(rows)}
+            canManage={canManage}
+            currentUserId={props.currentUserId}
+          />
         ))
         .otherwise(() => null)}
 

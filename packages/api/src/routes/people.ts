@@ -39,6 +39,7 @@ const personInput = z.object({
 
 const errorSchema = z.object({ error: z.string() });
 const FORBIDDEN_MESSAGE = "This needs the admin role or higher";
+const OWN_ROW_MESSAGE = "Change your own name and email in settings.";
 const idParam = z.object({ id: z.string() });
 
 const unauthorized = {
@@ -322,6 +323,15 @@ function toJson(row: PersonRow, extra: Decorations) {
   };
 }
 
+/**
+ * True when the row belongs to the caller's own account. Their name and email
+ * come from the account, so settings owns them, not the directory.
+ */
+function isCaller(c: Context<AppEnv>, row: PersonRow) {
+  // A row with no account has a null userId, which never equals an id.
+  return row.userId === c.get("user")?.id;
+}
+
 async function findPerson(db: Database, organizationId: string, id: string) {
   const rows = await db
     .select()
@@ -433,6 +443,7 @@ export const peopleRoutes = app
 
     const found = await findPerson(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
+    if (isCaller(c, found)) return c.json({ error: OWN_ROW_MESSAGE }, 403);
 
     try {
       const [updated] = await c.var.db
@@ -470,6 +481,13 @@ export const peopleRoutes = app
 
     const found = await findPerson(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
+
+    if (isCaller(c, found)) {
+      return c.json(
+        { error: "You cannot remove yourself. Leave the organization in settings." },
+        409,
+      );
+    }
 
     if (found.userId) {
       const memberships = await c.var.db

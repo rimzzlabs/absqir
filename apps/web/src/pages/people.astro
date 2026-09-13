@@ -3,6 +3,7 @@ import { PeoplePage } from "@/components/people/people-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
 const role = Astro.locals.activeMembership?.role ?? "member";
+const currentUserId = Astro.locals.user?.id ?? null;
 
 if (role === "member") {
   return Astro.redirect("/my/events", 302);
@@ -10,5 +11,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="People">
-  <PeoplePage client:load role={role} />
+  <PeoplePage client:load role={role} currentUserId={currentUserId} />
 </DashboardLayout>
