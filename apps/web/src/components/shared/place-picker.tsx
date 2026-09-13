@@ -4,8 +4,10 @@ import { Label } from "@absqir/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectItemDescription,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@absqir/ui/select";
@@ -59,23 +61,30 @@ export function PlacePicker(props: PlacePickerProps) {
               <SelectValue placeholder="No place" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>
-                No place
-                <SelectItemDescription>
-                  Anyone with the code checks in, wherever they are.
-                </SelectItemDescription>
-              </SelectItem>
-              {A.map(rows, (place) => (
-                <SelectItem key={place.id} value={place.id}>
-                  {place.name}
-                  <SelectItemDescription>
-                    {match(place.address)
-                      .with(P.string.minLength(1), (address) => `${address} · `)
-                      .otherwise(() => "")}
-                    within {place.radiusMeters} m
-                  </SelectItemDescription>
+              <SelectGroup>
+                <SelectLabel>Where people check in</SelectLabel>
+                <SelectItem value={NONE}>
+                  <span className="flex flex-col">
+                    <span>No place</span>
+                    <SelectItemDescription>
+                      Anyone with the code checks in, wherever they are.
+                    </SelectItemDescription>
+                  </span>
                 </SelectItem>
-              ))}
+                {A.map(rows, (place) => (
+                  <SelectItem key={place.id} value={place.id}>
+                    <span className="flex flex-col">
+                      <span>{place.name}</span>
+                      <SelectItemDescription>
+                        {match(place.address)
+                          .with(P.string.minLength(1), (address) => `${address} · `)
+                          .otherwise(() => "")}
+                        within {place.radiusMeters} m
+                      </SelectItemDescription>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
 
