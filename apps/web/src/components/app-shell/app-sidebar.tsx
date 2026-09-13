@@ -14,6 +14,7 @@ import {
 } from "@absqir/ui/sidebar";
 import { A } from "@mobily/ts-belt";
 import { ArrowSquareOutIcon, GithubLogoIcon } from "@phosphor-icons/react";
+import { match, P } from "ts-pattern";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import {
   CHECK_IN,
@@ -43,8 +44,15 @@ function NavEntry(props: { item: NavItem; currentPath: string }) {
     <SidebarMenuItem>
       <SidebarMenuButton isActive={active} tooltip={item.label} render={<a href={item.href} />}>
         <item.icon
-          weight={active ? "fill" : "regular"}
-          className={cn("transition-colors", active ? "text-primary" : "")}
+          weight={match(active)
+            .with(true, () => "fill" as const)
+            .otherwise(() => "regular" as const)}
+          className={cn(
+            "transition-colors",
+            match(active)
+              .with(true, () => "text-primary" as const)
+              .otherwise(() => "" as const),
+          )}
         />
         <span>{item.label}</span>
       </SidebarMenuButton>
@@ -86,7 +94,9 @@ export function AppSidebar(props: AppSidebarProps) {
 
   // Without an organization the list is short on purpose: the two entries
   // that work, and nothing that turns the reader away.
-  const groups = active ? navFor(active.role) : SOLO_NAV;
+  const groups = match(active)
+    .with(P.nullish, () => SOLO_NAV)
+    .otherwise((active) => navFor(active.role));
   const member = active !== null && !roleAtLeast(active.role, "organizer");
 
   return (
@@ -97,7 +107,9 @@ export function AppSidebar(props: AppSidebarProps) {
           active={props.active}
           canCreateOrganizations={props.canCreateOrganizations}
         />
-        {member ? <CheckInEntry currentPath={props.currentPath} /> : null}
+        {match(member)
+          .with(true, () => <CheckInEntry currentPath={props.currentPath} />)
+          .otherwise(() => null)}
       </SidebarHeader>
 
       <SidebarContent>

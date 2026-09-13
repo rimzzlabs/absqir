@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import { usageOf } from "#src/lib/commands";
 import { readEnvValue, setEnvValue } from "#src/lib/env-file";
 import { UsageError } from "#src/lib/errors";
@@ -78,14 +79,20 @@ export async function configSet(argv: string[]): Promise<number> {
 
   const value =
     flagValue ??
-    (setting?.secret
-      ? await ui.password({ message: `New value for ${key}`, flag: "a value" })
-      : await ui.text({
-          message: `New value for ${key}`,
-          flag: "a value",
-          placeholder: current || "empty",
-          defaultValue: current,
-        }));
+    (await match(Boolean(setting?.secret))
+      .with(
+        true,
+        async () => await ui.password({ message: `New value for ${key}`, flag: "a value" }),
+      )
+      .otherwise(
+        async () =>
+          await ui.text({
+            message: `New value for ${key}`,
+            flag: "a value",
+            placeholder: current || "empty",
+            defaultValue: current,
+          }),
+      ));
 
   setEnvValue({ path: ENV_PATH, key, value });
 
@@ -120,7 +127,11 @@ export function configGet(argv: string[]): number {
       return 1;
     }
 
-    ui.raw(values.reveal ? value : maskedValue({ setting: settingOf(key), value }));
+    ui.raw(
+      match(values.reveal)
+        .with(true, () => value)
+        .otherwise(() => maskedValue({ setting: settingOf(key), value })),
+    );
     return 0;
   }
 
@@ -128,7 +139,11 @@ export function configGet(argv: string[]): number {
     const value = readEnvValue(ENV_PATH, setting.key);
     if (value === null) continue;
 
-    ui.raw(`${setting.key}=${values.reveal ? value : maskedValue({ setting, value })}`);
+    ui.raw(
+      `${setting.key}=${match(values.reveal)
+        .with(true, () => value)
+        .otherwise(() => maskedValue({ setting, value }))}`,
+    );
   }
 
   if (!values.reveal && ui.isRich()) ui.info("Secrets are masked. Add --reveal to print them.");

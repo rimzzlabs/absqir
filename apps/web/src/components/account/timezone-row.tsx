@@ -10,6 +10,7 @@ import {
 } from "@absqir/ui/combobox";
 import { GlobeHemisphereEastIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { match, P } from "ts-pattern";
 import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { useDeviceTimezone } from "@/lib/use-device-timezone";
@@ -30,9 +31,9 @@ export function TimezoneRow(props: TimezoneRowProps) {
   const device = useDeviceTimezone();
   const zones = listTimezones();
   const dirty = chosen !== props.timezone;
-  const followingLabel = device
-    ? `Following this device: ${describeTimezone(device)}.`
-    : "Following this device.";
+  const followingLabel = match(device)
+    .with(P.string.minLength(1), (device) => `Following this device: ${describeTimezone(device)}.`)
+    .otherwise(() => "Following this device." as const);
 
   return (
     <SettingsRow
@@ -43,7 +44,13 @@ export function TimezoneRow(props: TimezoneRowProps) {
         <Combobox
           items={zones}
           value={chosen}
-          onValueChange={(value) => setChosen(typeof value === "string" ? value : null)}
+          onValueChange={(value) =>
+            setChosen(
+              match(value)
+                .with(P.string, (value) => value)
+                .otherwise(() => null),
+            )
+          }
           itemToStringLabel={(zone) => describeTimezone(zone)}
         >
           <ComboboxInput
@@ -67,7 +74,12 @@ export function TimezoneRow(props: TimezoneRowProps) {
 
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <GlobeHemisphereEastIcon aria-hidden className="size-3.5" />
-          {chosen ? `Times will read in ${describeTimezone(chosen)}.` : followingLabel}
+          {match(chosen)
+            .with(
+              P.string.minLength(1),
+              (chosen) => `Times will read in ${describeTimezone(chosen)}.`,
+            )
+            .otherwise(() => followingLabel)}
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -77,18 +89,22 @@ export function TimezoneRow(props: TimezoneRowProps) {
             disabled={save.isPending || !dirty}
             onClick={() => save.mutate(chosen)}
           >
-            {save.isPending ? "Saving…" : "Save"}
+            {match(save.isPending)
+              .with(true, () => "Saving…" as const)
+              .otherwise(() => "Save" as const)}
           </Button>
-          {device && chosen !== device ? (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={save.isPending}
-              onClick={() => setChosen(device)}
-            >
-              Use this device's zone
-            </Button>
-          ) : null}
+          {match(Boolean(device && chosen !== device))
+            .with(true, () => (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={save.isPending}
+                onClick={() => setChosen(device)}
+              >
+                Use this device's zone
+              </Button>
+            ))
+            .otherwise(() => null)}
         </div>
         <FormError error={save.error} />
       </div>

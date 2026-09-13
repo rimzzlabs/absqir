@@ -5,6 +5,7 @@ import type { Mailer } from "@absqir/transactional";
 import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Context } from "hono";
+import { match, P } from "ts-pattern";
 import type { AppEnv } from "#src/types";
 
 const { notification, member, person, user, organization } = schema;
@@ -63,7 +64,9 @@ export function routeByChannel<T extends { userId: string }>(
 ): readonly (T & { channel: DeliveredChannel })[] {
   return A.flatMap(rows, (row) => {
     const channel = channelOf(row.userId);
-    return channel === "none" ? [] : [{ ...row, channel }];
+    return match(channel)
+      .with("none", () => [])
+      .otherwise((channel) => [{ ...row, channel }]);
   });
 }
 
@@ -227,7 +230,11 @@ export async function userIdsForPeople(
     .from(person)
     .where(inArray(person.id, personIds));
 
-  return A.flatMap(rows, (row) => (row.userId ? [row.userId] : []));
+  return A.flatMap(rows, (row) =>
+    match(row.userId)
+      .with(P.string.minLength(1), (userId) => [userId])
+      .otherwise(() => []),
+  );
 }
 
 const LIST_LIMIT = 100;
@@ -245,7 +252,9 @@ export async function listNotifications(
     eq(notification.userId, userId),
     eq(notification.organizationId, organizationId),
     inApp,
-    scope === "unread" ? isNull(notification.readAt) : undefined,
+    match(scope)
+      .with("unread", () => isNull(notification.readAt))
+      .otherwise(() => undefined),
   );
 
   return db
@@ -320,7 +329,11 @@ export async function markRead(
   const rows = await db
     .update(notification)
     .set({ readAt: new Date() })
-    .where(ids === null ? mine : and(mine, inArray(notification.id, ids)))
+    .where(
+      match(ids)
+        .with(null, () => mine)
+        .otherwise((ids) => and(mine, inArray(notification.id, ids))),
+    )
     .returning({ id: notification.id });
 
   return rows.length;

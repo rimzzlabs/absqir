@@ -39,31 +39,37 @@ function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
         </p>
       </div>
 
-      {event.groups.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {A.map(event.groups, (group) => (
-            <Badge key={group.id} variant="outline">
-              {group.name}
-            </Badge>
-          ))}
-        </div>
-      ) : null}
+      {match(event.groups.length > 0)
+        .with(true, () => (
+          <div className="flex flex-wrap gap-1">
+            {A.map(event.groups, (group) => (
+              <Badge key={group.id} variant="outline">
+                {group.name}
+              </Badge>
+            ))}
+          </div>
+        ))
+        .otherwise(() => null)}
 
-      {event.record ? (
-        <div className="flex items-center gap-2">
-          <AttendanceStatusBadge status={event.record.status} />
-          {event.record.checkedInAt ? (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              at {formatDate(new Date(event.record.checkedInAt), "time")}
-            </span>
-          ) : null}
-        </div>
-      ) : (
-        <Button size="sm" className="w-fit" onClick={() => props.onPass(event.id)}>
-          <TicketIcon />
-          My pass
-        </Button>
-      )}
+      {match(event.record)
+        .with(P.nullish, () => (
+          <Button size="sm" className="w-fit" onClick={() => props.onPass(event.id)}>
+            <TicketIcon />
+            My pass
+          </Button>
+        ))
+        .otherwise((record) => (
+          <div className="flex items-center gap-2">
+            <AttendanceStatusBadge status={record.status} />
+            {match(record.checkedInAt)
+              .with(P.string.minLength(1), (checkedInAt) => (
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  at {formatDate(new Date(checkedInAt), "time")}
+                </span>
+              ))
+              .otherwise(() => null)}
+          </div>
+        ))}
     </li>
   );
 }
@@ -144,19 +150,25 @@ export function CheckInPass(props: CheckInPassProps) {
 
             return (
               <div className="flex flex-col gap-3">
-                {running.length > 0 ? (
-                  <ul className="flex flex-col gap-2">
-                    {A.map(running, (event) => (
-                      <RunningRow key={event.id} event={event} onPass={props.onPass} />
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Nothing runs right now, so no pass works yet.
-                  </p>
-                )}
+                {match(running.length > 0)
+                  .with(true, () => (
+                    <ul className="flex flex-col gap-2">
+                      {A.map(running, (event) => (
+                        <RunningRow key={event.id} event={event} onPass={props.onPass} />
+                      ))}
+                    </ul>
+                  ))
+                  .otherwise(() => (
+                    <p className="text-muted-foreground text-sm">
+                      Nothing runs right now, so no pass works yet.
+                    </p>
+                  ))}
 
-                {next ? <NextBlock event={next} /> : null}
+                {match(next)
+                  .with(P.nullish, () => null)
+                  .otherwise((next) => (
+                    <NextBlock event={next} />
+                  ))}
               </div>
             );
           })}

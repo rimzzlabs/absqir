@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Badge } from "@absqir/ui/badge";
 import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, UsersThreeIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import type { Event } from "@/queries/use-events";
 
@@ -18,8 +19,12 @@ function Counts(props: { event: Event }) {
   return (
     <span className="text-muted-foreground text-xs tabular-nums">
       {checkedIn}/{counts.expected} in
-      {counts.late > 0 ? ` · ${counts.late} late` : ""}
-      {status === "done" && counts.absent > 0 ? ` · ${counts.absent} absent` : ""}
+      {match(counts.late > 0)
+        .with(true, () => ` · ${counts.late} late`)
+        .otherwise(() => "" as const)}
+      {match(status === "done" && counts.absent > 0)
+        .with(true, () => ` · ${counts.absent} absent`)
+        .otherwise(() => "" as const)}
     </span>
   );
 }
@@ -41,7 +46,9 @@ export function EventCard(props: { event: Event }) {
           <EventStatusBadge status={event.status} />
           <span className="text-muted-foreground text-xs tabular-nums">
             {formatDate(startsAt, "time")} to{" "}
-            {sameDay ? formatDate(endsAt, "time") : formatDate(endsAt, "weekdayDateTime")}
+            {match(sameDay)
+              .with(true, () => formatDate(endsAt, "time"))
+              .otherwise(() => formatDate(endsAt, "weekdayDateTime"))}
           </span>
         </div>
 
@@ -52,20 +59,22 @@ export function EventCard(props: { event: Event }) {
           </p>
         </div>
 
-        {event.groups.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {A.map(event.groups, (group) => (
-              <Badge key={group.id} variant="outline">
-                {group.name}
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground flex items-center gap-1 text-xs">
-            <UsersThreeIcon aria-hidden />
-            No group
-          </p>
-        )}
+        {match(event.groups.length > 0)
+          .with(true, () => (
+            <div className="flex flex-wrap gap-1">
+              {A.map(event.groups, (group) => (
+                <Badge key={group.id} variant="outline">
+                  {group.name}
+                </Badge>
+              ))}
+            </div>
+          ))
+          .otherwise(() => (
+            <p className="text-muted-foreground flex items-center gap-1 text-xs">
+              <UsersThreeIcon aria-hidden />
+              No group
+            </p>
+          ))}
 
         <div className="mt-auto flex items-center justify-between gap-3 pt-1">
           <Counts event={event} />

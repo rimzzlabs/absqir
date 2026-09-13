@@ -97,5 +97,6 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "plugins": ["./.biome/plugins/no-ternary.grit"]
 }

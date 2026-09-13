@@ -32,10 +32,12 @@ const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
 function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: boolean }) {
   const past = props.scope === "past";
-  const emptyTitle = past ? "Nothing has happened yet" : "Nothing is planned";
-  const emptyHint = past
-    ? "Closed events land here with their records."
-    : "Create an event, or set up a schedule that creates them for you.";
+  const emptyTitle = match(past)
+    .with(true, () => "Nothing has happened yet" as const)
+    .otherwise(() => "Nothing is planned" as const);
+  const emptyHint = match(past)
+    .with(true, () => "Closed events land here with their records." as const)
+    .otherwise(() => "Create an event, or set up a schedule that creates them for you." as const);
 
   if (props.rows.length === 0) {
     return (
@@ -44,9 +46,15 @@ function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: 
           <EmptyMedia variant="icon">
             <QrCodeIcon />
           </EmptyMedia>
-          <EmptyTitle>{props.filtered ? "Nothing matches" : emptyTitle}</EmptyTitle>
+          <EmptyTitle>
+            {match(props.filtered)
+              .with(true, () => "Nothing matches" as const)
+              .otherwise(() => emptyTitle)}
+          </EmptyTitle>
           <EmptyDescription>
-            {props.filtered ? "Try another title, or every group." : emptyHint}
+            {match(props.filtered)
+              .with(true, () => "Try another title, or every group." as const)
+              .otherwise(() => emptyHint)}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -78,14 +86,14 @@ function EventsBody(props: EventsPageProps) {
       <PageHeader
         title="Events"
         description="One event is one moment people are expected. It opens and closes on its own clock."
-        actions={
-          canCreate ? (
+        actions={match(canCreate)
+          .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
               New event
             </Button>
-          ) : null
-        }
+          ))
+          .otherwise(() => null)}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -117,17 +125,21 @@ function EventsBody(props: EventsPageProps) {
           <div className="space-y-4">
             <EventGrid rows={rows} scope={scope} filtered={wanted !== "" || groupId !== ""} />
 
-            {events.hasNextPage ? (
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  disabled={events.isFetchingNextPage}
-                  onClick={() => void events.fetchNextPage()}
-                >
-                  {events.isFetchingNextPage ? "Loading…" : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+            {match(events.hasNextPage)
+              .with(true, () => (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    disabled={events.isFetchingNextPage}
+                    onClick={() => void events.fetchNextPage()}
+                  >
+                    {match(events.isFetchingNextPage)
+                      .with(true, () => "Loading…" as const)
+                      .otherwise(() => "Load more" as const)}
+                  </Button>
+                </div>
+              ))
+              .otherwise(() => null)}
           </div>
         ))
         .otherwise(() => null)}

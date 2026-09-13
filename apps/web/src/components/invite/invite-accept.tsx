@@ -14,7 +14,9 @@ export interface InviteAcceptProps {
 }
 
 function asRole(role: string | undefined) {
-  return role === "owner" || role === "admin" || role === "organizer" ? role : "member";
+  return match(role)
+    .with("owner", "admin", "organizer", (name) => name)
+    .otherwise(() => "member" as const);
 }
 
 function SignedOut(props: { invitationId: string }) {
@@ -64,7 +66,9 @@ function SignedIn(props: InviteAcceptProps) {
           disabled={accept.isPending}
           onClick={() => accept.mutate(props.invitationId)}
         >
-          {accept.isPending ? "Joining…" : "Accept the invitation"}
+          {match(accept.isPending)
+            .with(true, () => "Joining…" as const)
+            .otherwise(() => "Accept the invitation" as const)}
         </Button>
         <a href="/" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
           Not now
@@ -77,7 +81,11 @@ function SignedIn(props: InviteAcceptProps) {
 export function InviteAccept(props: InviteAcceptProps) {
   return (
     <Providers>
-      {props.userEmail ? <SignedIn {...props} /> : <SignedOut invitationId={props.invitationId} />}
+      {match(props.userEmail)
+        .with(P.string.minLength(1), () => <SignedIn {...props} />)
+        .otherwise(() => (
+          <SignedOut invitationId={props.invitationId} />
+        ))}
     </Providers>
   );
 }

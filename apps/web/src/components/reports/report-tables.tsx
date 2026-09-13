@@ -70,7 +70,9 @@ function ReportQuery<T>(props: {
     .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (rows) =>
-      rows.length === 0 ? props.empty : props.render(rows),
+      match(rows.length)
+        .with(0, () => props.empty)
+        .otherwise(() => props.render(rows)),
     )
     .otherwise(() => null);
 }
@@ -104,9 +106,11 @@ export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
                 <TableRow key={row.personId}>
                   <TableCell className="font-medium">
                     {row.name}
-                    {row.identifier ? (
-                      <p className="text-muted-foreground text-xs">{row.identifier}</p>
-                    ) : null}
+                    {match(row.identifier)
+                      .with(P.string.minLength(1), (identifier) => (
+                        <p className="text-muted-foreground text-xs">{identifier}</p>
+                      ))
+                      .otherwise(() => null)}
                   </TableCell>
                   <CountCells counts={row.counts} />
                   <RateCell rate={row.attendanceRate} counts={row.counts} />
@@ -194,7 +198,9 @@ export function EventReportTable(props: { query: Query<EventReportRow> }) {
                     </a>
                     <p className="text-muted-foreground text-xs">
                       {formatDate(new Date(row.startsAt), "weekdayDateTime")}
-                      {row.closed ? "" : " · still open"}
+                      {match(row.closed)
+                        .with(true, () => "" as const)
+                        .otherwise(() => " · still open" as const)}
                     </p>
                   </TableCell>
                   <CountCells counts={row.counts} />

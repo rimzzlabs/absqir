@@ -1,7 +1,8 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import { materializeSchedules } from "#src/lib/schedule";
 import type { AppEnv } from "#src/types";
@@ -164,14 +165,18 @@ function validTimezone(name: string) {
 
 async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: ScheduleRow[]) {
   const ids = A.map(rows, (row) => row.id);
-  const groups = ids.length
-    ? await c.var.db
-        .select({ scheduleId: scheduleGroup.scheduleId, id: group.id, name: group.name })
-        .from(scheduleGroup)
-        .innerJoin(group, eq(group.id, scheduleGroup.groupId))
-        .where(inArray(scheduleGroup.scheduleId, ids))
-        .orderBy(asc(group.name))
-    : [];
+  const groups = await match(ids.length > 0)
+    .with(
+      true,
+      async () =>
+        await c.var.db
+          .select({ scheduleId: scheduleGroup.scheduleId, id: group.id, name: group.name })
+          .from(scheduleGroup)
+          .innerJoin(group, eq(group.id, scheduleGroup.groupId))
+          .where(inArray(scheduleGroup.scheduleId, ids))
+          .orderBy(asc(group.name)),
+    )
+    .otherwise(async () => []);
 
   return A.map(rows, (row) => ({
     id: row.id,
@@ -277,8 +282,16 @@ export const scheduleRoutes = app
         title: body.title,
         description: body.description?.trim() || null,
         frequency: body.frequency,
-        weekdays:
-          body.frequency === "weekly" ? [...A.sort(A.uniq(body.weekdays), (a, b) => a - b)] : [],
+        weekdays: match(body.frequency)
+          .with("weekly", () =>
+            pipe(
+              body.weekdays,
+              A.uniq,
+              A.sort((a, b) => a - b),
+              F.toMutable,
+            ),
+          )
+          .otherwise(() => []),
         startTime: body.startTime,
         durationMinutes: body.durationMinutes,
         lateAfterMinutes: body.lateAfterMinutes ?? 15,
@@ -291,9 +304,13 @@ export const scheduleRoutes = app
       });
 
       if (groupIds.length) {
-        await tx
-          .insert(scheduleGroup)
-          .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
+        await tx.insert(scheduleGroup).values(
+          pipe(
+            groupIds,
+            A.map((groupId) => ({ scheduleId: id, groupId })),
+            F.toMutable,
+          ),
+        );
       }
     });
 
@@ -325,31 +342,60 @@ export const scheduleRoutes = app
       return c.json({ error: "Unknown timezone." }, 400);
     }
 
-    const groupIds = body.groupIds ? await validGroupIds(c, body.groupIds) : null;
+    const groupIds = await pipe(
+      O.fromNullable(body.groupIds),
+      O.map(async (groupIds) => await validGroupIds(c, groupIds)),
+      O.toNullable,
+    );
 
     await c.var.db.transaction(async (tx) => {
       await tx
         .update(schedule)
         .set({
-          ...(body.title !== undefined ? { title: body.title } : {}),
-          ...(body.description !== undefined
-            ? { description: body.description?.trim() || null }
-            : {}),
+          ...match(body.title)
+            .with(undefined, () => ({}))
+            .otherwise((title) => ({ title })),
+          ...match(body.description)
+            .with(undefined, () => ({}))
+            .otherwise((description) => ({ description: description?.trim() || null })),
           frequency,
-          weekdays: frequency === "weekly" ? [...A.sort(A.uniq(weekdays), (a, b) => a - b)] : [],
-          ...(body.startTime !== undefined ? { startTime: body.startTime } : {}),
-          ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
-          ...(body.lateAfterMinutes !== undefined
-            ? { lateAfterMinutes: body.lateAfterMinutes }
-            : {}),
-          ...(body.opensBeforeMinutes !== undefined
-            ? { opensBeforeMinutes: body.opensBeforeMinutes }
-            : {}),
-          ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
-          ...(body.startsOn !== undefined ? { startsOn: body.startsOn } : {}),
-          ...(body.endsOn !== undefined ? { endsOn: body.endsOn ?? null } : {}),
-          ...(body.active !== undefined ? { active: body.active } : {}),
-          ...(body.allowWalkIns !== undefined ? { allowWalkIns: body.allowWalkIns } : {}),
+          weekdays: match(frequency)
+            .with("weekly", () =>
+              pipe(
+                weekdays,
+                A.uniq,
+                A.sort((a, b) => a - b),
+                F.toMutable,
+              ),
+            )
+            .otherwise(() => []),
+          ...match(body.startTime)
+            .with(undefined, () => ({}))
+            .otherwise((startTime) => ({ startTime })),
+          ...match(body.durationMinutes)
+            .with(undefined, () => ({}))
+            .otherwise((durationMinutes) => ({ durationMinutes })),
+          ...match(body.lateAfterMinutes)
+            .with(undefined, () => ({}))
+            .otherwise((lateAfterMinutes) => ({ lateAfterMinutes })),
+          ...match(body.opensBeforeMinutes)
+            .with(undefined, () => ({}))
+            .otherwise((opensBeforeMinutes) => ({ opensBeforeMinutes })),
+          ...match(body.timezone)
+            .with(undefined, () => ({}))
+            .otherwise((timezone) => ({ timezone })),
+          ...match(body.startsOn)
+            .with(undefined, () => ({}))
+            .otherwise((startsOn) => ({ startsOn })),
+          ...match(body.endsOn)
+            .with(undefined, () => ({}))
+            .otherwise((endsOn) => ({ endsOn: endsOn ?? null })),
+          ...match(body.active)
+            .with(undefined, () => ({}))
+            .otherwise((active) => ({ active })),
+          ...match(body.allowWalkIns)
+            .with(undefined, () => ({}))
+            .otherwise((allowWalkIns) => ({ allowWalkIns })),
           updatedAt: new Date(),
         })
         .where(eq(schedule.id, id));
@@ -357,9 +403,13 @@ export const scheduleRoutes = app
       if (groupIds) {
         await tx.delete(scheduleGroup).where(eq(scheduleGroup.scheduleId, id));
         if (groupIds.length) {
-          await tx
-            .insert(scheduleGroup)
-            .values([...A.map(groupIds, (groupId) => ({ scheduleId: id, groupId }))]);
+          await tx.insert(scheduleGroup).values(
+            pipe(
+              groupIds,
+              A.map((groupId) => ({ scheduleId: id, groupId })),
+              F.toMutable,
+            ),
+          );
         }
       }
     });

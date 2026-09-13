@@ -29,7 +29,9 @@ function RequestRow(props: { row: JoinRequest }) {
     <Item variant="outline">
       <ItemMedia>
         <Avatar>
-          {row.image ? <AvatarImage src={row.image} alt="" /> : null}
+          {match(row.image)
+            .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
+            .otherwise(() => null)}
           <AvatarFallback>{initialsOf(row.name)}</AvatarFallback>
         </Avatar>
       </ItemMedia>
@@ -38,7 +40,9 @@ function RequestRow(props: { row: JoinRequest }) {
         <ItemDescription>
           {row.email} · asked {relativeToNow(new Date(row.createdAt))}
         </ItemDescription>
-        {row.message ? <ItemDescription>“{row.message}”</ItemDescription> : null}
+        {match(row.message)
+          .with(P.string.minLength(1), (message) => <ItemDescription>“{message}”</ItemDescription>)
+          .otherwise(() => null)}
       </ItemContent>
       <ItemActions>
         <Button
@@ -56,7 +60,9 @@ function RequestRow(props: { row: JoinRequest }) {
           onClick={() => decide.mutate({ id: row.id, decision: "approved" })}
         >
           <CheckIcon />
-          {decide.isPending ? "Saving…" : "Let in"}
+          {match(decide.isPending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => "Let in" as const)}
         </Button>
       </ItemActions>
     </Item>
@@ -74,18 +80,20 @@ export function JoinRequestsPanel() {
         .with({ isPending: true }, () => <Skeleton className="h-24 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (data) =>
-          data.items.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Nobody is waiting. A request lands here when someone at a verified domain asks to come
-              in.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {A.map(data.items, (row) => (
-                <RequestRow key={row.id} row={row} />
-              ))}
-            </div>
-          ),
+          match(data.items.length)
+            .with(0, () => (
+              <p className="text-muted-foreground text-sm">
+                Nobody is waiting. A request lands here when someone at a verified domain asks to
+                come in.
+              </p>
+            ))
+            .otherwise(() => (
+              <div className="space-y-3">
+                {A.map(data.items, (row) => (
+                  <RequestRow key={row.id} row={row} />
+                ))}
+              </div>
+            )),
         )
         .otherwise(() => null)}
 

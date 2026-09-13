@@ -38,7 +38,9 @@ function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
         disabled={props.query.isFetchingNextPage}
         onClick={() => void props.query.fetchNextPage()}
       >
-        {props.query.isFetchingNextPage ? "Loading…" : "Load more"}
+        {match(props.query.isFetchingNextPage)
+          .with(true, () => "Loading…" as const)
+          .otherwise(() => "Load more" as const)}
       </Button>
     </div>
   );
@@ -74,16 +76,18 @@ function Waiting() {
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () =>
-          rows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Nothing waits. Cannot make an event? Ask before it starts, with a reason.
-            </p>
-          ) : (
-            <>
-              <Grid rows={rows} />
-              <LoadMore query={pending} />
-            </>
-          ),
+          match(rows.length)
+            .with(0, () => (
+              <p className="text-muted-foreground text-sm">
+                Nothing waits. Cannot make an event? Ask before it starts, with a reason.
+              </p>
+            ))
+            .otherwise(() => (
+              <>
+                <Grid rows={rows} />
+                <LoadMore query={pending} />
+              </>
+            )),
         )
         .otherwise(() => null)}
     </section>
@@ -107,24 +111,26 @@ function Decided() {
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () =>
-          rows.length === 0 ? (
-            <Empty className="border-border rounded-xl border border-dashed py-16">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <NotePencilIcon />
-                </EmptyMedia>
-                <EmptyTitle>Nothing decided yet</EmptyTitle>
-                <EmptyDescription>
-                  Approved and declined requests land here, with the organizer's note.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <>
-              <Grid rows={rows} />
-              <LoadMore query={decided} />
-            </>
-          ),
+          match(rows.length)
+            .with(0, () => (
+              <Empty className="border-border rounded-xl border border-dashed py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <NotePencilIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>Nothing decided yet</EmptyTitle>
+                  <EmptyDescription>
+                    Approved and declined requests land here, with the organizer's note.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ))
+            .otherwise(() => (
+              <>
+                <Grid rows={rows} />
+                <LoadMore query={decided} />
+              </>
+            )),
         )
         .otherwise(() => null)}
     </section>

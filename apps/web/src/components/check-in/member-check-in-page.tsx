@@ -8,6 +8,7 @@ import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { match, P } from "ts-pattern";
 import { CheckInPass } from "@/components/check-in/check-in-pass";
 import { CheckInRecent } from "@/components/check-in/check-in-recent";
 import { CheckInResult } from "@/components/check-in/check-in-result";
@@ -53,7 +54,9 @@ function Scanner() {
     enabled: !checkIn.isSuccess,
     fallback: "Paste the link printed under the code on the room screen.",
   });
-  const progressNote = checkIn.isPending ? "Checking you in." : "";
+  const progressNote = match(checkIn.isPending)
+    .with(true, () => "Checking you in." as const)
+    .otherwise(() => "" as const);
   const error = rejected ?? checkIn.error?.message ?? null;
 
   return (
@@ -71,59 +74,65 @@ function Scanner() {
       <CardContent className="flex flex-1 flex-col gap-4">
         {/* The region lives through every state, so a reader hears the outcome. */}
         <p aria-live="polite" className="sr-only">
-          {checkIn.isSuccess
-            ? `${checkIn.data.personName}, you are in for ${checkIn.data.eventTitle}.`
-            : progressNote}
+          {match(checkIn.data)
+            .with(P.nonNullable, (data) => `${data.personName}, you are in for ${data.eventTitle}.`)
+            .otherwise(() => progressNote)}
         </p>
 
         <div className={cn("mx-auto w-full max-w-md", checkIn.isSuccess && "my-auto")}>
-          {checkIn.isSuccess ? (
-            <CheckInResult result={checkIn.data} onAgain={() => checkIn.reset()} />
-          ) : (
-            <ScanViewfinder
-              video={camera.video}
-              active={camera.active}
-              error={camera.fault?.message ?? null}
-              busy={checkIn.isPending}
-            />
-          )}
+          {match(checkIn.data)
+            .with(P.nonNullable, (data) => (
+              <CheckInResult result={data} onAgain={() => checkIn.reset()} />
+            ))
+            .otherwise(() => (
+              <ScanViewfinder
+                video={camera.video}
+                active={camera.active}
+                error={camera.fault?.message ?? null}
+                busy={checkIn.isPending}
+              />
+            ))}
         </div>
 
-        {!checkIn.isSuccess && error ? (
-          <Alert variant="destructive">
-            <WarningCircleIcon />
-            <AlertTitle>Not checked in</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
+        {match(Boolean(!checkIn.isSuccess && error))
+          .with(true, () => (
+            <Alert variant="destructive">
+              <WarningCircleIcon />
+              <AlertTitle>Not checked in</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ))
+          .otherwise(() => null)}
 
-        {checkIn.isSuccess ? null : (
-          <form
-            className="border-border mt-auto flex flex-col gap-2 border-t pt-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (manual.trim()) submit(manual.trim());
-              setManual("");
-            }}
-          >
-            <Label htmlFor="check-in-link">Cannot scan? Paste the link</Label>
-            <div className="flex gap-2">
-              <Input
-                id="check-in-link"
-                value={manual}
-                onChange={(event) => setManual(event.target.value)}
-                placeholder="https://…"
-                autoComplete="off"
-              />
-              <Button type="submit" variant="outline" disabled={checkIn.isPending}>
-                Check in
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              The room screen prints the link under its code.
-            </p>
-          </form>
-        )}
+        {match(checkIn.isSuccess)
+          .with(true, () => null)
+          .otherwise(() => (
+            <form
+              className="border-border mt-auto flex flex-col gap-2 border-t pt-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (manual.trim()) submit(manual.trim());
+                setManual("");
+              }}
+            >
+              <Label htmlFor="check-in-link">Cannot scan? Paste the link</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="check-in-link"
+                  value={manual}
+                  onChange={(event) => setManual(event.target.value)}
+                  placeholder="https://…"
+                  autoComplete="off"
+                />
+                <Button type="submit" variant="outline" disabled={checkIn.isPending}>
+                  Check in
+                </Button>
+              </div>
+              <p className="text-muted-foreground text-xs">
+                The room screen prints the link under its code.
+              </p>
+            </form>
+          ))}
       </CardContent>
 
       <CameraBlockedOverlay fault={camera.fault} onRetry={camera.retry} />

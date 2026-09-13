@@ -1,5 +1,6 @@
 import { R } from "@mobily/ts-belt";
 import { and, eq } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 import { createDb } from "#src/index";
 import { ensurePersonForUser } from "#src/people";
 import {
@@ -89,16 +90,21 @@ export async function markUser(options: MarkUserOptions): Promise<MarkUserResult
     const [updated] = await db
       .update(user)
       .set({
-        ...(options.onboardingStep ? { onboardingStep: options.onboardingStep } : {}),
-        ...(options.canCreateOrganizations === undefined
-          ? {}
-          : { canCreateOrganizations: options.canCreateOrganizations }),
+        ...match(options.onboardingStep)
+          .with(P.string.minLength(1), (onboardingStep) => ({ onboardingStep }))
+          .otherwise(() => ({})),
+        ...match(options.canCreateOrganizations === undefined)
+          .with(true, () => ({}))
+          .otherwise(() => ({ canCreateOrganizations: options.canCreateOrganizations })),
         updatedAt: new Date(),
       })
       .where(eq(user.email, options.email))
       .returning({ id: user.id });
 
-    return updated ? R.Ok(undefined) : R.Error("user-not-found");
+    return match(updated)
+      .returnType<MarkUserResult>()
+      .with(P.nullish, () => R.Error("user-not-found"))
+      .otherwise(() => R.Ok(undefined));
   } finally {
     await close();
   }

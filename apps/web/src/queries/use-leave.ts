@@ -1,5 +1,6 @@
 import { leaveKeys } from "@absqir/core/query-keys";
 import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { match } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
 export type LeaveScope = "pending" | "decided" | "all";
@@ -38,7 +39,9 @@ export function useMyLeave(filter: MyLeaveFilter = { scope: "all" }) {
         {
           query: {
             status: filter.scope,
-            limit: filter.limit === undefined ? undefined : String(filter.limit),
+            limit: match(filter.limit)
+              .with(undefined, () => undefined)
+              .otherwise((limit) => String(limit)),
             cursor: ctx.pageParam ?? undefined,
           },
         },

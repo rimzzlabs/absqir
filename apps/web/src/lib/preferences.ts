@@ -40,10 +40,9 @@ export function readMotion(): MotionPreference {
 }
 
 function applyTheme(theme: ThemePreference) {
-  const dark =
-    theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-      : theme === "dark";
+  const dark = match(theme)
+    .with("system", () => window.matchMedia("(prefers-color-scheme: dark)").matches)
+    .otherwise((theme) => theme === "dark");
   document.documentElement.classList.toggle("dark", dark);
 }
 
@@ -54,13 +53,23 @@ function applyMotion(motion: MotionPreference) {
 }
 
 export function setTheme(theme: ThemePreference) {
-  write(THEME_KEY, theme === "system" ? null : theme);
+  write(
+    THEME_KEY,
+    match(theme)
+      .with("system", () => null)
+      .otherwise((theme) => theme),
+  );
   applyTheme(theme);
   window.dispatchEvent(new Event(EVENT));
 }
 
 export function setMotion(motion: MotionPreference) {
-  write(MOTION_KEY, motion === "system" ? null : motion);
+  write(
+    MOTION_KEY,
+    match(motion)
+      .with("system", () => null)
+      .otherwise((motion) => motion),
+  );
   applyMotion(motion);
   window.dispatchEvent(new Event(EVENT));
 }

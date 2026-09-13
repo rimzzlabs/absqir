@@ -2,6 +2,7 @@ import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import type { Icon } from "@phosphor-icons/react";
 import { type MouseEvent, useEffect, useRef } from "react";
+import { match } from "ts-pattern";
 
 export interface SettingsNavItem<TValue extends string> {
   value: TValue;
@@ -68,18 +69,30 @@ export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValu
               <a
                 key={item.value}
                 href={`?tab=${item.value}`}
-                aria-current={active ? "page" : undefined}
+                aria-current={match(active)
+                  .with(true, () => "page" as const)
+                  .otherwise(() => undefined)}
                 onClick={(event) => choose(event, item.value)}
                 className={cn(
                   "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                  active
-                    ? "bg-muted text-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  match(active)
+                    .with(true, () => "bg-muted text-foreground font-medium" as const)
+                    .otherwise(
+                      () =>
+                        "text-muted-foreground hover:bg-muted/60 hover:text-foreground" as const,
+                    ),
                 )}
               >
                 <item.icon
-                  weight={active ? "fill" : "regular"}
-                  className={cn("size-4 shrink-0", active ? "text-primary" : "")}
+                  weight={match(active)
+                    .with(true, () => "fill" as const)
+                    .otherwise(() => "regular" as const)}
+                  className={cn(
+                    "size-4 shrink-0",
+                    match(active)
+                      .with(true, () => "text-primary" as const)
+                      .otherwise(() => "" as const),
+                  )}
                 />
                 {item.label}
               </a>

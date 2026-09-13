@@ -1,5 +1,6 @@
 import { Separator } from "@absqir/ui/separator";
 import { SidebarTrigger } from "@absqir/ui/sidebar";
+import { match } from "ts-pattern";
 import type { ShellUser } from "@/components/app-shell/app-shell";
 import { NotificationBell } from "@/components/app-shell/notification-bell";
 import { UserMenu } from "@/components/app-shell/user-menu";
@@ -26,7 +27,9 @@ export function AppHeader(props: AppHeaderProps) {
       <Separator orientation="vertical" className="mr-2 h-4 self-center" />
       <p className="min-w-0 flex-1 truncate text-sm font-medium">{props.title}</p>
       <div className="flex items-center gap-1">
-        {props.hasOrganization ? <NotificationBell /> : null}
+        {match(props.hasOrganization)
+          .with(true, () => <NotificationBell />)
+          .otherwise(() => null)}
         <UserMenu user={props.user} />
       </div>
     </header>

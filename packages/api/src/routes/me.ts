@@ -3,8 +3,9 @@ import { isTimezone } from "@absqir/core/timezone";
 import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, O, pipe } from "@mobily/ts-belt";
 import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 import { enabledSocialProviders } from "#src/env";
 import { forwardCookies } from "#src/lib/auth-forward";
 import { avatarSchema } from "#src/lib/avatar";
@@ -255,12 +256,16 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
     // Postgres keeps microseconds and JS keeps milliseconds, so the cursor
     // carries the column as text and the comparison happens in Postgres.
     const seenAt = sql<string>`${session.updatedAt}::text`;
-    const after = cursor
-      ? or(
+    const after = pipe(
+      O.fromNullable(cursor),
+      O.mapNullable((cursor) =>
+        or(
           lt(session.updatedAt, sql`${cursor.at}::timestamp`),
           and(eq(session.updatedAt, sql`${cursor.at}::timestamp`), lt(session.id, cursor.id)),
-        )
-      : undefined;
+        ),
+      ),
+      O.toUndefined,
+    );
 
     const rows = await c.var.db
       .select({ row: session, at: seenAt })
@@ -270,12 +275,18 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
           eq(session.userId, current.id),
           gt(session.expiresAt, now),
           // This device leads the first page and never repeats on a later one.
-          cursor ? sql`${session.id} <> ${mine.id}` : undefined,
+          pipe(
+            O.fromNullable(cursor),
+            O.map(() => sql`${session.id} <> ${mine.id}`),
+            O.toUndefined,
+          ),
           after,
         ),
       )
       .orderBy(
-        ...(cursor ? [] : [desc(sql`${session.id} = ${mine.id}`)]),
+        ...match(cursor)
+          .with(P.nullish, () => [desc(sql`${session.id} = ${mine.id}`)])
+          .otherwise(() => []),
         desc(session.updatedAt),
         desc(session.id),
       )
@@ -355,7 +366,13 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     const [row] = await c.var.db
       .update(user)
-      .set({ name, updatedAt: new Date(), ...(image === undefined ? {} : { image }) })
+      .set({
+        name,
+        updatedAt: new Date(),
+        ...match(image)
+          .with(undefined, () => ({}))
+          .otherwise((image) => ({ image })),
+      })
       .where(eq(user.id, current.id))
       .returning({ name: user.name, image: user.image });
 
@@ -430,7 +447,9 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
       .orderBy(member.createdAt);
 
     const memberships = A.flatMap(rows, (row) =>
-      isRoleName(row.role) ? [{ ...row, logo: row.logo ?? null, role: row.role }] : [],
+      match(row.role)
+        .with(P.when(isRoleName), (role) => [{ ...row, logo: row.logo ?? null, role }])
+        .otherwise(() => []),
     );
 
     return c.json(
@@ -440,12 +459,16 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
         email: user.email,
         image: user.image ?? null,
         emailVerified: user.emailVerified,
-        onboardingStep: isOnboardingStep(user.onboardingStep) ? user.onboardingStep : "profile",
+        onboardingStep: match(user.onboardingStep)
+          .with(P.when(isOnboardingStep), (onboardingStep) => onboardingStep)
+          .otherwise(() => "profile" as const),
         canCreateOrganizations: user.canCreateOrganizations === true,
-        notificationChannel: isNotificationChannel(user.notificationChannel)
-          ? user.notificationChannel
-          : "all",
-        timezone: isTimezone(user.timezone) ? user.timezone : null,
+        notificationChannel: match(user.notificationChannel)
+          .with(P.when(isNotificationChannel), (notificationChannel) => notificationChannel)
+          .otherwise(() => "all" as const),
+        timezone: match(user.timezone)
+          .with(P.when(isTimezone), (timezone) => timezone)
+          .otherwise(() => null),
         activeOrganizationId: session.activeOrganizationId ?? null,
         memberships: [...memberships],
       },

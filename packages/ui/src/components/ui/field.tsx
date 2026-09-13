@@ -2,7 +2,7 @@ import { A } from "@mobily/ts-belt";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { useMemo } from "react";
-
+import { match, P } from "ts-pattern";
 import { Label } from "#src/components/ui/label";
 import { Separator } from "#src/components/ui/separator";
 
@@ -189,7 +189,9 @@ function FieldError({
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {A.mapWithIndex(uniqueErrors, (index, error) =>
-          error?.message ? <li key={index}>{error.message}</li> : null,
+          match(error?.message)
+            .with(P.string.minLength(1), (message) => <li key={index}>{message}</li>)
+            .otherwise(() => null),
         )}
       </ul>
     );

@@ -1,4 +1,5 @@
 import { A, AR, pipe, R } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 
 /**
  * Reads TXT records over DNS-over-HTTPS. The Workers runtime has no DNS
@@ -58,18 +59,21 @@ export function txtRecords(host: string): AR.AsyncResult<readonly string[], DnsF
     ),
     // A refused connection, a resolver outage, or the timeout above.
     AR.mapError((): DnsFailure => "unreachable"),
-    AR.flatMap(async (response: Response) =>
-      response.ok
-        ? pipe(
-            await R.fromPromise(response.json() as Promise<DnsReply>),
-            R.mapError((): DnsFailure => "resolver"),
+    AR.flatMap(
+      async (response: Response) =>
+        await match(response.ok)
+          .with(true, async () =>
+            pipe(
+              await R.fromPromise(response.json() as Promise<DnsReply>),
+              R.mapError((): DnsFailure => "resolver"),
+            ),
           )
-        : R.Error<DnsFailure>("resolver"),
+          .otherwise(async () => R.Error<DnsFailure>("resolver")),
     ),
     AR.fold((reply: DnsReply) =>
-      reply.Status === NOERROR || reply.Status === NXDOMAIN
-        ? R.Ok(valuesOf(reply))
-        : R.Error<DnsFailure>("resolver"),
+      match(reply.Status === NOERROR || reply.Status === NXDOMAIN)
+        .with(true, () => R.Ok(valuesOf(reply)))
+        .otherwise(() => R.Error<DnsFailure>("resolver")),
     ),
   );
 }

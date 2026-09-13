@@ -3,10 +3,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@absqir/ui/
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
+import { A, O } from "@mobily/ts-belt";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { FormError } from "@/components/shared/form-error";
 import { isAuthProvider, providerLabel } from "@/lib/auth-providers";
@@ -27,7 +28,9 @@ export interface OnboardingProfileStepProps {
 function firstProviderLabel(providers: string[]): string {
   const first = A.getBy(providers, (provider) => isAuthProvider(provider));
 
-  return first && isAuthProvider(first) ? providerLabel(first) : "Your provider";
+  return match(O.toNullable(first))
+    .with(P.string.and(P.when(isAuthProvider)), (provider) => providerLabel(provider))
+    .otherwise(() => "Your provider");
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
@@ -42,7 +45,11 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const [addingPassword, setAddingPassword] = useState(false);
 
   const form = useForm<ProfileValues>({
-    resolver: zodResolver(mustSetPassword ? profileWithPasswordSchema : profileSchema),
+    resolver: zodResolver(
+      match(mustSetPassword)
+        .with(true, () => profileWithPasswordSchema)
+        .otherwise(() => profileSchema),
+    ),
     defaultValues: { name: status.name, password: "" },
   });
 
@@ -72,11 +79,9 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       >
         <AuthHeading
           title="Tell us your name"
-          description={
-            mustSetPassword
-              ? "The name your organizers see, and a password for next time."
-              : "The name your organizers see."
-          }
+          description={match(mustSetPassword)
+            .with(true, () => "The name your organizers see, and a password for next time.")
+            .otherwise(() => "The name your organizers see.")}
         />
 
         <FormField
@@ -86,44 +91,54 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
           render={(field) => <Input {...field} id="name" autoComplete="name" autoFocus />}
         />
 
-        {mustSetPassword ? passwordField : null}
+        {match(mustSetPassword)
+          .with(true, () => passwordField)
+          .otherwise(() => null)}
 
-        {canAddPassword ? (
-          <Collapsible
-            open={addingPassword}
-            onOpenChange={(open) => {
-              setAddingPassword(open);
-              // A folded field must not travel with the form.
-              if (!open) form.setValue("password", "", { shouldValidate: false });
-            }}
-          >
-            <CollapsibleTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-between"
-                />
-              }
+        {match(canAddPassword)
+          .with(true, () => (
+            <Collapsible
+              open={addingPassword}
+              onOpenChange={(open) => {
+                setAddingPassword(open);
+                // A folded field must not travel with the form.
+                if (!open) form.setValue("password", "", { shouldValidate: false });
+              }}
             >
-              Add a password
-              <CaretDownIcon className={addingPassword ? "rotate-180" : undefined} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4">
-              <p className="text-muted-foreground mb-4 text-sm">
-                {firstProviderLabel(status.linkedProviders)} already signs you in. A password is one
-                more way back, for a device where that account is not set up.
-              </p>
-              {passwordField}
-            </CollapsibleContent>
-          </Collapsible>
-        ) : null}
+              <CollapsibleTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-between"
+                  />
+                }
+              >
+                Add a password
+                <CaretDownIcon
+                  className={match(addingPassword)
+                    .with(true, () => "rotate-180")
+                    .otherwise(() => undefined)}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4">
+                <p className="text-muted-foreground mb-4 text-sm">
+                  {firstProviderLabel(status.linkedProviders)} already signs you in. A password is
+                  one more way back, for a device where that account is not set up.
+                </p>
+                {passwordField}
+              </CollapsibleContent>
+            </Collapsible>
+          ))
+          .otherwise(() => null)}
 
         <FormError error={save.error} />
 
         <Button type="submit" disabled={save.isPending} className="w-full">
-          {save.isPending ? "Saving…" : "Continue"}
+          {match(save.isPending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => "Continue" as const)}
         </Button>
       </form>
     </Form>

@@ -1,7 +1,8 @@
 import { type Database, schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
 
@@ -225,7 +226,14 @@ export const groupRoutes = app
       .groupBy(group.id)
       .orderBy(asc(sql`lower(${group.name})`));
 
-    return c.json([...A.map(rows, ({ row, memberCount }) => toJson(row, memberCount))], 200);
+    return c.json(
+      pipe(
+        rows,
+        A.map(({ row, memberCount }) => toJson(row, memberCount)),
+        F.toMutable,
+      ),
+      200,
+    );
   })
   .openapi(createRouteDef, async (c) => {
     if (roleBelow(c, "admin")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
@@ -277,10 +285,12 @@ export const groupRoutes = app
       const [updated] = await c.var.db
         .update(group)
         .set({
-          ...(body.name !== undefined ? { name: body.name } : {}),
-          ...(body.description !== undefined
-            ? { description: body.description?.trim() || null }
-            : {}),
+          ...match(body.name)
+            .with(undefined, () => ({}))
+            .otherwise((name) => ({ name })),
+          ...match(body.description)
+            .with(undefined, () => ({}))
+            .otherwise((description) => ({ description: description?.trim() || null })),
           updatedAt: new Date(),
         })
         .where(eq(group.id, id))
@@ -323,20 +333,28 @@ export const groupRoutes = app
 
     // Only people of this organization can join; ids from elsewhere are dropped.
     const wanted = [...new Set(personIds)];
-    const valid = wanted.length
-      ? await c.var.db
-          .select({ id: person.id })
-          .from(person)
-          .where(and(eq(person.organizationId, organizationId), inArray(person.id, wanted)))
-      : [];
+    const valid = await match(wanted.length > 0)
+      .with(
+        true,
+        async () =>
+          await c.var.db
+            .select({ id: person.id })
+            .from(person)
+            .where(and(eq(person.organizationId, organizationId), inArray(person.id, wanted))),
+      )
+      .otherwise(async () => []);
 
     await c.var.db.transaction(async (tx) => {
       await tx.delete(groupMember).where(eq(groupMember.groupId, id));
 
       if (valid.length) {
-        await tx
-          .insert(groupMember)
-          .values([...A.map(valid, (row) => ({ groupId: id, personId: row.id }))]);
+        await tx.insert(groupMember).values(
+          pipe(
+            valid,
+            A.map((row) => ({ groupId: id, personId: row.id })),
+            F.toMutable,
+          ),
+        );
       }
     });
 

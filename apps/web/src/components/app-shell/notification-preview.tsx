@@ -37,21 +37,30 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className={cn("truncate text-sm", unread ? "font-medium" : "text-foreground/80")}>
+          <span
+            className={cn(
+              "truncate text-sm",
+              match(unread)
+                .with(true, () => "font-medium" as const)
+                .otherwise(() => "text-foreground/80" as const),
+            )}
+          >
             {notification.title}
           </span>
-          {unread ? (
-            <>
-              <span aria-hidden className="bg-primary size-1.5 shrink-0 rounded-full" />
-              <span className="sr-only">Unread</span>
-            </>
-          ) : null}
+          {match(unread)
+            .with(true, () => (
+              <>
+                <span aria-hidden className="bg-primary size-1.5 shrink-0 rounded-full" />
+                <span className="sr-only">Unread</span>
+              </>
+            ))
+            .otherwise(() => null)}
         </span>
-        {notification.body ? (
-          <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">
-            {notification.body}
-          </span>
-        ) : null}
+        {match(notification.body)
+          .with(P.string.minLength(1), (body) => (
+            <span className="text-muted-foreground mt-0.5 line-clamp-2 block text-xs">{body}</span>
+          ))
+          .otherwise(() => null)}
         <span className="text-muted-foreground mt-0.5 block text-[11px]">
           {relativeToNow(new Date(notification.createdAt))}
         </span>
@@ -111,16 +120,18 @@ export function NotificationPreview(props: NotificationPreviewProps) {
     <div className="flex flex-col">
       <div className="flex h-9 items-center justify-between px-3">
         <p className="text-sm font-medium">Notifications</p>
-        {props.unread > 0 ? (
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => markRead.mutate(null)}
-            disabled={markRead.isPending}
-          >
-            Mark all read
-          </Button>
-        ) : null}
+        {match(props.unread > 0)
+          .with(true, () => (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => markRead.mutate(null)}
+              disabled={markRead.isPending}
+            >
+              Mark all read
+            </Button>
+          ))
+          .otherwise(() => null)}
       </div>
 
       <div className="border-border border-t px-1 py-1">
@@ -138,17 +149,19 @@ export function NotificationPreview(props: NotificationPreviewProps) {
             </div>
           ))
           .with({ data: P.select(P.nonNullable) }, (rows) =>
-            rows.length === 0 ? (
-              <p className="text-muted-foreground px-2 py-6 text-center text-sm">
-                Nothing yet. Reminders and requests land here.
-              </p>
-            ) : (
-              <ul className="space-y-0.5">
-                {A.map(pick(rows), (row) => (
-                  <PreviewRow key={row.id} notification={row} onRead={onRead} />
-                ))}
-              </ul>
-            ),
+            match(rows.length)
+              .with(0, () => (
+                <p className="text-muted-foreground px-2 py-6 text-center text-sm">
+                  Nothing yet. Reminders and requests land here.
+                </p>
+              ))
+              .otherwise(() => (
+                <ul className="space-y-0.5">
+                  {A.map(pick(rows), (row) => (
+                    <PreviewRow key={row.id} notification={row} onRead={onRead} />
+                  ))}
+                </ul>
+              )),
           )
           .otherwise(() => null)}
       </div>

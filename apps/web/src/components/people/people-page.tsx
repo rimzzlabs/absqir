@@ -64,7 +64,9 @@ function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
             <TableHead>Identifier</TableHead>
             <TableHead>Groups</TableHead>
             <TableHead>Status</TableHead>
-            {props.canManage ? <TableHead className="w-12" /> : null}
+            {match(props.canManage)
+              .with(true, () => <TableHead className="w-12" />)
+              .otherwise(() => null)}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,25 +77,27 @@ function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
               <TableCell className="font-mono text-xs">{person.identifier ?? "—"}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {person.groups.length === 0 ? (
-                    <span className="text-muted-foreground">—</span>
-                  ) : (
-                    A.map(person.groups, (group) => (
-                      <Badge key={group.id} variant="outline">
-                        {group.name}
-                      </Badge>
-                    ))
-                  )}
+                  {match(person.groups.length)
+                    .with(0, () => <span className="text-muted-foreground">—</span>)
+                    .otherwise(() =>
+                      A.map(person.groups, (group) => (
+                        <Badge key={group.id} variant="outline">
+                          {group.name}
+                        </Badge>
+                      )),
+                    )}
                 </div>
               </TableCell>
               <TableCell>
                 <StatusBadge person={person} />
               </TableCell>
-              {props.canManage ? (
-                <TableCell>
-                  <PersonRowActions person={person} />
-                </TableCell>
-              ) : null}
+              {match(props.canManage)
+                .with(true, () => (
+                  <TableCell>
+                    <PersonRowActions person={person} />
+                  </TableCell>
+                ))
+                .otherwise(() => null)}
             </TableRow>
           ))}
         </TableBody>
@@ -115,8 +119,8 @@ function PeopleBody(props: PeoplePageProps) {
       <PageHeader
         title="People"
         description="Everyone the organization expects to see. Members with an account can sign in and check in."
-        actions={
-          canManage ? (
+        actions={match(canManage)
+          .with(true, () => (
             <>
               <Button variant="outline" onClick={() => setImporting(true)}>
                 <UploadSimpleIcon />
@@ -127,8 +131,8 @@ function PeopleBody(props: PeoplePageProps) {
                 Add person
               </Button>
             </>
-          ) : null
-        }
+          ))
+          .otherwise(() => null)}
       />
 
       <div className="relative max-w-sm">

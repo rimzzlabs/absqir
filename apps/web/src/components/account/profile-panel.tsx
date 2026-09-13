@@ -3,9 +3,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { O, pipe } from "@mobily/ts-belt";
 import { CameraIcon, XIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { AccountDangerZone } from "@/components/account/account-danger-zone";
 import { EmailChange } from "@/components/account/email-change";
 import { TimezoneRow } from "@/components/account/timezone-row";
@@ -37,7 +39,9 @@ function Identity(props: ProfilePanelProps) {
   const [readError, setReadError] = useState<Error | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const save = useUpdateProfile();
-  const pictureLabel = props.image ? "Change picture" : "Add a picture";
+  const pictureLabel = match(props.image)
+    .with(P.string.minLength(1), () => "Change picture")
+    .otherwise(() => "Add a picture" as const);
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -46,14 +50,20 @@ function Identity(props: ProfilePanelProps) {
     try {
       save.mutate({ name: props.name, image: await toAvatarDataUrl(file) });
     } catch (error) {
-      setReadError(error instanceof Error ? error : new Error("Could not read that picture."));
+      setReadError(
+        match(error)
+          .with(P.instanceOf(Error), (error) => error)
+          .otherwise(() => new Error("Could not read that picture.")),
+      );
     }
   };
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
       <Avatar size="lg" className="size-24">
-        {props.image ? <AvatarImage src={props.image} alt="" /> : null}
+        {match(props.image)
+          .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
+          .otherwise(() => null)}
         <AvatarFallback name={props.name} className="text-2xl font-medium tracking-wide">
           {initialsOf(props.name)}
         </AvatarFallback>
@@ -63,7 +73,9 @@ function Identity(props: ProfilePanelProps) {
         <p className="font-heading truncate text-xl font-semibold tracking-tight">{props.name}</p>
         <p className="text-muted-foreground truncate text-sm">{props.email}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          {props.role ? <RoleBadge role={props.role} /> : null}
+          {match(props.role)
+            .with(P.string.minLength(1), (role) => <RoleBadge role={role} />)
+            .otherwise(() => null)}
           <span className="text-muted-foreground text-xs">
             Joined {formatDate(new Date(props.createdAt))}
           </span>
@@ -86,19 +98,23 @@ function Identity(props: ProfilePanelProps) {
             onClick={() => fileInput.current?.click()}
           >
             <CameraIcon />
-            {save.isPending ? "Saving…" : pictureLabel}
+            {match(save.isPending)
+              .with(true, () => "Saving…" as const)
+              .otherwise(() => pictureLabel)}
           </Button>
-          {props.image ? (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={save.isPending}
-              onClick={() => save.mutate({ name: props.name, image: null })}
-            >
-              <XIcon />
-              Remove
-            </Button>
-          ) : null}
+          {match(props.image)
+            .with(P.string.minLength(1), () => (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={save.isPending}
+                onClick={() => save.mutate({ name: props.name, image: null })}
+              >
+                <XIcon />
+                Remove
+              </Button>
+            ))
+            .otherwise(() => null)}
         </div>
         <p className="text-muted-foreground text-xs">PNG, JPEG or WebP. Shrunk to 128px.</p>
         <FormError error={readError ?? save.error} />
@@ -127,20 +143,28 @@ function NameRow(props: { name: string }) {
             id="name"
             aria-label="Name"
             autoComplete="name"
-            aria-invalid={form.formState.errors.name ? true : undefined}
+            aria-invalid={pipe(
+              O.fromNullable(form.formState.errors.name),
+              O.map(() => true),
+              O.toUndefined,
+            )}
           />
-          {form.formState.errors.name ? (
-            <p role="alert" className="text-destructive mt-1.5 text-sm">
-              {form.formState.errors.name.message}
-            </p>
-          ) : null}
+          {match(form.formState.errors.name)
+            .with(P.nullish, () => null)
+            .otherwise((name) => (
+              <p role="alert" className="text-destructive mt-1.5 text-sm">
+                {name.message}
+              </p>
+            ))}
         </div>
         <Button
           type="submit"
           variant="outline"
           disabled={save.isPending || !form.formState.isDirty}
         >
-          {save.isPending ? "Saving…" : "Save"}
+          {match(save.isPending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => "Save" as const)}
         </Button>
         <FormError error={save.error} />
       </form>
@@ -153,16 +177,16 @@ function EmailRow(props: { email: string }) {
 
   return (
     <SettingsRow label="Email" hint="Where you sign in and where reminders go.">
-      {changing ? (
-        <EmailChange onCancel={() => setChanging(false)} />
-      ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-sm">{props.email}</p>
-          <Button type="button" variant="outline" onClick={() => setChanging(true)}>
-            Change email
-          </Button>
-        </div>
-      )}
+      {match(changing)
+        .with(true, () => <EmailChange onCancel={() => setChanging(false)} />)
+        .otherwise(() => (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-sm">{props.email}</p>
+            <Button type="button" variant="outline" onClick={() => setChanging(true)}>
+              Change email
+            </Button>
+          </div>
+        ))}
     </SettingsRow>
   );
 }

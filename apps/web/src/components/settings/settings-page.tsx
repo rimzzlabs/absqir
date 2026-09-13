@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react";
 import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
+import { match, P } from "ts-pattern";
 import { NotificationsPanel } from "@/components/account/notifications-panel";
 import { ProfilePanel } from "@/components/account/profile-panel";
 import { SecurityPanel } from "@/components/account/security-panel";
@@ -89,33 +90,44 @@ function isTab(value: string, allowed: readonly SettingsTab[]): value is Setting
 function SettingsBody(props: SettingsPageProps) {
   const runsOrganization =
     props.organization !== null && (props.role === "owner" || props.role === "admin");
-  const groups = runsOrganization ? [ORGANIZATION_GROUP, PERSONAL_GROUP] : [PERSONAL_GROUP];
-  const allowed: readonly SettingsTab[] = runsOrganization
-    ? [...ORGANIZATION_TABS, ...PERSONAL_TABS]
-    : PERSONAL_TABS;
+  const groups = match(runsOrganization)
+    .with(true, () => [ORGANIZATION_GROUP, PERSONAL_GROUP])
+    .otherwise(() => [PERSONAL_GROUP]);
+  const allowed: readonly SettingsTab[] = match(runsOrganization)
+    .with(true, () => [...ORGANIZATION_TABS, ...PERSONAL_TABS])
+    .otherwise(() => PERSONAL_TABS);
 
   const [fromAddress, setTab] = useQueryState("tab", parseAsString);
   const requested = fromAddress ?? props.requestedTab;
 
   // A member who follows an admin's link lands on their own first section.
-  const wanted = requested ? (ALIASES[requested] ?? requested) : null;
-  const tab: SettingsTab = wanted && isTab(wanted, allowed) ? wanted : (allowed[0] ?? "profile");
+  const wanted = match(requested)
+    .with(P.string.minLength(1), (requested) => ALIASES[requested] ?? requested)
+    .otherwise(() => null);
+  const tab: SettingsTab = match(wanted)
+    .when(
+      (name): name is SettingsTab => name !== null && isTab(name, allowed),
+      (name) => name,
+    )
+    .otherwise(() => allowed[0] ?? "profile");
 
   // Every organization tab is unreachable without a role, so each one folds
   // to nothing rather than carrying a null through the tree.
   const { role, organization } = props;
 
   const content = {
-    members: role ? (
-      <SettingsSection
-        title="Members"
-        description="Everyone with an account in the organization, and what each one can do."
-      >
-        <div className="pt-6">
-          <MembersTable role={role} currentUserId={props.currentUserId} />
-        </div>
-      </SettingsSection>
-    ) : null,
+    members: match(role)
+      .with(P.string.minLength(1), (role) => (
+        <SettingsSection
+          title="Members"
+          description="Everyone with an account in the organization, and what each one can do."
+        >
+          <div className="pt-6">
+            <MembersTable role={role} currentUserId={props.currentUserId} />
+          </div>
+        </SettingsSection>
+      ))
+      .otherwise(() => null),
     invitations: (
       <SettingsSection
         title="Invitations"
@@ -146,8 +158,11 @@ function SettingsBody(props: SettingsPageProps) {
         </div>
       </SettingsSection>
     ),
-    organization:
-      role && organization ? <OrganizationPanel role={role} organization={organization} /> : null,
+    organization: match({ role, organization })
+      .with({ role: P.nonNullable, organization: P.nonNullable }, ({ role, organization }) => (
+        <OrganizationPanel role={role} organization={organization} />
+      ))
+      .otherwise(() => null),
     profile: (
       <ProfilePanel
         name={props.user.name}
@@ -168,11 +183,9 @@ function SettingsBody(props: SettingsPageProps) {
     <>
       <PageHeader
         title="Settings"
-        description={
-          runsOrganization
-            ? "The organization, the accounts in it, and your own."
-            : "Your account and how the app behaves for you."
-        }
+        description={match(runsOrganization)
+          .with(true, () => "The organization, the accounts in it, and your own." as const)
+          .otherwise(() => "Your account and how the app behaves for you." as const)}
       />
 
       <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">

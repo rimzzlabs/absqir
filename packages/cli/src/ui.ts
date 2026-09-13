@@ -1,5 +1,6 @@
 import * as clack from "@clack/prompts";
 import pc from "picocolors";
+import { match } from "ts-pattern";
 import { CancelError, UsageError } from "#src/lib/errors";
 
 /**
@@ -129,7 +130,11 @@ export function check(params: CheckParams): void {
     return;
   }
 
-  console.log(`${params.ok ? "ok  " : "FAIL"}  ${params.label}`);
+  console.log(
+    `${match(params.ok)
+      .with(true, () => "ok  ")
+      .otherwise(() => "FAIL")}  ${params.label}`,
+  );
   if (!params.ok && params.hint) console.log(`      ${params.hint}`);
 }
 

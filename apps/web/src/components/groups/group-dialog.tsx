@@ -14,6 +14,7 @@ import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { type GroupValues, groupSchema } from "@/lib/directory-schemas";
 import { useCreateGroup } from "@/mutations/use-create-group";
@@ -41,7 +42,9 @@ export function GroupDialog(props: GroupDialogProps) {
   const create = useCreateGroup();
   const update = useUpdateGroup();
   const pending = create.isPending || update.isPending;
-  const saveLabel = editing ? "Save" : "Create";
+  const saveLabel = match(editing)
+    .with(true, () => "Save" as const)
+    .otherwise(() => "Create" as const);
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.group));
@@ -65,9 +68,15 @@ export function GroupDialog(props: GroupDialogProps) {
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{editing ? "Edit group" : "New group"}</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>
+            {match(editing)
+              .with(true, () => "Edit group" as const)
+              .otherwise(() => "New group" as const)}
+          </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {editing ? "Rename it or change its description." : "Give it a name. Add people after."}
+            {match(editing)
+              .with(true, () => "Rename it or change its description." as const)
+              .otherwise(() => "Give it a name. Add people after." as const)}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -106,7 +115,9 @@ export function GroupDialog(props: GroupDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : saveLabel}
+                {match(pending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>
           </form>

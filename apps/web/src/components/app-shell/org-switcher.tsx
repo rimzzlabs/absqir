@@ -22,6 +22,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@ab
 import { A } from "@mobily/ts-belt";
 import { BuildingsIcon, CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { match, P } from "ts-pattern";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import { FormError } from "@/components/shared/form-error";
 import { OrganizationForm } from "@/components/shared/organization-form";
@@ -40,7 +41,9 @@ export interface OrgSwitcherProps {
 function OrgAvatar(props: { membership: ShellMembership; size?: "sm" | "default" }) {
   return (
     <Avatar size={props.size} className="rounded-md after:rounded-md">
-      {props.membership.logo ? <AvatarImage src={props.membership.logo} alt="" /> : null}
+      {match(props.membership.logo)
+        .with(P.string.minLength(1), (logo) => <AvatarImage src={logo} alt="" />)
+        .otherwise(() => null)}
       <AvatarFallback name={props.membership.name} className="rounded-md">
         {initialsOf(props.membership.name)}
       </AvatarFallback>
@@ -66,19 +69,25 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
               />
             }
           >
-            {props.active ? (
-              <OrgAvatar membership={props.active} />
-            ) : (
-              <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md">
-                <BuildingsIcon />
-              </div>
-            )}
+            {match(props.active)
+              .with(P.nullish, () => (
+                <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md">
+                  <BuildingsIcon />
+                </div>
+              ))
+              .otherwise((active) => (
+                <OrgAvatar membership={active} />
+              ))}
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">
-                {props.active ? props.active.name : "No organization"}
+                {match(props.active)
+                  .with(P.nullish, () => "No organization" as const)
+                  .otherwise((active) => active.name)}
               </span>
               <span className="text-muted-foreground truncate text-xs">
-                {props.active ? roleLabel(props.active.role) : "Join one to get started"}
+                {match(props.active)
+                  .with(P.nullish, () => "Join one to get started" as const)
+                  .otherwise((active) => roleLabel(active.role))}
               </span>
             </div>
             <CaretUpDownIcon className="ml-auto" />
@@ -87,20 +96,24 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
           <DropdownMenuContent
             className="w-(--anchor-width) min-w-56"
             align="start"
-            side={isMobile ? "bottom" : "right"}
+            side={match(isMobile)
+              .with(true, () => "bottom" as const)
+              .otherwise(() => "right" as const)}
             sideOffset={4}
           >
             {/* Base UI wants every label inside a group. */}
             <DropdownMenuGroup>
               <DropdownMenuLabel>Organizations</DropdownMenuLabel>
             </DropdownMenuGroup>
-            {props.memberships.length === 0 ? (
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-muted-foreground font-normal">
-                  You are in none yet.
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-            ) : null}
+            {match(props.memberships.length)
+              .with(0, () => (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-muted-foreground font-normal">
+                    You are in none yet.
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+              ))
+              .otherwise(() => null)}
             <DropdownMenuRadioGroup
               value={props.active?.organizationId ?? ""}
               onValueChange={(value) => {
@@ -122,17 +135,19 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
               ))}
             </DropdownMenuRadioGroup>
 
-            {props.canCreateOrganizations ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setCreating(true)}>
-                    <PlusIcon />
-                    New organization
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </>
-            ) : null}
+            {match(props.canCreateOrganizations)
+              .with(true, () => (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => setCreating(true)}>
+                      <PlusIcon />
+                      New organization
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              ))
+              .otherwise(() => null)}
           </DropdownMenuContent>
         </DropdownMenu>
 

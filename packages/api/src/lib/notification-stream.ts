@@ -2,6 +2,7 @@ import { createDb, type Database } from "@absqir/db";
 import { A, pipe } from "@mobily/ts-belt";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
+import { match, P } from "ts-pattern";
 import {
   listNotificationsSince,
   type NotificationRow,
@@ -25,7 +26,9 @@ export function cursorOf(value: string | undefined): Date | null {
   if (!value) return null;
 
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+  return match(Number.isNaN(date.getTime()))
+    .with(true, () => null)
+    .otherwise(() => date);
 }
 
 /**
@@ -67,9 +70,11 @@ export function notificationStream(
 
   // The request context releases its pool as soon as this handler returns,
   // which on Workers is long before the stream ends. So the stream owns one.
-  const owned = c.env.SHARED_DB
-    ? null
-    : createDb({ connectionString: c.env.HYPERDRIVE.connectionString, max: 1 });
+  const owned = match(c.env.SHARED_DB)
+    .with(P.nullish, () =>
+      createDb({ connectionString: c.env.HYPERDRIVE.connectionString, max: 1 }),
+    )
+    .otherwise(() => null);
   const db: Database = owned?.db ?? c.var.db;
 
   return streamSSE(c, async (stream) => {

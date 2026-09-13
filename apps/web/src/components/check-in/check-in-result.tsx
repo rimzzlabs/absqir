@@ -2,6 +2,7 @@ import { formatDate } from "@absqir/core/date";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Reveal } from "@absqir/ui/reveal";
 import { CheckCircleIcon, ScanIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import type { CheckInResult as Result } from "@/mutations/use-check-in";
 
@@ -23,7 +24,9 @@ export function CheckInResult(props: CheckInResultProps) {
 
       <div>
         <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
-          {result.already ? `Already in, ${result.personName}` : `You are in, ${result.personName}`}
+          {match(result.already)
+            .with(true, () => `Already in, ${result.personName}`)
+            .otherwise(() => `You are in, ${result.personName}`)}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">{result.eventTitle}</p>
       </div>

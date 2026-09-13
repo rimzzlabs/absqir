@@ -19,6 +19,7 @@ import { A } from "@mobily/ts-belt";
 import { UploadSimpleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { RoleSelect } from "@/components/shared/role-select";
 import { type ImportValues, importSchema } from "@/lib/directory-schemas";
@@ -40,19 +41,23 @@ function Summary(props: { result: ImportResult }) {
       <AlertTitle>
         {result.created} added, {result.updated} updated, {result.invited} invited
       </AlertTitle>
-      {result.skipped.length > 0 ? (
-        <AlertDescription>
-          <p>{result.skipped.length} row(s) skipped:</p>
-          <ul className="list-disc pl-5">
-            {A.map(result.skipped.slice(0, 10), (row) => (
-              <li key={row.row}>
-                Row {row.row}: {row.reason}
-              </li>
-            ))}
-            {result.skipped.length > 10 ? <li>and {result.skipped.length - 10} more</li> : null}
-          </ul>
-        </AlertDescription>
-      ) : null}
+      {match(result.skipped.length > 0)
+        .with(true, () => (
+          <AlertDescription>
+            <p>{result.skipped.length} row(s) skipped:</p>
+            <ul className="list-disc pl-5">
+              {A.map(result.skipped.slice(0, 10), (row) => (
+                <li key={row.row}>
+                  Row {row.row}: {row.reason}
+                </li>
+              ))}
+              {match(result.skipped.length > 10)
+                .with(true, () => <li>and {result.skipped.length - 10} more</li>)
+                .otherwise(() => null)}
+            </ul>
+          </AlertDescription>
+        ))
+        .otherwise(() => null)}
     </Alert>
   );
 }
@@ -92,87 +97,97 @@ export function ImportDialog(props: ImportDialogProps) {
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
-        {result ? (
-          <>
-            <ResponsiveDialogBody>
-              <Summary result={result} />
-            </ResponsiveDialogBody>
-            <ResponsiveDialogFooter>
-              <Button onClick={() => onOpenChange(false)}>Done</Button>
-            </ResponsiveDialogFooter>
-          </>
-        ) : (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((values) =>
-                importPeople.mutate(values, { onSuccess: setResult }),
-              )}
-              className="flex min-h-0 flex-1 flex-col gap-4"
-              noValidate
-            >
-              <ResponsiveDialogBody>
-                <input
-                  ref={fileInput}
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="sr-only"
-                  onChange={(event) => void onFile(event.target.files?.[0])}
-                />
-                <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
-                  <UploadSimpleIcon />
-                  Choose a CSV file
-                </Button>
-
-                <FormField
-                  control={form.control}
-                  name="csv"
-                  label="Or paste the rows"
-                  render={(field) => (
-                    <Textarea
-                      {...field}
-                      id="import-csv"
-                      rows={8}
-                      placeholder={EXAMPLE}
-                      className="font-mono text-xs"
-                    />
-                  )}
-                />
-
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="import-invite"
-                    checked={invite}
-                    onCheckedChange={(checked) => form.setValue("invite", checked === true)}
+        {match(result)
+          .with(P.nullish, () => (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((values) =>
+                  importPeople.mutate(values, { onSuccess: setResult }),
+                )}
+                className="flex min-h-0 flex-1 flex-col gap-4"
+                noValidate
+              >
+                <ResponsiveDialogBody>
+                  <input
+                    ref={fileInput}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="sr-only"
+                    onChange={(event) => void onFile(event.target.files?.[0])}
                   />
-                  <Label htmlFor="import-invite">Invite every row that has an email</Label>
-                </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    <UploadSimpleIcon />
+                    Choose a CSV file
+                  </Button>
 
-                {invite ? (
-                  <Field>
-                    <FieldLabel htmlFor="import-role">Role for the invitations</FieldLabel>
-                    <FieldContent>
-                      <RoleSelect
-                        id="import-role"
-                        value={form.watch("role")}
-                        onChange={(value) => form.setValue("role", value)}
+                  <FormField
+                    control={form.control}
+                    name="csv"
+                    label="Or paste the rows"
+                    render={(field) => (
+                      <Textarea
+                        {...field}
+                        id="import-csv"
+                        rows={8}
+                        placeholder={EXAMPLE}
+                        className="font-mono text-xs"
                       />
-                    </FieldContent>
-                  </Field>
-                ) : null}
+                    )}
+                  />
 
-                <FormError error={importPeople.error} />
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="import-invite"
+                      checked={invite}
+                      onCheckedChange={(checked) => form.setValue("invite", checked === true)}
+                    />
+                    <Label htmlFor="import-invite">Invite every row that has an email</Label>
+                  </div>
+
+                  {match(invite)
+                    .with(true, () => (
+                      <Field>
+                        <FieldLabel htmlFor="import-role">Role for the invitations</FieldLabel>
+                        <FieldContent>
+                          <RoleSelect
+                            id="import-role"
+                            value={form.watch("role")}
+                            onChange={(value) => form.setValue("role", value)}
+                          />
+                        </FieldContent>
+                      </Field>
+                    ))
+                    .otherwise(() => null)}
+
+                  <FormError error={importPeople.error} />
+                </ResponsiveDialogBody>
+                <ResponsiveDialogFooter>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={importPeople.isPending}>
+                    {match(importPeople.isPending)
+                      .with(true, () => "Importing…" as const)
+                      .otherwise(() => "Import" as const)}
+                  </Button>
+                </ResponsiveDialogFooter>
+              </form>
+            </Form>
+          ))
+          .otherwise((result) => (
+            <>
+              <ResponsiveDialogBody>
+                <Summary result={result} />
               </ResponsiveDialogBody>
               <ResponsiveDialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={importPeople.isPending}>
-                  {importPeople.isPending ? "Importing…" : "Import"}
-                </Button>
+                <Button onClick={() => onOpenChange(false)}>Done</Button>
               </ResponsiveDialogFooter>
-            </form>
-          </Form>
-        )}
+            </>
+          ))}
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

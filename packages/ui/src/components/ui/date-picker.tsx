@@ -1,4 +1,4 @@
-import { A } from "@mobily/ts-belt";
+import { A, O, pipe } from "@mobily/ts-belt";
 
 ("use client");
 
@@ -6,6 +6,7 @@ import { CalendarBlankIcon, ClockIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { format, isValid, setHours, setMinutes } from "date-fns";
 import * as React from "react";
+import { match, P } from "ts-pattern";
 import { Button } from "#src/components/ui/button";
 import { Calendar } from "#src/components/ui/calendar";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "#src/components/ui/input-group";
@@ -63,7 +64,9 @@ function DatePicker({
         }
       >
         <CalendarBlankIcon className="text-muted-foreground" />
-        {value ? format(value, displayFormat) : placeholder}
+        {match(value)
+          .with(P.nullish, () => placeholder)
+          .otherwise((value) => format(value, displayFormat))}
       </PopoverTrigger>
       <PopoverContent className="w-fit p-0" align="start">
         <Calendar
@@ -72,8 +75,12 @@ function DatePicker({
           selected={value ?? undefined}
           defaultMonth={value ?? undefined}
           disabled={[
-            ...(fromDate ? [{ before: fromDate }] : []),
-            ...(toDate ? [{ after: toDate }] : []),
+            ...match(fromDate)
+              .with(P.nullish, () => [])
+              .otherwise((fromDate) => [{ before: fromDate }]),
+            ...match(toDate)
+              .with(P.nullish, () => [])
+              .otherwise((toDate) => [{ after: toDate }]),
           ]}
           onSelect={(day) => {
             onChange(day ?? null);
@@ -193,8 +200,15 @@ function TimeField({
           }
           if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
-            const base = CLOCK.test(draft) ? draft : (normalizeClock(draft) ?? value) || "00:00";
-            const next = shiftClock(base, event.key === "ArrowUp" ? step : -step);
+            const base = match(CLOCK.test(draft))
+              .with(true, () => draft)
+              .otherwise(() => (normalizeClock(draft) ?? value) || "00:00");
+            const next = shiftClock(
+              base,
+              match(event.key)
+                .with("ArrowUp", () => step)
+                .otherwise(() => -step),
+            );
             setDraft(next);
             onChange(next);
           }
@@ -243,7 +257,9 @@ function DateTimePicker({
   ...props
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const clock = value && isValid(value) ? format(value, "HH:mm") : "09:00";
+  const clock = match(value)
+    .with(P.nonNullable.and(P.when(isValid)), (value) => format(value, "HH:mm"))
+    .otherwise(() => "09:00");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -265,7 +281,11 @@ function DateTimePicker({
         }
       >
         <CalendarBlankIcon className="text-muted-foreground" />
-        <span className="truncate">{value ? format(value, displayFormat) : placeholder}</span>
+        <span className="truncate">
+          {match(value)
+            .with(P.nullish, () => placeholder)
+            .otherwise((value) => format(value, displayFormat))}
+        </span>
       </PopoverTrigger>
       <PopoverContent className="w-fit gap-0 p-0" align="start">
         <Calendar
@@ -274,18 +294,36 @@ function DateTimePicker({
           selected={value ?? undefined}
           defaultMonth={value ?? undefined}
           disabled={[
-            ...(fromDate ? [{ before: fromDate }] : []),
-            ...(toDate ? [{ after: toDate }] : []),
+            ...match(fromDate)
+              .with(P.nullish, () => [])
+              .otherwise((fromDate) => [{ before: fromDate }]),
+            ...match(toDate)
+              .with(P.nullish, () => [])
+              .otherwise((toDate) => [{ after: toDate }]),
           ]}
-          onSelect={(day) => onChange(day ? withClock(day, clock) : null)}
+          onSelect={(day) =>
+            onChange(
+              pipe(
+                O.fromNullable(day),
+                O.map((day) => withClock(day, clock)),
+                O.toNullable,
+              ),
+            )
+          }
         />
         <div className="border-border flex items-center gap-2 border-t p-2">
           <TimeField
-            id={id ? `${id}-time` : undefined}
+            id={match(id)
+              .with(P.string.minLength(1), (id) => `${id}-time`)
+              .otherwise(() => undefined)}
             aria-label="Time"
-            value={value ? clock : ""}
+            value={match(value)
+              .with(P.nullish, () => "")
+              .otherwise(() => clock)}
             disabled={!value}
-            placeholder={value ? undefined : "Pick a day first"}
+            placeholder={match(value)
+              .with(P.nullish, () => "Pick a day first")
+              .otherwise(() => undefined)}
             className="flex-1"
             onChange={(next) => {
               if (value && next) onChange(withClock(value, next));

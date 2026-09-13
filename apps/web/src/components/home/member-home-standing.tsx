@@ -11,6 +11,7 @@ import {
 import { cn } from "@absqir/ui/lib/utils";
 import { A, pipe } from "@mobily/ts-belt";
 import { CaretRightIcon, ChartBarIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { type AttendanceStatus, AttendanceStatusBadge } from "@/components/shared/status-badge";
 import type { HistoryRow } from "@/queries/use-my";
 
@@ -31,7 +32,9 @@ const RECENT = 5;
 /** How it has gone: the rate, the split, and the last few records. */
 export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const total = props.history.length;
-  const countNote = total === 1 ? "One closed event." : `${total} closed events.`;
+  const countNote = match(total)
+    .with(1, () => "One closed event." as const)
+    .otherwise((total) => `${total} closed events.`);
   const counts = Object.fromEntries(
     A.map(SEGMENTS, (segment) => [
       segment.status,
@@ -40,7 +43,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
   ) as Record<AttendanceStatus, number>;
   // An excused event neither helps nor hurts.
   const judged = total - counts.excused;
-  const rate = judged === 0 ? null : Math.round(((counts.present + counts.late) / judged) * 100);
+  const rate = match(judged)
+    .with(0, () => null)
+    .otherwise((judged) => Math.round(((counts.present + counts.late) / judged) * 100));
   const recent = props.history.slice(0, RECENT);
 
   return (
@@ -51,7 +56,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
           Your standing
         </CardTitle>
         <CardDescription>
-          {total === 0 ? "No closed event has your name yet." : countNote}
+          {match(total)
+            .with(0, () => "No closed event has your name yet." as const)
+            .otherwise(() => countNote)}
         </CardDescription>
         <CardAction>
           <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>
@@ -63,7 +70,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
       <CardContent className="flex flex-col gap-4">
         <div>
           <p className="font-heading text-4xl font-semibold tracking-tight tabular-nums">
-            {rate === null ? "—" : `${rate}%`}
+            {match(rate)
+              .with(null, () => "—" as const)
+              .otherwise((rate) => `${rate}%`)}
           </p>
           <p className="text-muted-foreground text-sm">
             Present or late, of the events that count.
@@ -78,8 +87,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
           ).join(", ")}
           className="bg-muted flex h-2 w-full overflow-hidden rounded-full"
         >
-          {total > 0
-            ? pipe(
+          {match(total > 0)
+            .with(true, () =>
+              pipe(
                 SEGMENTS,
                 A.filter((segment) => counts[segment.status] > 0),
                 A.map((segment) => (
@@ -89,8 +99,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
                     style={{ width: `${(counts[segment.status] / total) * 100}%` }}
                   />
                 )),
-              )
-            : null}
+              ),
+            )
+            .otherwise(() => null)}
         </div>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
@@ -103,21 +114,23 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
           ))}
         </dl>
 
-        {recent.length > 0 ? (
-          <ul className="divide-border border-border divide-y border-t pt-1">
-            {A.map(recent, (row) => (
-              <li key={row.eventId} className="flex items-center gap-3 py-2 text-sm">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{row.title}</span>
-                  <span className="text-muted-foreground block text-xs">
-                    {formatDate(new Date(row.startsAt), "weekdayDateTime")}
+        {match(recent.length > 0)
+          .with(true, () => (
+            <ul className="divide-border border-border divide-y border-t pt-1">
+              {A.map(recent, (row) => (
+                <li key={row.eventId} className="flex items-center gap-3 py-2 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{row.title}</span>
+                    <span className="text-muted-foreground block text-xs">
+                      {formatDate(new Date(row.startsAt), "weekdayDateTime")}
+                    </span>
                   </span>
-                </span>
-                <AttendanceStatusBadge status={row.status} />
-              </li>
-            ))}
-          </ul>
-        ) : null}
+                  <AttendanceStatusBadge status={row.status} />
+                </li>
+              ))}
+            </ul>
+          ))
+          .otherwise(() => null)}
       </CardContent>
     </Card>
   );

@@ -19,7 +19,9 @@ function Summary(props: { rows: HistoryRow[] }) {
     (row) => row.status === "present" || row.status === "late",
   ).length;
   const late = A.filter(props.rows, (row) => row.status === "late").length;
-  const rate = total === 0 ? 0 : Math.round((on / total) * 100);
+  const rate = match(total)
+    .with(0, () => 0 as const)
+    .otherwise((total) => Math.round((on / total) * 100));
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
@@ -59,50 +61,58 @@ function HistoryBody() {
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
-          rows.length === 0 ? (
-            <Empty className="border-border rounded-xl border border-dashed py-16">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ClockCounterClockwiseIcon />
-                </EmptyMedia>
-                <EmptyTitle>No record yet</EmptyTitle>
-                <EmptyDescription>Your first closed event shows up here.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <>
-              <Summary rows={rows} />
-              <div className="border-border overflow-x-auto rounded-xl border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Event</TableHead>
-                      <TableHead>When</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Checked in</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {A.map(rows, (row) => (
-                      <TableRow key={row.eventId}>
-                        <TableCell className="font-medium">{row.title}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
-                        </TableCell>
-                        <TableCell>
-                          <AttendanceStatusBadge status={row.status} />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground tabular-nums">
-                          {row.checkedInAt ? formatDate(new Date(row.checkedInAt), "time") : "—"}
-                          {row.note ? ` · ${row.note}` : ""}
-                        </TableCell>
+          match(rows.length)
+            .with(0, () => (
+              <Empty className="border-border rounded-xl border border-dashed py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ClockCounterClockwiseIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>No record yet</EmptyTitle>
+                  <EmptyDescription>Your first closed event shows up here.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ))
+            .otherwise(() => (
+              <>
+                <Summary rows={rows} />
+                <div className="border-border overflow-x-auto rounded-xl border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event</TableHead>
+                        <TableHead>When</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Checked in</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          ),
+                    </TableHeader>
+                    <TableBody>
+                      {A.map(rows, (row) => (
+                        <TableRow key={row.eventId}>
+                          <TableCell className="font-medium">{row.title}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
+                          </TableCell>
+                          <TableCell>
+                            <AttendanceStatusBadge status={row.status} />
+                          </TableCell>
+                          <TableCell className="text-muted-foreground tabular-nums">
+                            {match(row.checkedInAt)
+                              .with(P.string.minLength(1), (checkedInAt) =>
+                                formatDate(new Date(checkedInAt), "time"),
+                              )
+                              .otherwise(() => "—" as const)}
+                            {match(row.note)
+                              .with(P.string.minLength(1), (note) => ` · ${note}`)
+                              .otherwise(() => "" as const)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )),
         )
         .otherwise(() => null)}
     </>

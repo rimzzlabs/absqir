@@ -45,7 +45,9 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   }, [open, form]);
 
   const approving = props.pending?.decision === "approved";
-  const decideLabel = approving ? "Approve" : "Decline";
+  const decideLabel = match(approving)
+    .with(true, () => "Approve" as const)
+    .otherwise(() => "Decline" as const);
 
   const onSubmit = (values: DecideLeaveValues) => {
     if (!props.pending) return;
@@ -65,12 +67,18 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            {approving ? "Approve" : "Decline"} {props.pending?.request.personName}
+            {match(approving)
+              .with(true, () => "Approve" as const)
+              .otherwise(() => "Decline" as const)}{" "}
+            {props.pending?.request.personName}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {approving
-              ? "The record for this event shows excused instead of absent."
-              : "The record stays as it is. The member sees your note."}
+            {match(approving)
+              .with(
+                true,
+                () => "The record for this event shows excused instead of absent." as const,
+              )
+              .otherwise(() => "The record stays as it is. The member sees your note." as const)}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <Form {...form}>
@@ -102,10 +110,14 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
               </Button>
               <Button
                 type="submit"
-                variant={approving ? "default" : "destructive"}
+                variant={match(approving)
+                  .with(true, () => "default" as const)
+                  .otherwise(() => "destructive" as const)}
                 disabled={decide.isPending}
               >
-                {decide.isPending ? "Saving…" : decideLabel}
+                {match(decide.isPending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => decideLabel)}
               </Button>
             </ResponsiveDialogFooter>
           </form>
@@ -128,12 +140,18 @@ function Queue(props: {
             <NotePencilIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {props.scope === "pending" ? "Nothing to decide" : "Nothing decided yet"}
+            {match(props.scope)
+              .with("pending", () => "Nothing to decide" as const)
+              .otherwise(() => "Nothing decided yet" as const)}
           </EmptyTitle>
           <EmptyDescription>
-            {props.scope === "pending"
-              ? "A member who cannot make an event asks here. You approve or decline."
-              : "Approved and declined requests land here."}
+            {match(props.scope)
+              .with(
+                "pending",
+                () =>
+                  "A member who cannot make an event asks here. You approve or decline." as const,
+              )
+              .otherwise(() => "Approved and declined requests land here." as const)}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -167,9 +185,11 @@ function Queue(props: {
               </TableCell>
               <TableCell className="max-w-xs whitespace-normal">
                 {row.reason}
-                {row.decisionNote ? (
-                  <p className="text-muted-foreground text-xs">Note: {row.decisionNote}</p>
-                ) : null}
+                {match(row.decisionNote)
+                  .with(P.string.minLength(1), (decisionNote) => (
+                    <p className="text-muted-foreground text-xs">Note: {decisionNote}</p>
+                  ))
+                  .otherwise(() => null)}
               </TableCell>
               <TableCell className="text-muted-foreground tabular-nums">
                 {formatDate(new Date(row.createdAt), "date")}
@@ -178,23 +198,25 @@ function Queue(props: {
                 <LeaveStatusBadge status={row.status} />
               </TableCell>
               <TableCell>
-                {row.status === "pending" ? (
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => props.onDecide({ request: row, decision: "declined" })}
-                    >
-                      Decline
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => props.onDecide({ request: row, decision: "approved" })}
-                    >
-                      Approve
-                    </Button>
-                  </div>
-                ) : null}
+                {match(row.status)
+                  .with("pending", () => (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => props.onDecide({ request: row, decision: "declined" })}
+                      >
+                        Decline
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => props.onDecide({ request: row, decision: "approved" })}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  ))
+                  .otherwise(() => null)}
               </TableCell>
             </TableRow>
           ))}

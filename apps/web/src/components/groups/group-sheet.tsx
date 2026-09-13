@@ -66,7 +66,9 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
 
   const toggle = (id: string, checked: boolean) => {
     setSelected((current) =>
-      checked ? [...new Set([...current, id])] : A.filter(current, (value) => value !== id),
+      match(checked)
+        .with(true, () => [...new Set([...current, id])])
+        .otherwise(() => A.filter(current, (value) => value !== id)),
     );
   };
 
@@ -78,52 +80,65 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
       <div className="flex shrink-0 flex-col gap-3 px-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">
-            {selected.length} {selected.length === 1 ? "person" : "people"}
+            {selected.length}{" "}
+            {match(selected.length)
+              .with(1, () => "person" as const)
+              .otherwise(() => "people" as const)}
           </p>
-          {props.canManage && dirty ? (
-            <Button
-              size="sm"
-              disabled={save.isPending}
-              onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
-            >
-              {save.isPending ? "Saving…" : "Save members"}
-            </Button>
-          ) : null}
+          {match(props.canManage && dirty)
+            .with(true, () => (
+              <Button
+                size="sm"
+                disabled={save.isPending}
+                onClick={() => save.mutate({ id: props.group.id, personIds: [...selected] })}
+              >
+                {match(save.isPending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => "Save members" as const)}
+              </Button>
+            ))
+            .otherwise(() => null)}
         </div>
 
-        {props.canManage ? (
-          <Input
-            type="search"
-            placeholder="Filter the directory"
-            aria-label="Filter the directory"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        ) : null}
+        {match(props.canManage)
+          .with(true, () => (
+            <Input
+              type="search"
+              placeholder="Filter the directory"
+              aria-label="Filter the directory"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          ))
+          .otherwise(() => null)}
 
         <FormError error={people.error ?? save.error} />
       </div>
 
       <SheetBody>
         <ul className="border-border divide-border divide-y rounded-lg border">
-          {people.isPending ? (
-            <li className="p-3">
-              <Skeleton className="h-5 w-40" />
-            </li>
-          ) : null}
+          {match(people.isPending)
+            .with(true, () => (
+              <li className="p-3">
+                <Skeleton className="h-5 w-40" />
+              </li>
+            ))
+            .otherwise(() => null)}
           {A.map(rows, (person) => {
             const checked = selected.includes(person.id);
             if (!props.canManage && !checked) return null;
 
             return (
               <li key={person.id} className="flex items-center gap-3 px-3 py-2">
-                {props.canManage ? (
-                  <Checkbox
-                    id={`member-${person.id}`}
-                    checked={checked}
-                    onCheckedChange={(value) => toggle(person.id, value === true)}
-                  />
-                ) : null}
+                {match(props.canManage)
+                  .with(true, () => (
+                    <Checkbox
+                      id={`member-${person.id}`}
+                      checked={checked}
+                      onCheckedChange={(value) => toggle(person.id, value === true)}
+                    />
+                  ))
+                  .otherwise(() => null)}
                 <Label
                   htmlFor={`member-${person.id}`}
                   className="flex-1 cursor-pointer font-normal"
@@ -136,9 +151,11 @@ function MemberPicker(props: { group: GroupDetail; canManage: boolean }) {
               </li>
             );
           })}
-          {!people.isPending && rows.length === 0 ? (
-            <li className="text-muted-foreground p-3 text-sm">Nobody matches.</li>
-          ) : null}
+          {match(!people.isPending && rows.length === 0)
+            .with(true, () => (
+              <li className="text-muted-foreground p-3 text-sm">Nobody matches.</li>
+            ))
+            .otherwise(() => null)}
         </ul>
       </SheetBody>
     </>
@@ -176,18 +193,20 @@ export function GroupSheet(props: GroupSheetProps) {
 
               <MemberPicker group={data} canManage={props.canManage} />
 
-              {props.canManage ? (
-                <SheetFooter className="flex-row justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                    <PencilSimpleIcon />
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setRemoving(true)}>
-                    <TrashIcon />
-                    Delete
-                  </Button>
-                </SheetFooter>
-              ) : null}
+              {match(props.canManage)
+                .with(true, () => (
+                  <SheetFooter className="flex-row justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                      <PencilSimpleIcon />
+                      Edit
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setRemoving(true)}>
+                      <TrashIcon />
+                      Delete
+                    </Button>
+                  </SheetFooter>
+                ))
+                .otherwise(() => null)}
 
               <GroupDialog open={editing} onOpenChange={setEditing} group={data} />
 
@@ -214,7 +233,9 @@ export function GroupSheet(props: GroupSheetProps) {
                         })
                       }
                     >
-                      {remove.isPending ? "Deleting…" : "Delete"}
+                      {match(remove.isPending)
+                        .with(true, () => "Deleting…" as const)
+                        .otherwise(() => "Delete" as const)}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

@@ -3,6 +3,7 @@ import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { RESEND_COOLDOWN_SECONDS } from "@/components/auth/auth-code-step";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { CodeInput } from "@/components/auth/code-input";
@@ -28,7 +29,9 @@ export function AuthResetStep(props: AuthResetStepProps) {
   const reset = useResetPassword({ redirectTo: props.next });
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
-  const resendLabel = cooldown.ready ? "Send a new code" : `New code in ${cooldown.remaining}s`;
+  const resendLabel = match(cooldown.ready)
+    .with(true, () => "Send a new code" as const)
+    .otherwise(() => `New code in ${cooldown.remaining}s`);
 
   return (
     <Form {...form}>
@@ -64,7 +67,9 @@ export function AuthResetStep(props: AuthResetStepProps) {
         <FormError error={reset.error ?? resend.error} />
 
         <Button type="submit" disabled={reset.isPending} className="w-full">
-          {reset.isPending ? "Saving…" : "Set password and sign in"}
+          {match(reset.isPending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => "Set password and sign in" as const)}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
@@ -84,7 +89,9 @@ export function AuthResetStep(props: AuthResetStepProps) {
               )
             }
           >
-            {resend.isPending ? "Sending…" : resendLabel}
+            {match(resend.isPending)
+              .with(true, () => "Sending…" as const)
+              .otherwise(() => resendLabel)}
           </Button>
         </div>
       </form>

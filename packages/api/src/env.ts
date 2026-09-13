@@ -1,6 +1,7 @@
 import { SOCIAL_PROVIDERS, type SocialProviderId, type SocialProviderKeyMap } from "@absqir/auth";
 import { A } from "@mobily/ts-belt";
 import { createEnv } from "@t3-oss/env-core";
+import { match, P } from "ts-pattern";
 import { z } from "zod";
 import type { ApiBindings } from "#src/bindings";
 
@@ -67,8 +68,12 @@ const schema = z
 
       if (Boolean(id) === Boolean(secret)) continue;
 
-      const missing = id ? secretKey : idKey;
-      const present = id ? idKey : secretKey;
+      const missing = match(id)
+        .with(P.string.minLength(1), () => secretKey)
+        .otherwise(() => idKey);
+      const present = match(id)
+        .with(P.string.minLength(1), () => idKey)
+        .otherwise(() => secretKey);
 
       ctx.issues.push({
         code: "custom",

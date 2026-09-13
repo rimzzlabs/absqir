@@ -52,32 +52,42 @@ function DeviceCard(props: {
     <li
       className={cn(
         "bg-card text-card-foreground relative flex flex-col gap-4 rounded-xl p-4 ring-1",
-        device.current ? "ring-primary/50" : "ring-foreground/10",
+        match(device.current)
+          .with(true, () => "ring-primary/50" as const)
+          .otherwise(() => "ring-foreground/10" as const),
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <span
           className={cn(
             "flex size-11 items-center justify-center rounded-lg",
-            device.current ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+            match(device.current)
+              .with(true, () => "bg-primary/10 text-primary" as const)
+              .otherwise(() => "bg-muted text-muted-foreground" as const),
           )}
         >
           <KindIcon className="size-6" weight="duotone" />
         </span>
-        {device.current ? <Badge>This device</Badge> : null}
+        {match(device.current)
+          .with(true, () => <Badge>This device</Badge>)
+          .otherwise(() => null)}
       </div>
 
       <div className="min-w-0">
         <p className="flex items-center gap-1.5 text-sm font-medium">
-          {PlatformIcon ? (
-            <PlatformIcon className="text-muted-foreground size-4 shrink-0" weight="fill" />
-          ) : null}
+          {match(Boolean(PlatformIcon))
+            .with(true, () => (
+              <PlatformIcon className="text-muted-foreground size-4 shrink-0" weight="fill" />
+            ))
+            .otherwise(() => null)}
           <span className="truncate">
             {agent.browser} on {agent.platform}
           </span>
         </p>
         <p className="text-muted-foreground text-sm">
-          {device.current ? "Active now" : `Last seen ${relativeToNow(new Date(device.updatedAt))}`}
+          {match(device.current)
+            .with(true, () => "Active now" as const)
+            .otherwise(() => `Last seen ${relativeToNow(new Date(device.updatedAt))}`)}
         </p>
       </div>
 
@@ -92,17 +102,19 @@ function DeviceCard(props: {
         </div>
       </dl>
 
-      {device.current ? null : (
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-auto w-full"
-          disabled={props.pending}
-          onClick={() => props.onRevoke(device.token)}
-        >
-          Sign out
-        </Button>
-      )}
+      {match(device.current)
+        .with(true, () => null)
+        .otherwise(() => (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-auto w-full"
+            disabled={props.pending}
+            onClick={() => props.onRevoke(device.token)}
+          >
+            Sign out
+          </Button>
+        ))}
     </li>
   );
 }
@@ -143,18 +155,22 @@ export function DevicesGrid() {
               ))}
             </ul>
 
-            {devices.hasNextPage ? (
-              <div className="flex justify-center pt-4 pb-px">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={devices.isFetchingNextPage}
-                  onClick={() => void devices.fetchNextPage()}
-                >
-                  {devices.isFetchingNextPage ? "Loading…" : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+            {match(devices.hasNextPage)
+              .with(true, () => (
+                <div className="flex justify-center pt-4 pb-px">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={devices.isFetchingNextPage}
+                    onClick={() => void devices.fetchNextPage()}
+                  >
+                    {match(devices.isFetchingNextPage)
+                      .with(true, () => "Loading…" as const)
+                      .otherwise(() => "Load more" as const)}
+                  </Button>
+                </div>
+              ))
+              .otherwise(() => null)}
           </ScrollArea>
         ))
         .otherwise(() => null)}

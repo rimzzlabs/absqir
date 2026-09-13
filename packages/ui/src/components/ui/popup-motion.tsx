@@ -16,6 +16,7 @@ import {
   useMemo,
   useRef,
 } from "react";
+import { match, P } from "ts-pattern";
 
 /**
  * Every Base UI popup in this package animates through Motion instead of
@@ -102,21 +103,33 @@ export function usePopupMotion(
 ): PopupMotionProps {
   const reduced = useReducedMotionConfig() ?? false;
   const { distance = 8, scale = 0.95, duration = DURATION.base } = options;
-  const offset = options.from
-    ? { x: options.from.x ?? 0, y: options.from.y ?? 0 }
-    : slideOffset(state.side, distance);
+  const offset = match(options.from)
+    .with(P.nullish, () => slideOffset(state.side, distance))
+    .otherwise((from) => ({ x: from.x ?? 0, y: from.y ?? 0 }));
   const instant = state.instant !== undefined && INSTANT_KINDS.has(state.instant);
-  const zoom = state.side === "none" ? 1 : scale;
+  const zoom = match(state.side)
+    .with("none", () => 1)
+    .otherwise(() => scale);
 
-  const hidden = reduced ? { opacity: 0 } : { opacity: 0, scale: zoom, x: offset.x, y: offset.y };
-  const visible = reduced ? { opacity: 1 } : { opacity: 1, scale: 1, x: 0, y: 0 };
-  const moving = reduced ? DURATION.fast : duration;
+  const hidden = match(reduced)
+    .with(true, () => ({ opacity: 0 }))
+    .otherwise(() => ({ opacity: 0, scale: zoom, x: offset.x, y: offset.y }));
+  const visible = match(reduced)
+    .with(true, () => ({ opacity: 1 }))
+    .otherwise(() => ({ opacity: 1, scale: 1, x: 0, y: 0 }));
+  const moving = match(reduced)
+    .with(true, () => DURATION.fast)
+    .otherwise(() => duration);
 
   return {
     initial: hidden,
-    animate: state.open ? visible : hidden,
+    animate: match(state.open)
+      .with(true, () => visible)
+      .otherwise(() => hidden),
     transition: {
-      duration: instant ? 0 : moving,
+      duration: match(instant)
+        .with(true, () => 0)
+        .otherwise(() => moving),
       ease: EASE_OUT,
     },
   };
@@ -131,8 +144,17 @@ export function useFadeMotion(
 
   return {
     initial: { opacity: 0 },
-    animate: { opacity: state.open ? 1 : 0 },
-    transition: { duration: reduced ? DURATION.fast : duration, ease: "linear" },
+    animate: {
+      opacity: match(state.open)
+        .with(true, () => 1)
+        .otherwise(() => 0),
+    },
+    transition: {
+      duration: match(reduced)
+        .with(true, () => DURATION.fast)
+        .otherwise(() => duration),
+      ease: "linear",
+    },
   };
 }
 
@@ -244,7 +266,9 @@ export interface MotionPopupProps extends HTMLProps {
  */
 export function MotionPopup({ state, options, ...props }: MotionPopupProps) {
   const preset = usePopupMotion(state, options);
-  const duration = typeof preset.transition.duration === "number" ? preset.transition.duration : 0;
+  const duration = match(preset.transition.duration)
+    .with(P.number, (duration) => duration)
+    .otherwise(() => 0);
   const onAnimationComplete = usePopupUnmount(state.open, duration);
 
   return (

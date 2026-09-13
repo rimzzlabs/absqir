@@ -2,6 +2,7 @@ import type { Context, MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
+import { match } from "ts-pattern";
 import { isProduction, parseEnv } from "#src/env";
 import type { AppEnv } from "#src/types";
 
@@ -24,7 +25,9 @@ function apiHeaders(production: boolean) {
     crossOriginOpenerPolicy: "same-origin",
     crossOriginResourcePolicy: "same-origin",
     referrerPolicy: "no-referrer",
-    strictTransportSecurity: production ? HSTS : false,
+    strictTransportSecurity: match(production)
+      .with(true, () => HSTS)
+      .otherwise(() => false as const),
     xContentTypeOptions: "nosniff",
     xFrameOptions: "DENY",
     xPermittedCrossDomainPolicies: "none",
@@ -48,7 +51,9 @@ function docsHeaders(production: boolean) {
       frameAncestors: ["'none'"],
     },
     referrerPolicy: "no-referrer",
-    strictTransportSecurity: production ? HSTS : false,
+    strictTransportSecurity: match(production)
+      .with(true, () => HSTS)
+      .otherwise(() => false as const),
     xContentTypeOptions: "nosniff",
     xFrameOptions: "DENY",
     removePoweredBy: true,

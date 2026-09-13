@@ -6,6 +6,7 @@ import { Label } from "@absqir/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircleIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { ConnectedAccounts } from "@/components/account/connected-accounts";
 import { DevicesGrid, useHasOtherDevices } from "@/components/account/devices-grid";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
@@ -79,14 +80,18 @@ function PasswordRow() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={change.isPending}>
-              {change.isPending ? "Changing…" : "Change password"}
+              {match(change.isPending)
+                .with(true, () => "Changing…" as const)
+                .otherwise(() => "Change password" as const)}
             </Button>
-            {change.isSuccess ? (
-              <p role="status" className="flex items-center gap-1.5 text-sm text-emerald-600">
-                <CheckCircleIcon weight="fill" className="size-4" />
-                Password changed.
-              </p>
-            ) : null}
+            {match(change.isSuccess)
+              .with(true, () => (
+                <p role="status" className="flex items-center gap-1.5 text-sm text-emerald-600">
+                  <CheckCircleIcon weight="fill" className="size-4" />
+                  Password changed.
+                </p>
+              ))
+              .otherwise(() => null)}
           </div>
         </form>
       </Form>
@@ -128,7 +133,9 @@ function SetPasswordRow() {
           <FormError error={set.error} />
 
           <Button type="submit" disabled={set.isPending}>
-            {set.isPending ? "Saving…" : "Set a password"}
+            {match(set.isPending)
+              .with(true, () => "Saving…" as const)
+              .otherwise(() => "Set a password" as const)}
           </Button>
         </form>
       </Form>
@@ -142,7 +149,9 @@ function PasswordSection() {
 
   if (!credentials.data) return null;
 
-  return credentials.data.hasPassword ? <PasswordRow /> : <SetPasswordRow />;
+  return match(credentials.data.hasPassword)
+    .with(true, () => <PasswordRow />)
+    .otherwise(() => <SetPasswordRow />);
 }
 
 function SignOutOthers() {

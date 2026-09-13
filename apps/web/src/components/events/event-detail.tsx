@@ -84,51 +84,61 @@ function Header(props: { event: Event; role: RoleName }) {
                 {group.name}
               </Badge>
             ))}
-            {event.allowWalkIns ? <Badge variant="secondary">Walk-ins allowed</Badge> : null}
+            {match(event.allowWalkIns)
+              .with(true, () => <Badge variant="secondary">Walk-ins allowed</Badge>)
+              .otherwise(() => null)}
           </div>
-          {event.description ? (
-            <p className="text-muted-foreground mt-2 max-w-prose text-sm">{event.description}</p>
-          ) : null}
+          {match(event.description)
+            .with(P.string.minLength(1), (description) => (
+              <p className="text-muted-foreground mt-2 max-w-prose text-sm">{description}</p>
+            ))
+            .otherwise(() => null)}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {event.status !== "done" ? (
-            <>
-              <a href={`/events/${event.id}/display`} className={buttonVariants({ size: "sm" })}>
-                <QrCodeIcon />
-                Room screen
-              </a>
-              <a
-                href={`/events/${event.id}/scan`}
-                className={buttonVariants({ size: "sm", variant: "outline" })}
+          {match(event.status)
+            .with("done", () => null)
+            .otherwise(() => (
+              <>
+                <a href={`/events/${event.id}/display`} className={buttonVariants({ size: "sm" })}>
+                  <QrCodeIcon />
+                  Room screen
+                </a>
+                <a
+                  href={`/events/${event.id}/scan`}
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                >
+                  <CameraIcon />
+                  Scanner
+                </a>
+              </>
+            ))}
+          {match(event.status)
+            .with("scheduled", () => (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={open.isPending}
+                onClick={() => open.mutate(event.id)}
               >
-                <CameraIcon />
-                Scanner
-              </a>
-            </>
-          ) : null}
-          {event.status === "scheduled" ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={open.isPending}
-              onClick={() => open.mutate(event.id)}
-            >
-              <LockOpenIcon />
-              Open now
-            </Button>
-          ) : null}
-          {event.status === "running" ? (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={close.isPending}
-              onClick={() => close.mutate(event.id)}
-            >
-              <LockIcon />
-              Close now
-            </Button>
-          ) : null}
+                <LockOpenIcon />
+                Open now
+              </Button>
+            ))
+            .otherwise(() => null)}
+          {match(event.status)
+            .with("running", () => (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={close.isPending}
+                onClick={() => close.mutate(event.id)}
+              >
+                <LockIcon />
+                Close now
+              </Button>
+            ))
+            .otherwise(() => null)}
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
             <PencilSimpleIcon />
             Edit
@@ -140,25 +150,31 @@ function Header(props: { event: Event; role: RoleName }) {
             <DownloadSimpleIcon />
             CSV
           </a>
-          {isAdmin ? (
-            <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
-              <TrashIcon />
-              Delete
-            </Button>
-          ) : null}
+          {match(isAdmin)
+            .with(true, () => (
+              <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
+                <TrashIcon />
+                Delete
+              </Button>
+            ))
+            .otherwise(() => null)}
         </div>
       </div>
 
       <FormError error={open.error ?? close.error ?? remove.error} />
 
-      {event.registrationOpen ? <PublicLink event={event} /> : null}
+      {match(event.registrationOpen)
+        .with(true, () => <PublicLink event={event} />)
+        .otherwise(() => null)}
 
-      {event.closedAt ? (
-        <p className="text-muted-foreground text-xs">
-          Closed {formatDate(new Date(event.closedAt), "dateTime")}. Everyone expected without a
-          check-in was marked absent.
-        </p>
-      ) : null}
+      {match(event.closedAt)
+        .with(P.string.minLength(1), (closedAt) => (
+          <p className="text-muted-foreground text-xs">
+            Closed {formatDate(new Date(closedAt), "dateTime")}. Everyone expected without a
+            check-in was marked absent.
+          </p>
+        ))
+        .otherwise(() => null)}
 
       <EventDialog open={editing} onOpenChange={setEditing} event={event} />
 
@@ -179,7 +195,9 @@ function Header(props: { event: Event; role: RoleName }) {
                 remove.mutate(event.id, { onSuccess: () => window.location.assign("/events") })
               }
             >
-              {remove.isPending ? "Deleting…" : "Delete"}
+              {match(remove.isPending)
+                .with(true, () => "Deleting…" as const)
+                .otherwise(() => "Delete" as const)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

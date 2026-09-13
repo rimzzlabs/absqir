@@ -5,6 +5,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A } from "@mobily/ts-belt";
 import { and, desc, eq, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
+import { match } from "ts-pattern";
 import { deliver } from "#src/lib/notifications";
 import { notifyJoinDecided, notifyJoinRequested } from "#src/lib/notify";
 import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
@@ -213,32 +214,32 @@ export const joinRequestRoutes = app
     const { message } = c.req.valid("json");
     const db = c.var.db;
 
-    const match = await findOrganizationForEmail(db, current.email);
+    const found = await findOrganizationForEmail(db, current.email);
 
-    if (!match || match.joinPolicy === "closed") {
+    if (!found || found.joinPolicy === "closed") {
       return c.json({ error: "No workspace takes people from this email domain." }, 403);
     }
 
     const already = await db
       .select({ id: member.id })
       .from(member)
-      .where(and(eq(member.organizationId, match.organizationId), eq(member.userId, current.id)))
+      .where(and(eq(member.organizationId, found.organizationId), eq(member.userId, current.id)))
       .limit(1);
 
     if (already[0]) {
-      return c.json({ error: `You are already in ${match.name}.` }, 409);
+      return c.json({ error: `You are already in ${found.name}.` }, 409);
     }
 
-    if (match.joinPolicy === "auto") {
-      await joinAsMember(c, match.organizationId, current);
-      await activateOrganization(c, match.organizationId);
+    if (found.joinPolicy === "auto") {
+      await joinAsMember(c, found.organizationId, current);
+      await activateOrganization(c, found.organizationId);
       await setOnboardingStep(c, current.id, "done");
 
       return c.json(
         {
           status: "joined" as const,
-          organizationId: match.organizationId,
-          organizationName: match.name,
+          organizationId: found.organizationId,
+          organizationName: found.name,
           requestId: null,
         },
         200,
@@ -246,22 +247,24 @@ export const joinRequestRoutes = app
     }
 
     const open = await findPendingJoinRequest(db, {
-      organizationId: match.organizationId,
+      organizationId: found.organizationId,
       userId: current.id,
     });
 
     if (open) {
-      return c.json({ error: `${match.name} already has your request.` }, 409);
+      return c.json({ error: `${found.name} already has your request.` }, 409);
     }
 
     const id = crypto.randomUUID();
 
     await db.insert(joinRequest).values({
       id,
-      organizationId: match.organizationId,
+      organizationId: found.organizationId,
       userId: current.id,
-      domain: match.domain,
-      message: message && message.length > 0 ? message : null,
+      domain: found.domain,
+      message: match(Boolean(message && message.length > 0))
+        .with(true, () => message)
+        .otherwise(() => null),
     });
 
     // The account is set up. It waits on the home page, with the frame around
@@ -271,7 +274,7 @@ export const joinRequestRoutes = app
     deliver(
       c,
       await notifyJoinRequested(db, {
-        organizationId: match.organizationId,
+        organizationId: found.organizationId,
         requestId: id,
         personName: current.name,
         email: current.email,
@@ -282,8 +285,8 @@ export const joinRequestRoutes = app
     return c.json(
       {
         status: "pending" as const,
-        organizationId: match.organizationId,
-        organizationName: match.name,
+        organizationId: found.organizationId,
+        organizationName: found.name,
         requestId: id,
       },
       200,
@@ -326,14 +329,16 @@ export const joinRequestRoutes = app
       .from(joinRequest)
       .innerJoin(user, eq(user.id, joinRequest.userId))
       .where(
-        status === "all"
-          ? eq(joinRequest.organizationId, organizationId)
-          : and(
+        match(status)
+          .with("all", () => eq(joinRequest.organizationId, organizationId))
+          .otherwise((status) =>
+            and(
               eq(joinRequest.organizationId, organizationId),
-              status === "pending"
-                ? eq(joinRequest.status, "pending")
-                : ne(joinRequest.status, "pending"),
+              match(status)
+                .with("pending", () => eq(joinRequest.status, "pending"))
+                .otherwise(() => ne(joinRequest.status, "pending")),
             ),
+          ),
       )
       .orderBy(desc(joinRequest.createdAt))
       .limit(MAX_REQUESTS);
@@ -392,7 +397,9 @@ export const joinRequestRoutes = app
         status: decision,
         decidedBy: current.id,
         decidedAt: new Date(),
-        decisionNote: note && note.length > 0 ? note : null,
+        decisionNote: match(Boolean(note && note.length > 0))
+          .with(true, () => note)
+          .otherwise(() => null),
         updatedAt: new Date(),
       })
       .where(eq(joinRequest.id, found.id));

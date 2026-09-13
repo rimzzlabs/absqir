@@ -2,6 +2,7 @@ import { Checkbox } from "@absqir/ui/checkbox";
 import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { useGroups } from "@/queries/use-groups";
 
@@ -28,7 +29,9 @@ export function GroupPicker(props: GroupPickerProps) {
 
   const toggle = (id: string, checked: boolean) => {
     props.onChange(
-      checked ? [...new Set([...props.value, id])] : A.filter(props.value, (value) => value !== id),
+      match(checked)
+        .with(true, () => [...new Set([...props.value, id])])
+        .otherwise(() => A.filter(props.value, (value) => value !== id)),
     );
   };
 
@@ -45,7 +48,10 @@ export function GroupPicker(props: GroupPickerProps) {
           <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer font-normal">
             <span>{group.name}</span>
             <span className="text-muted-foreground ml-2 text-xs">
-              {group.memberCount} {group.memberCount === 1 ? "person" : "people"}
+              {group.memberCount}{" "}
+              {match(group.memberCount)
+                .with(1, () => "person" as const)
+                .otherwise(() => "people" as const)}
             </span>
           </Label>
         </li>

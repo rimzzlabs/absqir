@@ -21,6 +21,7 @@
     "@absqir/db": "workspace:^",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
+    "ts-pattern": "^5.9.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {

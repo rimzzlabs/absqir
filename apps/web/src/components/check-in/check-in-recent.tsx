@@ -65,9 +65,13 @@ export function CheckInRecent() {
                       <span className="block truncate font-medium">{row.title}</span>
                       <span className="text-muted-foreground block text-xs tabular-nums">
                         {formatDate(new Date(row.startsAt), "weekdayDate")}
-                        {row.checkedInAt
-                          ? ` · in at ${formatDate(new Date(row.checkedInAt), "time")}`
-                          : ""}
+                        {match(row.checkedInAt)
+                          .with(
+                            P.string.minLength(1),
+                            (checkedInAt) =>
+                              ` · in at ${formatDate(new Date(checkedInAt), "time")}`,
+                          )
+                          .otherwise(() => "" as const)}
                       </span>
                     </span>
                     <AttendanceStatusBadge status={row.status} />

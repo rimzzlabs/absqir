@@ -1,5 +1,6 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { cn } from "cn";
+import { match, P } from "ts-pattern";
 
 function Slider({
   className,
@@ -9,8 +10,12 @@ function Slider({
   max = 100,
   ...props
 }: SliderPrimitive.Root.Props) {
-  const uncontrolled = Array.isArray(defaultValue) ? defaultValue : [min, max];
-  const _values = Array.isArray(value) ? value : uncontrolled;
+  const uncontrolled = match(defaultValue)
+    .with(P.when(Array.isArray), (defaultValue) => defaultValue)
+    .otherwise(() => [min, max]);
+  const _values = match(value)
+    .with(P.when(Array.isArray), (value) => value)
+    .otherwise(() => uncontrolled);
 
   return (
     <SliderPrimitive.Root

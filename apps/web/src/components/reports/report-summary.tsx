@@ -1,11 +1,14 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import type { ReportSummary } from "@/queries/use-reports";
 
 /** A rate reads as a whole percent, and an em dash when nothing was judged. */
 export function ratePercent(rate: number | null): string {
-  return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+  return match(rate)
+    .with(null, () => "—")
+    .otherwise((rate) => `${Math.round(rate * 100)}%`);
 }
 
 interface StatusBarSegment {

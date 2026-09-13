@@ -2,6 +2,7 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
 import type { Context } from "hono";
+import { match } from "ts-pattern";
 import { forwardCookies } from "#src/lib/auth-forward";
 import { statusOf } from "#src/lib/event-status";
 import { personForUser } from "#src/lib/events";
@@ -197,8 +198,9 @@ async function eventJson(c: Context<AppEnv>, id: string) {
     open: takesRegistrations(event, now),
     limit: event.registrationLimit ?? null,
     registered,
-    seatsLeft:
-      event.registrationLimit === null ? null : Math.max(0, event.registrationLimit - registered),
+    seatsLeft: match(event.registrationLimit)
+      .with(null, () => null)
+      .otherwise((registrationLimit) => Math.max(0, registrationLimit - registered)),
     mine,
     signedIn: user !== null,
   };

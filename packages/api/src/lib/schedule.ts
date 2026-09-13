@@ -1,9 +1,10 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { TZDate } from "@date-fns/tz";
-import { A, pipe } from "@mobily/ts-belt";
+import { A, F, pipe } from "@mobily/ts-belt";
 import { addDays, addMinutes, isAfter, isBefore, startOfDay } from "date-fns";
 import { and, eq, gte, inArray } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 
 const { schedule, scheduleGroup, event: eventTable, eventGroup } = schema;
 
@@ -29,7 +30,9 @@ function parseDate(value: string, timezone: string): TZDate {
 export function occurrencesBetween(rule: ScheduleRow, from: Date, until: Date): Date[] {
   const { hours, minutes } = parseClock(rule.startTime);
   const first = parseDate(rule.startsOn, rule.timezone);
-  const last = rule.endsOn ? parseDate(rule.endsOn, rule.timezone) : null;
+  const last = match(rule.endsOn)
+    .with(P.string.minLength(1), (endsOn) => parseDate(endsOn, rule.timezone))
+    .otherwise(() => null);
   const weekdays = new Set(rule.weekdays);
 
   let day = startOfDay(new TZDate(from, rule.timezone));
@@ -136,7 +139,13 @@ export async function materializeSchedules(
         if (groupIds.length) {
           await tx
             .insert(eventGroup)
-            .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))])
+            .values(
+              pipe(
+                groupIds,
+                A.map((groupId) => ({ eventId: id, groupId })),
+                F.toMutable,
+              ),
+            )
             .onConflictDoNothing();
         }
       });

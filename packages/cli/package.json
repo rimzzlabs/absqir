@@ -39,6 +39,7 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
-    "@mobily/ts-belt": "4.0.0-rc.5"
+    "@mobily/ts-belt": "4.0.0-rc.5",
+    "ts-pattern": "^5.9.0"
   }
 }

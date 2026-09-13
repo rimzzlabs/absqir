@@ -6,6 +6,7 @@ import { SidebarIcon } from "@phosphor-icons/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import * as React from "react";
+import { match, P } from "ts-pattern";
 import { Button } from "#src/components/ui/button";
 import { Input } from "#src/components/ui/input";
 import { Separator } from "#src/components/ui/separator";
@@ -70,7 +71,12 @@ function SidebarProvider({
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
+      const openState = match(value)
+        .with(
+          P.when((v) => typeof v === "function"),
+          (value) => value(open),
+        )
+        .otherwise((value) => value);
       if (setOpenProp) {
         setOpenProp(openState);
       } else {
@@ -85,7 +91,9 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+    return match(isMobile)
+      .with(true, () => setOpenMobile((open) => !open))
+      .otherwise(() => setOpen((open) => !open));
   }, [isMobile, setOpen]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
@@ -103,7 +111,9 @@ function SidebarProvider({
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed";
+  const state = match(open)
+    .with(true, () => "expanded" as const)
+    .otherwise(() => "collapsed" as const);
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -201,7 +211,9 @@ function Sidebar({
     <div
       className="group peer hidden text-sidebar-foreground md:block"
       data-state={state}
-      data-collapsible={state === "collapsed" ? collapsible : ""}
+      data-collapsible={match(state)
+        .with("collapsed", () => collapsible)
+        .otherwise(() => "")}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
@@ -213,9 +225,13 @@ function Sidebar({
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
-          variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+          match(variant === "floating" || variant === "inset")
+            .with(
+              true,
+              () =>
+                "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]" as const,
+            )
+            .otherwise(() => "group-data-[collapsible=icon]:w-(--sidebar-width-icon)" as const),
         )}
       />
       <div
@@ -224,9 +240,16 @@ function Sidebar({
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
           // Adjust the padding for floating and inset variants.
-          variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+          match(variant === "floating" || variant === "inset")
+            .with(
+              true,
+              () =>
+                "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]" as const,
+            )
+            .otherwise(
+              () =>
+                "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l" as const,
+            ),
           className,
         )}
         {...props}
@@ -497,7 +520,9 @@ function SidebarMenuButton({
       },
       props,
     ),
-    render: !tooltip ? render : <TooltipTrigger render={render} />,
+    render: match(Boolean(tooltip))
+      .with(true, () => <TooltipTrigger render={render} />)
+      .otherwise(() => render),
     state: {
       slot: "sidebar-menu-button",
       sidebar: "menu-button",

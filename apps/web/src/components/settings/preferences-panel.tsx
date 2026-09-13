@@ -3,6 +3,7 @@ import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import {
   type MotionPreference,
@@ -33,34 +34,70 @@ function Pane(props: { dark: boolean; className?: string }) {
       aria-hidden
       className={cn(
         "absolute inset-0 flex",
-        dark ? "bg-neutral-900 text-neutral-100" : "bg-white text-neutral-900",
+        match(dark)
+          .with(true, () => "bg-neutral-900 text-neutral-100" as const)
+          .otherwise(() => "bg-white text-neutral-900" as const),
         props.className,
       )}
     >
       <div
         className={cn(
           "flex w-[28%] flex-col gap-1 border-r p-1.5",
-          dark ? "border-white/10 bg-neutral-800" : "border-neutral-200 bg-neutral-50",
+          match(dark)
+            .with(true, () => "border-white/10 bg-neutral-800" as const)
+            .otherwise(() => "border-neutral-200 bg-neutral-50" as const),
         )}
       >
         <span className="bg-primary h-1.5 w-1/2 rounded-full" />
-        <span className={cn("h-1 rounded-full", dark ? "bg-neutral-600" : "bg-neutral-300")} />
         <span
-          className={cn("h-1 w-4/5 rounded-full", dark ? "bg-neutral-700" : "bg-neutral-200")}
+          className={cn(
+            "h-1 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-600" as const)
+              .otherwise(() => "bg-neutral-300" as const),
+          )}
         />
         <span
-          className={cn("h-1 w-3/5 rounded-full", dark ? "bg-neutral-700" : "bg-neutral-200")}
+          className={cn(
+            "h-1 w-4/5 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-700" as const)
+              .otherwise(() => "bg-neutral-200" as const),
+          )}
+        />
+        <span
+          className={cn(
+            "h-1 w-3/5 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-700" as const)
+              .otherwise(() => "bg-neutral-200" as const),
+          )}
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-2">
         <span
-          className={cn("h-1.5 w-1/2 rounded-full", dark ? "bg-neutral-500" : "bg-neutral-400")}
+          className={cn(
+            "h-1.5 w-1/2 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-500" as const)
+              .otherwise(() => "bg-neutral-400" as const),
+          )}
         />
         <span
-          className={cn("h-1 w-4/5 rounded-full", dark ? "bg-neutral-700" : "bg-neutral-200")}
+          className={cn(
+            "h-1 w-4/5 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-700" as const)
+              .otherwise(() => "bg-neutral-200" as const),
+          )}
         />
         <span
-          className={cn("h-1 w-2/3 rounded-full", dark ? "bg-neutral-700" : "bg-neutral-200")}
+          className={cn(
+            "h-1 w-2/3 rounded-full",
+            match(dark)
+              .with(true, () => "bg-neutral-700" as const)
+              .otherwise(() => "bg-neutral-200" as const),
+          )}
         />
         <span className="bg-primary mt-auto h-2.5 w-7 rounded-sm" />
       </div>
@@ -71,14 +108,16 @@ function Pane(props: { dark: boolean; className?: string }) {
 function Preview(props: { theme: ThemePreference }) {
   return (
     <div className="border-border relative aspect-[16/10] w-full overflow-hidden rounded-md border">
-      {props.theme === "system" ? (
-        <>
-          <Pane dark={false} />
-          <Pane dark className="[clip-path:polygon(100%_0,100%_100%,0_100%)]" />
-        </>
-      ) : (
-        <Pane dark={props.theme === "dark"} />
-      )}
+      {match(props.theme)
+        .with("system", () => (
+          <>
+            <Pane dark={false} />
+            <Pane dark className="[clip-path:polygon(100%_0,100%_100%,0_100%)]" />
+          </>
+        ))
+        .otherwise((theme) => (
+          <Pane dark={theme === "dark"} />
+        ))}
     </div>
   );
 }

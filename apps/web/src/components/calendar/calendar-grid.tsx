@@ -2,6 +2,7 @@ import { formatDate, isSameMonth, isToday } from "@absqir/core/date";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { type CalendarEntry, dayKey, entryTitle } from "@/components/calendar/calendar-entries";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -23,23 +24,25 @@ function EntryLine(props: { entry: CalendarEntry; onOpen: (entry: CalendarEntry)
     <button
       type="button"
       onClick={() => props.onOpen(entry)}
-      title={projected ? "A schedule will create this one" : undefined}
+      title={match(projected)
+        .with(true, () => "A schedule will create this one")
+        .otherwise(() => undefined)}
       className={cn(
         "hover:bg-muted flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-xs",
         projected && "text-muted-foreground",
       )}
     >
-      {projected ? (
-        <RepeatIcon className="size-3 shrink-0" />
-      ) : (
-        <span
-          aria-hidden
-          className={cn(
-            "size-1.5 shrink-0 rounded-full",
-            STATUS_DOT[entry.event.status] ?? "bg-muted-foreground",
-          )}
-        />
-      )}
+      {match(entry)
+        .with({ kind: "projected" }, () => <RepeatIcon className="size-3 shrink-0" />)
+        .otherwise((entry) => (
+          <span
+            aria-hidden
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              STATUS_DOT[entry.event.status] ?? "bg-muted-foreground",
+            )}
+          />
+        ))}
       <span className="tabular-nums">{formatDate(entry.startsAt, "time")}</span>
       <span className="truncate">{entryTitle(entry)}</span>
     </button>
@@ -62,7 +65,9 @@ export interface CalendarGridProps {
  * how many entries it hid; the week view has the height to show them all.
  */
 export function CalendarGrid(props: CalendarGridProps) {
-  const limit = props.view === "month" ? MONTH_CELL_LIMIT : Number.POSITIVE_INFINITY;
+  const limit = match(props.view)
+    .with("month", () => MONTH_CELL_LIMIT)
+    .otherwise(() => Number.POSITIVE_INFINITY);
 
   return (
     <div className="border-border overflow-x-auto rounded-xl border">
@@ -85,7 +90,9 @@ export function CalendarGrid(props: CalendarGridProps) {
               key={day.toISOString()}
               className={cn(
                 "group/day flex flex-col gap-1 p-1.5",
-                props.view === "month" ? "min-h-28" : "min-h-72",
+                match(props.view)
+                  .with("month", () => "min-h-28" as const)
+                  .otherwise(() => "min-h-72" as const),
                 outside && "bg-muted/20",
               )}
             >
@@ -96,9 +103,9 @@ export function CalendarGrid(props: CalendarGridProps) {
                   aria-label={`What happens on ${formatDate(day, "date")}`}
                   className={cn(
                     "flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
-                    isToday(day)
-                      ? "bg-primary text-primary-foreground font-semibold"
-                      : "hover:bg-muted",
+                    match(isToday(day))
+                      .with(true, () => "bg-primary text-primary-foreground font-semibold" as const)
+                      .otherwise(() => "hover:bg-muted" as const),
                     outside && "text-muted-foreground",
                   )}
                 >
@@ -119,15 +126,17 @@ export function CalendarGrid(props: CalendarGridProps) {
                 {A.map(shown, (entry) => (
                   <EntryLine key={entry.key} entry={entry} onOpen={props.onOpenEntry} />
                 ))}
-                {list.length > shown.length ? (
-                  <button
-                    type="button"
-                    onClick={() => props.onOpenDay(day)}
-                    className="text-muted-foreground hover:text-foreground px-1 text-left text-xs"
-                  >
-                    {list.length - shown.length} more
-                  </button>
-                ) : null}
+                {match(list.length > shown.length)
+                  .with(true, () => (
+                    <button
+                      type="button"
+                      onClick={() => props.onOpenDay(day)}
+                      className="text-muted-foreground hover:text-foreground px-1 text-left text-xs"
+                    >
+                      {list.length - shown.length} more
+                    </button>
+                  ))
+                  .otherwise(() => null)}
               </div>
             </div>
           );

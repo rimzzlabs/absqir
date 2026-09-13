@@ -1,0 +1,5 @@
+language js
+
+`$condition ? $whenTrue : $whenFalse` where {
+  register_diagnostic(span=$condition, message="Do not use a ternary. Branch with ts-pattern match(), or with a ts-belt Option pipe when the branch is only about a missing value.", severity="error")
+}

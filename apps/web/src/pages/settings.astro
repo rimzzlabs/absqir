@@ -1,5 +1,6 @@
 ---
 import { isNotificationChannel } from "@absqir/core/notification-channel";
+import { match, P } from "ts-pattern";
 import { SettingsPage } from "@/components/settings/settings-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
@@ -13,22 +14,22 @@ if (!user) {
 
 // An account with no organization still owns a profile, preferences, and a
 // list of its devices. Only the organization tabs need one.
-const organization = activeMembership
-  ? {
-      id: activeMembership.organizationId,
-      name: activeMembership.name,
-      slug: activeMembership.slug,
-    }
-  : null;
+const organization = match(activeMembership)
+  .with(P.nullish, () => null)
+  .otherwise((activeMembership) => ({
+    id: activeMembership.organizationId,
+    name: activeMembership.name,
+    slug: activeMembership.slug,
+  }));
 
 const shellUser = {
   name: user.name,
   email: user.email,
   image: user.image ?? null,
   createdAt: new Date(user.createdAt).toISOString(),
-  notificationChannel: isNotificationChannel(user.notificationChannel)
-    ? user.notificationChannel
-    : "all",
+  notificationChannel: match(user.notificationChannel)
+    .with(P.when(isNotificationChannel), (channel) => channel)
+    .otherwise(() => "all" as const),
   timezone: user.timezone ?? null,
 };
 ---

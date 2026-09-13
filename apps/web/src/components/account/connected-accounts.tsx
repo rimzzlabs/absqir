@@ -1,6 +1,7 @@
 import { Button } from "@absqir/ui/button";
 import { A, pipe } from "@mobily/ts-belt";
 import { useEffect, useState } from "react";
+import { match, P } from "ts-pattern";
 import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { ProviderIcon } from "@/components/shared/provider-icon";
@@ -34,7 +35,9 @@ function useLinkFailure(): string | null {
     const failure = readCallbackError({
       code,
       description: params.get("error_description"),
-      provider: isAuthProvider(provider) ? provider : null,
+      provider: match(provider)
+        .with(P.when(isAuthProvider), (provider) => provider)
+        .otherwise(() => null),
     });
 
     setMessage(failure?.message ?? null);
@@ -44,7 +47,13 @@ function useLinkFailure(): string | null {
     params.delete("provider");
 
     const query = params.toString();
-    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+    window.history.replaceState(
+      null,
+      "",
+      match(query)
+        .with(P.string.minLength(1), (query) => `?${query}`)
+        .otherwise(() => window.location.pathname),
+    );
   }, []);
 
   return message;
@@ -84,7 +93,11 @@ export function ConnectedAccounts() {
 
   if (rows.length === 0) return null;
 
-  const ways = linked.length + (hasPassword ? 1 : 0);
+  const ways =
+    linked.length +
+    match(hasPassword)
+      .with(true, () => 1 as const)
+      .otherwise(() => 0 as const);
 
   return (
     <SettingsRow
@@ -103,46 +116,52 @@ export function ConnectedAccounts() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{name}</p>
                   <p className="text-muted-foreground text-xs">
-                    {accountId ? "Connected" : "Not connected"}
+                    {match(accountId)
+                      .with(P.string.minLength(1), () => "Connected" as const)
+                      .otherwise(() => "Not connected" as const)}
                   </p>
                 </div>
 
-                {accountId ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={unlink.isPending || ways < 2}
-                    onClick={() => unlink.mutate(accountId)}
-                  >
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      void authClient.linkSocial({
-                        provider,
-                        callbackURL: RETURN_PATH,
-                        // Without this, a refused link lands on Better Auth's
-                        // own error page instead of the row that started it.
-                        errorCallbackURL: `${RETURN_PATH}&provider=${provider}`,
-                      });
-                    }}
-                  >
-                    Connect
-                  </Button>
-                )}
+                {match(accountId)
+                  .with(P.string.minLength(1), (accountId) => (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={unlink.isPending || ways < 2}
+                      onClick={() => unlink.mutate(accountId)}
+                    >
+                      Disconnect
+                    </Button>
+                  ))
+                  .otherwise(() => (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        void authClient.linkSocial({
+                          provider,
+                          callbackURL: RETURN_PATH,
+                          // Without this, a refused link lands on Better Auth's
+                          // own error page instead of the row that started it.
+                          errorCallbackURL: `${RETURN_PATH}&provider=${provider}`,
+                        });
+                      }}
+                    >
+                      Connect
+                    </Button>
+                  ))}
               </li>
             );
           })}
         </ul>
 
-        {linkFailure ? (
-          <p role="alert" className="text-destructive text-sm">
-            {linkFailure}
-          </p>
-        ) : null}
+        {match(linkFailure)
+          .with(P.string.minLength(1), (linkFailure) => (
+            <p role="alert" className="text-destructive text-sm">
+              {linkFailure}
+            </p>
+          ))
+          .otherwise(() => null)}
 
         <FormError error={unlink.error} />
       </div>

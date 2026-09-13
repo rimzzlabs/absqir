@@ -3,6 +3,7 @@ import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { type OrganizationValues, organizationSchema } from "@/lib/auth-schemas";
 import { toSlug } from "@/lib/slug";
 
@@ -53,7 +54,9 @@ export function OrganizationForm(props: OrganizationFormProps) {
         />
 
         <Button type="submit" disabled={props.pending} className="w-full">
-          {props.pending ? "Saving…" : props.submitLabel}
+          {match(props.pending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => props.submitLabel)}
         </Button>
       </form>
     </Form>

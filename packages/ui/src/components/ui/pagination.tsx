@@ -1,6 +1,7 @@
 import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import type * as React from "react";
+import { match } from "ts-pattern";
 import { Button } from "#src/components/ui/button";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -36,13 +37,17 @@ type PaginationLinkProps = {
 function PaginationLink({ className, isActive, size = "icon", ...props }: PaginationLinkProps) {
   return (
     <Button
-      variant={isActive ? "outline" : "ghost"}
+      variant={match(Boolean(isActive))
+        .with(true, () => "outline" as const)
+        .otherwise(() => "ghost" as const)}
       size={size}
       className={cn(className)}
       nativeButton={false}
       render={
         <a
-          aria-current={isActive ? "page" : undefined}
+          aria-current={match(Boolean(isActive))
+            .with(true, () => "page" as const)
+            .otherwise(() => undefined)}
           data-slot="pagination-link"
           data-active={isActive}
           {...props}

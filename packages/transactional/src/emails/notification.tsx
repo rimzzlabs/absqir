@@ -1,3 +1,4 @@
+import { match, P } from "ts-pattern";
 import {
   EmailButton,
   EmailFallbackLink,
@@ -22,7 +23,12 @@ export interface NotificationEmailProps {
 /** One notification, the same words the in-app list shows. */
 export function NotificationEmail(props: NotificationEmailProps) {
   const { title, body, organizationName, url, action, appUrl } = props;
-  const preferencesUrl = appUrl ? `${appUrl.replace(/\/$/, "")}/settings?tab=notifications` : null;
+  const preferencesUrl = match(appUrl)
+    .with(
+      P.string.minLength(1),
+      (appUrl) => `${appUrl.replace(/\/$/, "")}/settings?tab=notifications`,
+    )
+    .otherwise(() => null);
 
   return (
     <EmailLayout
@@ -31,20 +37,24 @@ export function NotificationEmail(props: NotificationEmailProps) {
       footer={
         <>
           You get this because you belong to {organizationName} on absqir.
-          {preferencesUrl ? (
-            <>
-              {" "}
-              <a className="abs-link" href={preferencesUrl} style={{ color: color.cobalt }}>
-                Choose which emails reach you
-              </a>
-              .
-            </>
-          ) : null}
+          {match(preferencesUrl)
+            .with(P.string.minLength(1), (preferencesUrl) => (
+              <>
+                {" "}
+                <a className="abs-link" href={preferencesUrl} style={{ color: color.cobalt }}>
+                  Choose which emails reach you
+                </a>
+                .
+              </>
+            ))
+            .otherwise(() => null)}
         </>
       }
     >
       <EmailHeading>{title}</EmailHeading>
-      {body ? <EmailText>{body}</EmailText> : null}
+      {match(body)
+        .with(P.string.minLength(1), (body) => <EmailText>{body}</EmailText>)
+        .otherwise(() => null)}
       <EmailButton href={url}>{action}</EmailButton>
       <EmailFallbackLink href={url} />
     </EmailLayout>

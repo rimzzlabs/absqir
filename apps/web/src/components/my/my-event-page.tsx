@@ -27,7 +27,9 @@ export interface MyEventPageProps {
 
 /** A time on the event's own day reads as a clock, elsewhere with the day. */
 function timeNear(value: Date, day: Date): string {
-  return isSameDay(value, day) ? formatDate(value, "time") : formatDate(value, "weekdayDateTime");
+  return match(isSameDay(value, day))
+    .with(true, () => formatDate(value, "time"))
+    .otherwise(() => formatDate(value, "weekdayDateTime"));
 }
 
 function Header(props: { event: MyEventDetail }) {
@@ -50,30 +52,36 @@ function Header(props: { event: MyEventDetail }) {
           {formatRange(startsAt, new Date(event.endsAt))}
         </p>
         <p className="text-muted-foreground mt-1 text-sm tabular-nums">
-          {event.status === "done" ? null : (
-            <>Door opens {timeNear(opensAtOf(event), startsAt)} · </>
-          )}
+          {match(event.status)
+            .with("done", () => null)
+            .otherwise(() => (
+              <>Door opens {timeNear(opensAtOf(event), startsAt)} · </>
+            ))}
           late after {timeNear(lateAt, startsAt)}
         </p>
 
-        {event.groups.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {A.map(event.groups, (group) => (
-              <Badge key={group.id} variant="outline">
-                {group.name}
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground mt-2 flex items-center gap-1 text-sm">
-            <UsersThreeIcon aria-hidden />
-            You registered for this one.
-          </p>
-        )}
+        {match(event.groups.length > 0)
+          .with(true, () => (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {A.map(event.groups, (group) => (
+                <Badge key={group.id} variant="outline">
+                  {group.name}
+                </Badge>
+              ))}
+            </div>
+          ))
+          .otherwise(() => (
+            <p className="text-muted-foreground mt-2 flex items-center gap-1 text-sm">
+              <UsersThreeIcon aria-hidden />
+              You registered for this one.
+            </p>
+          ))}
 
-        {event.description ? (
-          <p className="text-muted-foreground mt-3 max-w-prose text-sm">{event.description}</p>
-        ) : null}
+        {match(event.description)
+          .with(P.string.minLength(1), (description) => (
+            <p className="text-muted-foreground mt-3 max-w-prose text-sm">{description}</p>
+          ))
+          .otherwise(() => null)}
       </div>
     </header>
   );
@@ -96,82 +104,114 @@ function MySide(props: {
       <CardHeader>
         <CardTitle>You</CardTitle>
         <CardDescription>
-          {event.record ? "Your record for this event." : "Nothing on the register yet."}
+          {match(event.record)
+            .with(P.nullish, () => "Nothing on the register yet." as const)
+            .otherwise(() => "Your record for this event.")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {event.record ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <AttendanceStatusBadge status={event.record.status} />
-              {event.record.checkedInAt ? (
-                <span className="text-muted-foreground text-sm tabular-nums">
-                  at {formatDate(new Date(event.record.checkedInAt), "time")}
-                </span>
-              ) : null}
+        {match(event.record)
+          .with(P.nullish, () => null)
+          .otherwise((record) => (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <AttendanceStatusBadge status={record.status} />
+                {match(record.checkedInAt)
+                  .with(P.string.minLength(1), (checkedInAt) => (
+                    <span className="text-muted-foreground text-sm tabular-nums">
+                      at {formatDate(new Date(checkedInAt), "time")}
+                    </span>
+                  ))
+                  .otherwise(() => null)}
+              </div>
+              {match(record.note)
+                .with(P.string.minLength(1), (note) => (
+                  <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
+                    {note}
+                  </p>
+                ))
+                .otherwise(() => null)}
             </div>
-            {event.record.note ? (
-              <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
-                {event.record.note}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+          ))}
 
-        {event.leave ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">Leave</span>
-              <LeaveStatusBadge status={event.leave.status} />
+        {match(event.leave)
+          .with(P.nullish, () => null)
+          .otherwise((leave) => (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">Leave</span>
+                <LeaveStatusBadge status={leave.status} />
+              </div>
+              <p className="text-sm">{leave.reason}</p>
+              {match(leave.decisionNote)
+                .with(P.string.minLength(1), (decisionNote) => (
+                  <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
+                    {decisionNote}
+                  </p>
+                ))
+                .otherwise(() => null)}
+              {match(leave.status)
+                .with("pending", () => (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={withdraw.isPending}
+                    onClick={() => leave && withdraw.mutate(leave.id)}
+                  >
+                    {match(withdraw.isPending)
+                      .with(true, () => "Withdrawing…" as const)
+                      .otherwise(() => "Withdraw" as const)}
+                  </Button>
+                ))
+                .otherwise(() => null)}
+              <FormError error={withdraw.error} />
             </div>
-            <p className="text-sm">{event.leave.reason}</p>
-            {event.leave.decisionNote ? (
-              <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
-                {event.leave.decisionNote}
-              </p>
-            ) : null}
-            {event.leave.status === "pending" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={withdraw.isPending}
-                onClick={() => event.leave && withdraw.mutate(event.leave.id)}
-              >
-                {withdraw.isPending ? "Withdrawing…" : "Withdraw"}
-              </Button>
-            ) : null}
-            <FormError error={withdraw.error} />
-          </div>
-        ) : null}
+          ))}
 
-        {!event.record && !event.leave && !running ? (
-          <p className="text-muted-foreground text-sm">
-            {event.status === "done" ? "No record for you." : "Check in when the door opens."}
-          </p>
-        ) : null}
+        {match(!event.record && !event.leave && !running)
+          .with(true, () => (
+            <p className="text-muted-foreground text-sm">
+              {match(event.status)
+                .with("done", () => "No record for you." as const)
+                .otherwise(() => "Check in when the door opens." as const)}
+            </p>
+          ))
+          .otherwise(() => null)}
 
-        {running || canAsk ? (
-          <div className="flex flex-wrap gap-2">
-            {running && !event.record ? (
-              <>
-                <a href="/check-in" className={buttonVariants({ size: "sm" })}>
-                  <ScanIcon />
-                  Check in
-                </a>
-                <Button size="sm" variant="outline" onClick={props.onPass}>
-                  <TicketIcon />
-                  My pass
-                </Button>
-              </>
-            ) : null}
-            {canAsk ? (
-              <Button size="sm" variant={running ? "ghost" : "outline"} onClick={props.onAskLeave}>
-                <NotePencilIcon />
-                Ask for leave
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
+        {match(running || canAsk)
+          .with(true, () => (
+            <div className="flex flex-wrap gap-2">
+              {match(running && !event.record)
+                .with(true, () => (
+                  <>
+                    <a href="/check-in" className={buttonVariants({ size: "sm" })}>
+                      <ScanIcon />
+                      Check in
+                    </a>
+                    <Button size="sm" variant="outline" onClick={props.onPass}>
+                      <TicketIcon />
+                      My pass
+                    </Button>
+                  </>
+                ))
+                .otherwise(() => null)}
+              {match(canAsk)
+                .with(true, () => (
+                  <Button
+                    size="sm"
+                    variant={match(running)
+                      .with(true, () => "ghost" as const)
+                      .otherwise(() => "outline" as const)}
+                    onClick={props.onAskLeave}
+                  >
+                    <NotePencilIcon />
+                    Ask for leave
+                  </Button>
+                ))
+                .otherwise(() => null)}
+            </div>
+          ))
+          .otherwise(() => null)}
       </CardContent>
     </Card>
   );
@@ -181,10 +221,9 @@ function MySide(props: {
 function Roster(props: { event: MyEventDetail; className?: string }) {
   const { event } = props;
   const hidden = event.expectedTotal - event.attendees.length;
-  const headcount =
-    event.status === "scheduled"
-      ? `${event.expectedTotal} expected`
-      : `${event.checkedInCount} of ${event.expectedTotal} checked in`;
+  const headcount = match(event.status)
+    .with("scheduled", () => `${event.expectedTotal} expected`)
+    .otherwise(() => `${event.checkedInCount} of ${event.expectedTotal} checked in`);
 
   return (
     <Card className={props.className}>
@@ -196,25 +235,29 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
         <CardDescription>{headcount}</CardDescription>
       </CardHeader>
       <CardContent>
-        {event.attendees.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nobody else is on the list.</p>
-        ) : (
-          <>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              {A.map(event.attendees, (person) => (
-                <li key={person.id} className="min-w-0 truncate">
-                  {person.name}
-                </li>
-              ))}
-            </ul>
-            {hidden > 0 ? (
-              <>
-                <Separator className="my-3" />
-                <p className="text-muted-foreground text-sm">and {hidden} more</p>
-              </>
-            ) : null}
-          </>
-        )}
+        {match(event.attendees.length)
+          .with(0, () => (
+            <p className="text-muted-foreground text-sm">Nobody else is on the list.</p>
+          ))
+          .otherwise(() => (
+            <>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                {A.map(event.attendees, (person) => (
+                  <li key={person.id} className="min-w-0 truncate">
+                    {person.name}
+                  </li>
+                ))}
+              </ul>
+              {match(hidden > 0)
+                .with(true, () => (
+                  <>
+                    <Separator className="my-3" />
+                    <p className="text-muted-foreground text-sm">and {hidden} more</p>
+                  </>
+                ))
+                .otherwise(() => null)}
+            </>
+          ))}
       </CardContent>
     </Card>
   );
@@ -260,7 +303,12 @@ function MyEventBody(props: MyEventPageProps) {
           <Roster event={data} className="lg:order-1" />
         </div>
 
-        <PassDialog eventId={showPass ? data.id : null} onClose={() => setShowPass(false)} />
+        <PassDialog
+          eventId={match(showPass)
+            .with(true, () => data.id)
+            .otherwise(() => null)}
+          onClose={() => setShowPass(false)}
+        />
         <AskLeaveDialog open={asking} onOpenChange={setAsking} event={data} />
       </>
     ))

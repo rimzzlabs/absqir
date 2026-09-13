@@ -1,7 +1,8 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { and, eq, inArray } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 import { csvCell } from "#src/lib/csv";
 import { acceptsCheckIns, statusForCheckIn, statusOf } from "#src/lib/event-status";
 import {
@@ -457,9 +458,13 @@ export const eventRoutes = app
       });
 
       if (groupIds.length) {
-        await tx
-          .insert(eventGroup)
-          .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))]);
+        await tx.insert(eventGroup).values(
+          pipe(
+            groupIds,
+            A.map((groupId) => ({ eventId: id, groupId })),
+            F.toMutable,
+          ),
+        );
       }
     });
 
@@ -493,38 +498,50 @@ export const eventRoutes = app
     const found = await findEvent(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
 
-    const startsAt = body.startsAt ? new Date(body.startsAt) : found.startsAt;
-    const endsAt = body.endsAt ? new Date(body.endsAt) : found.endsAt;
+    const startsAt = match(body.startsAt)
+      .with(P.string.minLength(1), (startsAt) => new Date(startsAt))
+      .otherwise(() => found.startsAt);
+    const endsAt = match(body.endsAt)
+      .with(P.string.minLength(1), (endsAt) => new Date(endsAt))
+      .otherwise(() => found.endsAt);
 
     if (!validTimes(startsAt, endsAt)) {
       return c.json({ error: "The event must end after it starts." }, 400);
     }
 
-    const groupIds = body.groupIds ? await validGroupIds(c, body.groupIds) : null;
+    const groupIds = await pipe(
+      O.fromNullable(body.groupIds),
+      O.map(async (groupIds) => await validGroupIds(c, groupIds)),
+      O.toNullable,
+    );
 
     await c.var.db.transaction(async (tx) => {
       await tx
         .update(eventTable)
         .set({
-          ...(body.title !== undefined ? { title: body.title } : {}),
-          ...(body.description !== undefined
-            ? { description: body.description?.trim() || null }
-            : {}),
+          ...match(body.title)
+            .with(undefined, () => ({}))
+            .otherwise((title) => ({ title })),
+          ...match(body.description)
+            .with(undefined, () => ({}))
+            .otherwise((description) => ({ description: description?.trim() || null })),
           startsAt,
           endsAt,
-          ...(body.lateAfterMinutes !== undefined
-            ? { lateAfterMinutes: body.lateAfterMinutes }
-            : {}),
-          ...(body.opensBeforeMinutes !== undefined
-            ? { opensBeforeMinutes: body.opensBeforeMinutes }
-            : {}),
-          ...(body.allowWalkIns !== undefined ? { allowWalkIns: body.allowWalkIns } : {}),
-          ...(body.registrationOpen !== undefined
-            ? { registrationOpen: body.registrationOpen }
-            : {}),
-          ...(body.registrationLimit !== undefined
-            ? { registrationLimit: body.registrationLimit }
-            : {}),
+          ...match(body.lateAfterMinutes)
+            .with(undefined, () => ({}))
+            .otherwise((lateAfterMinutes) => ({ lateAfterMinutes })),
+          ...match(body.opensBeforeMinutes)
+            .with(undefined, () => ({}))
+            .otherwise((opensBeforeMinutes) => ({ opensBeforeMinutes })),
+          ...match(body.allowWalkIns)
+            .with(undefined, () => ({}))
+            .otherwise((allowWalkIns) => ({ allowWalkIns })),
+          ...match(body.registrationOpen)
+            .with(undefined, () => ({}))
+            .otherwise((registrationOpen) => ({ registrationOpen })),
+          ...match(body.registrationLimit)
+            .with(undefined, () => ({}))
+            .otherwise((registrationLimit) => ({ registrationLimit })),
           updatedAt: new Date(),
         })
         .where(eq(eventTable.id, id));
@@ -532,9 +549,13 @@ export const eventRoutes = app
       if (groupIds) {
         await tx.delete(eventGroup).where(eq(eventGroup.eventId, id));
         if (groupIds.length) {
-          await tx
-            .insert(eventGroup)
-            .values([...A.map(groupIds, (groupId) => ({ eventId: id, groupId }))]);
+          await tx.insert(eventGroup).values(
+            pipe(
+              groupIds,
+              A.map((groupId) => ({ eventId: id, groupId })),
+              F.toMutable,
+            ),
+          );
         }
       }
     });
@@ -595,7 +616,13 @@ export const eventRoutes = app
     if (!found) return c.json({ error: "Not found" }, 404);
 
     if (!found.closedAt) {
-      await finalizeEvent(c.var.db, found, now < found.endsAt ? now : found.endsAt);
+      await finalizeEvent(
+        c.var.db,
+        found,
+        match(now < found.endsAt)
+          .with(true, () => now)
+          .otherwise(() => found.endsAt),
+      );
     }
 
     const updated = await findEvent(c.var.db, organizationId, id);
@@ -635,8 +662,9 @@ export const eventRoutes = app
     if (!people[0]) return c.json({ error: "Not found" }, 404);
 
     const current = await existingRecord(c.var.db, id, personId);
-    const checkedInAt =
-      status === "present" || status === "late" ? (current?.checkedInAt ?? new Date()) : null;
+    const checkedInAt = match(status === "present" || status === "late")
+      .with(true, () => current?.checkedInAt ?? new Date())
+      .otherwise(() => null);
 
     await upsertRecord(c.var.db, {
       eventId: id,

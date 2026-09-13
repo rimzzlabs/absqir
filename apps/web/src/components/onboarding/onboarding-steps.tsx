@@ -1,6 +1,7 @@
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { CheckIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 
 export type OnboardingStepName = "profile" | "avatar" | "organization" | "done";
 
@@ -16,7 +17,9 @@ export interface OnboardingStepsProps {
 
 export function OnboardingSteps(props: OnboardingStepsProps) {
   const currentIndex = STEPS.findIndex((step) => step.key === props.current);
-  const position = currentIndex === -1 ? STEPS.length : currentIndex;
+  const position = match(currentIndex === -1)
+    .with(true, () => STEPS.length)
+    .otherwise(() => currentIndex);
 
   return (
     <ol className="flex items-center gap-3 text-sm" aria-label="Onboarding steps">
@@ -27,7 +30,9 @@ export function OnboardingSteps(props: OnboardingStepsProps) {
         return (
           <li key={step.key} className="flex items-center gap-2">
             <span
-              aria-current={active ? "step" : undefined}
+              aria-current={match(active)
+                .with(true, () => "step" as const)
+                .otherwise(() => undefined)}
               className={cn(
                 "flex size-6 items-center justify-center rounded-full border text-xs font-medium",
                 done && "border-primary bg-primary text-primary-foreground",
@@ -35,14 +40,22 @@ export function OnboardingSteps(props: OnboardingStepsProps) {
                 !done && !active && "border-border text-muted-foreground",
               )}
             >
-              {done ? <CheckIcon aria-hidden /> : index + 1}
+              {match(done)
+                .with(true, () => <CheckIcon aria-hidden />)
+                .otherwise(() => index + 1)}
             </span>
-            <span className={cn(active ? "text-foreground" : "text-muted-foreground")}>
+            <span
+              className={cn(
+                match(active)
+                  .with(true, () => "text-foreground" as const)
+                  .otherwise(() => "text-muted-foreground" as const),
+              )}
+            >
               {step.label}
             </span>
-            {index < STEPS.length - 1 ? (
-              <span aria-hidden className="bg-border ml-1 h-px w-6" />
-            ) : null}
+            {match(index < STEPS.length - 1)
+              .with(true, () => <span aria-hidden className="bg-border ml-1 h-px w-6" />)
+              .otherwise(() => null)}
           </li>
         );
       })}

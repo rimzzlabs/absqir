@@ -1,4 +1,5 @@
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 
 /**
  * A cell starting with = + - @ (or a control character) executes as a
@@ -8,7 +9,9 @@ import { A } from "@mobily/ts-belt";
 const FORMULA_PREFIX = /^[=+\-@\t\r]/;
 
 export function csvCell(value: string): string {
-  const neutralized = FORMULA_PREFIX.test(value) ? `'${value}` : value;
+  const neutralized = match(FORMULA_PREFIX.test(value))
+    .with(true, () => `'${value}`)
+    .otherwise(() => value);
 
   return `"${neutralized.replaceAll('"', '""')}"`;
 }

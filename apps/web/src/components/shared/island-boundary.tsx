@@ -9,6 +9,7 @@ import {
 } from "@absqir/ui/empty";
 import { ArrowClockwiseIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { Component, type ReactNode } from "react";
+import { match } from "ts-pattern";
 
 export interface IslandBoundaryProps {
   children: ReactNode;
@@ -51,11 +52,13 @@ export class IslandBoundary extends Component<IslandBoundaryProps, IslandBoundar
         </EmptyHeader>
 
         <EmptyContent>
-          {import.meta.env.DEV ? (
-            <p className="text-muted-foreground mb-3 font-mono text-xs break-all">
-              {error.message}
-            </p>
-          ) : null}
+          {match(import.meta.env.DEV)
+            .with(true, () => (
+              <p className="text-muted-foreground mb-3 font-mono text-xs break-all">
+                {error.message}
+              </p>
+            ))
+            .otherwise(() => null)}
 
           <Button variant="outline" size="sm" onClick={() => this.setState({ error: null })}>
             <ArrowClockwiseIcon />

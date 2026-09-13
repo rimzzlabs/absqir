@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@absqir/ui/alert-dialog";
 import type { ReactNode } from "react";
+import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 
 export interface FinalWordDialogProps {
@@ -54,7 +55,9 @@ export function FinalWordDialog(props: FinalWordDialogProps) {
             disabled={props.pending}
             onClick={props.onConfirm}
           >
-            {props.pending ? "Working…" : props.confirmLabel}
+            {match(props.pending)
+              .with(true, () => "Working…" as const)
+              .otherwise(() => props.confirmLabel)}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { match } from "ts-pattern";
 
 /** The real window, in milliseconds. The panel keeps the product's own clock. */
 const WINDOW_MS = 20_000;
@@ -63,7 +64,11 @@ export function RotatingCode() {
   // The accent has to land on a module that is actually drawn, or the window
   // arrives with nothing to show for it.
   const fresh = useMemo(() => {
-    const on = modules.flatMap((drawn, index) => (drawn ? [index] : []));
+    const on = modules.flatMap((drawn, index) =>
+      match(drawn)
+        .with(true, () => [index])
+        .otherwise(() => []),
+    );
     return on[(seed * 37 + 13) % on.length];
   }, [modules, seed]);
   const token = tokenFor(seed);
@@ -74,7 +79,11 @@ export function RotatingCode() {
     <figure className="lp-screen" style={{ margin: 0 }}>
       <div className="lp-screen-head">
         <span className="lp-screen-title">Room screen</span>
-        <span>{live ? `${seconds}s left` : "every 20s"}</span>
+        <span>
+          {match(live)
+            .with(true, () => `${seconds}s left`)
+            .otherwise(() => "every 20s" as const)}
+        </span>
       </div>
 
       <svg
@@ -98,8 +107,12 @@ export function RotatingCode() {
               width={8}
               height={8}
               rx={2}
-              fill={isFresh ? "var(--lp-cobalt)" : "var(--lp-ink)"}
-              opacity={isFresh ? 1 : 0.82}
+              fill={match(isFresh)
+                .with(true, () => "var(--lp-cobalt)")
+                .otherwise(() => "var(--lp-ink)")}
+              opacity={match(isFresh)
+                .with(true, () => 1)
+                .otherwise(() => 0.82)}
             />
           );
         })}
@@ -108,7 +121,11 @@ export function RotatingCode() {
       <div className="lp-window">
         <span
           className="lp-window-fill"
-          style={{ transform: `scaleX(${live ? remaining / WINDOW_MS : 1})` }}
+          style={{
+            transform: `scaleX(${match(live)
+              .with(true, () => remaining / WINDOW_MS)
+              .otherwise(() => 1 as const)})`,
+          }}
         />
       </div>
 

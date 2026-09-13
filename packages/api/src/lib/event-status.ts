@@ -1,4 +1,5 @@
 import type { AttendanceStatus } from "@absqir/db/schema";
+import { match } from "ts-pattern";
 
 export type EventStatus = "scheduled" | "running" | "done";
 
@@ -43,7 +44,9 @@ export function acceptsCheckIns(event: EventTimes, now: Date = new Date()): bool
 
 /** Present or late, judged by the clock, never by who scanned. */
 export function statusForCheckIn(event: EventTimes, at: Date): AttendanceStatus {
-  return at <= lateAt(event) ? "present" : "late";
+  return match(at <= lateAt(event))
+    .with(true, () => "present" as const)
+    .otherwise(() => "late" as const);
 }
 
 /** An event that the clock has ended but nobody closed yet. */

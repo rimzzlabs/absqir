@@ -21,6 +21,7 @@ import {
   Recharts,
 } from "@absqir/ui/chart";
 import { CaretRightIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 
 const { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } = Recharts;
 
@@ -58,11 +59,11 @@ function ChartCard(props: {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {props.empty ? (
-          <p className="text-muted-foreground py-8 text-center text-sm">{EMPTY_NOTE}</p>
-        ) : (
-          props.children
-        )}
+        {match(props.empty)
+          .with(true, () => (
+            <p className="text-muted-foreground py-8 text-center text-sm">{EMPTY_NOTE}</p>
+          ))
+          .otherwise(() => props.children)}
       </CardContent>
     </Card>
   );

@@ -6,6 +6,7 @@ import { isOnboardingStep } from "@absqir/db/schema";
 import { getRuntime } from "@app-runtime";
 import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 
 /** The single sign-in door. A signed-in reader is sent to the dashboard. */
 const SIGN_IN_PATH = "/sign-in";
@@ -37,8 +38,8 @@ function isOrgFreePath(path: string): boolean {
 
 /** The event id in a public event path, or null. */
 function eventIdOf(path: string): string | null {
-  const match = /^\/e\/([^/]+)$/.exec(path);
-  return match?.[1] ?? null;
+  const parts = /^\/e\/([^/]+)$/.exec(path);
+  return parts?.[1] ?? null;
 }
 
 function safeNext(url: URL): string {
@@ -86,7 +87,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     const { user, session } = data;
-    const onboardingStep = isOnboardingStep(user.onboardingStep) ? user.onboardingStep : "profile";
+    const onboardingStep = match(user.onboardingStep)
+      .with(P.when(isOnboardingStep), (onboardingStep) => onboardingStep)
+      .otherwise(() => "profile" as const);
 
     const rows = await db
       .select({
@@ -102,7 +105,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
       .orderBy(schema.member.createdAt);
 
     const memberships = A.flatMap(rows, (row) =>
-      isRoleName(row.role) ? [{ ...row, logo: row.logo ?? null, role: row.role }] : [],
+      match(row.role)
+        .with(P.when(isRoleName), (role) => [{ ...row, logo: row.logo ?? null, role }])
+        .otherwise(() => []),
     );
 
     const activeMembership =
@@ -124,7 +129,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // A public event page sends its own id, so step 3 registers instead.
     if (onboardingStep !== "done" && path !== "/onboarding" && !path.startsWith("/invite/")) {
       const eventId = eventIdOf(path);
-      const search = eventId ? `?event=${encodeURIComponent(eventId)}` : context.url.search;
+      const search = match(eventId)
+        .with(P.string.minLength(1), (eventId) => `?event=${encodeURIComponent(eventId)}`)
+        .otherwise(() => context.url.search);
 
       return context.redirect(`/onboarding${search}`, 302);
     }

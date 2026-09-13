@@ -18,10 +18,11 @@ import {
 } from "@absqir/ui/responsive-dialog";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
 import { type EventValues, eventSchema } from "@/lib/event-schemas";
@@ -65,12 +66,20 @@ function defaults(event: Event | null, initialStart?: Date | null): EventValues 
       opensBeforeMinutes: String(event.opensBeforeMinutes),
       allowWalkIns: event.allowWalkIns,
       registrationOpen: event.registrationOpen,
-      registrationLimit: event.registrationLimit === null ? "" : String(event.registrationLimit),
-      groupIds: [...A.map(event.groups, (group) => group.id)],
+      registrationLimit: match(event.registrationLimit)
+        .with(null, () => "")
+        .otherwise((registrationLimit) => String(registrationLimit)),
+      groupIds: pipe(
+        event.groups,
+        A.map((group) => group.id),
+        F.toMutable,
+      ),
     };
   }
 
-  const start = initialStart ? morningOf(initialStart) : nextRoundHour();
+  const start = match(initialStart)
+    .with(P.nullish, () => nextRoundHour())
+    .otherwise((initialStart) => morningOf(initialStart));
 
   return {
     title: "",
@@ -96,7 +105,9 @@ export function EventDialog(props: EventDialogProps) {
   const create = useCreateEvent();
   const update = useUpdateEvent();
   const pending = create.isPending || update.isPending;
-  const saveLabel = editing ? "Save" : "Create";
+  const saveLabel = match(editing)
+    .with(true, () => "Save" as const)
+    .otherwise(() => "Create" as const);
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.event, props.initialStart));
@@ -112,10 +123,9 @@ export function EventDialog(props: EventDialogProps) {
       opensBeforeMinutes: Number(values.opensBeforeMinutes),
       allowWalkIns: values.allowWalkIns,
       registrationOpen: values.registrationOpen,
-      registrationLimit:
-        values.registrationOpen && values.registrationLimit !== ""
-          ? Number(values.registrationLimit)
-          : null,
+      registrationLimit: match(values.registrationOpen && values.registrationLimit !== "")
+        .with(true, () => Number(values.registrationLimit))
+        .otherwise(() => null),
       groupIds: values.groupIds,
     };
 
@@ -140,11 +150,18 @@ export function EventDialog(props: EventDialogProps) {
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
       <ResponsiveDialogContent className="sm:max-w-lg">
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{editing ? "Edit event" : "New event"}</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>
+            {match(editing)
+              .with(true, () => "Edit event" as const)
+              .otherwise(() => "New event" as const)}
+          </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {editing
-              ? "Times and groups can change until the event closes."
-              : "One moment people are expected. Everyone in the ticked groups is on the list."}
+            {match(editing)
+              .with(true, () => "Times and groups can change until the event closes." as const)
+              .otherwise(
+                () =>
+                  "One moment people are expected. Everyone in the ticked groups is on the list." as const,
+              )}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -187,17 +204,26 @@ export function EventDialog(props: EventDialogProps) {
                 />
               </div>
 
-              {backfill ? (
-                <Alert>
-                  <ClockCounterClockwiseIcon />
-                  <AlertTitle>This event is already over</AlertTitle>
-                  <AlertDescription>
-                    {editing
-                      ? "It closes as soon as you save, and everyone expected without a record is marked absent."
-                      : "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record an event that already happened."}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
+              {match(backfill)
+                .with(true, () => (
+                  <Alert>
+                    <ClockCounterClockwiseIcon />
+                    <AlertTitle>This event is already over</AlertTitle>
+                    <AlertDescription>
+                      {match(editing)
+                        .with(
+                          true,
+                          () =>
+                            "It closes as soon as you save, and everyone expected without a record is marked absent." as const,
+                        )
+                        .otherwise(
+                          () =>
+                            "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record an event that already happened." as const,
+                        )}
+                    </AlertDescription>
+                  </Alert>
+                ))
+                .otherwise(() => null)}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
@@ -220,7 +246,13 @@ export function EventDialog(props: EventDialogProps) {
                 />
               </div>
 
-              <Field data-invalid={groupError ? true : undefined}>
+              <Field
+                data-invalid={pipe(
+                  O.fromNullable(groupError),
+                  O.map(() => true as const),
+                  O.toUndefined,
+                )}
+              >
                 <FieldLabel>Expected groups</FieldLabel>
                 <FieldContent>
                   <GroupPicker
@@ -257,24 +289,26 @@ export function EventDialog(props: EventDialogProps) {
                 </Label>
               </div>
 
-              {form.watch("registrationOpen") ? (
-                <FormField
-                  control={form.control}
-                  name="registrationLimit"
-                  label="Seats"
-                  description="Leave empty for no limit. Someone who registers joins as a member."
-                  render={(field) => (
-                    <Input
-                      {...field}
-                      id="event-seats"
-                      type="number"
-                      min={1}
-                      inputMode="numeric"
-                      placeholder="No limit"
-                    />
-                  )}
-                />
-              ) : null}
+              {match(form.watch("registrationOpen"))
+                .with(true, () => (
+                  <FormField
+                    control={form.control}
+                    name="registrationLimit"
+                    label="Seats"
+                    description="Leave empty for no limit. Someone who registers joins as a member."
+                    render={(field) => (
+                      <Input
+                        {...field}
+                        id="event-seats"
+                        type="number"
+                        min={1}
+                        inputMode="numeric"
+                        placeholder="No limit"
+                      />
+                    )}
+                  />
+                ))
+                .otherwise(() => null)}
 
               <FormField
                 control={form.control}
@@ -291,7 +325,9 @@ export function EventDialog(props: EventDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : saveLabel}
+                {match(pending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>
           </form>

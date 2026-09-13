@@ -1,6 +1,7 @@
 ---
 import { enabledSocialProviders } from "@absqir/api";
 import { getRuntime } from "@app-runtime";
+import { match, P } from "ts-pattern";
 import { AuthFlow } from "@/components/auth/auth-flow";
 import AuthLayout from "@/layouts/auth-layout.astro";
 import { isAuthProvider, readCallbackError } from "@/lib/auth-providers";
@@ -8,7 +9,10 @@ import { setEventCookie } from "@/lib/event-cookie";
 
 const next = Astro.url.searchParams.get("next") ?? "/";
 // Only a path from this site, never an absolute URL a stranger supplied.
-const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+const safeNext = match(next)
+  .with(P.string.startsWith("//"), () => "/")
+  .with(P.string.startsWith("/"), (path) => path)
+  .otherwise(() => "/");
 const email = Astro.url.searchParams.get("email") ?? "";
 // The public event page sends its id along, so a stranger can create an
 // account through it. The cookie is what the sign-up door checks.
@@ -28,7 +32,9 @@ const provider = Astro.url.searchParams.get("provider") ?? "";
 const callbackError = readCallbackError({
   code: Astro.url.searchParams.get("error"),
   description: Astro.url.searchParams.get("error_description"),
-  provider: isAuthProvider(provider) ? provider : null,
+  provider: match(provider)
+    .with(P.when(isAuthProvider), (name) => name)
+    .otherwise(() => null),
 });
 ---
 

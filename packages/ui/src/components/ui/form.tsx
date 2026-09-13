@@ -10,6 +10,7 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import {
   Field,
   FieldContent,
@@ -48,7 +49,11 @@ export function FormField<TValues extends FieldValues, TName extends FieldPath<T
             <FieldLabel htmlFor={controller.field.name}>{props.label}</FieldLabel>
             <FieldContent>
               {props.render(controller.field)}
-              {props.description ? <FieldDescription>{props.description}</FieldDescription> : null}
+              {match(props.description)
+                .with(P.string.minLength(1), (description) => (
+                  <FieldDescription>{description}</FieldDescription>
+                ))
+                .otherwise(() => null)}
               <FieldError errors={[controller.fieldState.error]} />
             </FieldContent>
           </Field>

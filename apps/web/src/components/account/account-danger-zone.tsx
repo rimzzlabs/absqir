@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { useId, useState } from "react";
+import { match, P } from "ts-pattern";
 import { ConfirmPhraseDialog } from "@/components/shared/confirm-phrase-dialog";
 import { DangerZone, DangerZoneRow } from "@/components/shared/danger-zone";
 import { FinalWordDialog } from "@/components/shared/final-word-dialog";
@@ -34,9 +35,16 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
   const hasPassword = credentials.data?.hasPassword ?? false;
   const blocked = owner.isSoleOwner && owner.othersPresent === true;
 
-  const description = blocked
-    ? `You hold the only owner seat in ${props.organization?.name ?? "your organization"}. Make somebody else an owner first.`
-    : "Your profile, your devices, and your membership go. Attendance records stay, with nobody behind them.";
+  const description = match(blocked)
+    .with(
+      true,
+      () =>
+        `You hold the only owner seat in ${props.organization?.name ?? "your organization"}. Make somebody else an owner first.`,
+    )
+    .otherwise(
+      () =>
+        "Your profile, your devices, and your membership go. Attendance records stay, with nobody behind them." as const,
+    );
 
   const stop = () => {
     setStage("idle");
@@ -67,34 +75,34 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
           if (!open) stop();
         }}
         title="Delete your account?"
-        description={
-          hasPassword
-            ? "Give your password, then type the words below."
-            : "Type the words below to go on."
-        }
+        description={match(hasPassword)
+          .with(true, () => "Give your password, then type the words below." as const)
+          .otherwise(() => "Type the words below to go on." as const)}
         phrase={CONFIRM_PHRASE}
         phraseLabel="phrase"
         confirmLabel="Continue"
         canConfirm={!hasPassword || password.length > 0}
         onConfirm={() => setStage("final")}
       >
-        {hasPassword ? (
-          <div className="space-y-2">
-            <Label htmlFor={passwordId}>Password</Label>
-            <Input
-              id={passwordId}
-              type="password"
-              value={password}
-              autoComplete="current-password"
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            This account signs in with a code, so the deletion needs a sign-in less than an hour
-            old. If it is refused, sign out, sign in again, and come back.
-          </p>
-        )}
+        {match(hasPassword)
+          .with(true, () => (
+            <div className="space-y-2">
+              <Label htmlFor={passwordId}>Password</Label>
+              <Input
+                id={passwordId}
+                type="password"
+                value={password}
+                autoComplete="current-password"
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </div>
+          ))
+          .otherwise(() => (
+            <p className="text-muted-foreground text-sm">
+              This account signs in with a code, so the deletion needs a sign-in less than an hour
+              old. If it is refused, sign out, sign in again, and come back.
+            </p>
+          ))}
       </ConfirmPhraseDialog>
 
       <FinalWordDialog
@@ -107,7 +115,13 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
         confirmLabel="Delete forever"
         pending={remove.isPending}
         error={remove.error}
-        onConfirm={() => remove.mutate({ password: hasPassword ? password : undefined })}
+        onConfirm={() =>
+          remove.mutate({
+            password: match(hasPassword)
+              .with(true, () => password)
+              .otherwise(() => undefined),
+          })
+        }
       >
         <p>
           Your name, your picture, your signed-in devices, and every organization you belong to go
@@ -126,9 +140,11 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
 export function AccountDangerZone(props: AccountDangerZoneProps) {
   return (
     <DangerZone>
-      {props.role && props.organization ? (
-        <LeaveOrganizationRow role={props.role} organization={props.organization} />
-      ) : null}
+      {match({ role: props.role, organization: props.organization })
+        .with({ role: P.nonNullable, organization: P.nonNullable }, ({ role, organization }) => (
+          <LeaveOrganizationRow role={role} organization={organization} />
+        ))
+        .otherwise(() => null)}
       <DeleteAccountRow {...props} />
     </DangerZone>
   );

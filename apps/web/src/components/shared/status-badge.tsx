@@ -1,5 +1,6 @@
 import { Badge } from "@absqir/ui/badge";
 import { cn } from "@absqir/ui/lib/utils";
+import { match } from "ts-pattern";
 
 export type EventStatus = "scheduled" | "running" | "done";
 export type AttendanceStatus = "present" | "late" | "excused" | "absent";
@@ -37,9 +38,11 @@ export function EventStatusBadge(props: { status: EventStatus }) {
 
   return (
     <Badge variant="outline" className={cn(item.className)}>
-      {props.status === "running" ? (
-        <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-current" />
-      ) : null}
+      {match(props.status)
+        .with("running", () => (
+          <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-current" />
+        ))
+        .otherwise(() => null)}
       {item.label}
     </Badge>
   );

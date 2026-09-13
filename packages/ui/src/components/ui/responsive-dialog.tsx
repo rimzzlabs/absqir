@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import * as React from "react";
+import { match } from "ts-pattern";
 import {
   Dialog,
   DialogBody,
@@ -79,13 +80,15 @@ function ResponsiveDialog({ showSwipeHandle = true, children, ...props }: Respon
 
   return (
     <DrawerModeContext.Provider value={drawer}>
-      {drawer ? (
-        <Drawer showSwipeHandle={showSwipeHandle} {...props}>
-          {children}
-        </Drawer>
-      ) : (
-        <Dialog {...props}>{children}</Dialog>
-      )}
+      {match(drawer)
+        .with(true, () => (
+          <Drawer showSwipeHandle={showSwipeHandle} {...props}>
+            {children}
+          </Drawer>
+        ))
+        .otherwise(() => (
+          <Dialog {...props}>{children}</Dialog>
+        ))}
     </DrawerModeContext.Provider>
   );
 }
@@ -93,7 +96,9 @@ function ResponsiveDialog({ showSwipeHandle = true, children, ...props }: Respon
 function ResponsiveDialogTrigger(props: React.ComponentProps<"button">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerTrigger {...props} /> : <DialogTrigger {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerTrigger {...props} />)
+    .otherwise(() => <DialogTrigger {...props} />);
 }
 
 export interface ResponsiveDialogContentProps {
@@ -123,13 +128,17 @@ function ResponsiveDialogContent({
 function ResponsiveDialogHeader(props: React.ComponentProps<"div">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerHeader {...props} /> : <DialogHeader {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerHeader {...props} />)
+    .otherwise(() => <DialogHeader {...props} />);
 }
 
 function ResponsiveDialogBody(props: React.ComponentProps<"div">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerBody {...props} /> : <DialogBody {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerBody {...props} />)
+    .otherwise(() => <DialogBody {...props} />);
 }
 
 function ResponsiveDialogFooter({ className, ...props }: React.ComponentProps<"div">) {
@@ -145,19 +154,25 @@ function ResponsiveDialogFooter({ className, ...props }: React.ComponentProps<"d
 function ResponsiveDialogTitle(props: React.ComponentProps<"h2">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerTitle {...props} /> : <DialogTitle {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerTitle {...props} />)
+    .otherwise(() => <DialogTitle {...props} />);
 }
 
 function ResponsiveDialogDescription(props: React.ComponentProps<"p">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerDescription {...props} /> : <DialogDescription {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerDescription {...props} />)
+    .otherwise(() => <DialogDescription {...props} />);
 }
 
 function ResponsiveDialogClose(props: React.ComponentProps<"button">) {
   const drawer = useDrawerMode();
 
-  return drawer ? <DrawerClose {...props} /> : <DialogClose {...props} />;
+  return match(drawer)
+    .with(true, () => <DrawerClose {...props} />)
+    .otherwise(() => <DialogClose {...props} />);
 }
 
 export {

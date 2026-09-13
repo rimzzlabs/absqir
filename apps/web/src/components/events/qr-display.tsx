@@ -16,7 +16,9 @@ function QrScreen(props: QrDisplayProps) {
   const event = useEvent(props.eventId);
   const qr = useQrToken(props.eventId);
   const data = event.data;
-  const checkedIn = data ? data.counts.present + data.counts.late : 0;
+  const checkedIn = match(data)
+    .with(P.nullish, () => 0 as const)
+    .otherwise((data) => data.counts.present + data.counts.late);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-10 text-center">
@@ -31,33 +33,39 @@ function QrScreen(props: QrDisplayProps) {
         ← Back
       </a>
 
-      {data ? (
-        <div className="space-y-2">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">{data.title}</h1>
-          <p className="text-muted-foreground text-sm">
-            {formatRange(new Date(data.startsAt), new Date(data.endsAt))}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <EventStatusBadge status={data.status} />
-            <span className="text-muted-foreground text-sm tabular-nums">
-              {checkedIn}/{data.counts.expected} checked in
-            </span>
+      {match(data)
+        .with(P.nullish, () => null)
+        .otherwise((data) => (
+          <div className="space-y-2">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">{data.title}</h1>
+            <p className="text-muted-foreground text-sm">
+              {formatRange(new Date(data.startsAt), new Date(data.endsAt))}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <EventStatusBadge status={data.status} />
+              <span className="text-muted-foreground text-sm tabular-nums">
+                {checkedIn}/{data.counts.expected} checked in
+              </span>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ))}
 
-      {data?.status === "scheduled" ? (
-        <p role="status" className="text-muted-foreground max-w-sm text-sm">
-          Check-in opens {data.opensBeforeMinutes} minutes before the start. The code below works
-          only while the event runs.
-        </p>
-      ) : null}
+      {match(data)
+        .with({ status: "scheduled" }, (data) => (
+          <p role="status" className="text-muted-foreground max-w-sm text-sm">
+            Check-in opens {data.opensBeforeMinutes} minutes before the start. The code below works
+            only while the event runs.
+          </p>
+        ))
+        .otherwise(() => null)}
 
-      {data?.status === "done" ? (
-        <p role="status" className="text-destructive text-sm font-medium">
-          This event is closed.
-        </p>
-      ) : null}
+      {match(data)
+        .with({ status: "done" }, () => (
+          <p role="status" className="text-destructive text-sm font-medium">
+            This event is closed.
+          </p>
+        ))
+        .otherwise(() => null)}
 
       {match(qr)
         .with({ isPending: true }, () => (

@@ -1,4 +1,5 @@
 import { A, O, pipe } from "@mobily/ts-belt";
+import { match, P } from "ts-pattern";
 /**
  * IANA time zones, as the browser and Node know them. An account can name
  * one, so two people in different places read the same instant in their own
@@ -42,7 +43,9 @@ export function timezoneOffset(zone: string, at: Date = new Date()): string {
 export function describeTimezone(zone: string, at: Date = new Date()): string {
   const [region, ...rest] = zone.split("/");
   const city = rest.join(" / ").replaceAll("_", " ");
-  const place = city ? `${city}, ${region}` : zone.replaceAll("_", " ");
+  const place = match(city)
+    .with(P.string.minLength(1), (city) => `${city}, ${region}`)
+    .otherwise(() => zone.replaceAll("_", " "));
 
   return `${place} (${timezoneOffset(zone, at)})`;
 }

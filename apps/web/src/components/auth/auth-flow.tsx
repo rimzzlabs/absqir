@@ -50,9 +50,9 @@ function firstStep(props: AuthFlowProps): Step {
 
 function AuthSteps(props: AuthFlowProps) {
   const [step, setStep] = useState<Step>(() => firstStep(props));
-  const notice = props.callbackError?.needsInvitation
-    ? null
-    : (props.callbackError?.message ?? null);
+  const notice = match(Boolean(props.callbackError?.needsInvitation))
+    .with(true, () => null)
+    .otherwise(() => props.callbackError?.message ?? null);
 
   return match(step)
     .with({ kind: "email" }, () => (

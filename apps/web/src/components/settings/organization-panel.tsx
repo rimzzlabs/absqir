@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { OrganizationCounts } from "@/components/settings/organization-counts";
 import { OrganizationDangerZone } from "@/components/settings/organization-danger-zone";
 import { OrganizationIdentifiers } from "@/components/settings/organization-identifiers";
@@ -20,11 +21,13 @@ function NameRow(props: OrganizationPanelProps) {
   return (
     <SettingsRow
       label="Name and slug"
-      hint={
-        canEdit
-          ? "The name people read, and the short word that names this organization everywhere else."
-          : "Only owners and admins can change these."
-      }
+      hint={match(canEdit)
+        .with(
+          true,
+          () =>
+            "The name people read, and the short word that names this organization everywhere else." as const,
+        )
+        .otherwise(() => "Only owners and admins can change these." as const)}
     >
       <fieldset disabled={!canEdit} className="max-w-md">
         <OrganizationForm

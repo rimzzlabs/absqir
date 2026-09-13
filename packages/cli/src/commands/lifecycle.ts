@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { match } from "ts-pattern";
 import { runCompose, streamCompose } from "#src/lib/compose";
 import { readEnvValue } from "#src/lib/env-file";
 import { nextSteps } from "#src/lib/next-steps";
@@ -32,7 +33,9 @@ const HEALTH_POLL_MS = 2_000;
 const STOPPED_MARK = "migrations: stopped. ";
 
 function envValue(key: string): string | null {
-  return existsSync(".env") ? readEnvValue(".env", key) : null;
+  return match(existsSync(".env"))
+    .with(true, () => readEnvValue(".env", key))
+    .otherwise(() => null);
 }
 
 async function healthy(port: string): Promise<boolean> {

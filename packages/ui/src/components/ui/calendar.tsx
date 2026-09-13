@@ -4,6 +4,7 @@ import { CaretDownIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/re
 import { cn } from "cn";
 import * as React from "react";
 import { type DayButton, DayPicker, getDefaultClassNames, type Locale } from "react-day-picker";
+import { match } from "ts-pattern";
 import { Button, buttonVariants } from "#src/components/ui/button";
 
 function Calendar({
@@ -66,9 +67,12 @@ function Calendar({
         dropdown: cn("absolute inset-0 bg-popover opacity-0", defaultClassNames.dropdown),
         caption_label: cn(
           "font-medium select-none",
-          captionLayout === "label"
-            ? "text-sm"
-            : "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
+          match(captionLayout)
+            .with("label", () => "text-sm" as const)
+            .otherwise(
+              () =>
+                "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground" as const,
+            ),
           defaultClassNames.caption_label,
         ),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
@@ -85,9 +89,15 @@ function Calendar({
         ),
         day: cn(
           "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
-          props.showWeekNumber
-            ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)"
-            : "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)",
+          match(Boolean(props.showWeekNumber))
+            .with(
+              true,
+              () =>
+                "[&:nth-child(2)[data-selected=true]_button]:rounded-l-(--cell-radius)" as const,
+            )
+            .otherwise(
+              () => "[&:first-child[data-selected=true]_button]:rounded-l-(--cell-radius)" as const,
+            ),
           defaultClassNames.day,
         ),
         range_start: cn(

@@ -4,6 +4,7 @@ import { TZDate } from "@date-fns/tz";
 import { A } from "@mobily/ts-belt";
 import { format } from "date-fns";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 import { type EventRow, expectedPersonIds } from "#src/lib/expected";
 import {
   adminUserIds,
@@ -58,7 +59,13 @@ async function userTimezones(
     .from(user)
     .where(inArray(user.id, userIds));
 
-  return new Map(A.flatMap(rows, (row) => (row.timezone ? [[row.id, row.timezone] as const] : [])));
+  return new Map(
+    A.flatMap(rows, (row) =>
+      match(row.timezone)
+        .with(P.string.minLength(1), (timezone) => [[row.id, timezone] as const])
+        .otherwise(() => []),
+    ),
+  );
 }
 
 function whenLine(event: EventRow, timezone: string): string {
@@ -112,8 +119,9 @@ export async function notifyDueReminders(
     const zones = await userTimezones(db, userIds);
 
     for (const kind of kinds) {
-      const title =
-        kind === "hour" ? `${event.title} starts within the hour` : `${event.title} is coming up`;
+      const title = match(kind)
+        .with("hour", () => `${event.title} starts within the hour`)
+        .otherwise(() => `${event.title} is coming up`);
 
       for (const userId of userIds) {
         rows.push({
@@ -221,9 +229,9 @@ export async function notifyLeaveDecided(
       title: `Your leave for ${params.eventTitle} was ${params.decision}`,
       body:
         params.note ??
-        (approved
-          ? "The record for this event says excused."
-          : "The record stays as it is. Talk to an organizer if that is wrong."),
+        match(approved)
+          .with(true, () => "The record for this event says excused.")
+          .otherwise(() => "The record stays as it is. Talk to an organizer if that is wrong."),
       href: "/my/leave",
       dedupeKey: `leave-decided:${params.requestId}`,
     },
@@ -282,14 +290,14 @@ export async function notifyJoinDecided(
       organizationId: params.organizationId,
       userId: params.userId,
       type: "join-decided",
-      title: approved
-        ? `You are in ${params.organizationName}`
-        : `${params.organizationName} declined your request`,
+      title: match(approved)
+        .with(true, () => `You are in ${params.organizationName}`)
+        .otherwise(() => `${params.organizationName} declined your request`),
       body:
         params.note ??
-        (approved
-          ? "Open absqir to see your events."
-          : "Ask somebody there to invite you if that is wrong."),
+        match(approved)
+          .with(true, () => "Open absqir to see your events.")
+          .otherwise(() => "Ask somebody there to invite you if that is wrong."),
       href: "/",
       dedupeKey: `join-decided:${params.requestId}`,
     },

@@ -8,6 +8,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { emailOTP, organization } from "better-auth/plugins";
 import { and, count, eq, gt } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 import { ac, roles } from "#src/roles";
 
 const ONE_MINUTE = 60;
@@ -441,9 +442,14 @@ export function createAuth(options: CreateAuthOptions) {
       // front of the Node image sets the second.
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"] },
       useSecureCookies,
-      defaultCookieAttributes: useSecureCookies
-        ? { httpOnly: true, secure: true, sameSite: "none", partitioned: true }
-        : { httpOnly: true, secure: false, sameSite: "lax" },
+      defaultCookieAttributes: match(useSecureCookies)
+        .with(true, () => ({
+          httpOnly: true,
+          secure: true,
+          sameSite: "none" as const,
+          partitioned: true,
+        }))
+        .otherwise(() => ({ httpOnly: true, secure: false, sameSite: "lax" as const })),
     },
   });
 }
@@ -455,7 +461,9 @@ export type Session = Auth["$Infer"]["Session"];
 export function authErrorOf(error: unknown): { status: number; message: string } | null {
   if (!(error instanceof APIError)) return null;
 
-  const status = typeof error.statusCode === "number" ? error.statusCode : 400;
+  const status = match(error.statusCode)
+    .with(P.number, (statusCode) => statusCode)
+    .otherwise(() => 400);
   const message = error.body?.message ?? error.message;
 
   return { status, message };

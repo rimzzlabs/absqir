@@ -12,6 +12,7 @@ import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { STRETCHED_LINK } from "@/components/shared/stretched-link";
 import type { MyEvent } from "@/queries/use-my";
@@ -65,8 +66,9 @@ function AgendaRow(props: { event: MyEvent }) {
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
   const rows = A.filter(props.events, (row) => row.status !== "done").slice(0, PREVIEW);
-  const agendaHint =
-    rows.length === 0 ? "Nothing is planned for you." : "Soonest first, in your time zone.";
+  const agendaHint = match(rows.length)
+    .with(0, () => "Nothing is planned for you." as const)
+    .otherwise(() => "Soonest first, in your time zone." as const);
   const days = byDay(rows);
   const today = formatDate(new Date(), "iso");
 
@@ -77,7 +79,11 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
           <CalendarBlankIcon />
           Coming up
         </CardTitle>
-        <CardDescription>{props.pending ? "Loading your days…" : agendaHint}</CardDescription>
+        <CardDescription>
+          {match(props.pending)
+            .with(true, () => "Loading your days…" as const)
+            .otherwise(() => agendaHint)}
+        </CardDescription>
         <CardAction>
           <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             All my events
@@ -86,38 +92,44 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
         </CardAction>
       </CardHeader>
       <CardContent>
-        {props.pending ? (
-          <div className="flex flex-col gap-3" aria-busy>
-            <Skeleton className="h-10 rounded-lg" />
-            <Skeleton className="h-10 rounded-lg" />
-            <Skeleton className="h-10 rounded-lg" />
-          </div>
-        ) : (
-          <ol className="flex flex-col gap-5">
-            {A.map(days, (day) => (
-              <li key={day.iso} className="flex gap-4">
-                <div className="w-12 shrink-0 text-center">
-                  <span className="text-muted-foreground block text-[11px] font-medium tracking-wider uppercase">
-                    {day.iso === today ? "Today" : formatDate(day.at, "weekday")}
-                  </span>
-                  <span
-                    className={cn(
-                      "font-heading block text-2xl leading-none font-semibold tabular-nums",
-                      day.iso === today ? "text-primary" : "",
-                    )}
-                  >
-                    {formatDate(day.at, "dayOfMonth")}
-                  </span>
-                </div>
-                <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  {A.map(day.rows, (event) => (
-                    <AgendaRow key={event.id} event={event} />
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ol>
-        )}
+        {match(props.pending)
+          .with(true, () => (
+            <div className="flex flex-col gap-3" aria-busy>
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+            </div>
+          ))
+          .otherwise(() => (
+            <ol className="flex flex-col gap-5">
+              {A.map(days, (day) => (
+                <li key={day.iso} className="flex gap-4">
+                  <div className="w-12 shrink-0 text-center">
+                    <span className="text-muted-foreground block text-[11px] font-medium tracking-wider uppercase">
+                      {match(day.iso === today)
+                        .with(true, () => "Today" as const)
+                        .otherwise(() => formatDate(day.at, "weekday"))}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-heading block text-2xl leading-none font-semibold tabular-nums",
+                        match(day.iso === today)
+                          .with(true, () => "text-primary" as const)
+                          .otherwise(() => "" as const),
+                      )}
+                    >
+                      {formatDate(day.at, "dayOfMonth")}
+                    </span>
+                  </div>
+                  <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    {A.map(day.rows, (event) => (
+                      <AgendaRow key={event.id} event={event} />
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          ))}
       </CardContent>
     </Card>
   );

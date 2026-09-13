@@ -56,19 +56,27 @@ function StepRow(props: { step: Step }) {
   const locked = step.state === "locked";
 
   return (
-    <li className={locked ? "opacity-50" : undefined}>
+    <li
+      className={match(locked)
+        .with(true, () => "opacity-50")
+        .otherwise(() => undefined)}
+    >
       <div className="flex items-start gap-3">
         <StepMark state={step.state} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm font-medium">
             <step.icon aria-hidden className="text-muted-foreground size-4" />
             {step.label}
-            {locked ? <LockSimpleIcon aria-hidden className="size-3.5" /> : null}
+            {match(locked)
+              .with(true, () => <LockSimpleIcon aria-hidden className="size-3.5" />)
+              .otherwise(() => null)}
           </p>
           <p className="text-muted-foreground text-sm">{step.hint}</p>
         </div>
       </div>
-      {step.body ? <div className="mt-4 ml-8">{step.body}</div> : null}
+      {match(Boolean(step.body))
+        .with(true, () => <div className="mt-4 ml-8">{step.body}</div>)
+        .otherwise(() => null)}
     </li>
   );
 }
@@ -86,9 +94,13 @@ function joinHint(status: OnboardingStatus): string {
   const workspace = status.workspace;
 
   if (workspace) {
-    return workspace.joinPolicy === "auto"
-      ? `${workspace.name} is on absqir, and everybody at ${workspace.domain} can come straight in.`
-      : `${workspace.name} is on absqir and takes people from ${workspace.domain}.`;
+    return match(workspace.joinPolicy)
+      .with(
+        "auto",
+        () =>
+          `${workspace.name} is on absqir, and everybody at ${workspace.domain} can come straight in.`,
+      )
+      .otherwise(() => `${workspace.name} is on absqir and takes people from ${workspace.domain}.`);
   }
 
   return "An organization holds the people, the events, and the attendance.";
@@ -106,7 +118,9 @@ function stepsFor(status: OnboardingStatus): Step[] {
     },
     {
       state: "now",
-      label: waiting ? "Waiting on an organizer" : "Join or start an organization",
+      label: match(waiting)
+        .with(true, () => "Waiting on an organizer")
+        .otherwise(() => "Join or start an organization"),
       hint: joinHint(status),
       icon: UsersThreeIcon,
       body: <JoinOrganization status={status} variant="waiting" heading={false} />,

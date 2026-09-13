@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { match } from "ts-pattern";
 
 interface Runner {
   id: string;
@@ -78,7 +79,9 @@ export function InstallCommand() {
             id={`${listId}-tab-${item.id}`}
             aria-selected={index === active}
             aria-controls={`${listId}-panel`}
-            tabIndex={index === active ? 0 : -1}
+            tabIndex={match(index === active)
+              .with(true, () => 0)
+              .otherwise(() => -1)}
             className="lp-tab"
             onClick={() => setActive(index)}
           >
@@ -104,29 +107,33 @@ export function InstallCommand() {
           onClick={copy}
           aria-label="Copy the command"
         >
-          {copied ? (
-            <svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true" fill="none">
-              <path
-                d="M3.5 8L6.25 10.75L11.5 4.75"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true" fill="none">
-              <rect x="4.75" y="4.75" width="7.5" height="7.5" rx="1.75" stroke="currentColor" />
-              <path
-                d="M9.5 2.75H4.5A1.75 1.75 0 0 0 2.75 4.5v5"
-                stroke="currentColor"
-                strokeLinecap="round"
-              />
-            </svg>
-          )}
+          {match(copied)
+            .with(true, () => (
+              <svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true" fill="none">
+                <path
+                  d="M3.5 8L6.25 10.75L11.5 4.75"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ))
+            .otherwise(() => (
+              <svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true" fill="none">
+                <rect x="4.75" y="4.75" width="7.5" height="7.5" rx="1.75" stroke="currentColor" />
+                <path
+                  d="M9.5 2.75H4.5A1.75 1.75 0 0 0 2.75 4.5v5"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                />
+              </svg>
+            ))}
         </button>
         <span className="lp-sr" role="status">
-          {copied ? "Command copied" : ""}
+          {match(copied)
+            .with(true, () => "Command copied" as const)
+            .otherwise(() => "" as const)}
         </span>
       </div>
     </div>

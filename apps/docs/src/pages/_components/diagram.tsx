@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { match, P } from "ts-pattern";
 
 export type Tone = "plain" | "muted" | "accent" | "good" | "warn" | "bad";
 
@@ -47,18 +48,20 @@ export function Diagram(props: DiagramProps) {
         <title>{props.title}</title>
         {props.children}
       </svg>
-      {props.caption ? (
-        <figcaption
-          style={{
-            color: "var(--vocs-text-color-muted)",
-            fontSize: "0.875rem",
-            lineHeight: 1.5,
-            marginTop: "10px",
-          }}
-        >
-          {props.caption}
-        </figcaption>
-      ) : null}
+      {match(props.caption)
+        .with(P.string.minLength(1), (caption) => (
+          <figcaption
+            style={{
+              color: "var(--vocs-text-color-muted)",
+              fontSize: "0.875rem",
+              lineHeight: 1.5,
+              marginTop: "10px",
+            }}
+          >
+            {caption}
+          </figcaption>
+        ))
+        .otherwise(() => null)}
     </figure>
   );
 }
@@ -140,7 +143,9 @@ export function Arrow(props: ArrowProps) {
         y2={y2}
         stroke={color}
         strokeWidth={1.5}
-        strokeDasharray={props.dashed ? "5 4" : undefined}
+        strokeDasharray={match(Boolean(props.dashed))
+          .with(true, () => "5 4")
+          .otherwise(() => undefined)}
       />
       <path
         d="M0 0 L-8 -4.5 L-8 4.5 Z"

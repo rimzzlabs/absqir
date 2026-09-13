@@ -1,4 +1,5 @@
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 
 /**
  * An organization can claim the domain its people share, so a new account at
@@ -222,7 +223,9 @@ export function isClaimableDomain(value: string): boolean {
  */
 export function claimableDomainOfEmail(email: string): string | null {
   const domain = emailDomainOf(email);
-  return domain !== null && !PUBLIC_EMAIL_DOMAINS.has(domain) ? domain : null;
+  return match(domain !== null && !PUBLIC_EMAIL_DOMAINS.has(domain))
+    .with(true, () => domain)
+    .otherwise(() => null);
 }
 
 /** The host an organization puts the proof record on. */

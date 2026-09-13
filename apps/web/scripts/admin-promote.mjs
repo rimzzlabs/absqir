@@ -1,6 +1,7 @@
 // One-off container script: let an existing account create organizations.
 import { parseArgs } from "node:util";
 import { markUser } from "@absqir/db/ops";
+import { match } from "ts-pattern";
 
 const { values } = parseArgs({
   options: {
@@ -22,9 +23,9 @@ const result = await markUser({
 
 if (result.ok) {
   console.log(
-    values.revoke
-      ? `${values.email} can no longer create organizations`
-      : `${values.email} can now create organizations`,
+    match(values.revoke)
+      .with(true, () => `${values.email} can no longer create organizations`)
+      .otherwise(() => `${values.email} can now create organizations`),
   );
 } else {
   console.error(`No account with email ${values.email}.`);
