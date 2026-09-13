@@ -6,6 +6,7 @@ import {
   isAfter,
   isSameDay,
 } from "date-fns";
+import { match, P } from "ts-pattern";
 
 /** One format per intent. Callers pick an intent, never a pattern string. */
 const PATTERNS = {
@@ -55,7 +56,9 @@ export function displayTimezone(): string | null {
  */
 export function inDisplayZone(value: Date): Date {
   const zone = resolveTimezone();
-  return zone ? new TZDate(value, zone) : value;
+  return match(zone)
+    .with(P.string.minLength(1), (zone) => new TZDate(value, zone))
+    .otherwise(() => value);
 }
 
 /** Now, in the display zone. */
@@ -74,10 +77,14 @@ export function parseDisplayDay(value: string): Date | null {
   const month = Number(parts[2]) - 1;
   const day = Number(parts[3]);
   const zone = resolveTimezone();
-  const date = zone ? new TZDate(year, month, day, zone) : new Date(year, month, day);
+  const date = match(zone)
+    .with(P.string.minLength(1), (zone) => new TZDate(year, month, day, zone))
+    .otherwise(() => new Date(year, month, day));
 
   // A 40th of a month rolls over instead of failing; the round trip catches it.
-  return Number.isNaN(date.getTime()) || format(date, PATTERNS.iso) !== value ? null : date;
+  return match(Number.isNaN(date.getTime()) || format(date, PATTERNS.iso) !== value)
+    .with(true, () => null)
+    .otherwise(() => date);
 }
 
 export function formatDate(value: Date, intent: DateIntent = "date"): string {

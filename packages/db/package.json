@@ -51,7 +51,8 @@
     "@absqir/core": "workspace:^",
     "@mobily/ts-belt": "4.0.0-rc.5",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
     "@absqir/config": "workspace:^",

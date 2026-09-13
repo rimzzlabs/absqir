@@ -257,6 +257,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
       zod:
         specifier: ^4.5.4
         version: 4.5.4
@@ -337,6 +340,9 @@ importers:
       pg:
         specifier: ^8.23.0
         version: 8.23.0
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
     devDependencies:
       '@absqir/config':
         specifier: workspace:^
@@ -383,6 +389,9 @@ importers:
       resend:
         specifier: ^6.26.0
         version: 6.26.0(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
     devDependencies:
       '@absqir/config':
         specifier: workspace:^
@@ -447,6 +456,9 @@ importers:
       recharts:
         specifier: 3.10.1
         version: 3.10.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react-is@17.0.2)(react@19.2.8)(redux@5.0.1)
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0

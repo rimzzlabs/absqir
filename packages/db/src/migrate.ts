@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { match, P } from "ts-pattern";
 
 export interface DatabaseErrorVerdict {
   /** True when a later attempt can succeed, for example while Postgres boots. */
@@ -66,7 +67,9 @@ export function describeDatabaseError(error: unknown): DatabaseErrorVerdict {
     return { retry: true, message: "the database is not accepting connections yet" };
   }
 
-  const text = error instanceof Error ? error.message : String(error);
+  const text = match(error)
+    .with(P.instanceOf(Error), (error) => error.message)
+    .otherwise(() => String(error));
 
   return { retry: true, message: text.split("\n")[0] ?? "unknown error" };
 }
