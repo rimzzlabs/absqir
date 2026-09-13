@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -17,6 +18,7 @@ export interface OnboardingOrganizationStepProps {
  * they pick, they can also finish and decide later.
  */
 export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProps) {
+  const t = useTranslate();
   const finish = useOnboardingFinish();
 
   return (
@@ -36,8 +38,8 @@ export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProp
             onClick={() => finish.mutate()}
           >
             {match(finish.isPending)
-              .with(true, () => "Finishing…" as const)
-              .otherwise(() => "Finish without joining" as const)}
+              .with(true, () => t("onboarding:organization.finishing"))
+              .otherwise(() => t("onboarding:organization.finishWithout"))}
           </Button>
         </>
       }

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import {
@@ -20,12 +21,13 @@ export interface UserMenuProps {
 }
 
 export function UserMenu(props: UserMenuProps) {
+  const t = useTranslate();
   const signOut = useSignOut();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" aria-label="Account menu" />}
+        render={<Button variant="ghost" size="icon" aria-label={t("shell:user.menu")} />}
       >
         <Avatar>
           {match(props.user.image)
@@ -47,18 +49,18 @@ export function UserMenu(props: UserMenuProps) {
         <DropdownMenuGroup>
           <DropdownMenuItem render={<a href="/settings?tab=profile" />}>
             <UserCircleIcon />
-            Profile
+            {t("shell:user.profile")}
           </DropdownMenuItem>
           <DropdownMenuItem render={<a href="/settings?tab=preferences" />}>
             <SlidersHorizontalIcon />
-            Preferences
+            {t("shell:user.preferences")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem disabled={signOut.isPending} onClick={() => signOut.mutate()}>
             <SignOutIcon />
-            Sign out
+            {t("shell:user.signOut")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

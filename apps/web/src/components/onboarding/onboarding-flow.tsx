@@ -1,4 +1,5 @@
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { useEffect } from "react";
 import { match, P } from "ts-pattern";
 import { OnboardingAvatarStep } from "@/components/onboarding/onboarding-avatar-step";
@@ -19,6 +20,7 @@ export interface OnboardingFlowProps {
 }
 
 function OnboardingBody(props: OnboardingFlowProps) {
+  const t = useTranslate();
   const status = useOnboarding();
   const step = status.data?.step;
 
@@ -27,7 +29,9 @@ function OnboardingBody(props: OnboardingFlowProps) {
   }, [step]);
 
   return match(status)
-    .with({ isPending: true }, () => <p className="text-muted-foreground text-sm">Loading…</p>)
+    .with({ isPending: true }, () => (
+      <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
+    ))
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-8">
@@ -42,7 +46,9 @@ function OnboardingBody(props: OnboardingFlowProps) {
               eventId={props.eventId}
             />
           ))
-          .with("done", () => <p className="text-muted-foreground text-sm">All set. One moment…</p>)
+          .with("done", () => (
+            <p className="text-muted-foreground text-sm">{t("onboarding:done")}</p>
+          ))
           .exhaustive()}
       </div>
     ))

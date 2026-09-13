@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ export interface ConfirmPhraseDialogProps {
  * the last word.
  */
 export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
+  const t = useTranslate();
   const [typed, setTyped] = useState("");
   const fieldId = useId();
   const ready = typed.trim() === props.phrase && (props.canConfirm ?? true);
@@ -57,7 +59,9 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
 
           <div className="space-y-2">
             <Label htmlFor={fieldId}>
-              Type <span className="text-foreground font-medium">{props.phrase}</span> to confirm
+              {t("common:confirmPhrase.typeBefore")}{" "}
+              <span className="text-foreground font-medium">{props.phrase}</span>{" "}
+              {t("common:confirmPhrase.typeAfter")}
             </Label>
             <Input
               id={fieldId}
@@ -65,7 +69,7 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
               autoComplete="off"
               autoCapitalize="off"
               spellCheck={false}
-              aria-label={`Type the ${props.phraseLabel} to confirm`}
+              aria-label={t("common:confirmPhrase.inputLabel", { label: props.phraseLabel })}
               onChange={(event) => setTyped(event.target.value)}
             />
           </div>
@@ -73,7 +77,7 @@ export function ConfirmPhraseDialog(props: ConfirmPhraseDialogProps) {
 
         {/* The footer bleeds to the edge, so it tracks the padding above. */}
         <AlertDialogFooter className="-mx-5 -mb-5 p-5">
-          <AlertDialogCancel>Keep it</AlertDialogCancel>
+          <AlertDialogCancel>{t("common:actions.keepIt")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={!ready}

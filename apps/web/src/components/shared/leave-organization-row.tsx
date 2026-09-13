@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,25 +28,19 @@ export interface LeaveOrganizationRowProps {
  * leaving is both an organization act and an account act.
  */
 export function LeaveOrganizationRow(props: LeaveOrganizationRowProps) {
+  const t = useTranslate();
   const [confirming, setConfirming] = useState(false);
   const leave = useLeaveOrganization();
   const owner = useSoleOwner(props.role);
 
   const description = match(owner.isSoleOwner)
-    .with(
-      true,
-      () =>
-        "You hold the only owner seat. Make somebody else an owner first, or delete the organization." as const,
-    )
-    .otherwise(
-      () =>
-        "You lose every screen behind this organization. Your directory entry stays, without an account behind it." as const,
-    );
+    .with(true, () => t("common:leaveOrganization.soleOwner"))
+    .otherwise(() => t("common:leaveOrganization.description"));
 
   return (
     <>
       <DangerZoneRow
-        title={`Leave ${props.organization.name}`}
+        title={t("common:leaveOrganization.rowTitle", { name: props.organization.name })}
         description={description}
         action={
           <Button
@@ -54,7 +49,7 @@ export function LeaveOrganizationRow(props: LeaveOrganizationRowProps) {
             disabled={owner.isSoleOwner || owner.checking}
             onClick={() => setConfirming(true)}
           >
-            Leave
+            {t("common:actions.leave")}
           </Button>
         }
       />
@@ -62,22 +57,24 @@ export function LeaveOrganizationRow(props: LeaveOrganizationRowProps) {
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Leave {props.organization.name}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("common:leaveOrganization.confirmTitle", { name: props.organization.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              You need a new invitation to come back. Your account and your history stay.
+              {t("common:leaveOrganization.confirmDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FormError error={leave.error} />
           <AlertDialogFooter>
-            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogCancel>{t("common:actions.stay")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={leave.isPending}
               onClick={() => leave.mutate(props.organization.id)}
             >
               {match(leave.isPending)
-                .with(true, () => "Leaving…" as const)
-                .otherwise(() => "Leave" as const)}
+                .with(true, () => t("common:actions.leaving"))
+                .otherwise(() => t("common:actions.leave"))}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

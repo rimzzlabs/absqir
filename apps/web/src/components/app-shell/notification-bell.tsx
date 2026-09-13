@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
 import { BellIcon } from "@phosphor-icons/react";
@@ -18,6 +19,7 @@ const CLOSE_DELAY_MS = 200;
  * badge live lives here too, because the bell is on every page.
  */
 export function NotificationBell() {
+  const t = useTranslate();
   useNotificationStream();
   const unread = useUnreadCount();
   const count = unread.data?.count ?? 0;
@@ -36,8 +38,8 @@ export function NotificationBell() {
             size="icon"
             className="relative"
             aria-label={match(count)
-              .with(0, () => "Notifications")
-              .otherwise((count) => `Notifications, ${count} unread`)}
+              .with(0, () => t("shell:notifications.label"))
+              .otherwise((count) => t("shell:notifications.labelWithCount", { count }))}
           />
         }
       >

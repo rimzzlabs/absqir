@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
@@ -29,8 +30,9 @@ export interface AuthEmailStepProps {
 }
 
 export function AuthEmailStep(props: AuthEmailStepProps) {
+  const t = useTranslate();
   const form = useForm<EmailValues>({
-    resolver: zodResolver(emailSchema),
+    resolver: zodResolver(emailSchema(t)),
     defaultValues: { email: props.initialEmail },
   });
 
@@ -65,10 +67,7 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
         className="space-y-5"
         noValidate
       >
-        <AuthHeading
-          title="Sign in or create an account"
-          description="Enter your email. We will tell you what comes next."
-        />
+        <AuthHeading title={t("auth:door.title")} description={t("auth:door.description")} />
 
         {match(props.notice)
           .with(P.string.minLength(1), (notice) => (
@@ -81,7 +80,7 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
         <FormField
           control={form.control}
           name="email"
-          label="Email"
+          label={t("auth:door.email")}
           render={(field) => (
             <Input {...field} id="email" type="email" autoComplete="email" autoFocus />
           )}
@@ -106,8 +105,8 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
 
         <Button type="submit" disabled={pending} className="w-full">
           {match(pending)
-            .with(true, () => "Checking…" as const)
-            .otherwise(() => "Continue" as const)}
+            .with(true, () => t("auth:door.checking"))
+            .otherwise(() => t("auth:door.continue"))}
         </Button>
 
         <AuthProviderButtons providers={props.providers} next={props.next} />

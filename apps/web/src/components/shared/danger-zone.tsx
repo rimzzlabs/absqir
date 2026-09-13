@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import { WarningIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
@@ -13,16 +14,20 @@ export interface DangerZoneProps {
  * is red so a reader who scrolls past knows to slow down.
  */
 export function DangerZone(props: DangerZoneProps) {
+  const t = useTranslate();
+
   return (
     <section
-      aria-label="Danger zone"
+      aria-label={t("common:dangerZone.label")}
       className={cn("border-destructive/30 min-w-0 rounded-xl border", props.className)}
     >
       <header className="border-destructive/20 flex items-center gap-2 border-b px-5 py-4">
         <WarningIcon weight="fill" className="text-destructive size-5 shrink-0" />
         <div className="min-w-0">
-          <h3 className="font-heading text-base font-semibold tracking-tight">Danger zone</h3>
-          <p className="text-muted-foreground text-sm">Nothing here can be undone.</p>
+          <h3 className="font-heading text-base font-semibold tracking-tight">
+            {t("common:dangerZone.title")}
+          </h3>
+          <p className="text-muted-foreground text-sm">{t("common:dangerZone.description")}</p>
         </div>
       </header>
       <div className="divide-destructive/20 divide-y">{props.children}</div>

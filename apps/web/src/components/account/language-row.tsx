@@ -1,5 +1,5 @@
 import { LOCALE_NAMES, type Locale } from "@absqir/i18n";
-import { useTranslation } from "@absqir/i18n/react";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { TranslateIcon } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -17,14 +17,14 @@ export interface LanguageRowProps {
 
 /** The language of every screen, every notification, and every email. */
 export function LanguageRow(props: LanguageRowProps) {
-  const { t } = useTranslation(["settings", "common"]);
+  const t = useTranslate();
   const [chosen, setChosen] = useState<Locale>(props.locale);
   const save = useUpdateLocale();
   const device = useDeviceLocale();
   const dirty = chosen !== props.locale;
 
   return (
-    <SettingsRow label={t("language.label")} hint={t("language.hint")}>
+    <SettingsRow label={t("settings:language.label")} hint={t("settings:language.hint")}>
       <div className="flex flex-col gap-3">
         <LanguageField
           id="language"
@@ -38,7 +38,7 @@ export function LanguageRow(props: LanguageRowProps) {
           .otherwise((device) => (
             <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <TranslateIcon aria-hidden className="size-3.5" />
-              {t("language.followingDevice", { language: LOCALE_NAMES[device] })}
+              {t("settings:language.followingDevice", { language: LOCALE_NAMES[device] })}
             </p>
           ))}
 

@@ -1,2 +1,72 @@
-/** Placeholder while this area moves to the message catalog. */
-export const auth = {} as const;
+/** The one door: email first, then a password, a code, or a closed sign. */
+export const auth = {
+  door: {
+    signInTitle: "Sign in",
+    title: "Sign in or create an account",
+    description: "Enter your email. We will tell you what comes next.",
+    email: "Email",
+    checking: "Checking…",
+    continue: "Continue",
+  },
+  closed: {
+    title: "This email needs an invitation",
+    description: "There is no account for {{email}}, and this absqir only lets invited people in.",
+    hint: "Ask an organizer of your organization to invite you. The invitation email carries a link that opens this page with your address ready to go.",
+    tryAnother: "Try another email",
+  },
+  code: {
+    titleNew: "Check your inbox",
+    title: "Enter your code",
+    description: "We sent a 6 digit code to {{email}}. It works for 10 minutes.",
+    label: "Code",
+    createAccount: "Create my account",
+    signIn: "Sign in",
+    useAnotherEmail: "Use another email",
+    sendNewCode: "Send a new code",
+    newCodeIn: "New code in {{seconds}}s",
+    sending: "Sending…",
+  },
+  password: {
+    title: "Welcome back",
+    label: "Password",
+    remember: "Keep me signed in",
+    signingIn: "Signing in…",
+    signIn: "Sign in",
+    useAnotherEmail: "Use another email",
+    emailCodeInstead: "Email me a code instead",
+  },
+  reset: {
+    title: "Enter your code",
+    description: "We sent a 6 digit code to {{email}}. Choose a new password with it.",
+    newPassword: "New password",
+    minLength: "At least {{count}} characters.",
+    submit: "Set password and sign in",
+    backToPassword: "Back to password",
+  },
+  providers: {
+    or: "or",
+    continueWith: "Continue with {{provider}}",
+    opening: "Opening…",
+    fallbackName: "The provider",
+  },
+  callback: {
+    noInvitationWithEmail:
+      "{{provider}} signed you in as {{email}}. That address has no invitation here.",
+    noInvitation: "The address {{provider}} returned has no invitation here.",
+    accessDenied: "The {{provider}} sign-in was cancelled.",
+    emailMismatch: "That {{provider}} account uses a different address than this account.",
+    alreadyLinked: "That {{provider}} account already belongs to someone else here.",
+    unableToLink: "absqir could not link that {{provider}} account.",
+    emailNotFound: "{{provider}} shared no address. Add one there, then try again.",
+    emailNotVerified: "{{provider}} has not verified that address yet.",
+    unknown: "The {{provider}} sign-in did not finish. Try again, or use your email.",
+  },
+  validation: {
+    passwordRequired: "Enter your password.",
+    passwordShort: "Use at least {{count}} characters.",
+    passwordLong: "That password is too long.",
+    codeLength: "Enter the {{count}} digit code.",
+    digitsOnly: "Digits only.",
+    nameRequired: "Enter your name.",
+  },
+} as const;

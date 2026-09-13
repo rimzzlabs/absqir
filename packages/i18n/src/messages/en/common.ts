@@ -142,5 +142,6 @@ export const common = {
     emailInvalid: "Enter a valid email address.",
     slugTooShort: "Use at least 2 characters.",
     slugTooLong: "Use at most 40 characters.",
+    slugChars: "Lowercase letters, digits, and hyphens only.",
   },
 } as const;

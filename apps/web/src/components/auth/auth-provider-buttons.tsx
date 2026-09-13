@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { A } from "@mobily/ts-belt";
 import { useState } from "react";
@@ -18,6 +19,7 @@ export interface AuthProviderButtonsProps {
  * the page asks for, so these sit below the divider, not above it.
  */
 export function AuthProviderButtons(props: AuthProviderButtonsProps) {
+  const t = useTranslate();
   const [pending, setPending] = useState<AuthProviderId | null>(null);
 
   if (props.providers.length === 0) return null;
@@ -42,7 +44,7 @@ export function AuthProviderButtons(props: AuthProviderButtonsProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-muted-foreground text-xs">or</span>
+        <span className="text-muted-foreground text-xs">{t("auth:providers.or")}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
@@ -60,8 +62,10 @@ export function AuthProviderButtons(props: AuthProviderButtonsProps) {
           >
             <ProviderIcon provider={provider} />
             {match(pending === provider)
-              .with(true, () => "Opening…" as const)
-              .otherwise(() => `Continue with ${providerLabel(provider)}`)}
+              .with(true, () => t("auth:providers.opening"))
+              .otherwise(() =>
+                t("auth:providers.continueWith", { provider: providerLabel(t, provider) }),
+              )}
           </Button>
         ))}
       </div>

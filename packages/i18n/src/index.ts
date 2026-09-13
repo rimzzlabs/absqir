@@ -24,7 +24,38 @@ declare module "i18next" {
  */
 const instances = new Map<Locale, I18nInstance>();
 
-export const NAMESPACES = Object.keys(messages.en) as (keyof typeof messages.en)[];
+/**
+ * Every namespace, in one tuple. The translator binds all of them, so one
+ * shape of key, `t("events:title")`, works wherever it is read.
+ */
+export const NAMESPACES = [
+  "common",
+  "shell",
+  "auth",
+  "onboarding",
+  "join",
+  "home",
+  "events",
+  "checkin",
+  "calendar",
+  "reports",
+  "schedules",
+  "groups",
+  "settings",
+  "account",
+  "notifications",
+  "my",
+  "invite",
+  "leave",
+  "publicEvent",
+  "email",
+  "errors",
+] as const;
+
+export type Namespaces = typeof NAMESPACES;
+
+/** A reader for every message in one language. */
+export type Translate = TFunction<Namespaces>;
 
 export function i18nFor(locale: Locale): I18nInstance {
   const known = instances.get(locale);
@@ -38,7 +69,7 @@ export function i18nFor(locale: Locale): I18nInstance {
     supportedLngs: [LOCALE_TAGS.id, "id", LOCALE_TAGS.en, "en"],
     nonExplicitSupportedLngs: true,
     defaultNS: "common",
-    ns: NAMESPACES,
+    ns: [...NAMESPACES],
     resources: {
       en: messages.en,
       id: messages.id,
@@ -59,6 +90,6 @@ export function i18nFor(locale: Locale): I18nInstance {
  * The message reader for one language, outside React: an Astro page, an
  * email, an API answer. `t("events:title")` names the namespace up front.
  */
-export function translatorFor(locale: Locale): TFunction {
-  return i18nFor(locale).getFixedT(LOCALE_TAGS[locale]);
+export function translatorFor(locale: Locale): Translate {
+  return i18nFor(locale).getFixedT(LOCALE_TAGS[locale], NAMESPACES);
 }

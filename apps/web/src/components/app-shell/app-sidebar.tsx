@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import {
   Sidebar,
@@ -38,11 +39,13 @@ export interface AppSidebarProps {
 
 function NavEntry(props: { item: NavItem; currentPath: string }) {
   const { item } = props;
+  const t = useTranslate();
   const active = isActivePath(item.href, props.currentPath);
+  const label = t(`shell:nav.${item.id}`);
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton isActive={active} tooltip={item.label} render={<a href={item.href} />}>
+      <SidebarMenuButton isActive={active} tooltip={label} render={<a href={item.href} />}>
         <item.icon
           weight={match(active)
             .with(true, () => "fill" as const)
@@ -54,7 +57,7 @@ function NavEntry(props: { item: NavItem; currentPath: string }) {
               .otherwise(() => "" as const),
           )}
         />
-        <span>{item.label}</span>
+        <span>{label}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -69,12 +72,14 @@ const COLLAPSED_CHECK_IN =
 
 /** A member's one action, filled in the brand color so it never hides in the list. */
 function CheckInEntry(props: { currentPath: string }) {
+  const t = useTranslate();
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
           isActive={isActivePath(CHECK_IN.href, props.currentPath)}
-          tooltip={CHECK_IN.label}
+          tooltip={t(`shell:nav.${CHECK_IN.id}`)}
           render={<a href={CHECK_IN.href} />}
           className={cn(
             "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-active:bg-primary/90 data-active:text-primary-foreground justify-center font-medium shadow-sm [&_svg]:size-4",
@@ -82,7 +87,9 @@ function CheckInEntry(props: { currentPath: string }) {
           )}
         >
           <CHECK_IN.icon weight="bold" />
-          <span className="group-data-[collapsible=icon]:sr-only">{CHECK_IN.label}</span>
+          <span className="group-data-[collapsible=icon]:sr-only">
+            {t(`shell:nav.${CHECK_IN.id}`)}
+          </span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
@@ -91,6 +98,7 @@ function CheckInEntry(props: { currentPath: string }) {
 
 export function AppSidebar(props: AppSidebarProps) {
   const { active } = props;
+  const t = useTranslate();
 
   // Without an organization the list is short on purpose: the two entries
   // that work, and nothing that turns the reader away.
@@ -114,9 +122,9 @@ export function AppSidebar(props: AppSidebarProps) {
 
       <SidebarContent>
         {A.map(groups, (group) => (
-          <SidebarGroup key={group.label}>
+          <SidebarGroup key={group.id}>
             <SidebarGroupLabel className="text-sidebar-foreground/50 text-[11px] tracking-wider uppercase">
-              {group.label}
+              {t(`shell:groups.${group.id}`)}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -133,11 +141,11 @@ export function AppSidebar(props: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip="Star on GitHub"
+              tooltip={t("shell:github")}
               render={<a href={GITHUB_URL} target="_blank" rel="noreferrer" />}
             >
               <GithubLogoIcon weight="fill" />
-              <span className="truncate">Star on GitHub</span>
+              <span className="truncate">{t("shell:github")}</span>
               <ArrowSquareOutIcon aria-hidden className="text-muted-foreground ml-auto" />
             </SidebarMenuButton>
           </SidebarMenuItem>

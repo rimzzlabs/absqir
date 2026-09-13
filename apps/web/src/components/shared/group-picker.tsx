@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -14,17 +15,14 @@ export interface GroupPickerProps {
 
 /** A checklist of the organization's groups. Everyone in a ticked group is expected. */
 export function GroupPicker(props: GroupPickerProps) {
+  const t = useTranslate();
   const groups = useGroups();
 
   if (groups.isPending) return <Skeleton className="h-16 rounded-lg" />;
   if (groups.isError) return <FormError error={groups.error} />;
 
   if (groups.data.length === 0) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        No groups yet. Create one on the Groups page, then come back.
-      </p>
-    );
+    return <p className="text-muted-foreground text-sm">{t("common:groupPicker.empty")}</p>;
   }
 
   const toggle = (id: string, checked: boolean) => {
@@ -48,10 +46,7 @@ export function GroupPicker(props: GroupPickerProps) {
           <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer font-normal">
             <span>{group.name}</span>
             <span className="text-muted-foreground ml-2 text-xs">
-              {group.memberCount}{" "}
-              {match(group.memberCount)
-                .with(1, () => "person" as const)
-                .otherwise(() => "people" as const)}
+              {t("common:people", { count: group.memberCount })}
             </span>
           </Label>
         </li>

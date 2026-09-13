@@ -1,4 +1,5 @@
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
@@ -23,45 +24,54 @@ function asRole(role: string | undefined) {
 }
 
 function SignedOut(props: { invitationId: string }) {
+  const t = useTranslate();
   const next = encodeURIComponent(`/invite/${props.invitationId}`);
 
   return (
     <div className="space-y-5">
       <AuthHeading
-        title="You have an invitation"
-        description="Sign in, or create your account, and the invitation opens again on the other side."
+        title={t("invite:accept.signedOutTitle")}
+        description={t("invite:accept.signedOutDescription")}
       />
       <a href={`/sign-in?next=${next}`} className={buttonVariants({ className: "w-full" })}>
-        Continue
+        {t("invite:accept.continue")}
       </a>
     </div>
   );
 }
 
 function SignedIn(props: InviteAcceptProps) {
+  const t = useTranslate();
   const invitation = useInvitation(props.invitationId);
   const accept = useOnboardingAccept();
 
   return match(invitation)
-    .with({ isPending: true }, () => <p className="text-muted-foreground text-sm">Loading…</p>)
+    .with({ isPending: true }, () => (
+      <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
+    ))
     .with({ isError: true, error: P.select() }, (error) => (
       <div className="space-y-5">
         <AuthHeading
-          title="This invitation cannot be opened"
-          description="It expired, it was cancelled, or it was sent to another email address."
+          title={t("invite:accept.brokenTitle")}
+          description={t("invite:accept.brokenDescription")}
         />
         <FormError error={error} />
-        <p className="text-muted-foreground text-sm">You are signed in as {props.userEmail}.</p>
+        <p className="text-muted-foreground text-sm">
+          {t("invite:accept.signedInAs", { email: props.userEmail ?? "" })}
+        </p>
         <a href="/" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-          Go to the dashboard
+          {t("invite:accept.dashboard")}
         </a>
       </div>
     ))
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-5">
         <AuthHeading
-          title={`Join ${data.organizationName}`}
-          description={`${data.inviterEmail} invited you as ${roleLabel(asRole(data.role))}.`}
+          title={t("invite:accept.title", { organization: data.organizationName })}
+          description={t("invite:accept.description", {
+            inviter: data.inviterEmail,
+            role: roleLabel(t, asRole(data.role)),
+          })}
         />
         <FormError error={accept.error} />
         <Button
@@ -70,11 +80,11 @@ function SignedIn(props: InviteAcceptProps) {
           onClick={() => accept.mutate(props.invitationId)}
         >
           {match(accept.isPending)
-            .with(true, () => "Joining…" as const)
-            .otherwise(() => "Accept the invitation" as const)}
+            .with(true, () => t("invite:accept.joining"))
+            .otherwise(() => t("invite:accept.accept"))}
         </Button>
         <a href="/" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
-          Not now
+          {t("common:actions.notNow")}
         </a>
       </div>
     ))

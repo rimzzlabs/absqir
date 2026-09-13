@@ -4,8 +4,10 @@ import { A, type O } from "@mobily/ts-belt";
 export type DeviceKind = "phone" | "tablet" | "desktop";
 
 export interface DeviceDescription {
-  browser: string;
-  platform: string;
+  /** The brand name, or null when the string names none this list knows. */
+  browser: string | null;
+  /** The platform brand name, or null for the same reason. */
+  platform: string | null;
   kind: DeviceKind;
 }
 
@@ -47,18 +49,17 @@ function firstMatch<T>(ua: string, rules: UserAgentRule<T>[]): O.Option<T> {
   return A.getBy(rules, (rule) => rule.pattern.test(ua))?.value;
 }
 
-/** A short human line for a signed-in device. */
+/**
+ * What a signed-in device is, in brand names. A name absent from the lists
+ * comes back as null: the words around a device are written where the
+ * reader's language is known, not here.
+ */
 export function describeUserAgent(userAgent: string | null | undefined): DeviceDescription {
   const ua = userAgent ?? "";
 
   return {
-    browser: firstMatch(ua, BROWSERS) ?? "Unknown browser",
-    platform: firstMatch(ua, PLATFORMS) ?? "unknown device",
+    browser: firstMatch(ua, BROWSERS) ?? null,
+    platform: firstMatch(ua, PLATFORMS) ?? null,
     kind: firstMatch(ua, KINDS) ?? "desktop",
   };
-}
-
-export function deviceLabel(userAgent: string | null | undefined): string {
-  const { browser, platform } = describeUserAgent(userAgent);
-  return `${browser} on ${platform}`;
 }

@@ -1,4 +1,5 @@
 import { relativeToNow } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -27,6 +28,7 @@ function pick(rows: Notification[]): Notification[] {
 
 function PreviewRow(props: { notification: Notification; onRead: (id: string) => Promise<void> }) {
   const { notification } = props;
+  const t = useTranslate();
   const Icon = NOTIFICATION_ICONS[notification.type];
   const unread = notification.readAt === null;
 
@@ -51,7 +53,7 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
             .with(true, () => (
               <>
                 <span aria-hidden className="bg-primary size-1.5 shrink-0 rounded-full" />
-                <span className="sr-only">Unread</span>
+                <span className="sr-only">{t("shell:notifications.unread")}</span>
               </>
             ))
             .otherwise(() => null)}
@@ -109,6 +111,7 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
 }
 
 export function NotificationPreview(props: NotificationPreviewProps) {
+  const t = useTranslate();
   const notifications = useNotifications("all", { enabled: props.open });
   const markRead = useMarkRead();
 
@@ -119,7 +122,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
   return (
     <div className="flex flex-col">
       <div className="flex h-9 items-center justify-between px-3">
-        <p className="text-sm font-medium">Notifications</p>
+        <p className="text-sm font-medium">{t("shell:notifications.title")}</p>
         {match(props.unread > 0)
           .with(true, () => (
             <Button
@@ -128,7 +131,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
               onClick={() => markRead.mutate(null)}
               disabled={markRead.isPending}
             >
-              Mark all read
+              {t("shell:notifications.markAllRead")}
             </Button>
           ))
           .otherwise(() => null)}
@@ -152,7 +155,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
             match(rows.length)
               .with(0, () => (
                 <p className="text-muted-foreground px-2 py-6 text-center text-sm">
-                  Nothing yet. Reminders and requests land here.
+                  {t("shell:notifications.empty")}
                 </p>
               ))
               .otherwise(() => (
@@ -171,7 +174,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
           href="/notifications"
           className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
         >
-          All notifications
+          {t("shell:notifications.all")}
         </a>
       </div>
     </div>

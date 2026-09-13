@@ -1,5 +1,5 @@
 import { isLocale, LOCALE_NAMES, LOCALE_TAGLINES, LOCALES, type Locale } from "@absqir/i18n";
-import { useTranslation } from "@absqir/i18n/react";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ export interface LanguageFieldProps {
  * finds theirs.
  */
 export function LanguageField(props: LanguageFieldProps) {
-  const { t } = useTranslation("settings");
+  const t = useTranslate();
 
   return (
     <Select
@@ -42,7 +42,7 @@ export function LanguageField(props: LanguageFieldProps) {
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>{t("language.selectLabel")}</SelectLabel>
+          <SelectLabel>{t("settings:language.selectLabel")}</SelectLabel>
           {A.map(LOCALES, (locale) => (
             <SelectItem key={locale} value={locale}>
               <span className="flex flex-col">

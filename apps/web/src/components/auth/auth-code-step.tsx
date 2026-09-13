@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,8 +24,9 @@ export interface AuthCodeStepProps {
 }
 
 export function AuthCodeStep(props: AuthCodeStepProps) {
+  const t = useTranslate();
   const form = useForm<CodeValues>({
-    resolver: zodResolver(codeSchema),
+    resolver: zodResolver(codeSchema(t)),
     defaultValues: { code: "" },
   });
 
@@ -32,11 +34,11 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
   const submitLabel = match(props.isNew)
-    .with(true, () => "Create my account" as const)
-    .otherwise(() => "Sign in" as const);
+    .with(true, () => t("auth:code.createAccount"))
+    .otherwise(() => t("auth:code.signIn"));
   const resendLabel = match(cooldown.ready)
-    .with(true, () => "Send a new code" as const)
-    .otherwise(() => `New code in ${cooldown.remaining}s`);
+    .with(true, () => t("auth:code.sendNewCode"))
+    .otherwise(() => t("auth:code.newCodeIn", { seconds: String(cooldown.remaining) }));
 
   return (
     <Form {...form}>
@@ -49,15 +51,15 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
       >
         <AuthHeading
           title={match(props.isNew)
-            .with(true, () => "Check your inbox")
-            .otherwise(() => "Enter your code")}
-          description={`We sent a 6 digit code to ${props.email}. It works for 10 minutes.`}
+            .with(true, () => t("auth:code.titleNew"))
+            .otherwise(() => t("auth:code.title"))}
+          description={t("auth:code.description", { email: props.email })}
         />
 
         <FormField
           control={form.control}
           name="code"
-          label="Code"
+          label={t("auth:code.label")}
           render={(field) => (
             <CodeInput
               value={field.value}
@@ -77,13 +79,13 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
 
         <Button type="submit" disabled={verify.isPending} className="w-full">
           {match(verify.isPending)
-            .with(true, () => "Checking…" as const)
+            .with(true, () => t("auth:door.checking"))
             .otherwise(() => submitLabel)}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
-            Use another email
+            {t("auth:code.useAnotherEmail")}
           </Button>
           <Button
             type="button"
@@ -99,7 +101,7 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
             }
           >
             {match(resend.isPending)
-              .with(true, () => "Sending…" as const)
+              .with(true, () => t("auth:code.sending"))
               .otherwise(() => resendLabel)}
           </Button>
         </div>

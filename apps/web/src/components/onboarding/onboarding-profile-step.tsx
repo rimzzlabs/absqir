@@ -1,5 +1,5 @@
-import type { Locale } from "@absqir/i18n";
-import { useTranslation } from "@absqir/i18n/react";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@absqir/ui/collapsible";
 import { Field, FieldDescription, FieldLabel } from "@absqir/ui/field";
@@ -33,18 +33,18 @@ export interface OnboardingProfileStepProps {
   locale: Locale;
 }
 
-/** "GitHub", or "Your provider" for one this build does not name. */
-function firstProviderLabel(providers: string[]): string {
+/** "GitHub", or a stand-in name for a provider this build does not name. */
+function firstProviderLabel(t: Translate, providers: string[]): string {
   const first = A.getBy(providers, (provider) => isAuthProvider(provider));
 
   return match(O.toNullable(first))
-    .with(P.string.and(P.when(isAuthProvider)), (provider) => providerLabel(provider))
-    .otherwise(() => "Your provider");
+    .with(P.string.and(P.when(isAuthProvider)), (provider) => providerLabel(t, provider))
+    .otherwise(() => t("auth:providers.fallbackName"));
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const { status } = props;
-  const { t } = useTranslation(["onboarding", "common"]);
+  const t = useTranslate();
 
   // Everybody meets this picker once: the owner who starts an organization,
   // and the member who arrives from an invitation. Both land here first.
@@ -61,8 +61,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const form = useForm<ProfileValues>({
     resolver: zodResolver(
       match(mustSetPassword)
-        .with(true, () => profileWithPasswordSchema)
-        .otherwise(() => profileSchema),
+        .with(true, () => profileWithPasswordSchema(t))
+        .otherwise(() => profileSchema(t)),
     ),
     defaultValues: { name: status.name, password: "" },
   });
@@ -73,8 +73,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
     <FormField
       control={form.control}
       name="password"
-      label="Password"
-      description={`At least ${MIN_PASSWORD_LENGTH} characters. You can also sign in with an emailed code later.`}
+      label={t("onboarding:profile.password")}
+      description={t("onboarding:profile.passwordHint", { count: MIN_PASSWORD_LENGTH })}
       render={(field) => (
         <Input {...field} id="password" type="password" autoComplete="new-password" />
       )}
@@ -92,23 +92,23 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         noValidate
       >
         <AuthHeading
-          title="Tell us your name"
+          title={t("onboarding:profile.title")}
           description={match(mustSetPassword)
-            .with(true, () => "The name your organizers see, and a password for next time.")
-            .otherwise(() => "The name your organizers see.")}
+            .with(true, () => t("onboarding:profile.descriptionWithPassword"))
+            .otherwise(() => t("onboarding:profile.description"))}
         />
 
         <FormField
           control={form.control}
           name="name"
-          label="Full name"
+          label={t("onboarding:profile.fullName")}
           render={(field) => <Input {...field} id="name" autoComplete="name" autoFocus />}
         />
 
         <Field>
-          <FieldLabel htmlFor="onboarding-language">{t("language.label")}</FieldLabel>
+          <FieldLabel htmlFor="onboarding-language">{t("onboarding:language.label")}</FieldLabel>
           <LanguageField id="onboarding-language" value={locale} onChange={setLocale} />
-          <FieldDescription>{t("language.hint")}</FieldDescription>
+          <FieldDescription>{t("onboarding:language.hint")}</FieldDescription>
         </Field>
 
         {match(mustSetPassword)
@@ -135,7 +135,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                   />
                 }
               >
-                Add a password
+                {t("onboarding:profile.addPassword")}
                 <CaretDownIcon
                   className={match(addingPassword)
                     .with(true, () => "rotate-180")
@@ -144,8 +144,9 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4">
                 <p className="text-muted-foreground mb-4 text-sm">
-                  {firstProviderLabel(status.linkedProviders)} already signs you in. A password is
-                  one more way back, for a device where that account is not set up.
+                  {t("onboarding:profile.addPasswordHint", {
+                    provider: firstProviderLabel(t, status.linkedProviders),
+                  })}
                 </p>
                 {passwordField}
               </CollapsibleContent>
@@ -157,8 +158,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
 
         <Button type="submit" disabled={save.isPending} className="w-full">
           {match(save.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Continue" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("onboarding:profile.continue"))}
         </Button>
       </form>
     </Form>

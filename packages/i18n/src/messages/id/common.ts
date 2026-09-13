@@ -141,5 +141,6 @@ export const common = {
     emailInvalid: "Masukkan alamat email yang benar.",
     slugTooShort: "Pakai minimal 2 karakter.",
     slugTooLong: "Pakai maksimal 40 karakter.",
+    slugChars: "Hanya huruf kecil, angka, dan tanda hubung.",
   },
 } as const;

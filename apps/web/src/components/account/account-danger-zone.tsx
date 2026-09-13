@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
@@ -12,9 +13,6 @@ import { useSoleOwner } from "@/lib/use-sole-owner";
 import { useDeleteAccount } from "@/mutations/use-delete-account";
 import { useCredentials } from "@/queries/use-credentials";
 
-/** Short enough to type once, and impossible to press by accident. */
-const CONFIRM_PHRASE = "Delete my account";
-
 export interface AccountDangerZoneProps {
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
@@ -24,6 +22,7 @@ export interface AccountDangerZoneProps {
 type Stage = "idle" | "phrase" | "final";
 
 function DeleteAccountRow(props: AccountDangerZoneProps) {
+  const t = useTranslate();
   const [stage, setStage] = useState<Stage>("idle");
   const [password, setPassword] = useState("");
   const passwordId = useId();
@@ -35,16 +34,15 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
   const hasPassword = credentials.data?.hasPassword ?? false;
   const blocked = owner.isSoleOwner && owner.othersPresent === true;
 
+  // Short enough to type once, and impossible to press by accident.
+  const phrase = t("account:danger.phrase");
   const description = match(blocked)
-    .with(
-      true,
-      () =>
-        `You hold the only owner seat in ${props.organization?.name ?? "your organization"}. Make somebody else an owner first.`,
+    .with(true, () =>
+      t("account:danger.soleOwner", {
+        organization: props.organization?.name ?? t("account:danger.yourOrganization"),
+      }),
     )
-    .otherwise(
-      () =>
-        "Your profile, your devices, and your membership go. Attendance records stay, with nobody behind them." as const,
-    );
+    .otherwise(() => t("account:danger.deleteDescription"));
 
   const stop = () => {
     setStage("idle");
@@ -55,7 +53,7 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
   return (
     <>
       <DangerZoneRow
-        title="Delete your account"
+        title={t("account:danger.deleteTitle")}
         description={description}
         action={
           <Button
@@ -64,7 +62,7 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
             disabled={blocked || owner.checking}
             onClick={() => setStage("phrase")}
           >
-            Delete account
+            {t("account:danger.deleteButton")}
           </Button>
         }
       />
@@ -74,20 +72,20 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title="Delete your account?"
+        title={t("account:danger.confirmTitle")}
         description={match(hasPassword)
-          .with(true, () => "Give your password, then type the words below." as const)
-          .otherwise(() => "Type the words below to go on." as const)}
-        phrase={CONFIRM_PHRASE}
-        phraseLabel="phrase"
-        confirmLabel="Continue"
+          .with(true, () => t("account:danger.confirmWithPassword"))
+          .otherwise(() => t("account:danger.confirmWithoutPassword"))}
+        phrase={phrase}
+        phraseLabel={t("account:danger.phraseLabel")}
+        confirmLabel={t("account:danger.continue")}
         canConfirm={!hasPassword || password.length > 0}
         onConfirm={() => setStage("final")}
       >
         {match(hasPassword)
           .with(true, () => (
             <div className="space-y-2">
-              <Label htmlFor={passwordId}>Password</Label>
+              <Label htmlFor={passwordId}>{t("account:danger.password")}</Label>
               <Input
                 id={passwordId}
                 type="password"
@@ -98,10 +96,7 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
             </div>
           ))
           .otherwise(() => (
-            <p className="text-muted-foreground text-sm">
-              This account signs in with a code, so the deletion needs a sign-in less than an hour
-              old. If it is refused, sign out, sign in again, and come back.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("account:danger.codeOnlyHint")}</p>
           ))}
       </ConfirmPhraseDialog>
 
@@ -110,9 +105,9 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title="Last word"
-        description="Press the button and your account is gone. Nobody can bring it back."
-        confirmLabel="Delete forever"
+        title={t("account:danger.lastWord")}
+        description={t("account:danger.lastWordDescription")}
+        confirmLabel={t("account:danger.deleteForever")}
         pending={remove.isPending}
         error={remove.error}
         onConfirm={() =>
@@ -123,14 +118,8 @@ function DeleteAccountRow(props: AccountDangerZoneProps) {
           })
         }
       >
-        <p>
-          Your name, your picture, your signed-in devices, and every organization you belong to go
-          with it.
-        </p>
-        <p>
-          Attendance records stay, with nobody behind them, so the reports of past events still add
-          up.
-        </p>
+        <p>{t("account:danger.losing")}</p>
+        <p>{t("account:danger.keeping")}</p>
       </FinalWordDialog>
     </>
   );

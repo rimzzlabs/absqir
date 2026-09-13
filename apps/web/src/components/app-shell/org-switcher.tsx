@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import {
   DropdownMenu,
@@ -52,6 +53,7 @@ function OrgAvatar(props: { membership: ShellMembership; size?: "sm" | "default"
 }
 
 export function OrgSwitcher(props: OrgSwitcherProps) {
+  const t = useTranslate();
   const { isMobile } = useSidebar();
   const setActive = useSetActiveOrganization();
   const create = useCreateOrganization();
@@ -81,13 +83,13 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">
                 {match(props.active)
-                  .with(P.nullish, () => "No organization" as const)
+                  .with(P.nullish, () => t("shell:organizations.none"))
                   .otherwise((active) => active.name)}
               </span>
               <span className="text-muted-foreground truncate text-xs">
                 {match(props.active)
-                  .with(P.nullish, () => "Join one to get started" as const)
-                  .otherwise((active) => roleLabel(active.role))}
+                  .with(P.nullish, () => t("shell:organizations.noneHint"))
+                  .otherwise((active) => roleLabel(t, active.role))}
               </span>
             </div>
             <CaretUpDownIcon className="ml-auto" />
@@ -103,13 +105,13 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
           >
             {/* Base UI wants every label inside a group. */}
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("shell:organizations.label")}</DropdownMenuLabel>
             </DropdownMenuGroup>
             {match(props.memberships.length)
               .with(0, () => (
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="text-muted-foreground font-normal">
-                    You are in none yet.
+                    {t("shell:organizations.inNone")}
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>
               ))
@@ -129,7 +131,7 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
                   <OrgAvatar membership={membership} size="sm" />
                   <span className="truncate">{membership.name}</span>
                   <span className="text-muted-foreground ml-auto text-xs">
-                    {roleLabel(membership.role)}
+                    {roleLabel(t, membership.role)}
                   </span>
                 </DropdownMenuRadioItem>
               ))}
@@ -142,7 +144,7 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
                   <DropdownMenuGroup>
                     <DropdownMenuItem onClick={() => setCreating(true)}>
                       <PlusIcon />
-                      New organization
+                      {t("shell:organizations.create")}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </>
@@ -154,14 +156,14 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
         <ResponsiveDialog open={creating} onOpenChange={setCreating}>
           <ResponsiveDialogContent>
             <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>New organization</ResponsiveDialogTitle>
+              <ResponsiveDialogTitle>{t("shell:organizations.createTitle")}</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
-                You become its owner. Invite people from the settings page.
+                {t("shell:organizations.createDescription")}
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <ResponsiveDialogBody>
               <OrganizationForm
-                submitLabel="Create organization"
+                submitLabel={t("shell:organizations.createSubmit")}
                 pending={create.isPending}
                 onSubmit={(values) => create.mutate(values)}
               />

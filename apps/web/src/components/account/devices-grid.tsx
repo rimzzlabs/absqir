@@ -1,5 +1,6 @@
 import { formatDate, relativeToNow } from "@absqir/core/date";
 import { type DeviceKind, describeUserAgent } from "@absqir/core/user-agent";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
@@ -44,9 +45,12 @@ function DeviceCard(props: {
   onRevoke: (token: string) => void;
 }) {
   const { device } = props;
+  const t = useTranslate();
   const agent = describeUserAgent(device.userAgent);
   const KindIcon = KIND_ICONS[agent.kind];
-  const PlatformIcon = PLATFORM_ICONS[agent.platform];
+  const PlatformIcon = match(agent.platform)
+    .with(P.string, (platform) => PLATFORM_ICONS[platform])
+    .otherwise(() => undefined);
 
   return (
     <li
@@ -69,36 +73,43 @@ function DeviceCard(props: {
           <KindIcon className="size-6" weight="duotone" />
         </span>
         {match(device.current)
-          .with(true, () => <Badge>This device</Badge>)
+          .with(true, () => <Badge>{t("account:devices.thisDevice")}</Badge>)
           .otherwise(() => null)}
       </div>
 
       <div className="min-w-0">
         <p className="flex items-center gap-1.5 text-sm font-medium">
-          {match(Boolean(PlatformIcon))
-            .with(true, () => (
+          {match(PlatformIcon)
+            .with(P.nonNullable, (PlatformIcon) => (
               <PlatformIcon className="text-muted-foreground size-4 shrink-0" weight="fill" />
             ))
             .otherwise(() => null)}
           <span className="truncate">
-            {agent.browser} on {agent.platform}
+            {t("account:devices.on", {
+              browser: agent.browser ?? t("account:devices.unknownBrowser"),
+              platform: agent.platform ?? t("account:devices.unknownPlatform"),
+            })}
           </span>
         </p>
         <p className="text-muted-foreground text-sm">
           {match(device.current)
-            .with(true, () => "Active now" as const)
-            .otherwise(() => `Last seen ${relativeToNow(new Date(device.updatedAt))}`)}
+            .with(true, () => t("account:devices.activeNow"))
+            .otherwise(() =>
+              t("account:devices.lastSeen", { when: relativeToNow(new Date(device.updatedAt)) }),
+            )}
         </p>
       </div>
 
       <dl className="text-muted-foreground grid gap-1 text-xs">
         <div className="flex items-center justify-between gap-3">
-          <dt>Signed in</dt>
+          <dt>{t("account:devices.signedIn")}</dt>
           <dd className="text-foreground">{formatDate(new Date(device.createdAt))}</dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt>Address</dt>
-          <dd className="text-foreground truncate font-mono">{device.ipAddress ?? "Unknown"}</dd>
+          <dt>{t("account:devices.address")}</dt>
+          <dd className="text-foreground truncate font-mono">
+            {device.ipAddress ?? t("account:devices.unknownAddress")}
+          </dd>
         </div>
       </dl>
 
@@ -112,7 +123,7 @@ function DeviceCard(props: {
             disabled={props.pending}
             onClick={() => props.onRevoke(device.token)}
           >
-            Sign out
+            {t("account:devices.signOut")}
           </Button>
         ))}
     </li>
@@ -127,6 +138,7 @@ const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
  * the settings page.
  */
 export function DevicesGrid() {
+  const t = useTranslate();
   const devices = useDevices();
   const revoke = useRevokeSession();
   const rows = A.flatMap(devices.data?.pages ?? [], (page) => page.items);
@@ -165,8 +177,8 @@ export function DevicesGrid() {
                     onClick={() => void devices.fetchNextPage()}
                   >
                     {match(devices.isFetchingNextPage)
-                      .with(true, () => "Loading…" as const)
-                      .otherwise(() => "Load more" as const)}
+                      .with(true, () => t("common:actions.loading"))
+                      .otherwise(() => t("account:devices.loadMore"))}
                   </Button>
                 </div>
               ))
