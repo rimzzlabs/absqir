@@ -139,7 +139,7 @@ export const common = {
     soleOwner:
       "You hold the only owner seat. Make somebody else an owner first, or delete the organization.",
     description:
-      "You lose every screen behind this organization. Your directory entry stays, without an account behind it.",
+      "You lose access to everything in this organization. Your directory entry stays, without an account behind it.",
     confirmTitle: "Leave {{name}}?",
     confirmDescription:
       "You need a new invitation to come back. Your account and your history stay.",

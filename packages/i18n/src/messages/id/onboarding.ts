@@ -11,7 +11,7 @@ export const onboarding = {
     hint: "Kami membuka dalam bahasa yang diminta peramban Anda. Ubah di sini, atau nanti di pengaturan.",
   },
   profile: {
-    title: "Siapa nama Anda",
+    title: "Siapa nama Anda?",
     description: "Nama yang dilihat penyelenggara Anda.",
     descriptionWithPassword:
       "Nama yang dilihat penyelenggara Anda, dan kata sandi untuk masuk berikutnya.",
@@ -44,6 +44,6 @@ export const onboarding = {
     register: "Daftar",
     registering: "Mendaftar…",
   },
-  done: "Beres. Sebentar ya…",
+  done: "Beres. Sebentar…",
   pageTitle: "Selamat datang",
 } as const;

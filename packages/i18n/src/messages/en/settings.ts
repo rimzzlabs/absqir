@@ -182,18 +182,18 @@ export const settings = {
       title: "Delete this organization",
       ownerOnly: "Only an owner can delete the organization.",
       description:
-        "The directory, the groups, the events, and every attendance record go with it. Members keep their accounts and land in the waiting room.",
+        "The directory, the groups, the events, and every attendance record go with it. Members keep their accounts, but belong to no organization afterwards.",
       button: "Delete organization",
       confirmTitle: "Delete {{name}}?",
       confirmDescription: "Copy the short name below to go on.",
       phraseLabel: "organization short name",
       continue: "Continue",
-      lastWord: "Last word",
+      lastWord: "Last step",
       lastWordDescription: "Press the button and {{name}} is gone. Nobody can bring it back.",
       deleteForever: "Delete forever",
       losing:
         "The directory, the groups, the events, and every attendance record are erased. No report of a past event survives.",
-      keeping: "The members keep their accounts, and land in the waiting room.",
+      keeping: "The members keep their accounts, but belong to no organization afterwards.",
     },
   },
   preferences: {

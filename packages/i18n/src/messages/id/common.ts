@@ -46,11 +46,11 @@ export const common = {
   },
   confirmPhrase: {
     typeBefore: "Ketik",
-    typeAfter: "untuk memastikan",
-    inputLabel: "Ketik {{label}} untuk memastikan",
+    typeAfter: "untuk mengonfirmasi",
+    inputLabel: "Ketik {{label}} untuk mengonfirmasi",
   },
   groupPicker: {
-    empty: "Belum ada grup. Buat satu di halaman Grup, lalu kembali ke sini.",
+    empty: "Belum ada grup. Buat grup di halaman Grup, lalu kembali ke sini.",
   },
   camera: {
     title: "Kamera dimatikan untuk situs ini",
@@ -116,7 +116,7 @@ export const common = {
     none: "Tanpa tempat",
     noneHint: "Siapa pun yang punya kode bisa check-in, di mana pun dia berada.",
     within: "dalam {{radius, number}} m",
-    savePlaceLink: "Simpan satu tempat dulu",
+    savePlaceLink: "Simpan tempat dulu",
     savePlaceRest: "untuk memeriksa posisi orang.",
     require: "Tolak check-in yang dibuat di luar tempat ini",
     experimental: "Percobaan",
@@ -139,7 +139,7 @@ export const common = {
     soleOwner:
       "Anda satu-satunya pemilik. Jadikan orang lain pemilik dulu, atau hapus organisasinya.",
     description:
-      "Anda kehilangan setiap layar di balik organisasi ini. Data Anda di direktori tetap ada, tanpa akun di belakangnya.",
+      "Anda kehilangan akses ke semua isi organisasi ini. Data Anda di direktori tetap ada, tanpa akun di belakangnya.",
     confirmTitle: "Keluar dari {{name}}?",
     confirmDescription: "Anda butuh undangan baru untuk kembali. Akun dan riwayat Anda tetap ada.",
   },

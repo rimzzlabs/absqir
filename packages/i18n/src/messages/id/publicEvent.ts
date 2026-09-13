@@ -5,7 +5,7 @@ export const publicEvent = {
   full: " · penuh",
   youAreRegistered: "Anda sudah terdaftar",
   youAreRegisteredHint:
-    "Saat acaranya berlangsung, pindai layar di ruangan, atau tunjukkan pas Anda di pintu.",
+    "Saat acaranya berlangsung, pindai layar di ruangan, atau tunjukkan kartu masuk Anda di pintu.",
   myEvents: "Acara saya",
   withdrawing: "Menarik…",
   withdraw: "Tarik pendaftaran saya",
@@ -18,7 +18,7 @@ export const publicEvent = {
   registering: "Mendaftar…",
   register: "Daftar",
   joinNote: "Anda bergabung ke {{organization}} sebagai anggota, dan acara ini mengharapkan Anda.",
-  brokenTitle: "Tidak ada yang bisa didaftar",
+  brokenTitle: "Tidak ada acara yang bisa diikuti",
   brokenDescription:
     "Tautan ini tidak mengarah ke acara terbuka. Minta tautan baru ke penyelenggara.",
 } as const;

@@ -33,11 +33,11 @@ export const join = {
   },
   none: {
     title: "Anda belum ada di organisasi mana pun",
-    canCreate: "Mulai satu di bawah, atau tunggu undangan.",
+    canCreate: "Buat organisasi di bawah, atau tunggu undangan.",
     cannotCreate: "Penyelenggara harus mengundang Anda.",
   },
   create: "Buat organisasi",
-  createSeparate: "Mulai organisasi terpisah",
+  createSeparate: "Buat organisasi terpisah",
   invitationHint:
     "Undangan ke {{email}} membawa Anda langsung masuk. Buka tautannya dan Anda sudah di dalam.",
 } as const;

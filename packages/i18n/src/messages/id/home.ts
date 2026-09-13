@@ -25,9 +25,9 @@ export const home = {
     empty:
       "Belum ada acara dalam 30 hari terakhir yang ditutup. Angkanya muncul saat acara ditutup.",
     byEvent: "Kehadiran per acara",
-    byEventHint: "30 hari terakhir, paling lama dulu.",
+    byEventHint: "30 hari terakhir, mulai dari yang paling awal.",
     byGroup: "Kehadiran per grup",
-    byGroupHint: "30 hari terakhir, paling rendah dulu.",
+    byGroupHint: "30 hari terakhir, kehadiran terendah dulu.",
   },
   setup: {
     title: "Siapkan {{name}}",
@@ -42,13 +42,13 @@ export const home = {
   upcoming: {
     title: "Acara berikutnya",
     empty: "Belum ada rencana. Buat satu acara, atau jadwal yang membuatnya untuk Anda.",
-    hint: "Paling dekat dulu. Yang sedang berlangsung sudah menerima check-in.",
+    hint: "Paling dekat dulu. Yang sedang berlangsung sudah bisa menerima check-in.",
     allEvents: "Semua acara",
     schedules: "Jadwal",
   },
   member: {
-    readIn: "{{organization}}. Waktu dibaca dalam",
-    deviceClock: "jam perangkat ini",
+    readIn: "{{organization}}. Waktu ditampilkan menurut",
+    deviceClock: "jam di perangkat ini",
     checkIn: "Check-in",
     runningNow: "Sedang berlangsung",
     upNext: "Berikutnya",
@@ -58,7 +58,7 @@ export const home = {
       "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     at: "pukul {{time}}",
     opens: "Check-in dibuka {{when}}",
-    myPass: "Pas saya",
+    myPass: "Kartu masuk saya",
     agenda: "Akan datang",
     agendaLoading: "Memuat hari-hari Anda…",
     agendaEmpty: "Belum ada rencana untuk Anda.",
@@ -90,7 +90,7 @@ export const home = {
     join: "Bergabung atau mulai organisasi",
     invite: "Undang orang yang Anda harapkan hadir",
     inviteHint:
-      "Kirimi masing-masing undangan lewat email. Mereka masuk dan direktorinya terisi sendiri.",
+      "Kirim undangan lewat email ke masing-masing orang. Mereka masuk dan direktorinya terisi sendiri.",
     firstEvent: "Jalankan acara pertama Anda",
     firstEventHint: "Kode QR di layar, pemindai di pintu, dan daftar hadirnya terisi sendiri.",
     joinHintRequest:
@@ -104,7 +104,7 @@ export const home = {
     featureQr: "Check-in lewat QR",
     featureQrHint:
       "Kode di layar yang berganti setiap beberapa detik, atau pemindai di pintu untuk antrean.",
-    featureSchedules: "Jadwal yang merencanakan dirinya sendiri",
+    featureSchedules: "Jadwal yang berjalan sendiri",
     featureSchedulesHint:
       "Satu aturan membuat setiap rapat pagi Senin, sekalian mengundang seluruh grupnya.",
     featureReports: "Laporan yang bisa Anda serahkan",
@@ -117,6 +117,6 @@ export const home = {
       "Setiap akun membaca absqir dalam bahasanya sendiri. Ubah bahasa Anda di Pengaturan, Profil.",
     tipDomain:
       "Organisasi bisa mengklaim domain emailnya, supaya rekan baru menemukannya tanpa perlu diajak.",
-    openSource: "absqir bersifat sumber terbuka. Baca kodenya di GitHub.",
+    openSource: "absqir adalah perangkat lunak sumber terbuka. Baca kodenya di GitHub.",
   },
 } as const;

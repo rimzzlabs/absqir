@@ -1,4 +1,4 @@
-/** Satu pintu: email dulu, lalu kata sandi, kode, atau tanda tertutup. */
+/** Satu pintu: email dulu, lalu kata sandi, kode, atau pintu yang tertutup. */
 export const auth = {
   door: {
     signInTitle: "Masuk",
@@ -30,7 +30,7 @@ export const auth = {
   password: {
     title: "Selamat datang kembali",
     label: "Kata sandi",
-    remember: "Biarkan saya tetap masuk",
+    remember: "Tetap masuk di perangkat ini",
     signingIn: "Masuk…",
     signIn: "Masuk",
     useAnotherEmail: "Pakai email lain",

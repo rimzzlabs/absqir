@@ -29,10 +29,10 @@ export const account = {
   },
   timezone: {
     label: "Zona waktu",
-    hint: "Setiap jam di aplikasi ini, dan pengingat yang Anda terima, dibaca dalam jam ini. Orang di tempat lain melihat momen yang sama dalam jam mereka.",
+    hint: "Setiap waktu di aplikasi ini, dan pengingat yang Anda terima, ditampilkan menurut zona waktu ini. Orang di tempat lain melihat momen yang sama menurut zona waktu mereka.",
     search: "Cari kota atau zona",
     empty: "Tidak ada zona yang cocok.",
-    willRead: "Waktu akan dibaca dalam {{zone}}.",
+    willRead: "Waktu akan ditampilkan menurut {{zone}}.",
     followingDevice: "Mengikuti perangkat ini: {{zone}}.",
     following: "Mengikuti perangkat ini.",
     useDevice: "Pakai zona perangkat ini",
@@ -47,7 +47,7 @@ export const account = {
   },
   security: {
     signInTitle: "Cara masuk",
-    signInDescription: "Apa yang membuktikan ini Anda.",
+    signInDescription: "Apa yang membuktikan bahwa ini memang Anda.",
     password: "Kata sandi",
     passwordHint:
       "Minimal {{count, number}} karakter. Lupa? Keluar dulu, lalu pilih kode lewat email di halaman masuk.",
@@ -72,7 +72,7 @@ export const account = {
     on: "{{browser}} di {{platform}}",
     activeNow: "Aktif sekarang",
     lastSeen: "Terakhir terlihat {{when}}",
-    signedIn: "Mulai masuk",
+    signedIn: "Masuk sejak",
     address: "Alamat",
     unknownAddress: "Tidak diketahui",
     signOut: "Keluarkan",
@@ -134,7 +134,7 @@ export const account = {
     password: "Kata sandi",
     codeOnlyHint:
       "Akun ini masuk lewat kode, jadi penghapusan butuh sesi masuk yang kurang dari satu jam. Kalau ditolak, keluar, masuk lagi, lalu kembali ke sini.",
-    lastWord: "Kata terakhir",
+    lastWord: "Langkah terakhir",
     lastWordDescription:
       "Tekan tombolnya dan akun Anda hilang. Tidak ada yang bisa mengembalikannya.",
     deleteForever: "Hapus selamanya",

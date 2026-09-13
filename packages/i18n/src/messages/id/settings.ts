@@ -61,7 +61,7 @@ export const settings = {
   invitations: {
     formTitle: "Undang seseorang",
     formDescription:
-      "Dia menerima email berisi tautan. Di sisi sana dia membuat akun, atau masuk, lalu tiba di sini. Undangannya berlaku 7 hari.",
+      "Dia menerima email berisi tautan. Tautan itu dibuka untuk membuat akun atau masuk, lalu dia tiba di sini. Undangannya berlaku 7 hari.",
     email: "Email",
     role: "Peran",
     send: "Kirim",
@@ -95,7 +95,7 @@ export const settings = {
     deleteTitle: "Hapus {{name}}?",
     deleteUnused: "Belum ada yang memakainya.",
     deleteUsed:
-      "{{usage}} memakainya. Acara yang sudah dibuat menyimpan salinan lingkarannya sendiri, jadi check-in yang lalu tidak berubah arti. Acara berikutnya dari jadwal kehilangan pagarnya.",
+      "{{usage}} memakainya. Acara yang sudah dibuat menyimpan salinan lingkarannya sendiri, jadi check-in yang lalu tidak berubah arti. Acara berikutnya yang dibuat jadwal tidak lagi punya batas tempat.",
     deleting: "Menghapus…",
     deletePlace: "Hapus tempat",
     dialog: {
@@ -106,12 +106,13 @@ export const settings = {
       name: "Nama",
       namePlaceholder: "Kantor pusat, Aula B, Lokasi 3",
       address: "Alamat",
-      addressPlaceholder: "Tidak wajib. Hanya untuk dibaca, tidak dicari ke mana pun.",
-      radius: "Sejauh apa dari penanda check-in masih dihitung",
+      addressPlaceholder:
+        "Tidak wajib. Alamat ini hanya untuk dibaca, dan absqir tidak memakainya untuk mencari tempatnya.",
+      radius: "Sejauh apa dari penanda sebuah check-in masih dihitung",
       radiusLabel: "Jari-jari dalam meter",
       metres: "m",
       radiusHint:
-        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count, number}} m lingkarannya lebih kecil dari galat itu, jadi itulah batas bawahnya.",
+        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count, number}} m lingkarannya lebih kecil daripada tingkat kesalahan itu, jadi itulah batas terkecilnya.",
       placeHintBefore: "Ketuk peta untuk meletakkan penanda, atau tekan",
       placeHintButton: "Pakai lokasi saya",
       create: "Buat",
@@ -184,19 +185,19 @@ export const settings = {
       title: "Hapus organisasi ini",
       ownerOnly: "Hanya pemilik yang bisa menghapus organisasi.",
       description:
-        "Direktori, grup, acara, dan setiap catatan kehadiran ikut hilang. Anggota tetap punya akun dan kembali ke ruang tunggu.",
+        "Direktori, grup, acara, dan setiap catatan kehadiran ikut hilang. Anggota tetap punya akun, tetapi tidak lagi tergabung di organisasi mana pun.",
       button: "Hapus organisasi",
       confirmTitle: "Hapus {{name}}?",
       confirmDescription: "Salin nama pendek di bawah untuk lanjut.",
       phraseLabel: "nama pendek organisasi",
       continue: "Lanjut",
-      lastWord: "Kata terakhir",
+      lastWord: "Langkah terakhir",
       lastWordDescription:
         "Tekan tombolnya dan {{name}} hilang. Tidak ada yang bisa mengembalikannya.",
       deleteForever: "Hapus selamanya",
       losing:
         "Direktori, grup, acara, dan setiap catatan kehadiran dihapus. Tidak ada laporan acara lampau yang tersisa.",
-      keeping: "Anggota tetap punya akunnya, dan kembali ke ruang tunggu.",
+      keeping: "Anggota tetap punya akunnya, tetapi tidak lagi tergabung di organisasi mana pun.",
     },
   },
   preferences: {
@@ -214,7 +215,7 @@ export const settings = {
     },
     animation: "Animasi",
     animationHint:
-      "Mati menghentikan setiap transisi, popup, dan gerak halaman. Ikuti perangkat menghormati pengaturan kurangi gerak di sistem operasi.",
+      "Mati menghentikan setiap transisi, popup, dan gerak halaman. Ikuti perangkat akan mengikuti pengaturan kurangi gerak di sistem operasi Anda.",
     motions: {
       system: "Ikuti perangkat",
       on: "Nyala",

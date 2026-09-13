@@ -1,7 +1,8 @@
-/** Check-in: pemindai, pas, hasilnya, dan jalan kembali. */
+/** Check-in: pemindai, kartu masuk, hasilnya, dan jalan kembali. */
 export const checkin = {
   title: "Check-in",
-  description: "Arahkan kamera ke layar di ruangan. Atau tunjukkan pas Anda ke penyelenggara.",
+  description:
+    "Arahkan kamera ke layar di ruangan. Atau tunjukkan kartu masuk Anda ke penyelenggara.",
   scanner: {
     title: "Pindai layar ruangan",
     description:
@@ -46,17 +47,18 @@ export const checkin = {
     locatingTitle: "Mencari posisi Anda…",
   },
   pass: {
-    title: "Tunjukkan pas saya",
+    title: "Tunjukkan kartu masuk saya",
     description:
-      "Kalau penyelenggara yang memindai, bukan layar ruangan, tunjukkan ini. Satu pas untuk satu acara.",
+      "Kalau penyelenggara yang memindai, bukan layar ruangan, tunjukkan ini. Satu kartu masuk untuk satu acara.",
     myEvents: "Acara saya",
     runsUntil: "Berlangsung sampai {{time}}",
-    myPass: "Pas saya",
+    myPass: "Kartu masuk saya",
     upNext: "Berikutnya",
     opens: "Check-in dibuka {{when}}",
     emptyTitle: "Belum ada acara untuk Anda",
     emptyDescription: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
-    nothingRuns: "Tidak ada acara yang berlangsung sekarang, jadi belum ada pas yang berlaku.",
+    nothingRuns:
+      "Tidak ada acara yang berlangsung sekarang, jadi belum ada kartu masuk yang berlaku.",
   },
   steps: {
     title: "Cara kerjanya",
@@ -64,8 +66,9 @@ export const checkin = {
     one: "Arahkan ke layar ruangan",
     oneHint:
       "Penyelenggara menampilkan kode di layar atau di lembar cetak. Tahan kode itu di dalam bingkai.",
-    two: "Atau tunjukkan pas Anda",
-    twoHint: "Tidak ada layar di ruangan? Buka pas Anda dan biarkan penyelenggara memindainya.",
+    two: "Atau tunjukkan kartu masuk Anda",
+    twoHint:
+      "Tidak ada layar di ruangan? Buka kartu masuk Anda dan biarkan penyelenggara memindainya.",
     three: "Catatan Anda ditulis",
     threeHint: "Anda langsung melihat jam dan statusnya. Catatan itu masuk ke riwayat Anda juga.",
   },
@@ -111,12 +114,12 @@ export const checkin = {
   },
   scannerPage: {
     fallbackTitle: "Pemindai",
-    description: "Arahkan kamera ke pas di ponsel anggota. Setiap pas dihitung sekali.",
-    fallback: "Minta kode pas di bawah QR anggota, lalu ketik di bawah ini.",
+    description: "Arahkan kamera ke kartu masuk di ponsel anggota. Setiap kartu dihitung sekali.",
+    fallback: "Minta kode di bawah QR anggota, lalu ketik di bawah ini.",
     opening: "Membuka kamera…",
     notAvailable: "Kamera tidak tersedia",
-    manualPlaceholder: "Atau tempel pas di sini",
-    manualLabel: "Kode pas",
+    manualPlaceholder: "Atau tempel kode kartu di sini",
+    manualLabel: "Kode kartu masuk",
     checkIn: "Check-in",
     alreadyIn: "Sudah hadir sejak {{time}}",
     checkedIn: "Tercatat hadir pukul {{time}}",
@@ -141,7 +144,7 @@ export const checkin = {
     recorded: "Apa yang tercatat",
     scanned: "Dipindai",
     scannedRoomCode: "Kode yang berganti otomatis di layar ruangan",
-    scannedPass: "Pas, dibaca oleh pemindai penyelenggara",
+    scannedPass: "Kartu masuk, dibaca oleh pemindai penyelenggara",
     distance: "Jarak",
     distanceFrom: "{{distance}} dari tempatnya",
     noLocation: "Perangkat tidak mengirim lokasi",

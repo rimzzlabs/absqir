@@ -30,7 +30,7 @@ export const calendar = {
       "{{expected, number}} diharapkan · {{present, number}} hadir · {{late, number}} terlambat · {{absent, number}} tidak hadir",
     fromSchedule: "Dari sebuah jadwal",
     projectedHint:
-      "Jadwalnya membuat acara ini dua minggu sebelumnya. Belum ada yang perlu dilakukan.",
-    newEvent: "Acara baru pada hari ini",
+      "Jadwalnya membuat acara ini dua minggu sebelum harinya. Belum ada yang perlu dilakukan.",
+    newEvent: "Acara baru pada tanggal ini",
   },
 } as const;

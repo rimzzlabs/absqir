@@ -135,7 +135,7 @@ export const account = {
     password: "Password",
     codeOnlyHint:
       "This account signs in with a code, so the deletion needs a sign-in less than an hour old. If it is refused, sign out, sign in again, and come back.",
-    lastWord: "Last word",
+    lastWord: "Last step",
     lastWordDescription: "Press the button and your account is gone. Nobody can bring it back.",
     deleteForever: "Delete forever",
     losing:
