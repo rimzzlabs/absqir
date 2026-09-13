@@ -1,12 +1,13 @@
 import { formatDate } from "@absqir/core/date";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
-import { Button, buttonVariants } from "@absqir/ui/button";
+import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { A } from "@mobily/ts-belt";
 import { CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
+import { BackLink } from "@/components/shared/back-link";
 import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge, EventStatusBadge } from "@/components/shared/status-badge";
@@ -67,12 +68,7 @@ function ScannerBody(props: ScannerProps) {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 py-6">
       <div className="flex items-center justify-between">
-        <a
-          href={`/events/${props.eventId}`}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          ← Back
-        </a>
+        <BackLink href={`/events/${props.eventId}`}>Back</BackLink>
         {match(data)
           .with(P.nullish, () => null)
           .otherwise((data) => (
