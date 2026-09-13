@@ -58,7 +58,7 @@ export const home = {
       "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     at: "pukul {{time}}",
     opens: "Check-in dibuka {{when}}",
-    myPass: "Kartu masuk saya",
+    myPass: "QR saya",
     agenda: "Akan datang",
     agendaLoading: "Memuat hari-hari Anda…",
     agendaEmpty: "Belum ada rencana untuk Anda.",

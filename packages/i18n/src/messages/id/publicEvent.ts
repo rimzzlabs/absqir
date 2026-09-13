@@ -5,7 +5,7 @@ export const publicEvent = {
   full: " · penuh",
   youAreRegistered: "Anda sudah terdaftar",
   youAreRegisteredHint:
-    "Saat acaranya berlangsung, pindai layar di ruangan, atau tunjukkan kartu masuk Anda di pintu.",
+    "Saat acaranya berlangsung, pindai layar di ruangan, atau tunjukkan QR Anda di pintu.",
   myEvents: "Acara saya",
   withdrawing: "Menarik…",
   withdraw: "Tarik pendaftaran saya",

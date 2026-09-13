@@ -3,7 +3,7 @@ export const my = {
   events: {
     title: "Acara saya",
     description:
-      "Tempat Anda diharapkan hadir. Saat satu acara berlangsung, pindai layar di ruangan, atau tunjukkan kartu masuk Anda di pintu.",
+      "Tempat Anda diharapkan hadir. Saat satu acara berlangsung, pindai layar di ruangan, atau tunjukkan QR Anda di pintu.",
     upcoming: "Akan datang",
     past: "Sudah lewat",
     loadMore: "Muat lagi",
@@ -14,13 +14,13 @@ export const my = {
     emptyUpcomingHint: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     to: "{{start}} sampai {{end}}",
     registered: "Terdaftar",
-    myPass: "Kartu masuk saya",
+    myPass: "QR saya",
     opens: "Dibuka {{when}}",
   },
   pass: {
-    fallbackTitle: "Kartu masuk Anda",
-    description: "Tunjukkan ini ke penyelenggara di pintu. Kartu masuk ini milik Anda sendiri.",
-    alt: "Kartu masuk Anda sebagai kode QR",
+    fallbackTitle: "QR Anda",
+    description: "Tunjukkan ini ke penyelenggara di pintu. QR ini milik Anda sendiri.",
+    alt: "Kode QR check-in Anda",
   },
   event: {
     back: "Acara saya",
@@ -51,7 +51,7 @@ export const my = {
     noRecord: "Anda belum punya catatan untuk acara ini.",
     checkInWhenOpen: "Check-in begitu waktunya dibuka.",
     checkIn: "Check-in",
-    myPass: "Kartu masuk saya",
+    myPass: "QR saya",
     askLeave: "Ajukan izin",
     roster: "Siapa yang diharapkan hadir",
     expected: "{{count, number}} diharapkan",
