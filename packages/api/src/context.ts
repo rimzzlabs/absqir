@@ -1,6 +1,7 @@
 import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
 import { createDb, type Database } from "@absqir/db";
 import { createMailer, type Mailer } from "@absqir/transactional";
+import { match, P } from "ts-pattern";
 import type { ApiBindings } from "#src/bindings";
 import { type ApiEnv, parseEnv, secureCookies, socialProviderKeys } from "#src/env";
 
@@ -22,13 +23,15 @@ export interface RequestContext {
  * self-host that never set APP_URL still renders both against itself.
  */
 export function createMailerFor(env: ApiEnv, origin: string): Mailer | null {
-  return env.RESEND_API_KEY
-    ? createMailer({
-        apiKey: env.RESEND_API_KEY,
+  return match(env.RESEND_API_KEY)
+    .with(P.string.minLength(1), (RESEND_API_KEY) =>
+      createMailer({
+        apiKey: RESEND_API_KEY,
         from: env.EMAIL_FROM,
         appUrl: env.APP_URL ?? origin,
-      })
-    : null;
+      }),
+    )
+    .otherwise(() => null);
 }
 
 /** Loopback, link-local, and the three private IPv4 blocks. */
@@ -90,7 +93,9 @@ export function trustedOriginsFor(
   const stated = URL.parse(requestOrigin);
   if (!stated || !isLocalHost(stated.hostname)) return [origin];
 
-  return stated.origin === origin ? [origin] : [origin, stated.origin];
+  return match(stated.origin === origin)
+    .with(true, () => [origin])
+    .otherwise(() => [origin, stated.origin]);
 }
 
 /**
@@ -106,9 +111,9 @@ export function createRequestContext(
 ): RequestContext {
   const env = parseEnv(bindings);
 
-  const { db, close } = bindings.SHARED_DB
-    ? { db: bindings.SHARED_DB, close: async () => {} }
-    : createDb({ connectionString: bindings.HYPERDRIVE.connectionString });
+  const { db, close } = match(bindings.SHARED_DB)
+    .with(P.nullish, () => createDb({ connectionString: bindings.HYPERDRIVE.connectionString }))
+    .otherwise((SHARED_DB) => ({ db: SHARED_DB, close: async () => {} }));
 
   const mailer = createMailerFor(env, origin);
 

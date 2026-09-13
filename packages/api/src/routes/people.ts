@@ -4,6 +4,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
+import { match, P } from "ts-pattern";
 import { csvToRecords } from "#src/lib/csv";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
@@ -209,12 +210,16 @@ type PersonRow = typeof person.$inferSelect;
 
 function normalizeEmail(value: string | null | undefined) {
   const trimmed = value?.trim().toLowerCase();
-  return trimmed ? trimmed : null;
+  return match(trimmed)
+    .with(P.string.minLength(1), (trimmed) => trimmed)
+    .otherwise(() => null);
 }
 
 function normalizeIdentifier(value: string | null | undefined) {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  return match(trimmed)
+    .with(P.string.minLength(1), (trimmed) => trimmed)
+    .otherwise(() => null);
 }
 
 function isUniqueViolation(error: unknown) {
@@ -232,19 +237,30 @@ async function decorate(
   organizationId: string,
   rows: PersonRow[],
 ): Promise<Decorations> {
-  const userIds = A.flatMap(rows, (row) => (row.userId ? [row.userId] : []));
-  const emails = A.flatMap(rows, (row) => (row.email ? [row.email] : []));
+  const userIds = A.flatMap(rows, (row) =>
+    match(row.userId)
+      .with(P.string.minLength(1), (userId) => [userId])
+      .otherwise(() => []),
+  );
+  const emails = A.flatMap(rows, (row) =>
+    match(row.email)
+      .with(P.string.minLength(1), (email) => [email])
+      .otherwise(() => []),
+  );
   const ids = A.map(rows, (row) => row.id);
 
   const [members, invitations, memberships] = await Promise.all([
-    userIds.length
-      ? db
+    match(userIds.length > 0)
+      .with(true, () =>
+        db
           .select({ userId: member.userId, role: member.role })
           .from(member)
-          .where(and(eq(member.organizationId, organizationId), inArray(member.userId, userIds)))
-      : [],
-    emails.length
-      ? db
+          .where(and(eq(member.organizationId, organizationId), inArray(member.userId, userIds))),
+      )
+      .otherwise(() => []),
+    match(emails.length > 0)
+      .with(true, () =>
+        db
           .select({ email: invitation.email })
           .from(invitation)
           .where(
@@ -254,16 +270,19 @@ async function decorate(
               gt(invitation.expiresAt, new Date()),
               inArray(invitation.email, emails),
             ),
-          )
-      : [],
-    ids.length
-      ? db
+          ),
+      )
+      .otherwise(() => []),
+    match(ids.length > 0)
+      .with(true, () =>
+        db
           .select({ personId: groupMember.personId, id: group.id, name: group.name })
           .from(groupMember)
           .innerJoin(group, eq(group.id, groupMember.groupId))
           .where(inArray(groupMember.personId, ids))
-          .orderBy(asc(group.name))
-      : [],
+          .orderBy(asc(group.name)),
+      )
+      .otherwise(() => []),
   ]);
 
   const groups = new Map<string, { id: string; name: string }[]>();
@@ -281,8 +300,12 @@ async function decorate(
 }
 
 function toJson(row: PersonRow, extra: Decorations) {
-  const rawRole = row.userId ? extra.roles.get(row.userId) : undefined;
-  const role = rawRole !== undefined && isRoleName(rawRole) ? rawRole : null;
+  const rawRole = match(row.userId)
+    .with(P.string.minLength(1), (userId) => extra.roles.get(userId))
+    .otherwise(() => undefined);
+  const role = match(rawRole)
+    .with(P.when(isRoleName), (name) => name)
+    .otherwise(() => null);
 
   return {
     id: row.id,
@@ -291,7 +314,9 @@ function toJson(row: PersonRow, extra: Decorations) {
     identifier: row.identifier ?? null,
     userId: row.userId ?? null,
     role,
-    invited: row.email ? extra.invited.has(row.email) : false,
+    invited: match(row.email)
+      .with(P.string.minLength(1), (email) => extra.invited.has(email))
+      .otherwise(() => false),
     groups: extra.groups.get(row.id) ?? [],
     createdAt: row.createdAt.toISOString(),
   };
@@ -330,7 +355,9 @@ export const peopleRoutes = app
   .openapi(listRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const { q } = c.req.valid("query");
-    const needle = q ? `%${q.replaceAll(/[%_]/g, "")}%` : null;
+    const needle = match(q)
+      .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_]/g, "")}%`)
+      .otherwise(() => null);
 
     const rows = await c.var.db
       .select()
@@ -338,13 +365,15 @@ export const peopleRoutes = app
       .where(
         and(
           eq(person.organizationId, organizationId),
-          needle
-            ? or(
+          match(needle)
+            .with(P.string.minLength(1), (needle) =>
+              or(
                 ilike(person.name, needle),
                 ilike(person.email, needle),
                 ilike(person.identifier, needle),
-              )
-            : undefined,
+              ),
+            )
+            .otherwise(() => undefined),
         ),
       )
       .orderBy(asc(sql`lower(${person.name})`))
@@ -409,11 +438,15 @@ export const peopleRoutes = app
       const [updated] = await c.var.db
         .update(person)
         .set({
-          ...(body.name !== undefined ? { name: body.name } : {}),
-          ...(body.email !== undefined ? { email: normalizeEmail(body.email) } : {}),
-          ...(body.identifier !== undefined
-            ? { identifier: normalizeIdentifier(body.identifier) }
-            : {}),
+          ...match(body.name)
+            .with(undefined, () => ({}))
+            .otherwise((name) => ({ name })),
+          ...match(body.email)
+            .with(undefined, () => ({}))
+            .otherwise((email) => ({ email: normalizeEmail(email) })),
+          ...match(body.identifier)
+            .with(undefined, () => ({}))
+            .otherwise((identifier) => ({ identifier: normalizeIdentifier(identifier) })),
           updatedAt: new Date(),
         })
         .where(eq(person.id, id))
@@ -499,9 +532,19 @@ export const peopleRoutes = app
       .from(person)
       .where(eq(person.organizationId, organizationId));
 
-    const byEmail = new Map(A.flatMap(existing, (row) => (row.email ? [[row.email, row.id]] : [])));
+    const byEmail = new Map(
+      A.flatMap(existing, (row) =>
+        match(row.email)
+          .with(P.string.minLength(1), (email) => [[email, row.id] as const])
+          .otherwise(() => []),
+      ),
+    );
     const byIdentifier = new Map(
-      A.flatMap(existing, (row) => (row.identifier ? [[row.identifier, row.id]] : [])),
+      A.flatMap(existing, (row) =>
+        match(row.identifier)
+          .with(P.string.minLength(1), (identifier) => [[identifier, row.id] as const])
+          .otherwise(() => []),
+      ),
     );
 
     let created = 0;
@@ -533,8 +576,12 @@ export const peopleRoutes = app
             .update(person)
             .set({
               name,
-              ...(email ? { email } : {}),
-              ...(identifier ? { identifier } : {}),
+              ...match(email)
+                .with(P.string.minLength(1), (email) => ({ email }))
+                .otherwise(() => ({})),
+              ...match(identifier)
+                .with(P.string.minLength(1), (identifier) => ({ identifier }))
+                .otherwise(() => ({})),
               updatedAt: new Date(),
             })
             .where(eq(person.id, matchId));

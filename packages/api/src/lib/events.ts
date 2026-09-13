@@ -1,7 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { AttendanceStatus } from "@absqir/db/schema";
-import { A } from "@mobily/ts-belt";
+import { A, O, pipe } from "@mobily/ts-belt";
 import {
   and,
   asc,
@@ -18,7 +18,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
 import { type EventStatus, isBackfill, needsFinalising, statusOf } from "#src/lib/event-status";
 import { type EventRow, expectedPersonIds, registeredPersonIds } from "#src/lib/expected";
@@ -325,17 +325,23 @@ export async function listEvents(db: Database, params: ListEventsParams) {
   const cursor = decodeCursor(params.cursor);
   const startsAtText = sql<string>`${eventTable.startsAt}::text`;
 
-  const after = cursor
-    ? or(
+  const after = pipe(
+    O.fromNullable(cursor),
+    O.mapNullable((cursor) =>
+      or(
         (ascending ? gt : lt)(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
         and(
           eq(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
           (ascending ? gt : lt)(eventTable.id, cursor.id),
         ),
-      )
-    : undefined;
+      ),
+    ),
+    O.toUndefined,
+  );
 
-  const needle = params.q ? `%${params.q.replaceAll(/[%_\\]/g, "\\$&")}%` : null;
+  const needle = match(params.q)
+    .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_\\]/g, "\\$&")}%`)
+    .otherwise(() => null);
 
   const rows = await db
     .select({ row: eventTable, at: startsAtText })
@@ -348,24 +354,30 @@ export async function listEvents(db: Database, params: ListEventsParams) {
           .with("past", () => isPast(now))
           .with("all", () => undefined)
           .exhaustive(),
-        needle ? ilike(eventTable.title, needle) : undefined,
-        params.groupId
-          ? inArray(
+        match(needle)
+          .with(P.string.minLength(1), (needle) => ilike(eventTable.title, needle))
+          .otherwise(() => undefined),
+        match(params.groupId)
+          .with(P.string.minLength(1), (groupId) =>
+            inArray(
               eventTable.id,
               db
                 .select({ id: eventGroup.eventId })
                 .from(eventGroup)
-                .where(eq(eventGroup.groupId, params.groupId)),
-            )
-          : undefined,
-        params.expectedPersonId ? expects(db, params.expectedPersonId) : undefined,
+                .where(eq(eventGroup.groupId, groupId)),
+            ),
+          )
+          .otherwise(() => undefined),
+        match(params.expectedPersonId)
+          .with(P.string.minLength(1), (expectedPersonId) => expects(db, expectedPersonId))
+          .otherwise(() => undefined),
         after,
       ),
     )
     .orderBy(
-      ...(ascending
-        ? [asc(eventTable.startsAt), asc(eventTable.id)]
-        : [desc(eventTable.startsAt), desc(eventTable.id)]),
+      ...match(ascending)
+        .with(true, () => [asc(eventTable.startsAt), asc(eventTable.id)])
+        .otherwise(() => [desc(eventTable.startsAt), desc(eventTable.id)]),
     )
     .limit(params.limit + 1);
 

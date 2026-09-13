@@ -2,6 +2,7 @@ import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { settle, toEventJson } from "#src/lib/events";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import { occurrencesBetween } from "#src/lib/schedule";
@@ -120,7 +121,13 @@ export const calendarRoutes = app.openapi(calendarRoute, async (c) => {
 
   const projected = A.flatMap(rules, (rule) =>
     pipe(
-      occurrencesBetween(rule, from > now ? from : now, to),
+      occurrencesBetween(
+        rule,
+        match(from > now)
+          .with(true, () => from)
+          .otherwise(() => now),
+        to,
+      ),
       A.filter((startsAt) => !taken.has(`${rule.id}:${startsAt.getTime()}`)),
       A.map((startsAt) => ({
         scheduleId: rule.id,

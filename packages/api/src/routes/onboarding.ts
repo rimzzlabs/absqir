@@ -2,9 +2,10 @@ import { authErrorOf, isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A } from "@mobily/ts-belt";
+import { A, O, pipe } from "@mobily/ts-belt";
 import { and, count, eq, gt, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
+import { match, P } from "ts-pattern";
 import { forwardCookies } from "#src/lib/auth-forward";
 import { avatarSchema } from "#src/lib/avatar";
 import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
@@ -299,24 +300,28 @@ export const onboardingRoutes = app
     if (!row) return c.json({ error: "Unauthorized" }, 401);
 
     const found = await findOrganizationForEmail(db, row.email);
-    const workspace =
-      found && found.joinPolicy !== "closed"
-        ? {
-            organizationId: found.organizationId,
-            name: found.name,
-            slug: found.slug,
-            logo: found.logo,
-            joinPolicy: found.joinPolicy,
-            domain: found.domain,
-          }
-        : null;
+    const workspace = match(found)
+      .with({ joinPolicy: P.not("closed") }, (found) => ({
+        organizationId: found.organizationId,
+        name: found.name,
+        slug: found.slug,
+        logo: found.logo,
+        joinPolicy: found.joinPolicy,
+        domain: found.domain,
+      }))
+      .otherwise(() => null);
 
-    const open = workspace
-      ? await findPendingJoinRequest(db, {
-          organizationId: workspace.organizationId,
-          userId: row.id,
-        })
-      : null;
+    const open = await pipe(
+      O.fromNullable(workspace),
+      O.mapNullable(
+        async (workspace) =>
+          await findPendingJoinRequest(db, {
+            organizationId: workspace.organizationId,
+            userId: row.id,
+          }),
+      ),
+      O.toNullable,
+    );
 
     return c.json(
       {
@@ -329,13 +334,15 @@ export const onboardingRoutes = app
         canCreateOrganizations: row.canCreateOrganizations,
         membershipCount: memberships[0]?.value ?? 0,
         workspace,
-        joinRequest: open
-          ? {
-              id: open.id,
-              organizationName: workspace?.name ?? "",
-              createdAt: open.createdAt.toISOString(),
-            }
-          : null,
+        joinRequest: pipe(
+          O.fromNullable(open),
+          O.map((open) => ({
+            id: open.id,
+            organizationName: workspace?.name ?? "",
+            createdAt: open.createdAt.toISOString(),
+          })),
+          O.toNullable,
+        ),
         invitations: [
           ...A.map(invitations, (row) => ({
             id: row.id,
@@ -474,7 +481,9 @@ export const onboardingRoutes = app
 
     const result = await registerForEvent(c.var.db, { event: found.event, user: current });
     if (!result.ok) {
-      const message = result.reason === "full" ? "This event is full." : "This event is over.";
+      const message = match(result.reason)
+        .with("full", () => "This event is full.")
+        .otherwise(() => "This event is over.");
       return c.json({ error: message }, 409);
     }
 

@@ -9,6 +9,7 @@ import { JOIN_POLICIES } from "@absqir/db/schema";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, O, pipe, R } from "@mobily/ts-belt";
 import { and, asc, eq } from "drizzle-orm";
+import { match } from "ts-pattern";
 import { txtRecords } from "#src/lib/dns";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
@@ -227,7 +228,11 @@ export const domainRoutes = app
     if (taken[0]) {
       const here = taken[0].organizationId === organizationId;
       return c.json(
-        { error: here ? `${domain} is on your list already.` : `${domain} is claimed already.` },
+        {
+          error: match(here)
+            .with(true, () => `${domain} is on your list already.`)
+            .otherwise(() => `${domain} is claimed already.`),
+        },
         409,
       );
     }

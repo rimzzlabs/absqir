@@ -1,6 +1,7 @@
 import { A } from "@mobily/ts-belt";
 import { Body, Head, Html, Img, Preview } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
+import { match, P } from "ts-pattern";
 import { CONTENT_WIDTH, color, font } from "#src/theme";
 
 export interface EmailLayoutProps {
@@ -171,26 +172,30 @@ export function EmailLayout(props: EmailLayoutProps) {
  * beside it is live text, so a reader who blocks images still sees the name.
  */
 function BrandBar(props: { appUrl?: string }) {
-  const markUrl = props.appUrl ? `${props.appUrl.replace(/\/$/, "")}/brand/mark.png` : null;
+  const markUrl = match(props.appUrl)
+    .with(P.string.minLength(1), (appUrl) => `${appUrl.replace(/\/$/, "")}/brand/mark.png`)
+    .otherwise(() => null);
 
   return (
     <table role="presentation" cellPadding={0} cellSpacing={0} border={0} width="100%">
       <tbody>
         <tr>
-          {markUrl ? (
-            <td
-              width="36"
-              style={{ paddingBottom: "18px", paddingRight: "10px", verticalAlign: "middle" }}
-            >
-              <Img
-                src={markUrl}
+          {match(markUrl)
+            .with(P.string.minLength(1), (markUrl) => (
+              <td
                 width="36"
-                height="36"
-                alt=""
-                style={{ border: 0, borderRadius: "9px", display: "block" }}
-              />
-            </td>
-          ) : null}
+                style={{ paddingBottom: "18px", paddingRight: "10px", verticalAlign: "middle" }}
+              >
+                <Img
+                  src={markUrl}
+                  width="36"
+                  height="36"
+                  alt=""
+                  style={{ border: 0, borderRadius: "9px", display: "block" }}
+                />
+              </td>
+            ))
+            .otherwise(() => null)}
           <td style={{ paddingBottom: "18px", verticalAlign: "middle" }}>
             <span className="abs-ink" style={wordmark}>
               absqir
@@ -199,7 +204,9 @@ function BrandBar(props: { appUrl?: string }) {
         </tr>
         <tr>
           <td
-            colSpan={markUrl ? 2 : 1}
+            colSpan={match(markUrl)
+              .with(P.string.minLength(1), () => 2)
+              .otherwise(() => 1)}
             className="abs-rule"
             data-skip-in-text="true"
             style={{

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { A } from "@mobily/ts-belt";
+import { match, P } from "ts-pattern";
 import { confirmReset, resetAndStart } from "#src/commands/db";
 import { captureCompose, dockerAvailable } from "#src/lib/compose";
 import { psqlProbeArgs, readPsqlProbe } from "#src/lib/db-check";
@@ -83,7 +84,9 @@ export async function collectChecks(): Promise<CheckResult[]> {
     results.push({
       label: `${provider.label} sign-in has both keys`,
       ok: Boolean(id) && Boolean(providerSecret),
-      hint: `Set the missing one: absqir config set ${id ? secretKey : idKey} ...`,
+      hint: `Set the missing one: absqir config set ${match(id)
+        .with(P.string.minLength(1), () => secretKey)
+        .otherwise(() => idKey)} ...`,
     });
 
     // The provider refuses a callback it does not know, and says so on its
@@ -145,20 +148,27 @@ export async function doctor(): Promise<number> {
   // reads them while the health request runs.
   for (const result of results) ui.check(result);
 
-  const database = existsSync(".env")
-    ? await ui.spin({
-        start: "Asking Postgres to take the password in .env",
-        stop: "Asked Postgres for the password in .env",
-        task: databaseCheck,
-      })
-    : null;
+  const database = await match(existsSync(".env"))
+    .with(
+      true,
+      async () =>
+        await ui.spin({
+          start: "Asking Postgres to take the password in .env",
+          stop: "Asked Postgres for the password in .env",
+          task: databaseCheck,
+        }),
+    )
+    .otherwise(async () => null);
 
   if (database) {
     results.push(database);
     ui.check(database);
   }
 
-  const port = (existsSync(".env") ? readEnvValue(".env", "PORT") : null) ?? "4321";
+  const port =
+    match(existsSync(".env"))
+      .with(true, () => readEnvValue(".env", "PORT"))
+      .otherwise(() => null) ?? "4321";
 
   const healthy = await ui.spin({
     start: `Asking http://localhost:${port}/api/health`,
@@ -198,7 +208,11 @@ export async function doctor(): Promise<number> {
     if (await confirmReset()) return resetAndStart();
   }
 
-  ui.outroError(failed === 1 ? "1 check failed." : `${failed} checks failed.`);
+  ui.outroError(
+    match(failed)
+      .with(1, () => "1 check failed.")
+      .otherwise((failed) => `${failed} checks failed.`),
+  );
 
   return 1;
 }

@@ -1,6 +1,7 @@
 import { render } from "@react-email/render";
 import type { ReactElement } from "react";
 import { Resend } from "resend";
+import { match, P } from "ts-pattern";
 import { InvitationEmail, type InvitationEmailProps } from "#src/emails/invitation";
 import { NotificationEmail, type NotificationEmailProps } from "#src/emails/notification";
 import { OtpEmail, type OtpEmailProps, type OtpEmailPurpose } from "#src/emails/otp";
@@ -36,7 +37,12 @@ const OTP_SUBJECTS: Record<OtpEmailPurpose, (code: string) => string> = {
 export function createMailer(options: CreateMailerOptions) {
   const { apiKey, from, appUrl } = options;
   const resend = new Resend(apiKey);
-  const preferencesUrl = appUrl ? `${appUrl.replace(/\/$/, "")}/settings?tab=notifications` : null;
+  const preferencesUrl = match(appUrl)
+    .with(
+      P.string.minLength(1),
+      (appUrl) => `${appUrl.replace(/\/$/, "")}/settings?tab=notifications`,
+    )
+    .otherwise(() => null);
 
   /**
    * Both parts are built here rather than handed to Resend as `react`, so
@@ -80,7 +86,11 @@ export function createMailer(options: CreateMailerOptions) {
         element: NotificationEmail({ ...props, appUrl }),
         // A notification is the one message a reader can turn off, so it
         // says so in a header the inbox can act on, not only in the footer.
-        headers: preferencesUrl ? { "List-Unsubscribe": `<${preferencesUrl}>` } : undefined,
+        headers: match(preferencesUrl)
+          .with(P.string.minLength(1), (preferencesUrl) => ({
+            "List-Unsubscribe": `<${preferencesUrl}>`,
+          }))
+          .otherwise(() => undefined),
       });
     },
   };

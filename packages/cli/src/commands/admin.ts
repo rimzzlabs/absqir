@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { match } from "ts-pattern";
 import { usageOf } from "#src/lib/commands";
 import { runCompose } from "#src/lib/compose";
 import { readEnvValue } from "#src/lib/env-file";
@@ -55,24 +56,32 @@ export async function adminCreate(argv: string[]): Promise<number> {
 
   const typed =
     values.password ??
-    (ui.isRich()
-      ? await ui.password({
-          message: "Password (leave it empty to generate one)",
-          flag: "--password",
-        })
-      : "");
+    (await match(ui.isRich())
+      .with(
+        true,
+        async () =>
+          await ui.password({
+            message: "Password (leave it empty to generate one)",
+            flag: "--password",
+          }),
+      )
+      .otherwise(async () => ""));
 
   const password = typed || randomBytes(12).toString("base64url");
 
   const createOrgs =
     values["create-orgs"] ??
-    (ui.isRich()
-      ? await ui.confirm({
-          message: "Let this account create organizations?",
-          flag: "--create-orgs",
-          initialValue: true,
-        })
-      : false);
+    (await match(ui.isRich())
+      .with(
+        true,
+        async () =>
+          await ui.confirm({
+            message: "Let this account create organizations?",
+            flag: "--create-orgs",
+            initialValue: true,
+          }),
+      )
+      .otherwise(async () => false as const));
 
   ui.info(`Creating ${email} in a one-off container.`);
 
@@ -93,7 +102,9 @@ export async function adminCreate(argv: string[]): Promise<number> {
       name,
       "--password",
       password,
-      ...(createOrgs ? ["--create-orgs"] : []),
+      ...match(createOrgs)
+        .with(true, () => ["--create-orgs"])
+        .otherwise(() => []),
     ],
   });
 
@@ -109,7 +120,10 @@ export async function adminCreate(argv: string[]): Promise<number> {
     });
   }
 
-  const appUrl = (existsSync(".env") ? readEnvValue(".env", "APP_URL") : null) ?? DEFAULT_APP_URL;
+  const appUrl =
+    match(existsSync(".env"))
+      .with(true, () => readEnvValue(".env", "APP_URL"))
+      .otherwise(() => null) ?? DEFAULT_APP_URL;
 
   ui.outro(`Open ${appUrl} and sign in as ${email} with the password.`);
 
@@ -144,15 +158,17 @@ export async function adminPromote(argv: string[]): Promise<number> {
       "scripts/admin-promote.mjs",
       "--email",
       email,
-      ...(values.revoke ? ["--revoke"] : []),
+      ...match(values.revoke)
+        .with(true, () => ["--revoke"])
+        .otherwise(() => []),
     ],
   });
 
   if (code === 0) {
     ui.outro(
-      values.revoke
-        ? `${email} can no longer create organizations.`
-        : `${email} can create organizations.`,
+      match(values.revoke)
+        .with(true, () => `${email} can no longer create organizations.`)
+        .otherwise(() => `${email} can create organizations.`),
     );
   } else {
     ui.outroError(`docker compose stopped with code ${code}.`);
@@ -195,19 +211,23 @@ export async function memberAdd(argv: string[]): Promise<number> {
 
   const role =
     (values.role as Role | undefined) ??
-    (ui.isRich()
-      ? await ui.select<Role>({
-          message: "Role in the organization",
-          flag: "--role",
-          initialValue: "member",
-          options: [
-            { value: "owner", label: "owner", hint: "everything, including deletion" },
-            { value: "admin", label: "admin", hint: "members, events, settings" },
-            { value: "organizer", label: "organizer", hint: "events and attendance" },
-            { value: "member", label: "member", hint: "attends events" },
-          ],
-        })
-      : "member");
+    (await match(ui.isRich())
+      .with(
+        true,
+        async () =>
+          await ui.select<Role>({
+            message: "Role in the organization",
+            flag: "--role",
+            initialValue: "member",
+            options: [
+              { value: "owner", label: "owner", hint: "everything, including deletion" },
+              { value: "admin", label: "admin", hint: "members, events, settings" },
+              { value: "organizer", label: "organizer", hint: "events and attendance" },
+              { value: "member", label: "member", hint: "attends events" },
+            ],
+          }),
+      )
+      .otherwise(async () => "member" as const));
 
   const code = await runCompose({
     args: [

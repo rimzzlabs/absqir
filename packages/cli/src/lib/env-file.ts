@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 
 /**
  * Minimal .env editing: one KEY="value" per line, comments preserved. This is
@@ -28,7 +29,9 @@ export function setEnvValue(params: SetEnvValueParams): void {
   const next = `${key}="${value}"`;
 
   if (index === -1) {
-    const trailing = lines.at(-1) === "" ? lines.slice(0, -1) : lines;
+    const trailing = match(lines.at(-1) === "")
+      .with(true, () => lines.slice(0, -1))
+      .otherwise(() => lines);
     writeFileSync(path, `${[...trailing, next].join("\n")}\n`);
     return;
   }

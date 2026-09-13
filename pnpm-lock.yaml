@@ -13,6 +13,9 @@ importers:
       '@mobily/ts-belt':
         specifier: 4.0.0-rc.5
         version: 4.0.0-rc.5
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.5.12
@@ -276,6 +279,9 @@ importers:
       '@mobily/ts-belt':
         specifier: 4.0.0-rc.5
         version: 4.0.0-rc.5
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
     devDependencies:
       '@absqir/config':
         specifier: workspace:^

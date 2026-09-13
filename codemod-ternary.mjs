@@ -33,6 +33,20 @@ const bodyText = (node, src, text) => {
   return ts.isObjectLiteralExpression(node) ? `(${inner})` : inner;
 };
 
+/** True when the branch awaits in its own scope, so the arrow it moves into must be async. */
+function hasAwait(node) {
+  let found = false;
+  const walk = (n) => {
+    if (found) return;
+    if (ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) ||
+        ts.isArrowFunction(n) || ts.isMethodDeclaration(n)) return;
+    if (ts.isAwaitExpression(n)) { found = true; return; }
+    ts.forEachChild(n, walk);
+  };
+  walk(node);
+  return found;
+}
+
 /** True when the branch still reads the bound name, so the parameter is not unused. */
 function usesName(node, name) {
   let found = false;
@@ -50,20 +64,50 @@ const TYPEOF_PATTERNS = {
   bigint: "P.bigint", symbol: "P.symbol", function: "P.when((v) => typeof v === \"function\")",
 };
 
-/** Reads `typeof x === "number"` and `x instanceof C` back into a ts-pattern pattern. */
+const EQ = new Set([ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken]);
+const NEQ = new Set([ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken]);
+
+const isLiteralOperand = (n) =>
+  ts.isStringLiteral(n) || ts.isNumericLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n);
+const isNullishOperand = (n) => n.kind === ts.SyntaxKind.NullKeyword || isUndefLit(n);
+
+/**
+ * Reads a condition back into a ts-pattern pattern. `on` says which branch the
+ * pattern selects, so the other branch is the one that keeps the narrowed value.
+ */
 function narrowingOf(cond, src) {
-  if (ts.isBinaryExpression(cond) &&
-      (cond.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ||
-       cond.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken)) {
-    const [l, r] = [cond.left, cond.right];
-    const typeofSide = ts.isTypeOfExpression(l) ? l : ts.isTypeOfExpression(r) ? r : null;
-    const litSide = ts.isStringLiteral(l) ? l : ts.isStringLiteral(r) ? r : null;
-    if (typeofSide && litSide && TYPEOF_PATTERNS[litSide.text]) {
-      return { subject: typeofSide.expression, pattern: TYPEOF_PATTERNS[litSide.text] };
-    }
-  }
   if (ts.isBinaryExpression(cond) && cond.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword) {
-    return { subject: cond.left, pattern: `P.instanceOf(${cond.right.getText(src)})` };
+    return { subject: cond.left, pattern: `P.instanceOf(${cond.right.getText(src)})`, on: "true" };
+  }
+  if (!ts.isBinaryExpression(cond)) return null;
+  const eq = EQ.has(cond.operatorToken.kind);
+  const neq = NEQ.has(cond.operatorToken.kind);
+  if (!eq && !neq) return null;
+
+  const { left: l, right: r } = cond;
+  const on = eq ? "true" : "false";
+
+  const typeofSide = ts.isTypeOfExpression(l) ? l : ts.isTypeOfExpression(r) ? r : null;
+  const strSide = ts.isStringLiteral(l) ? l : ts.isStringLiteral(r) ? r : null;
+  if (typeofSide && strSide && TYPEOF_PATTERNS[strSide.text]) {
+    return { subject: typeofSide.expression, pattern: TYPEOF_PATTERNS[strSide.text], on };
+  }
+
+  const litSide = isLiteralOperand(l) ? l : isLiteralOperand(r) ? r : null;
+  const other = litSide === l ? r : l;
+  if (litSide && !ts.isTypeOfExpression(other)) {
+    return { subject: other, pattern: litSide.getText(src), on };
+  }
+
+  const nullSide = isNullishOperand(l) ? l : isNullishOperand(r) ? r : null;
+  if (nullSide) {
+    const subject = nullSide === l ? r : l;
+    // A loose comparison catches both null and undefined; a strict one does not.
+    const pattern = cond.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken ||
+      cond.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken
+      ? "P.nullish"
+      : nullSide.kind === ts.SyntaxKind.NullKeyword ? "null" : "undefined";
+    return { subject, pattern, on };
   }
   return null;
 }
@@ -89,40 +133,82 @@ function rebind(branch, condText, bind, src) {
   return text;
 }
 
-function plan(node, checker, src) {
+/** Contextual literal unions widen inside an arrow, so literal branches keep `as const`. */
+function needsConst(node, checker) {
+  const ctx = checker.getContextualType(node);
+  if (!ctx) return false;
+  const parts = ctx.isUnion() ? ctx.types : [ctx];
+  return parts.some((t) => t.isLiteral() || t.flags & ts.TypeFlags.BooleanLiteral);
+}
+
+/** `isThing(x)` where isThing is a type predicate, so the branch can narrow x. */
+function guardOf(cond, checker) {
+  if (!ts.isCallExpression(cond) || cond.arguments.length !== 1) return null;
+  const arg = cond.arguments[0];
+  if (!ts.isIdentifier(arg) && !ts.isPropertyAccessExpression(arg)) return null;
+  const sigType = checker.getTypeAtLocation(cond.expression);
+  for (const sig of sigType.getCallSignatures()) {
+    if (checker.getTypePredicateOfSignature(sig)) return { subject: arg, callee: cond.expression };
+  }
+  return null;
+}
+
+function plan(node, checker, src, flip = false) {
   const cond = node.condition;
+  // `!x ? a : b` is `x ? b : a`, and the positive form is the one every tier reads.
+  if (ts.isPrefixUnaryExpression(cond) && cond.operator === ts.SyntaxKind.ExclamationToken) {
+    return plan(
+      { ...node, condition: cond.operand, whenTrue: node.whenFalse, whenFalse: node.whenTrue,
+        getStart: node.getStart.bind(node), getEnd: node.getEnd.bind(node) },
+      checker, src, !flip,
+    );
+  }
   const condText = cond.getText(src);
-  const a = bodyText(node.whenTrue, src);
-  const b = bodyText(node.whenFalse, src);
+  const keepConst = needsConst(node, checker);
+  const lit = (n, t) => (keepConst && (isLiteralOperand(n) || n.kind === ts.SyntaxKind.TrueKeyword ||
+    n.kind === ts.SyntaxKind.FalseKeyword) ? `${t} as const` : t);
+  const a = lit(node.whenTrue, bodyText(node.whenTrue, src));
+  const b = lit(node.whenFalse, bodyText(node.whenFalse, src));
+  const isAsync = hasAwait(node.whenTrue) || hasAwait(node.whenFalse);
 
   // `typeof x === "number" ? ... : ...` loses its narrowing inside an arrow,
   // so it becomes a pattern on x instead of a boolean.
-  const narrow = narrowingOf(cond, src);
+  const guard = guardOf(cond, checker);
+  const narrow = guard
+    ? { subject: guard.subject, pattern: `P.when(${guard.callee.getText(src)})`, on: "true" }
+    : narrowingOf(cond, src);
   if (narrow) {
     const subjText = narrow.subject.getText(src);
     const bind = ts.isIdentifier(narrow.subject)
       ? narrow.subject.text
       : ts.isPropertyAccessExpression(narrow.subject) ? narrow.subject.name.text : null;
     if (bind) {
-      const aBound = ts.isIdentifier(narrow.subject)
-        ? a
-        : bodyText(node.whenTrue, src, rebind(node.whenTrue, subjText, bind, src));
+      // The pattern selects one branch; the other one is where the value is narrowed.
+      const matched = narrow.on === "true" ? node.whenTrue : node.whenFalse;
+      const rest = narrow.on === "true" ? node.whenFalse : node.whenTrue;
+      const bound = (n) =>
+        lit(n, ts.isIdentifier(narrow.subject)
+          ? bodyText(n, src)
+          : bodyText(n, src, rebind(n, subjText, bind, src)));
       return {
         kind: "narrow", subject: subjText, pattern: narrow.pattern,
-        bind: usesName(node.whenTrue, bind) ? bind : null, a: aBound, b,
+        matched: bound(matched), rest: bound(rest),
+        matchedBind: usesName(matched, bind) ? bind : null,
+        restBind: usesName(rest, bind) ? bind : null,
+        isAsync,
       };
     }
   }
 
   if (ts.isPropertyAccessExpression(cond) && cond.name.text === "length") {
-    return { kind: "match", subject: `${condText} > 0`, a, b };
+    return { kind: "match", subject: `${condText} > 0`, a, b, isAsync };
   }
-  if (looksBoolean(cond)) return { kind: "match", subject: condText, a, b };
+  if (looksBoolean(cond)) return { kind: "match", subject: condText, a, b, isAsync };
 
   const type = checker.getTypeAtLocation(cond);
   const parts = type.isUnion() ? type.types : [type];
   if (parts.every((p) => p.flags & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral))) {
-    return { kind: "match", subject: condText, a, b };
+    return { kind: "match", subject: condText, a, b, isAsync };
   }
 
   const hasNullish = parts.some((p) => p.flags & NULLISH);
@@ -142,7 +228,9 @@ function plan(node, checker, src) {
       : bodyText(node.whenTrue, src, rebind(node.whenTrue, condText, bind, src));
     return {
       kind: "narrow", subject: condText, pattern: "P.string.minLength(1)",
-      bind: usesName(node.whenTrue, bind) ? bind : null, a: aBound, b,
+      matched: aBound, rest: b,
+      matchedBind: usesName(node.whenTrue, bind) ? bind : null, restBind: null,
+      isAsync,
     };
   }
 
@@ -153,32 +241,41 @@ function plan(node, checker, src) {
       : bodyText(node.whenTrue, src, rebind(node.whenTrue, condText, bind, src));
     const used = usesName(node.whenTrue, bind);
     if (isNullLit(node.whenFalse) || isUndefLit(node.whenFalse)) {
+      const bodyType = checker.getTypeAtLocation(node.whenTrue);
+      const bodyParts = bodyType.isUnion() ? bodyType.types : [bodyType];
       return {
-        kind: "option", source: condText, bind, body: aBound,
-        out: isNullLit(node.whenFalse) ? "O.toNullable" : "O.toUndefined",
+        kind: "option", source: condText, bind: used ? bind : null, body: aBound,
+        // O.map refuses a nullable result; O.mapNullable folds it back to None.
+        map: bodyParts.some((t) => t.flags & NULLISH) ? "O.mapNullable" : "O.map",
+        out: isNullLit(node.whenFalse) ? "O.toNullable" : "O.toUndefined", isAsync,
       };
     }
-    return { kind: "nullish", subject: condText, bind: used ? bind : null, a: aBound, b };
+    return { kind: "nullish", subject: condText, bind: used ? bind : null, a: aBound, b, isAsync };
   }
 
-  return { kind: "match", subject: `Boolean(${condText})`, a, b };
+  return { kind: "match", subject: `Boolean(${condText})`, a, b, isAsync };
 }
 
 /** `{ foo: foo }` reads as `{ foo }` once a branch binds the value to its own name. */
-const shorthand = (out) => out.replace(/\b(\w+): \1(?=[,}\s])/g, "$1");
+const shorthand = (out) => out.replace(/\b(\w+): \1(?=\s*[,}])/g, "$1");
 
 function render(p) {
+  // A branch that awaits keeps its await, so both arrows turn async and the
+  // whole match is awaited in the place the ternary used to sit.
+  const fn = p.isAsync ? "async " : "";
+  const lead = p.isAsync ? "await " : "";
+  const param = (bind) => (bind ? `${fn}(${bind})` : `${fn}()`);
   if (p.kind === "option") {
-    return `pipe(O.fromNullable(${p.source}), O.map((${p.bind}) => ${p.body}), ${p.out})`;
+    return `${lead}pipe(O.fromNullable(${p.source}), ${p.map}(${param(p.bind)} => ${p.body}), ${p.out})`;
   }
-  const arg = p.bind ? `(${p.bind})` : "()";
+  const none = `${fn}()`;
   if (p.kind === "nullish") {
-    return `match(${p.subject}).with(P.nullish, () => ${p.b}).otherwise(${arg} => ${p.a})`;
+    return `${lead}match(${p.subject}).with(P.nullish, ${none} => ${p.b}).otherwise(${param(p.bind)} => ${p.a})`;
   }
   if (p.kind === "narrow") {
-    return `match(${p.subject}).with(${p.pattern}, ${arg} => ${p.a}).otherwise(() => ${p.b})`;
+    return `${lead}match(${p.subject}).with(${p.pattern}, ${param(p.matchedBind)} => ${p.matched}).otherwise(${param(p.restBind)} => ${p.rest})`;
   }
-  return `match(${p.subject}).with(true, () => ${p.a}).otherwise(() => ${p.b})`;
+  return `${lead}match(${p.subject}).with(true, ${none} => ${p.a}).otherwise(${none} => ${p.b})`;
 }
 
 const MODULES = { match: "ts-pattern", P: "ts-pattern", O: "@mobily/ts-belt", pipe: "@mobily/ts-belt" };
@@ -251,10 +348,12 @@ for (const configPath of PROJECTS) {
     for (const node of hits.reverse()) {
       const p = plan(node, checker, src);
       stats[p.kind]++;
+      const out = shorthand(render(p));
       if (p.kind === "option") { names.add("pipe"); names.add("O"); }
-      else if (p.kind === "match") names.add("match");
-      else { names.add("match"); names.add("P"); }
-      text = text.slice(0, node.getStart(src)) + shorthand(render(p)) + text.slice(node.getEnd());
+      else names.add("match");
+      // Only a pattern helper needs the P import; a literal pattern does not.
+      if (/\bP\./.test(out)) names.add("P");
+      text = text.slice(0, node.getStart(src)) + out + text.slice(node.getEnd());
       total++;
     }
     writeFileSync(src.fileName, ensureImports(text, names));

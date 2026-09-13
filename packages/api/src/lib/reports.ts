@@ -2,6 +2,7 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { A } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import { match, P } from "ts-pattern";
 
 const { event: eventTable, attendanceRecord, person, group, groupMember, eventGroup } = schema;
 
@@ -65,13 +66,17 @@ async function eventIdsInRange(
     lte(eventTable.startsAt, range.to),
   );
 
-  const rows = range.groupId
-    ? await db
-        .selectDistinct({ id: eventTable.id })
-        .from(eventTable)
-        .innerJoin(eventGroup, eq(eventGroup.eventId, eventTable.id))
-        .where(and(where, eq(eventGroup.groupId, range.groupId)))
-    : await db.select({ id: eventTable.id }).from(eventTable).where(where);
+  const rows = await match(range.groupId)
+    .with(
+      P.string.minLength(1),
+      async (groupId) =>
+        await db
+          .selectDistinct({ id: eventTable.id })
+          .from(eventTable)
+          .innerJoin(eventGroup, eq(eventGroup.eventId, eventTable.id))
+          .where(and(where, eq(eventGroup.groupId, groupId))),
+    )
+    .otherwise(async () => await db.select({ id: eventTable.id }).from(eventTable).where(where));
 
   return A.map(rows, (row) => row.id);
 }
@@ -155,9 +160,14 @@ export async function reportSummary(
   ]);
 
   const row = totals[0];
-  const counts: StatusCounts = row
-    ? { present: row.present, late: row.late, excused: row.excused, absent: row.absent }
-    : { ...EMPTY };
+  const counts: StatusCounts = match(row)
+    .with(P.nullish, () => ({ ...EMPTY }))
+    .otherwise((row) => ({
+      present: row.present,
+      late: row.late,
+      excused: row.excused,
+      absent: row.absent,
+    }));
 
   return {
     ...base,
@@ -229,10 +239,11 @@ export async function reportByGroup(
   // A person can sit in more than one group, so the counts are read per group
   // instead of grouped once: the same record belongs to every group the
   // person is in.
-  const rows =
-    ids.length === 0
-      ? []
-      : await db
+  const rows = await match(ids.length)
+    .with(0, async () => [])
+    .otherwise(
+      async () =>
+        await db
           .select({
             groupId: groupMember.groupId,
             people: sql<number>`count(distinct ${attendanceRecord.personId})`.mapWith(Number),
@@ -249,15 +260,21 @@ export async function reportByGroup(
               ),
             ),
           )
-          .groupBy(groupMember.groupId);
+          .groupBy(groupMember.groupId),
+    );
 
   const byGroup = new Map(A.map(rows, (row) => [row.groupId, row]));
 
   return A.map(groups, (row) => {
     const found = byGroup.get(row.id);
-    const counts: StatusCounts = found
-      ? { present: found.present, late: found.late, excused: found.excused, absent: found.absent }
-      : { ...EMPTY };
+    const counts: StatusCounts = match(found)
+      .with(P.nullish, () => ({ ...EMPTY }))
+      .otherwise((found) => ({
+        present: found.present,
+        late: found.late,
+        excused: found.excused,
+        absent: found.absent,
+      }));
 
     return {
       groupId: row.id,
@@ -300,9 +317,14 @@ export async function reportByEvent(
 
   return A.map(events, (row) => {
     const found = byEvent.get(row.id);
-    const counts: StatusCounts = found
-      ? { present: found.present, late: found.late, excused: found.excused, absent: found.absent }
-      : { ...EMPTY };
+    const counts: StatusCounts = match(found)
+      .with(P.nullish, () => ({ ...EMPTY }))
+      .otherwise((found) => ({
+        present: found.present,
+        late: found.late,
+        excused: found.excused,
+        absent: found.absent,
+      }));
 
     return {
       eventId: row.id,

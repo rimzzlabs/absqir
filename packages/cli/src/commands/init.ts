@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { A } from "@mobily/ts-belt";
+import { match, P } from "ts-pattern";
 import { readEnvValue } from "#src/lib/env-file";
 import { UsageError } from "#src/lib/errors";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
@@ -168,14 +169,18 @@ export async function init(argv: string[]): Promise<number> {
 
   const target =
     positionals[0] ??
-    (guided
-      ? await ui.text({
-          message: "Where do the files go?",
-          flag: "a directory",
-          placeholder: ".",
-          defaultValue: ".",
-        })
-      : ".");
+    (await match(guided)
+      .with(
+        true,
+        async () =>
+          await ui.text({
+            message: "Where do the files go?",
+            flag: "a directory",
+            placeholder: ".",
+            defaultValue: ".",
+          }),
+      )
+      .otherwise(async () => "."));
 
   const dir = resolve(target);
   const composePath = join(dir, "docker-compose.yml");
@@ -205,7 +210,12 @@ export async function init(argv: string[]): Promise<number> {
   const flagError = validateAppUrl(appUrlFlag);
   if (flagError) throw new UsageError(`${flagError} (--app-url)`);
 
-  const appUrl = (appUrlFlag ?? (guided ? await askAppUrl() : DEFAULT_APP_URL)).replace(/\/+$/, "");
+  const appUrl = (
+    appUrlFlag ??
+    (await match(guided)
+      .with(true, async () => await askAppUrl())
+      .otherwise(async () => DEFAULT_APP_URL))
+  ).replace(/\/+$/, "");
 
   if (guided && values["registration-open"] === undefined) {
     ui.note({
@@ -223,21 +233,25 @@ export async function init(argv: string[]): Promise<number> {
 
   const registrationOpen =
     values["registration-open"] ??
-    (guided
-      ? (await ui.select<"invite" | "open">({
-          message: "After your own account, who can join?",
-          flag: "--registration-open",
-          initialValue: "invite",
-          options: [
-            { value: "invite", label: "Invite only", hint: "an office, a school, a team" },
-            {
-              value: "open",
-              label: "Anyone with an email address",
-              hint: "a public community",
-            },
-          ],
-        })) === "open"
-      : false);
+    (await match(guided)
+      .with(
+        true,
+        async () =>
+          (await ui.select<"invite" | "open">({
+            message: "After your own account, who can join?",
+            flag: "--registration-open",
+            initialValue: "invite",
+            options: [
+              { value: "invite", label: "Invite only", hint: "an office, a school, a team" },
+              {
+                value: "open",
+                label: "Anyone with an email address",
+                hint: "a public community",
+              },
+            ],
+          })) === "open",
+      )
+      .otherwise(async () => false as const));
 
   if (guided && values["resend-key"] === undefined) {
     ui.note({
@@ -256,25 +270,33 @@ export async function init(argv: string[]): Promise<number> {
 
   const resendKey =
     values["resend-key"] ??
-    (guided
-      ? await ui.password({
-          message: "Resend API key",
-          flag: "--resend-key",
-          validate: validateNoQuote,
-        })
-      : "");
+    (await match(guided)
+      .with(
+        true,
+        async () =>
+          await ui.password({
+            message: "Resend API key",
+            flag: "--resend-key",
+            validate: validateNoQuote,
+          }),
+      )
+      .otherwise(async () => ""));
 
   const emailFrom =
     values["email-from"] ??
-    (guided && resendKey
-      ? await ui.text({
-          message: "From address on every email",
-          flag: "--email-from",
-          placeholder: DEFAULT_EMAIL_FROM,
-          defaultValue: DEFAULT_EMAIL_FROM,
-          validate: validateNoQuote,
-        })
-      : DEFAULT_EMAIL_FROM);
+    (await match(Boolean(guided && resendKey))
+      .with(
+        true,
+        async () =>
+          await ui.text({
+            message: "From address on every email",
+            flag: "--email-from",
+            placeholder: DEFAULT_EMAIL_FROM,
+            defaultValue: DEFAULT_EMAIL_FROM,
+            validate: validateNoQuote,
+          }),
+      )
+      .otherwise(async () => DEFAULT_EMAIL_FROM));
 
   const askProviders = async () => {
     if (!guided) return [];
@@ -290,21 +312,23 @@ export async function init(argv: string[]): Promise<number> {
     });
   };
 
-  const chosen = values.provider ? parseProviders(values.provider) : await askProviders();
+  const chosen = await match(values.provider)
+    .with(P.nullish, async () => await askProviders())
+    .otherwise(async (provider) => parseProviders(provider));
 
-  const providers = guided
-    ? await askCredentials({ appUrl, chosen })
-    : A.map(chosen, (id) => ({ id, clientId: "", clientSecret: "" }));
+  const providers = await match(guided)
+    .with(true, async () => await askCredentials({ appUrl, chosen }))
+    .otherwise(async () => A.map(chosen, (id) => ({ id, clientId: "", clientSecret: "" })));
 
   // Postgres reads POSTGRES_PASSWORD once, when it creates its data volume.
   // A fresh password on a second init would lock the app out of its own
   // database, so an existing .env keeps its secrets.
-  const kept = existsSync(envPath)
-    ? {
-        secret: readEnvValue(envPath, "BETTER_AUTH_SECRET"),
-        dbPassword: readEnvValue(envPath, "POSTGRES_PASSWORD"),
-      }
-    : { secret: null, dbPassword: null };
+  const kept = match(existsSync(envPath))
+    .with(true, () => ({
+      secret: readEnvValue(envPath, "BETTER_AUTH_SECRET"),
+      dbPassword: readEnvValue(envPath, "POSTGRES_PASSWORD"),
+    }))
+    .otherwise(() => ({ secret: null, dbPassword: null }));
 
   mkdirSync(dir, { recursive: true });
   writeFileSync(composePath, COMPOSE_TEMPLATE);
@@ -324,9 +348,12 @@ export async function init(argv: string[]): Promise<number> {
 
   ui.success(`Wrote ${composePath}`);
   ui.success(
-    kept.dbPassword
-      ? `Wrote ${envPath}, and kept its secrets so the database still opens`
-      : `Wrote ${envPath} with fresh secrets`,
+    match(kept.dbPassword)
+      .with(
+        P.string.minLength(1),
+        () => `Wrote ${envPath}, and kept its secrets so the database still opens`,
+      )
+      .otherwise(() => `Wrote ${envPath} with fresh secrets`),
   );
 
   if (resendKey && emailFrom.includes("onboarding@resend.dev")) {
@@ -342,9 +369,11 @@ export async function init(argv: string[]): Promise<number> {
     if (provider) ui.success(`${provider.label} sign-in is ready.`);
   }
 
-  const next = resendKey
-    ? []
-    : ["absqir config set RESEND_API_KEY re_...   codes and invitations go by email"];
+  const next = match(resendKey)
+    .with(P.string.minLength(1), () => [])
+    .otherwise(() => [
+      "absqir config set RESEND_API_KEY re_...   codes and invitations go by email",
+    ]);
 
   ui.note({
     title: "Next steps",

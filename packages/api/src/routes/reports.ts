@@ -2,6 +2,7 @@ import type { Database } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A } from "@mobily/ts-belt";
 import type { Context } from "hono";
+import { match } from "ts-pattern";
 import { csvCell } from "#src/lib/csv";
 import { settle } from "#src/lib/events";
 import { organizationGuard, organizationIdOf, requireRole } from "#src/lib/org-access";
@@ -167,7 +168,9 @@ function rangeOfUrl(url: URL): ReportRange | null {
 }
 
 function percent(rate: number | null): string {
-  return rate === null ? "" : `${Math.round(rate * 100)}%`;
+  return match(rate)
+    .with(null, () => "")
+    .otherwise((rate) => `${Math.round(rate * 100)}%`);
 }
 
 type CsvTable = "people" | "groups" | "events";
@@ -227,7 +230,9 @@ async function csvLines(
         csvCell(row.title),
         row.startsAt,
         row.endsAt,
-        row.closed ? "yes" : "no",
+        match(row.closed)
+          .with(true, () => "yes")
+          .otherwise(() => "no"),
         row.counts.present,
         row.counts.late,
         row.counts.excused,

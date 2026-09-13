@@ -1,6 +1,6 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { A, F, pipe } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { and, desc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
@@ -240,15 +240,19 @@ export const leaveRoutes = base
     const limit = query.limit ?? PAGE_SIZE;
     const cursor = decodeCursor(query.cursor);
 
-    const after = cursor
-      ? or(
+    const after = pipe(
+      O.fromNullable(cursor),
+      O.mapNullable((cursor) =>
+        or(
           lt(leaveRequest.createdAt, sql`${cursor.at}::timestamptz`),
           and(
             eq(leaveRequest.createdAt, sql`${cursor.at}::timestamptz`),
             lt(leaveRequest.id, cursor.id),
           ),
-        )
-      : undefined;
+        ),
+      ),
+      O.toUndefined,
+    );
 
     const list = await rows(c)
       .where(

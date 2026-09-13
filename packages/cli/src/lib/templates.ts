@@ -1,4 +1,5 @@
 import { A } from "@mobily/ts-belt";
+import { match, P } from "ts-pattern";
 import { callbackUrl, keysOf, PROVIDERS, type ProviderId } from "#src/lib/providers";
 
 export const DEFAULT_APP_URL = "http://localhost:4321";
@@ -84,7 +85,9 @@ function oauthBlock(params: OauthBlockParams): string {
   for (const provider of PROVIDERS) {
     const [idKey, secretKey] = keysOf(provider.id);
     const picked = A.getBy(params.providers, (entry) => entry.id === provider.id);
-    const prefix = picked ? "" : "# ";
+    const prefix = match(picked)
+      .with(P.nullish, () => "# ")
+      .otherwise(() => "");
 
     lines.push("");
     lines.push(`# ${provider.label}: ${provider.console}`);
@@ -116,7 +119,9 @@ PORT="4321"
 
 # Set to true when the instance is behind HTTPS. Over plain http the browser
 # drops Secure cookies and sign-in fails silently.
-SECURE_COOKIES="${params.appUrl.startsWith("https://") ? "true" : "false"}"
+SECURE_COOKIES="${match(params.appUrl.startsWith("https://"))
+    .with(true, () => "true")
+    .otherwise(() => "false")}"
 
 # Required. Sign-in codes and invitations travel by email through Resend.
 # Get a key at https://resend.com, then set the From address to a domain

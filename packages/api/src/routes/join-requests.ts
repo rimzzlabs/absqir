@@ -5,6 +5,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A } from "@mobily/ts-belt";
 import { and, desc, eq, ne } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
+import { match } from "ts-pattern";
 import { deliver } from "#src/lib/notifications";
 import { notifyJoinDecided, notifyJoinRequested } from "#src/lib/notify";
 import { activateOrganization, setOnboardingStep } from "#src/lib/onboarding";
@@ -261,7 +262,9 @@ export const joinRequestRoutes = app
       organizationId: found.organizationId,
       userId: current.id,
       domain: found.domain,
-      message: message && message.length > 0 ? message : null,
+      message: match(Boolean(message && message.length > 0))
+        .with(true, () => message)
+        .otherwise(() => null),
     });
 
     // The account is set up. It waits on the home page, with the frame around
@@ -326,14 +329,16 @@ export const joinRequestRoutes = app
       .from(joinRequest)
       .innerJoin(user, eq(user.id, joinRequest.userId))
       .where(
-        status === "all"
-          ? eq(joinRequest.organizationId, organizationId)
-          : and(
+        match(status)
+          .with("all", () => eq(joinRequest.organizationId, organizationId))
+          .otherwise((status) =>
+            and(
               eq(joinRequest.organizationId, organizationId),
               status === "pending"
                 ? eq(joinRequest.status, "pending")
                 : ne(joinRequest.status, "pending"),
             ),
+          ),
       )
       .orderBy(desc(joinRequest.createdAt))
       .limit(MAX_REQUESTS);
@@ -392,7 +397,9 @@ export const joinRequestRoutes = app
         status: decision,
         decidedBy: current.id,
         decidedAt: new Date(),
-        decisionNote: note && note.length > 0 ? note : null,
+        decisionNote: match(Boolean(note && note.length > 0))
+          .with(true, () => note)
+          .otherwise(() => null),
         updatedAt: new Date(),
       })
       .where(eq(joinRequest.id, found.id));
