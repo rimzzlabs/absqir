@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { QrDisplay } from "@/components/events/qr-display";
 import Layout from "@/layouts/layout.astro";
 
@@ -12,8 +13,9 @@ if (!id) {
 if (role === "member") {
   return Astro.redirect("/my/events", 302);
 }
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<Layout title="Room screen — absqir">
+<Layout title={`${t("shell:titles.display")} — absqir`}>
   <QrDisplay client:load locale={Astro.locals.locale} eventId={id} />
 </Layout>

@@ -56,6 +56,18 @@ export const shell = {
     empty: "Belum ada apa-apa. Pengingat dan permintaan muncul di sini.",
     all: "Semua notifikasi",
   },
+  errorPages: {
+    notFoundCode: "404",
+    notFoundTitle: "Halaman tidak ditemukan",
+    notFoundBody: "Halaman ini tidak ada. Alamatnya bisa salah, atau halamannya sudah pindah.",
+    home: "Ke halaman beranda",
+    serverCode: "500",
+    serverTitle: "Ada yang salah",
+    serverBody:
+      "Server tidak bisa menyelesaikan permintaan Anda. Masalahnya ada di sisi kami. Coba lagi sebentar.",
+    tryAgain: "Coba lagi",
+  },
+  brandHome: "beranda absqir",
   titles: {
     home: "Beranda",
     events: "Acara",

@@ -1,4 +1,5 @@
 import { MAX_RADIUS_METERS, MIN_RADIUS_METERS } from "@absqir/core/geo";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { CrosshairIcon, SpinnerIcon } from "@phosphor-icons/react";
@@ -42,6 +43,7 @@ const FALLBACK_ZOOM = 2;
 const PLACED_ZOOM = 17;
 
 export function MapPicker(props: MapPickerProps) {
+  const t = useTranslate();
   const host = useRef<HTMLDivElement>(null);
   const map = useRef<LeafletMap | null>(null);
   const marker = useRef<Marker | null>(null);
@@ -57,6 +59,9 @@ export function MapPicker(props: MapPickerProps) {
   const radius = useRef(props.value.radiusMeters);
   radius.current = props.value.radiusMeters;
   const start = useRef<[number, number]>([props.value.latitude, props.value.longitude]);
+  // The setup effect depends on nothing, so the words it needs ride a ref.
+  const markerTitle = useRef(t("common:mapPicker.markerTitle"));
+  markerTitle.current = t("common:mapPicker.markerTitle");
 
   useEffect(() => {
     const element = host.current;
@@ -85,7 +90,7 @@ export function MapPicker(props: MapPickerProps) {
       marker.current = L.marker(at, {
         draggable: true,
         keyboard: true,
-        title: "The place. Drag to move it.",
+        title: markerTitle.current,
         icon: L.divIcon({
           className: "",
           html: '<span class="block size-4 rounded-full border-2 border-white bg-primary shadow-md"></span>',
@@ -164,7 +169,7 @@ export function MapPicker(props: MapPickerProps) {
           props.className,
         )}
         role="application"
-        aria-label="Pick the place on the map"
+        aria-label={t("common:mapPicker.label")}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -174,11 +179,9 @@ export function MapPicker(props: MapPickerProps) {
             .otherwise(() => (
               <CrosshairIcon />
             ))}
-          Use my location
+          {t("common:mapPicker.useMyLocation")}
         </Button>
-        <p className="text-muted-foreground text-xs">
-          Tap the map, or drag the pin. The circle is how far from it a check-in still counts.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("common:mapPicker.hint")}</p>
       </div>
     </div>
   );

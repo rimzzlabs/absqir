@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import Layout from "@/layouts/layout.astro";
 
 interface Props {
@@ -6,11 +7,12 @@ interface Props {
 }
 
 const { title } = Astro.props;
+const t = translatorFor(Astro.locals.locale);
 ---
 
 <Layout title={title}>
   <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-16">
-    <a href="/" class="mb-8 inline-flex items-center gap-2" aria-label="absqir home">
+    <a href="/" class="mb-8 inline-flex items-center gap-2" aria-label={t("shell:brandHome")}>
       <img src="/favicon.svg" alt="" class="size-7" />
       <span class="font-serif text-xl font-bold tracking-tight">absqir</span>
     </a>

@@ -1,8 +1,11 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { MyLeavePage } from "@/components/my/my-leave-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<DashboardLayout title="My leave">
+<DashboardLayout title={t("shell:titles.myLeave")}>
   <MyLeavePage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

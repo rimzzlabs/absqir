@@ -27,6 +27,16 @@ export const account = {
     sendNew: "Send a new code",
     useAnother: "Use another address",
   },
+  timezone: {
+    label: "Time zone",
+    hint: "Every time in the app, and the reminders you receive, read in this clock. People in other places see the same moment in theirs.",
+    search: "Search a city or a zone",
+    empty: "No zone matches.",
+    willRead: "Times will read in {{zone}}.",
+    followingDevice: "Following this device: {{zone}}.",
+    following: "Following this device.",
+    useDevice: "Use this device's zone",
+  },
   connected: {
     label: "Connected accounts",
     hint: "Sign in with a provider instead of a code. The address on the provider does not have to match this account. The last way in cannot be disconnected.",

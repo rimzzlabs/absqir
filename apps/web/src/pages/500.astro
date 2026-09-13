@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { buttonVariants } from "@absqir/ui/button";
 import Layout from "@/layouts/layout.astro";
 
@@ -13,18 +14,21 @@ console.error("Unhandled render error:", error);
 
 // A link back to the failing URL retries the request without client JS.
 const retryHref = Astro.url.pathname + Astro.url.search;
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<Layout title="Something went wrong">
+<Layout title={t("shell:titles.serverError")}>
   <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-16">
-    <p class="text-muted-foreground font-mono text-sm">500</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold tracking-tight">Something went wrong</h1>
-    <p class="text-muted-foreground mt-1 mb-8 text-sm">
-      The server could not finish your request. The problem is on our side. Try again in a moment.
-    </p>
+    <p class="text-muted-foreground font-mono text-sm">{t("shell:errorPages.serverCode")}</p>
+    <h1 class="mt-2 font-serif text-3xl font-bold tracking-tight">
+      {t("shell:errorPages.serverTitle")}
+    </h1>
+    <p class="text-muted-foreground mt-1 mb-8 text-sm">{t("shell:errorPages.serverBody")}</p>
     <div class="flex items-center gap-3">
-      <a href={retryHref} class={buttonVariants({ variant: "default" })}>Try again</a>
-      <a href="/" class={buttonVariants({ variant: "outline" })}>Go to the home page</a>
+      <a href={retryHref} class={buttonVariants({ variant: "default" })}>
+        {t("shell:errorPages.tryAgain")}
+      </a>
+      <a href="/" class={buttonVariants({ variant: "outline" })}>{t("shell:errorPages.home")}</a>
     </div>
   </main>
 </Layout>

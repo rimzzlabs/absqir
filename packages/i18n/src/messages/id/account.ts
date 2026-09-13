@@ -27,6 +27,16 @@ export const account = {
     sendNew: "Kirim kode baru",
     useAnother: "Pakai alamat lain",
   },
+  timezone: {
+    label: "Zona waktu",
+    hint: "Setiap jam di aplikasi ini, dan pengingat yang Anda terima, dibaca dalam jam ini. Orang di tempat lain melihat momen yang sama dalam jam mereka.",
+    search: "Cari kota atau zona",
+    empty: "Tidak ada zona yang cocok.",
+    willRead: "Waktu akan dibaca dalam {{zone}}.",
+    followingDevice: "Mengikuti perangkat ini: {{zone}}.",
+    following: "Mengikuti perangkat ini.",
+    useDevice: "Pakai zona perangkat ini",
+  },
   connected: {
     label: "Akun tertaut",
     hint: "Masuk lewat penyedia, bukan lewat kode. Alamat di penyedia tidak harus sama dengan akun ini. Jalan masuk terakhir tidak bisa dilepas.",

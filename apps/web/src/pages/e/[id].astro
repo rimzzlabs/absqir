@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { PublicEventPage } from "@/components/public-event/public-event-page";
 import AuthLayout from "@/layouts/auth-layout.astro";
 import { setEventCookie } from "@/lib/event-cookie";
@@ -12,9 +13,10 @@ if (!id) {
 // The public face of an event. Works signed out; the cookie lets a stranger
 // create an account through this event's door.
 setEventCookie(Astro.cookies, id);
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<AuthLayout title="Register — absqir">
+<AuthLayout title={`${t("shell:titles.register")} — absqir`}>
   <PublicEventPage
     client:load
     locale={Astro.locals.locale}

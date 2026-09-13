@@ -56,6 +56,18 @@ export const shell = {
     empty: "Nothing yet. Reminders and requests land here.",
     all: "All notifications",
   },
+  errorPages: {
+    notFoundCode: "404",
+    notFoundTitle: "Page not found",
+    notFoundBody: "This page does not exist. The address can be wrong, or the page moved.",
+    home: "Go to the home page",
+    serverCode: "500",
+    serverTitle: "Something went wrong",
+    serverBody:
+      "The server could not finish your request. The problem is on our side. Try again in a moment.",
+    tryAgain: "Try again",
+  },
+  brandHome: "absqir home",
   titles: {
     home: "Home",
     events: "Events",
