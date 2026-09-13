@@ -44,11 +44,11 @@ before you save, and the organizers get no closed notification for it.
 
 ## Statuses per person
 
-| Status    | How it happens                                                               |
-| --------- | ---------------------------------------------------------------------------- |
-| `present` | Checked in no later than `late after` minutes past the start.                |
+| Status    | How it happens                                                             |
+| --------- | -------------------------------------------------------------------------- |
+| `present` | Checked in no later than `late after` minutes past the start.              |
 | `late`    | Checked in after that, while the event still runs.                         |
-| `excused` | Set by an organizer by hand, or written when a leave request is approved.    |
+| `excused` | Set by an organizer by hand, or written when a leave request is approved.  |
 | `absent`  | Written when the event closes, for everyone expected who never checked in. |
 
 An organizer can change any status by hand from the event page. The record
@@ -89,6 +89,13 @@ as text when the camera is not available.
 
 Either way, the clock decides present or late. A second scan of the same
 person changes nothing and says so.
+
+## Checking where people are
+
+An event can also refuse a check-in made away from the place it belongs to.
+That is its own topic, because a browser cannot tell a real satellite fix
+from a made-up one, and the rule is built around that limit rather than
+around the map. See [Checking where people are](/location).
 
 ## Schedules
 

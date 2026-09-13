@@ -71,6 +71,20 @@
       "when": 1788986157008,
       "tag": "0009_rename_session_to_event",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789270737678,
+      "tag": "0010_eminent_toad_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789320294392,
+      "tag": "0011_known_misty_knight",
+      "breakpoints": true
     }
   ]
 }

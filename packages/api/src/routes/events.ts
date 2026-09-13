@@ -17,7 +17,9 @@ import {
   toEventJson,
   upsertRecord,
 } from "#src/lib/events";
+import { checkLocation, type LocationClaim, recordAttempt } from "#src/lib/location-check";
 import { parsePass, verifyPass } from "#src/lib/member-pass";
+import { readNetwork } from "#src/lib/network";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import { createQrToken, verifyQrToken } from "#src/lib/qr-token";
 import { randomSecret } from "#src/lib/schedule";
@@ -55,6 +57,16 @@ const eventSchema = z.object({
   closedAt: z.string().nullable(),
   scheduleId: z.string().nullable(),
   status: statusEnum,
+  requireLocation: z.boolean(),
+  fence: z
+    .object({
+      locationId: z.string().nullable(),
+      name: z.string().nullable(),
+      latitude: z.number(),
+      longitude: z.number(),
+      radiusMeters: z.number(),
+    })
+    .nullable(),
   groups: z.array(groupRef),
   counts: countsSchema,
 });
@@ -70,6 +82,62 @@ const recordSchema = z.object({
   method: z.string().nullable(),
   checkedInAt: z.string().nullable(),
   note: z.string().nullable(),
+  location: z
+    .object({
+      verdict: z.enum(["inside", "edge", "outside", "coarse", "missing"]),
+      distanceMeters: z.number().nullable(),
+      accuracyMeters: z.number().nullable(),
+      riskScore: z.number(),
+      riskReasons: z.array(z.string()),
+      flagged: z.boolean(),
+      reviewedAt: z.string().nullable(),
+    })
+    .nullable(),
+});
+
+/**
+ * One reading from the device. Everything the Geolocation API hands over is
+ * kept, because the parts nobody thinks about, the altitude and the shape of
+ * the error bar, are what tell a satellite fix from a made-up one.
+ */
+const fixSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  accuracy: z.number().min(0).max(1_000_000),
+  altitude: z.number().nullable(),
+  altitudeAccuracy: z.number().nullable(),
+  speed: z.number().nullable(),
+  heading: z.number().nullable(),
+  at: z.number().int(),
+});
+
+/**
+ * What the page reports about itself and about where it is. None of it is
+ * trusted: a client can send anything here, and the point of the burst is
+ * that a convincing lie has to be consistent across every field and across
+ * every event the person attends.
+ */
+const locationClaimSchema = z.object({
+  fixes: z.array(fixSchema).min(1).max(20),
+  nativeGeolocation: z.boolean(),
+  automated: z.boolean(),
+  timezoneOffsetMinutes: z.number().int().min(-840).max(840).nullable(),
+  timezone: z.string().max(64).nullable(),
+});
+
+const locationResult = z.object({
+  verdict: z.enum(["inside", "edge", "outside", "coarse", "missing"]).nullable(),
+  distanceMeters: z.number().nullable(),
+  /** True when the organizer will see this record flagged. */
+  flagged: z.boolean(),
+  /** The refused attempt, for a member who wants to report it. Null on success. */
+  attemptId: z.string().nullable(),
+  /**
+   * The report this member already sent for this event, when there is one.
+   * The page needs it before it offers the button: one report stands per
+   * event, so offering a second only to refuse it on send is a dead end.
+   */
+  report: z.object({ status: z.enum(["pending", "approved", "declined"]) }).nullable(),
 });
 
 const checkInResult = z.object({
@@ -79,6 +147,8 @@ const checkInResult = z.object({
   already: z.boolean(),
   eventTitle: z.string(),
   personName: z.string(),
+  /** Null when the event never asked where the person was. */
+  location: locationResult.nullable(),
 });
 
 const eventInput = z.object({
@@ -101,6 +171,10 @@ const eventInput = z.object({
   allowWalkIns: z.boolean().optional(),
   registrationOpen: z.boolean().optional(),
   registrationLimit: z.number().int().min(1).max(100_000).nullable().optional(),
+  /** A saved place. Null clears the fence. */
+  locationId: z.string().nullable().optional(),
+  /** Opts the event in. Without a place it stays off, because there is no fence. */
+  requireLocation: z.boolean().optional(),
   groupIds: z.array(z.string()).max(100),
 });
 
@@ -329,7 +403,17 @@ const checkInRoute = createRoute({
     "Any signed-in member of the event's organization. The token proves the reader saw the live screen; the account proves who they are.",
   request: {
     params: idParam,
-    body: { content: { "application/json": { schema: z.object({ token: z.string().min(1) }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            token: z.string().min(1),
+            /** Required only when the event asks for it. */
+            location: locationClaimSchema.nullable().optional(),
+          }),
+        },
+      },
+    },
   },
   responses: {
     200: { description: "Checked in", content: { "application/json": { schema: checkInResult } } },
@@ -342,10 +426,35 @@ const checkInRoute = createRoute({
       content: { "application/json": { schema: errorSchema } },
     },
     404: notFound,
+    409: {
+      description: "Outside the event's place, or the reading was unusable",
+      content: { "application/json": { schema: errorSchema.extend({ location: locationResult }) } },
+    },
     410: {
       description: "Check-in is not open",
       content: { "application/json": { schema: errorSchema } },
     },
+  },
+});
+
+const reviewRoute = createRoute({
+  method: "post",
+  path: "/events/{id}/records/{personId}/review",
+  tags: ["events"],
+  summary: "Clear the flag on a check-in",
+  description:
+    "Marks a flagged record as looked at. The signals stay on the row, so the history is not lost. To reject the check-in, mark the person absent instead.",
+  request: {
+    params: z.object({ id: z.string(), personId: z.string() }),
+  },
+  responses: {
+    200: {
+      description: "Reviewed",
+      content: { "application/json": { schema: z.object({ reviewedAt: z.string() }) } },
+    },
+    401: unauthorized,
+    403: forbidden,
+    404: notFound,
   },
 });
 
@@ -356,7 +465,17 @@ const scanRoute = createRoute({
   summary: "Check someone in from the pass on their phone",
   request: {
     params: idParam,
-    body: { content: { "application/json": { schema: z.object({ code: z.string().min(1) }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            code: z.string().min(1),
+            /** The scanning device's own reading, not the member's. */
+            location: locationClaimSchema.nullable().optional(),
+          }),
+        },
+      },
+    },
   },
   responses: {
     200: { description: "Checked in", content: { "application/json": { schema: checkInResult } } },
@@ -367,6 +486,10 @@ const scanRoute = createRoute({
     401: unauthorized,
     403: forbidden,
     404: notFound,
+    409: {
+      description: "The scanning device is outside the event's place",
+      content: { "application/json": { schema: errorSchema.extend({ location: locationResult }) } },
+    },
     410: {
       description: "Check-in is not open",
       content: { "application/json": { schema: errorSchema } },
@@ -389,6 +512,69 @@ async function validGroupIds(c: Parameters<typeof organizationIdOf>[0], ids: str
     .where(and(eq(group.organizationId, organizationId), inArray(group.id, wanted)));
 
   return A.map(rows, (row) => row.id);
+}
+
+/**
+ * Turns a saved place into the fence columns an event carries. The copy is
+ * the point: an event judged a check-in against the circle as it stood that
+ * day, and moving the place later must not rewrite that.
+ *
+ * `requireLocation` without a place is not an error, it is simply off. There
+ * is no fence to be outside of.
+ */
+async function fenceColumns(
+  c: Parameters<typeof organizationIdOf>[0],
+  locationId: string | null | undefined,
+  requireLocation: boolean,
+) {
+  const organizationId = organizationIdOf(c);
+
+  const place = await match(locationId)
+    .with(P.string.minLength(1), async (id) => {
+      const rows = await c.var.db
+        .select()
+        .from(schema.location)
+        .where(and(eq(schema.location.id, id), eq(schema.location.organizationId, organizationId)))
+        .limit(1);
+
+      return rows[0] ?? null;
+    })
+    .otherwise(() => Promise.resolve(null));
+
+  return match([requireLocation, place] as const)
+    .with([true, P.nonNullable], ([, found]) => ({
+      locationId: found.id,
+      requireLocation: true,
+      latitude: found.latitude,
+      longitude: found.longitude,
+      radiusMeters: found.radiusMeters,
+    }))
+    .otherwise(() => ({
+      locationId: place?.id ?? null,
+      requireLocation: false,
+      latitude: null,
+      longitude: null,
+      radiusMeters: null,
+    }));
+}
+
+/** The report this person already has on this event, if any. */
+async function reportStateFor(
+  c: Parameters<typeof organizationIdOf>[0],
+  eventId: string,
+  personId: string,
+) {
+  const found = await c.var.db
+    .select({ status: schema.checkInReport.status })
+    .from(schema.checkInReport)
+    .where(
+      and(eq(schema.checkInReport.eventId, eventId), eq(schema.checkInReport.personId, personId)),
+    )
+    .limit(1);
+
+  return match(found[0])
+    .with(P.nullish, () => null)
+    .otherwise((row) => ({ status: row.status }));
 }
 
 const FORBIDDEN_MESSAGE = "This needs the organizer role or higher";
@@ -438,6 +624,7 @@ export const eventRoutes = app
     }
 
     const groupIds = await validGroupIds(c, body.groupIds);
+    const fence = await fenceColumns(c, body.locationId, body.requireLocation ?? false);
     const id = crypto.randomUUID();
 
     await c.var.db.transaction(async (tx) => {
@@ -453,6 +640,7 @@ export const eventRoutes = app
         allowWalkIns: body.allowWalkIns ?? false,
         registrationOpen: body.registrationOpen ?? false,
         registrationLimit: body.registrationLimit ?? null,
+        ...fence,
         secret: randomSecret(),
         createdBy: user?.id ?? null,
       });
@@ -515,6 +703,18 @@ export const eventRoutes = app
       O.toNullable,
     );
 
+    // A body that mentions neither field leaves the fence exactly as it was.
+    const mentionsFence = body.locationId !== undefined || body.requireLocation !== undefined;
+    const nextLocationId = match(body.locationId)
+      .with(undefined, () => found.locationId)
+      .otherwise((locationId) => locationId);
+
+    const fence = await match(mentionsFence)
+      .with(true, () =>
+        fenceColumns(c, nextLocationId, body.requireLocation ?? found.requireLocation),
+      )
+      .otherwise(() => Promise.resolve(null));
+
     await c.var.db.transaction(async (tx) => {
       await tx
         .update(eventTable)
@@ -542,6 +742,7 @@ export const eventRoutes = app
           ...match(body.registrationLimit)
             .with(undefined, () => ({}))
             .otherwise((registrationLimit) => ({ registrationLimit })),
+          ...(fence ?? {}),
           updatedAt: new Date(),
         })
         .where(eq(eventTable.id, id));
@@ -707,7 +908,7 @@ export const eventRoutes = app
   .openapi(checkInRoute, async (c) => {
     const user = c.get("user");
     const { id } = c.req.valid("param");
-    const { token } = c.req.valid("json");
+    const { token, location } = c.req.valid("json");
     const now = new Date();
 
     if (!user) return c.json({ error: "Unauthorized" }, 401);
@@ -751,8 +952,54 @@ export const eventRoutes = app
           already: true,
           eventTitle: found.title,
           personName: me.name,
+          location: null,
         },
         200,
+      );
+    }
+
+    const network = readNetwork(c.req.raw);
+    const claim: LocationClaim | null = location ?? null;
+    const decision = await checkLocation({
+      db: c.var.db,
+      eventId: id,
+      personId: me.id,
+      event: found,
+      claim,
+      network,
+      method: "screen",
+    });
+
+    const attempt = {
+      db: c.var.db,
+      organizationId: found.organizationId,
+      eventId: id,
+      personId: me.id,
+      method: "screen" as const,
+      decision,
+      claim,
+      network,
+      userAgent: c.req.header("user-agent") ?? null,
+    };
+
+    if (!decision.accepted) {
+      const [attemptId, report] = await Promise.all([
+        recordAttempt({ ...attempt, outcome: "refused" }),
+        reportStateFor(c, id, me.id),
+      ]);
+
+      return c.json(
+        {
+          error: decision.message ?? "You are not at this event's place.",
+          location: {
+            verdict: decision.verdict,
+            distanceMeters: decision.columns.distanceMeters,
+            flagged: decision.suspect,
+            attemptId,
+            report,
+          },
+        },
+        409,
       );
     }
 
@@ -762,7 +1009,10 @@ export const eventRoutes = app
       status: statusForCheckIn(found, now),
       method: "screen",
       checkedInAt: now,
+      location: decision.columns,
     });
+
+    await recordAttempt({ ...attempt, outcome: "accepted" });
 
     return c.json(
       {
@@ -771,16 +1021,55 @@ export const eventRoutes = app
         already: false,
         eventTitle: found.title,
         personName: me.name,
+        // The member is told the fence passed, and never that they were
+        // flagged. Naming the signal only teaches the next attempt.
+        location: match(decision.required)
+          .with(true, () => ({
+            verdict: decision.verdict,
+            distanceMeters: decision.columns.distanceMeters,
+            flagged: false,
+            attemptId: null,
+            report: null,
+          }))
+          .otherwise(() => null),
       },
       200,
     );
+  })
+  .openapi(reviewRoute, async (c) => {
+    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+
+    const organizationId = organizationIdOf(c);
+    const { id, personId } = c.req.valid("param");
+    const user = c.get("user");
+    const now = new Date();
+
+    const found = await findEvent(c.var.db, organizationId, id);
+    if (!found) return c.json({ error: "Not found" }, 404);
+
+    // The signals are never erased. Clearing the flag says an organizer read
+    // them and let the record stand, which is itself worth keeping.
+    const [updated] = await c.var.db
+      .update(schema.attendanceRecord)
+      .set({ reviewedAt: now, reviewedBy: user?.id ?? null, updatedAt: now })
+      .where(
+        and(
+          eq(schema.attendanceRecord.eventId, id),
+          eq(schema.attendanceRecord.personId, personId),
+        ),
+      )
+      .returning();
+
+    if (!updated) return c.json({ error: "Not found" }, 404);
+
+    return c.json({ reviewedAt: now.toISOString() }, 200);
   })
   .openapi(scanRoute, async (c) => {
     if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
-    const { code } = c.req.valid("json");
+    const { code, location } = c.req.valid("json");
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
@@ -816,8 +1105,54 @@ export const eventRoutes = app
           already: true,
           eventTitle: found.title,
           personName: who.name,
+          location: null,
         },
         200,
+      );
+    }
+
+    // The reading belongs to the organizer's device, which is the door the
+    // member is standing at, so it describes the member well enough. The
+    // crowd and movement checks are switched off for it inside checkLocation.
+    const network = readNetwork(c.req.raw);
+    const claim: LocationClaim | null = location ?? null;
+    const decision = await checkLocation({
+      db: c.var.db,
+      eventId: id,
+      personId: who.id,
+      event: found,
+      claim,
+      network,
+      method: "scanner",
+    });
+
+    const attempt = {
+      db: c.var.db,
+      organizationId,
+      eventId: id,
+      personId: who.id,
+      method: "scanner" as const,
+      decision,
+      claim,
+      network,
+      userAgent: c.req.header("user-agent") ?? null,
+    };
+
+    if (!decision.accepted) {
+      const attemptId = await recordAttempt({ ...attempt, outcome: "refused" });
+
+      return c.json(
+        {
+          error: decision.message ?? "This scanner is not at the event's place.",
+          location: {
+            verdict: decision.verdict,
+            distanceMeters: decision.columns.distanceMeters,
+            flagged: decision.suspect,
+            attemptId,
+            report: null,
+          },
+        },
+        409,
       );
     }
 
@@ -827,7 +1162,10 @@ export const eventRoutes = app
       status: statusForCheckIn(found, now),
       method: "scanner",
       checkedInAt: now,
+      location: decision.columns,
     });
+
+    await recordAttempt({ ...attempt, outcome: "accepted" });
 
     return c.json(
       {
@@ -836,6 +1174,15 @@ export const eventRoutes = app
         already: false,
         eventTitle: found.title,
         personName: who.name,
+        location: match(decision.required)
+          .with(true, () => ({
+            verdict: decision.verdict,
+            distanceMeters: decision.columns.distanceMeters,
+            flagged: decision.suspect,
+            attemptId: null,
+            report: null,
+          }))
+          .otherwise(() => null),
       },
       200,
     );

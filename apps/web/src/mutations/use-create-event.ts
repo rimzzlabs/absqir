@@ -12,6 +12,9 @@ export interface EventInput {
   allowWalkIns: boolean;
   registrationOpen: boolean;
   registrationLimit: number | null;
+  /** A saved place. Null clears the fence. */
+  locationId: string | null;
+  requireLocation: boolean;
   groupIds: string[];
 }
 

@@ -16,6 +16,9 @@ export interface ScheduleInput {
   endsOn: string | null;
   active: boolean;
   allowWalkIns: boolean;
+  /** A saved place every event this rule spawns inherits. Null clears it. */
+  locationId: string | null;
+  requireLocation: boolean;
   groupIds: string[];
 }
 

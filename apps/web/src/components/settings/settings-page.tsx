@@ -6,6 +6,7 @@ import {
   EnvelopeSimpleIcon,
   GlobeHemisphereWestIcon,
   HandWavingIcon,
+  MapPinIcon,
   ShieldCheckIcon,
   SlidersHorizontalIcon,
   UserCircleIcon,
@@ -23,6 +24,7 @@ import { InvitationsPanel } from "@/components/settings/invitations-panel";
 import { JoinRequestsPanel } from "@/components/settings/join-requests-panel";
 import { MembersTable } from "@/components/settings/members-table";
 import { OrganizationPanel } from "@/components/settings/organization-panel";
+import { PlacesPanel } from "@/components/settings/places-panel";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
 import { SettingsNav, type SettingsNavGroup } from "@/components/settings/settings-nav";
 import { SettingsSection } from "@/components/settings/settings-section";
@@ -53,6 +55,7 @@ const ORGANIZATION_TABS = [
   "members",
   "invitations",
   "requests",
+  "places",
   "domains",
   "organization",
 ] as const;
@@ -68,6 +71,7 @@ const ORGANIZATION_GROUP: SettingsNavGroup<SettingsTab> = {
     { value: "members", label: "Members", icon: UsersThreeIcon },
     { value: "invitations", label: "Invitations", icon: EnvelopeSimpleIcon },
     { value: "requests", label: "Requests", icon: HandWavingIcon },
+    { value: "places", label: "Places", icon: MapPinIcon },
     { value: "domains", label: "Domains", icon: GlobeHemisphereWestIcon },
     { value: "organization", label: "Organization", icon: BuildingsIcon },
   ],
@@ -145,6 +149,16 @@ function SettingsBody(props: SettingsPageProps) {
       >
         <div className="pt-6">
           <JoinRequestsPanel />
+        </div>
+      </SettingsSection>
+    ),
+    places: (
+      <SettingsSection
+        title="Places"
+        description="Where you check people in. An event set to a place refuses a check-in made somewhere else."
+      >
+        <div className="pt-6">
+          <PlacesPanel />
         </div>
       </SettingsSection>
     ),

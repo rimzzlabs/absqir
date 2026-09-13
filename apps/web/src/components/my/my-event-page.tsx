@@ -8,6 +8,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import {
   CalendarBlankIcon,
+  MapPinIcon,
   NotePencilIcon,
   ScanIcon,
   TicketIcon,
@@ -89,6 +90,22 @@ function Header(props: { event: MyEventDetail }) {
               You registered for this one.
             </p>
           ))}
+
+        {/* A member who learns about the fence only by being refused at the
+            door has been told too late. */}
+        {match(event.fence)
+          .with(P.nonNullable, (fence) => (
+            <p className="text-muted-foreground mt-2 flex items-start gap-1.5 text-sm">
+              <MapPinIcon aria-hidden className="mt-0.5 shrink-0" />
+              <span>
+                {fence.name ?? "A set place"}
+                {match(event.requireLocation)
+                  .with(true, () => ` · check in within ${fence.radiusMeters} m of it`)
+                  .otherwise(() => "")}
+              </span>
+            </p>
+          ))
+          .otherwise(() => null)}
 
         {match(event.description)
           .with(P.string.minLength(1), (description) => (
@@ -269,6 +286,32 @@ function MySide(props: {
                 ))
                 .otherwise(() => null)}
               <FormError error={withdraw.error} />
+            </div>
+          ))}
+
+        {/* A member who reported a problem has to be able to see it landed,
+            and what came of it. Otherwise they report again. */}
+        {match(event.report)
+          .with(P.nullish, () => null)
+          .otherwise((report) => (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">Check-in problem</span>
+                {match(report.status)
+                  .with("approved", () => <Badge variant="secondary">Accepted</Badge>)
+                  .with("declined", () => <Badge variant="outline">Not accepted</Badge>)
+                  .otherwise(() => (
+                    <Badge>Waiting</Badge>
+                  ))}
+              </div>
+              <p className="text-sm">{report.message}</p>
+              {match(report.decisionNote)
+                .with(P.string.minLength(1), (decisionNote) => (
+                  <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
+                    {decisionNote}
+                  </p>
+                ))
+                .otherwise(() => null)}
             </div>
           ))}
 

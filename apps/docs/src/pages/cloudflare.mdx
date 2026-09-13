@@ -114,14 +114,14 @@ pnpm cf:secret RESEND_API_KEY
 pnpm cf:secret APP_URL
 ```
 
-| Secret | Required | What it holds |
-| --- | --- | --- |
-| `BETTER_AUTH_SECRET` | yes | 32 characters or more. `openssl rand -base64 32` makes one. |
-| `RESEND_API_KEY` | yes | Sign-in codes and invitations travel through it. |
-| `APP_URL` | yes | The address people will type, with the scheme and no trailing slash. |
-| `CRON_SECRET` | no | 16 characters or more. Turns on `POST /api/tick`. See step 9. |
-| `GITHUB_CLIENT_ID` | no | With `GITHUB_CLIENT_SECRET`. See [Sign in with GitHub and Google](/oauth). |
-| `GOOGLE_CLIENT_ID` | no | With `GOOGLE_CLIENT_SECRET`. |
+| Secret               | Required | What it holds                                                              |
+| -------------------- | -------- | -------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET` | yes      | 32 characters or more. `openssl rand -base64 32` makes one.                |
+| `RESEND_API_KEY`     | yes      | Sign-in codes and invitations travel through it.                           |
+| `APP_URL`            | yes      | The address people will type, with the scheme and no trailing slash.       |
+| `CRON_SECRET`        | no       | 16 characters or more. Turns on `POST /api/tick`. See step 9.              |
+| `GITHUB_CLIENT_ID`   | no       | With `GITHUB_CLIENT_SECRET`. See [Sign in with GitHub and Google](/oauth). |
+| `GOOGLE_CLIENT_ID`   | no       | With `GOOGLE_CLIENT_SECRET`.                                               |
 
 `ENVIRONMENT` and `EMAIL_FROM` are plain settings, not secrets. They sit in the
 `vars` block of `apps/web/wrangler.jsonc`. Change `EMAIL_FROM` to an address on
@@ -220,14 +220,14 @@ Read [Upgrades](/upgrades) first. It lists what each version needs.
 
 ## What is different from Docker
 
-| | Docker | Cloudflare |
-| --- | --- | --- |
-| Install | `npx absqir init` | clone the repository |
-| Database | Postgres in a container | Neon, or any hosted Postgres |
-| Migrations | the app applies them at start | `pnpm db:migrate` from your machine |
-| Heartbeat | the server runs it | an outside scheduler posts to `/api/tick` |
-| Upgrade | `absqir upgrade` | `git checkout`, then `pnpm deploy` |
-| Backups | back up the volume yourself | your Postgres host does it |
+|            | Docker                        | Cloudflare                                |
+| ---------- | ----------------------------- | ----------------------------------------- |
+| Install    | `npx absqir init`             | clone the repository                      |
+| Database   | Postgres in a container       | Neon, or any hosted Postgres              |
+| Migrations | the app applies them at start | `pnpm db:migrate` from your machine       |
+| Heartbeat  | the server runs it            | an outside scheduler posts to `/api/tick` |
+| Upgrade    | `absqir upgrade`              | `git checkout`, then `pnpm deploy`        |
+| Backups    | back up the volume yourself   | your Postgres host does it                |
 
 ## Next
 

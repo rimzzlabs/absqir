@@ -7,11 +7,13 @@ import {
   ArrowClockwiseIcon,
   CheckCircleIcon,
   QrCodeIcon,
+  ScanIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
+import { ReportAction } from "@/components/check-in/report-action";
 import { Providers } from "@/components/providers";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useCheckIn } from "@/mutations/use-check-in";
@@ -75,13 +77,45 @@ function CheckInBody(props: CheckInPageProps) {
           <WarningCircleIcon weight="fill" className="text-destructive size-8" />
         </Mark>
         <AuthHeading title="Not checked in" description={error.message} />
-        <Button className="w-full" onClick={() => window.location.reload()}>
-          <ArrowClockwiseIcon />
-          Try again
-        </Button>
-        <a href="/check-in" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-          Scan it myself
-        </a>
+
+        {/* The camera on a phone opens this page, so most refusals land here
+            rather than in the app's own scanner. The way back belongs here too. */}
+        {match(checkIn.locationRefusal)
+          .with(P.nonNullable, (refusal) => (
+            <ReportAction
+              key={refusal.attemptId ?? props.eventId}
+              eventId={props.eventId}
+              attemptId={refusal.attemptId}
+              reportStatus={refusal.reportStatus}
+              refusal={error.message}
+            />
+          ))
+          .otherwise(() => null)}
+
+        {/* The token lives in this page's address. Once it has expired a
+            reload replays the same dead token and fails the same way, so the
+            only honest primary action is a fresh scan. */}
+        {match(checkIn.tokenExpired)
+          .with(true, () => (
+            <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
+              <ScanIcon />
+              Scan the screen again
+            </a>
+          ))
+          .otherwise(() => (
+            <>
+              <Button className="w-full" onClick={() => window.location.reload()}>
+                <ArrowClockwiseIcon />
+                Try again
+              </Button>
+              <a
+                href="/check-in"
+                className={buttonVariants({ variant: "outline", className: "w-full" })}
+              >
+                Scan it myself
+              </a>
+            </>
+          ))}
         <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
           My events
         </a>
@@ -123,7 +157,18 @@ function CheckInBody(props: CheckInPageProps) {
         <Mark className="bg-muted ring-muted/50">
           <Spinner className="text-muted-foreground size-6" />
         </Mark>
-        <AuthHeading title="Checking you in…" description="One moment. Keep this page open." />
+        {/* The location step is the slow one and it opens a permission
+            prompt, so it says so rather than leaving the reader guessing. */}
+        {match(checkIn.stage)
+          .with("locating", () => (
+            <AuthHeading
+              title="Finding where you are…"
+              description="This event checks that you are at the place. Allow location, and hold still for a moment."
+            />
+          ))
+          .otherwise(() => (
+            <AuthHeading title="Checking you in…" description="One moment. Keep this page open." />
+          ))}
       </div>
     ));
 }

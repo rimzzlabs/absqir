@@ -13,6 +13,8 @@ export default defineConfig((options) => ({
     "src/email-domain.ts",
     "src/attendance-series.ts",
     "src/member-access.ts",
+    "src/geo.ts",
+    "src/location-risk.ts",
   ],
   format: "esm",
   platform: "neutral",

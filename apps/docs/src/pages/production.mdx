@@ -11,8 +11,7 @@ containers with the new settings.
 
 ## 1. Put it behind HTTPS
 
-Run absqir behind a reverse proxy that terminates TLS and forwards to port
-4321. Caddy, nginx, and Traefik all work.
+Run absqir behind a reverse proxy that terminates TLS and forwards to port 4321. Caddy, nginx, and Traefik all work.
 
 The proxy must send `X-Forwarded-For` and `X-Forwarded-Proto`. absqir reads the
 first for its rate limits, and the second to know the request arrived over

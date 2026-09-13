@@ -17,6 +17,8 @@ const base = {
   endsOn: null,
   active: true,
   allowWalkIns: false,
+  locationId: null,
+  requireLocation: false,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

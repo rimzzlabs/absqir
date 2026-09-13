@@ -27,12 +27,24 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
   const framed = props.active && !props.busy;
 
   return (
-    <div className="bg-muted ring-foreground/10 relative aspect-square w-full overflow-hidden rounded-2xl ring-1">
-      <video ref={props.video} muted playsInline className="size-full object-cover" />
+    <div className="bg-muted ring-foreground/10 relative aspect-square w-full overflow-hidden rounded-xl ring-1">
+      {/* A video paints on its own layer, and a layer is not clipped by an
+          ancestor's rounded overflow. Without a radius of its own its square
+          corners show past the frame. Every layer below does the same, so
+          each one carries the frame's radius rather than trusting the clip. */}
+      <video
+        ref={props.video}
+        muted
+        playsInline
+        className="size-full rounded-[inherit] object-cover"
+      />
 
       {match(props.active)
         .with(true, () => (
-          <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+          >
             {/* The ring darkens the picture outside the frame, and the parent clips it. */}
             <div className="absolute inset-[14%] overflow-hidden shadow-[0_0_0_100vmax_rgba(0,0,0,0.45)]">
               {match(framed)
@@ -84,7 +96,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
         .with(true, () => (
           <p
             role="status"
-            className="bg-background/75 absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm font-medium backdrop-blur-sm"
+            className="bg-background/75 absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-[inherit] text-sm font-medium backdrop-blur-sm"
           >
             <Spinner className="size-5" />
             Checking you in…

@@ -47,6 +47,14 @@
     "./member-access": {
       "development": "./src/member-access.ts",
       "default": "./dist/member-access.js"
+    },
+    "./geo": {
+      "development": "./src/geo.ts",
+      "default": "./dist/geo.js"
+    },
+    "./location-risk": {
+      "development": "./src/location-risk.ts",
+      "default": "./dist/location-risk.js"
     }
   },
   "imports": {

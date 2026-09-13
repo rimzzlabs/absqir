@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
@@ -12,8 +13,9 @@ import {
 } from "@absqir/ui/dropdown-menu";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
-import { DotsThreeIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
+import { flaggedCount, RecordLocationCell } from "@/components/events/record-location";
 import { FormError } from "@/components/shared/form-error";
 import {
   type AttendanceStatus,
@@ -89,6 +91,18 @@ function originOf(record: EventRecord): string | null {
 }
 
 function recordColumns(event: Event): DataColumn<EventRecord>[] {
+  // The column only exists on an event that asked. Every other event would
+  // show a full column of dashes.
+  const whereColumn: DataColumn<EventRecord>[] = match(event.requireLocation)
+    .with(true, () => [
+      {
+        key: "where",
+        header: "Where",
+        cell: (row: EventRecord) => <RecordLocationCell eventId={event.id} record={row} />,
+      },
+    ])
+    .otherwise(() => []);
+
   return [
     {
       key: "name",
@@ -143,6 +157,7 @@ function recordColumns(event: Event): DataColumn<EventRecord>[] {
       ),
       cellClassName: "text-muted-foreground text-xs",
     },
+    ...whereColumn,
     {
       key: "actions",
       place: "action",
@@ -155,9 +170,30 @@ function recordColumns(event: Event): DataColumn<EventRecord>[] {
 export function EventRecords(props: EventRecordsProps) {
   const records = useEventRecords(props.event.id);
 
+  const flagged = flaggedCount(records.data ?? []);
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-medium">People</h2>
+
+      {/* A flag that nobody sees is a flag that does nothing. */}
+      {match(flagged)
+        .with(0, () => null)
+        .otherwise((count) => (
+          <Alert>
+            <WarningIcon />
+            <AlertTitle>
+              {match(count)
+                .with(1, () => "One check-in is worth a look")
+                .otherwise(() => `${count} check-ins are worth a look`)}
+            </AlertTitle>
+            <AlertDescription>
+              Their location readings did not look like a phone standing at the place. Open the
+              Where column to read why.
+            </AlertDescription>
+          </Alert>
+        ))}
+
       {match(records)
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)

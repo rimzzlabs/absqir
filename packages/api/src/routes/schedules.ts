@@ -27,6 +27,8 @@ const scheduleSchema = z.object({
   endsOn: z.string().nullable(),
   active: z.boolean(),
   allowWalkIns: z.boolean(),
+  locationId: z.string().nullable(),
+  requireLocation: z.boolean(),
   groups: z.array(z.object({ id: z.string(), name: z.string() })),
   createdAt: z.string(),
 });
@@ -59,6 +61,9 @@ const scheduleInput = z.object({
   endsOn: z.string().regex(DAY).nullable().optional(),
   active: z.boolean().optional(),
   allowWalkIns: z.boolean().optional(),
+  /** A saved place every event this rule spawns inherits. */
+  locationId: z.string().nullable().optional(),
+  requireLocation: z.boolean().optional(),
   groupIds: z.array(z.string()).max(100),
 });
 
@@ -193,6 +198,8 @@ async function withGroups(c: Parameters<typeof organizationIdOf>[0], rows: Sched
     endsOn: row.endsOn ?? null,
     active: row.active,
     allowWalkIns: row.allowWalkIns,
+    locationId: row.locationId ?? null,
+    requireLocation: row.requireLocation,
     groups: [
       ...pipe(
         groups,
@@ -301,6 +308,9 @@ export const scheduleRoutes = app
         endsOn: body.endsOn ?? null,
         active: body.active ?? true,
         allowWalkIns: body.allowWalkIns ?? false,
+        locationId: body.locationId ?? null,
+        // Without a place there is no fence, so the flag stays off.
+        requireLocation: Boolean(body.requireLocation && body.locationId),
       });
 
       if (groupIds.length) {
@@ -347,6 +357,18 @@ export const scheduleRoutes = app
       O.map(async (groupIds) => await validGroupIds(c, groupIds)),
       O.toNullable,
     );
+
+    // A body that mentions neither field leaves the place exactly as it was.
+    const mentionsPlace = body.locationId !== undefined || body.requireLocation !== undefined;
+    const nextLocationId = match(body.locationId)
+      .with(undefined, () => found.locationId)
+      .otherwise((locationId) => locationId);
+    const nextPlace = match(mentionsPlace)
+      .with(true, () => ({
+        locationId: nextLocationId,
+        requireLocation: Boolean((body.requireLocation ?? found.requireLocation) && nextLocationId),
+      }))
+      .otherwise(() => null);
 
     await c.var.db.transaction(async (tx) => {
       await tx
@@ -396,6 +418,9 @@ export const scheduleRoutes = app
           ...match(body.allowWalkIns)
             .with(undefined, () => ({}))
             .otherwise((allowWalkIns) => ({ allowWalkIns })),
+          ...match(nextPlace)
+            .with(null, () => ({}))
+            .otherwise((place) => place),
           updatedAt: new Date(),
         })
         .where(eq(schedule.id, id));

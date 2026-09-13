@@ -25,12 +25,12 @@ works with empty keys.
 
 ## What you need
 
-| Key                    | What it is                        |
-| ---------------------- | --------------------------------- |
-| `GITHUB_CLIENT_ID`     | The client ID of your GitHub app  |
-| `GITHUB_CLIENT_SECRET` | The client secret of that app     |
-| `GOOGLE_CLIENT_ID`     | The client ID of your Google app  |
-| `GOOGLE_CLIENT_SECRET` | The client secret of that app     |
+| Key                    | What it is                       |
+| ---------------------- | -------------------------------- |
+| `GITHUB_CLIENT_ID`     | The client ID of your GitHub app |
+| `GITHUB_CLIENT_SECRET` | The client secret of that app    |
+| `GOOGLE_CLIENT_ID`     | The client ID of your Google app |
+| `GOOGLE_CLIENT_SECRET` | The client secret of that app    |
 
 Set both keys of a pair, or neither. A pair with one half set stops the
 server with a message that names the missing key. An empty value counts as
@@ -161,11 +161,11 @@ is refused, by the rules in [Accounts and organizations](/accounts#who-may-regis
 
 ## When something fails
 
-| What you see                     | What it means                                                                        |
-| -------------------------------- | ------------------------------------------------------------------------------------ |
-| No button on the sign-in page    | A key is empty. Run `absqir doctor`, then `absqir config get`.                        |
-| The server refuses to start      | One key of a pair is set. The log names the missing key.                              |
-| `redirect_uri_mismatch`          | The registered callback does not match `APP_URL`. Fix one of the two.                 |
-| "That address has no invitation" | The provider returned a different address than the invitation. Use the invited one.   |
+| What you see                     | What it means                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| No button on the sign-in page    | A key is empty. Run `absqir doctor`, then `absqir config get`.                      |
+| The server refuses to start      | One key of a pair is set. The log names the missing key.                            |
+| `redirect_uri_mismatch`          | The registered callback does not match `APP_URL`. Fix one of the two.               |
+| "That address has no invitation" | The provider returned a different address than the invitation. Use the invited one. |
 
 More cases are in [Troubleshooting](/troubleshooting).
