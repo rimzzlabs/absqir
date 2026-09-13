@@ -1,3 +1,5 @@
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { useEffect } from "react";
 import { match, P } from "ts-pattern";
 import { OnboardingAvatarStep } from "@/components/onboarding/onboarding-avatar-step";
@@ -9,6 +11,8 @@ import { FormError } from "@/components/shared/form-error";
 import { useOnboarding } from "@/queries/use-onboarding";
 
 export interface OnboardingFlowProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   /** From the invitation link, so step 3 can offer that organization first. */
   invitationId: string | null;
   /** From a public event page, so step 3 registers for it. */
@@ -16,6 +20,7 @@ export interface OnboardingFlowProps {
 }
 
 function OnboardingBody(props: OnboardingFlowProps) {
+  const t = useTranslate();
   const status = useOnboarding();
   const step = status.data?.step;
 
@@ -24,13 +29,15 @@ function OnboardingBody(props: OnboardingFlowProps) {
   }, [step]);
 
   return match(status)
-    .with({ isPending: true }, () => <p className="text-muted-foreground text-sm">Loading…</p>)
+    .with({ isPending: true }, () => (
+      <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
+    ))
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-8">
         <OnboardingSteps current={data.step} />
         {match(data.step)
-          .with("profile", () => <OnboardingProfileStep status={data} />)
+          .with("profile", () => <OnboardingProfileStep status={data} locale={props.locale} />)
           .with("avatar", () => <OnboardingAvatarStep status={data} />)
           .with("organization", () => (
             <OnboardingOrganizationStep
@@ -39,7 +46,9 @@ function OnboardingBody(props: OnboardingFlowProps) {
               eventId={props.eventId}
             />
           ))
-          .with("done", () => <p className="text-muted-foreground text-sm">All set. One moment…</p>)
+          .with("done", () => (
+            <p className="text-muted-foreground text-sm">{t("onboarding:done")}</p>
+          ))
           .exhaustive()}
       </div>
     ))
@@ -48,7 +57,7 @@ function OnboardingBody(props: OnboardingFlowProps) {
 
 export function OnboardingFlow(props: OnboardingFlowProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <OnboardingBody {...props} />
     </Providers>
   );

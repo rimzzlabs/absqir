@@ -1,17 +1,22 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { buttonVariants } from "@absqir/ui/button";
 import Layout from "@/layouts/layout.astro";
+
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<Layout title="Page not found">
+<Layout title={t("shell:titles.notFound")}>
   <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-16">
-    <p class="text-muted-foreground font-mono text-sm">404</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold tracking-tight">Page not found</h1>
-    <p class="text-muted-foreground mt-1 mb-8 text-sm">
-      This page does not exist. The address can be wrong, or the page moved.
-    </p>
+    <p class="text-muted-foreground font-mono text-sm">{t("shell:errorPages.notFoundCode")}</p>
+    <h1 class="mt-2 font-serif text-3xl font-bold tracking-tight">
+      {t("shell:errorPages.notFoundTitle")}
+    </h1>
+    <p class="text-muted-foreground mt-1 mb-8 text-sm">{t("shell:errorPages.notFoundBody")}</p>
     <div class="flex items-center gap-3">
-      <a href="/" class={buttonVariants({ variant: "default" })}>Go to the home page</a>
+      <a href="/" class={buttonVariants({ variant: "default" })}>
+        {t("shell:errorPages.home")}
+      </a>
     </div>
   </main>
 </Layout>

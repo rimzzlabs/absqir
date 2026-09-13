@@ -16,6 +16,11 @@ const notificationSchema = z.object({
   type: z.enum(NOTIFICATION_TYPES),
   title: z.string(),
   body: z.string().nullable(),
+  /** The key the page words the row from. Null on a row written before. */
+  titleKey: z.string().nullable(),
+  titleParams: z.record(z.string(), z.union([z.string(), z.number()])).nullable(),
+  bodyKey: z.string().nullable(),
+  bodyParams: z.record(z.string(), z.union([z.string(), z.number()])).nullable(),
   href: z.string().nullable(),
   readAt: z.string().nullable(),
   createdAt: z.string(),
@@ -97,7 +102,7 @@ app.use("/notifications/*", organizationGuard());
 // describe, and the typed client cannot consume one anyway.
 app.get("/notifications/stream", (c) => {
   const user = c.get("user");
-  if (!user) return c.json({ error: "Unauthorized" }, 401);
+  if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
   return notificationStream(c, user.id, organizationIdOf(c));
 });
@@ -106,7 +111,7 @@ export const notificationRoutes = app
   .openapi(listRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { scope } = c.req.valid("query");
     const rows = await listNotifications(c.var.db, user.id, organizationId, scope ?? "all");
@@ -116,14 +121,14 @@ export const notificationRoutes = app
   .openapi(countRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     return c.json({ count: await unreadCount(c.var.db, user.id, organizationId) }, 200);
   })
   .openapi(readRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { ids } = c.req.valid("json");
     const read = await markRead(c.var.db, user.id, organizationId, ids ?? null);

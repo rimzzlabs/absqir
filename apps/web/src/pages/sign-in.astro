@@ -1,5 +1,6 @@
 ---
 import { enabledSocialProviders } from "@absqir/api";
+import { translatorFor } from "@absqir/i18n";
 import { getRuntime } from "@app-runtime";
 import { match, P } from "ts-pattern";
 import { AuthFlow } from "@/components/auth/auth-flow";
@@ -29,7 +30,8 @@ const providers = enabledSocialProviders(getRuntime(Astro.locals).bindings);
 // A provider that refused sends the reader back here. The page owns the
 // wording, so only the code and a checked address survive the address bar.
 const provider = Astro.url.searchParams.get("provider") ?? "";
-const callbackError = readCallbackError({
+const t = translatorFor(Astro.locals.locale);
+const callbackError = readCallbackError(t, {
   code: Astro.url.searchParams.get("error"),
   description: Astro.url.searchParams.get("error_description"),
   provider: match(provider)
@@ -38,9 +40,10 @@ const callbackError = readCallbackError({
 });
 ---
 
-<AuthLayout title="Sign in — absqir">
+<AuthLayout title={`${t("auth:door.signInTitle")} — absqir`}>
   <AuthFlow
     client:load
+    locale={Astro.locals.locale}
     next={safeNext}
     initialEmail={email}
     eventId={eventId}

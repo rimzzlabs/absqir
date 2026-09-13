@@ -1,4 +1,5 @@
 import { accountMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -7,12 +8,13 @@ import { api, apiError } from "@/lib/api";
  * the zone in its markup, so a saved choice reloads it.
  */
 export function useUpdateTimezone() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: accountMutationKeys.timezone(),
     mutationFn: async (timezone: string | null) => {
       const response = await api.me.timezone.$patch({ json: { timezone } });
 
-      if (!response.ok) throw await apiError(response, "Could not save the time zone.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveTimeZone"));
 
       return response.json();
     },

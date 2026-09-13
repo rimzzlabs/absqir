@@ -1,4 +1,5 @@
 import { formatRange } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@absqir/ui/item";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -13,6 +14,7 @@ export interface OnboardingEventCardProps {
 
 /** Step 3 through a public event page: one card, one button. */
 export function OnboardingEventCard(props: OnboardingEventCardProps) {
+  const t = useTranslate();
   const event = usePublicEvent(props.eventId);
   const join = useOnboardingEvent();
 
@@ -21,11 +23,11 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => {
       const soldOut = match(data.seatsLeft)
-        .with(0, () => "Every seat is taken." as const)
+        .with(0, () => t("onboarding:event.soldOut"))
         .otherwise(() => null);
       const note = match(data.open)
         .with(true, () => soldOut)
-        .otherwise(() => "This event no longer takes people." as const);
+        .otherwise(() => t("onboarding:event.closed"));
 
       return (
         <div className="space-y-3">
@@ -44,8 +46,8 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
                 onClick={() => join.mutate(data.id)}
               >
                 {match(join.isPending)
-                  .with(true, () => "Registering…" as const)
-                  .otherwise(() => "Register" as const)}
+                  .with(true, () => t("onboarding:event.registering"))
+                  .otherwise(() => t("onboarding:event.register"))}
               </Button>
             </ItemActions>
           </Item>

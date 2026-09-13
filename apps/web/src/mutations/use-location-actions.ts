@@ -1,4 +1,5 @@
 import { eventKeys, locationKeys, locationMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -21,6 +22,7 @@ function invalidate(queryClient: ReturnType<typeof useQueryClient>) {
 }
 
 export function useCreatePlace() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -28,7 +30,7 @@ export function useCreatePlace() {
     mutationFn: async (values: PlaceInput) => {
       const response = await api.locations.$post({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the place.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSavePlace"));
 
       return response.json();
     },
@@ -37,6 +39,7 @@ export function useCreatePlace() {
 }
 
 export function useUpdatePlace() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -44,7 +47,7 @@ export function useUpdatePlace() {
     mutationFn: async ({ id, ...values }: PlaceInput & { id: string }) => {
       const response = await api.locations[":id"].$patch({ param: { id }, json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the place.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSavePlace"));
 
       return response.json();
     },
@@ -53,6 +56,7 @@ export function useUpdatePlace() {
 }
 
 export function useRemovePlace() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -60,7 +64,7 @@ export function useRemovePlace() {
     mutationFn: async (id: string) => {
       const response = await api.locations[":id"].$delete({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not delete the place.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotDeletePlace"));
 
       return response.json();
     },

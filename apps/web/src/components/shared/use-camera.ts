@@ -1,3 +1,5 @@
+import type { Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import jsQR from "jsqr";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { match, P } from "ts-pattern";
@@ -25,36 +27,33 @@ export interface CameraFault {
   message: string;
 }
 
-const INSECURE = "The camera needs an https address.";
-
 /**
  * Reads the fault. A page served over plain http gets no camera at all, and
  * some engines report that as a refusal, so the address is checked before the
  * name of the fault.
  */
-function causeOf(cause: unknown): Omit<CameraFault, "message"> & { cause: string } {
-  if (!window.isSecureContext) return { kind: "insecure", cause: INSECURE };
+function causeOf(t: Translate, cause: unknown): Omit<CameraFault, "message"> & { cause: string } {
+  if (!window.isSecureContext) {
+    return { kind: "insecure", cause: t("checkin:camera.insecure") };
+  }
 
   const name = match(cause)
     .with(P.instanceOf(Error), (cause) => cause.name)
     .otherwise(() => "" as const);
 
   if (name === "NotAllowedError") {
-    return { kind: "refused", cause: "Camera access was refused." };
+    return { kind: "refused", cause: t("checkin:camera.refused") };
   }
 
   if (name === "NotFoundError" || name === "OverconstrainedError") {
-    return { kind: "missing", cause: "No camera was found on this device." };
+    return { kind: "missing", cause: t("checkin:camera.missing") };
   }
 
   if (name === "NotReadableError") {
-    return {
-      kind: "busy",
-      cause: "The camera is busy in another app. Close that app, then retry.",
-    };
+    return { kind: "busy", cause: t("checkin:camera.busy") };
   }
 
-  return { kind: "unknown", cause: "The camera could not be opened." };
+  return { kind: "unknown", cause: t("checkin:camera.unknown") };
 }
 
 /**
@@ -63,6 +62,7 @@ function causeOf(cause: unknown): Omit<CameraFault, "message"> & { cause: string
  * caller decides what a repeat means.
  */
 export function useCamera(onCode: (code: string) => void, options: UseCameraOptions) {
+  const t = useTranslate();
   const enabled = options.enabled ?? true;
   const { fallback } = options;
   const video = useRef<HTMLVideoElement>(null);
@@ -95,8 +95,8 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
           .with(true, () => "missing" as const)
           .otherwise(() => "insecure" as const),
         message: `${match(secure)
-          .with(true, () => "This browser has no camera." as const)
-          .otherwise(() => INSECURE)} ${fallback}`,
+          .with(true, () => t("checkin:camera.noCamera"))
+          .otherwise(() => t("checkin:camera.insecure"))} ${fallback}`,
       });
       return;
     }
@@ -149,7 +149,7 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
       .catch((reason: unknown) => {
         // play() can fail after the camera opened. Hand it back either way.
         release();
-        const { kind, cause } = causeOf(reason);
+        const { kind, cause } = causeOf(t, reason);
         setFault({ kind, message: `${cause} ${fallback}` });
       });
 
@@ -159,7 +159,7 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
       cancelAnimationFrame(frame);
       release();
     };
-  }, [enabled, fallback, fault]);
+  }, [enabled, fallback, fault, t]);
 
   return { video, fault, active, retry };
 }

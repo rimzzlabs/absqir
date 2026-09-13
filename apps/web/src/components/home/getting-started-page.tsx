@@ -1,3 +1,5 @@
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Progress } from "@absqir/ui/progress";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -15,7 +17,7 @@ import {
   LockSimpleIcon,
   QrCodeIcon,
   RepeatIcon,
-  UploadSimpleIcon,
+  TranslateIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
@@ -28,6 +30,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { type OnboardingStatus, useOnboarding } from "@/queries/use-onboarding";
 
 export interface GettingStartedPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
 }
 
@@ -82,73 +86,82 @@ function StepRow(props: { step: Step }) {
 }
 
 /** What the second step says depends on what absqir found for this address. */
-function joinHint(status: OnboardingStatus): string {
+function joinHint(t: Translate, status: OnboardingStatus): string {
   if (status.joinRequest) {
-    return `${status.joinRequest.organizationName} decides, and absqir tells you the moment they do.`;
+    return t("home:gettingStarted.joinHintRequest", {
+      name: status.joinRequest.organizationName,
+    });
   }
 
   if (status.invitations.length > 0) {
-    return "An invitation is waiting for you. Accept it and you are in.";
+    return t("home:gettingStarted.joinHintInvited");
   }
 
   const workspace = status.workspace;
 
   if (workspace) {
     return match(workspace.joinPolicy)
-      .with(
-        "auto",
-        () =>
-          `${workspace.name} is on absqir, and everybody at ${workspace.domain} can come straight in.`,
+      .with("auto", () =>
+        t("home:gettingStarted.joinHintAuto", {
+          name: workspace.name,
+          domain: workspace.domain,
+        }),
       )
-      .otherwise(() => `${workspace.name} is on absqir and takes people from ${workspace.domain}.`);
+      .otherwise(() =>
+        t("home:gettingStarted.joinHintWorkspace", {
+          name: workspace.name,
+          domain: workspace.domain,
+        }),
+      );
   }
 
-  return "An organization holds the people, the events, and the attendance.";
+  return t("home:gettingStarted.joinHintNone");
 }
 
-function stepsFor(status: OnboardingStatus): Step[] {
+function stepsFor(t: Translate, status: OnboardingStatus): Step[] {
   const waiting = status.joinRequest !== null;
 
   return [
     {
       state: "done",
-      label: "Your account is ready",
-      hint: `You are signed in as ${status.email}.`,
+      label: t("home:gettingStarted.accountReady"),
+      hint: t("home:gettingStarted.accountReadyHint", { email: status.email }),
       icon: CheckCircleIcon,
     },
     {
       state: "now",
       label: match(waiting)
-        .with(true, () => "Waiting on an organizer")
-        .otherwise(() => "Join or start an organization"),
-      hint: joinHint(status),
+        .with(true, () => t("home:gettingStarted.waiting"))
+        .otherwise(() => t("home:gettingStarted.join")),
+      hint: joinHint(t, status),
       icon: UsersThreeIcon,
       body: <JoinOrganization status={status} variant="waiting" heading={false} />,
     },
     {
       state: "locked",
-      label: "Invite the people you expect to see",
-      hint: "Send each one an email invitation. They sign in and the directory fills itself.",
+      label: t("home:gettingStarted.invite"),
+      hint: t("home:gettingStarted.inviteHint"),
       icon: IdentificationCardIcon,
     },
     {
       state: "locked",
-      label: "Run your first event",
-      hint: "A QR code on screen, a scanner at the door, and the register writes itself.",
+      label: t("home:gettingStarted.firstEvent"),
+      hint: t("home:gettingStarted.firstEventHint"),
       icon: QrCodeIcon,
     },
   ];
 }
 
 function GettingStartedBody(props: GettingStartedPageProps) {
+  const t = useTranslate();
   const status = useOnboarding();
   const first = props.userName.split(" ")[0] ?? props.userName;
 
   return (
     <>
       <PageHeader
-        title={`Welcome, ${first}`}
-        description="Four steps to your first register. You are on the second."
+        title={t("home:gettingStarted.welcome", { name: first })}
+        description={t("home:gettingStarted.description")}
       />
 
       {match(status)
@@ -160,20 +173,26 @@ function GettingStartedBody(props: GettingStartedPageProps) {
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (data) => {
-          const steps = stepsFor(data);
+          const steps = stepsFor(t, data);
           const done = A.filter(steps, (step) => step.state === "done").length;
 
           return (
             <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
               <Card>
                 <CardHeader>
-                  <CardTitle>Getting started</CardTitle>
+                  <CardTitle>{t("home:gettingStarted.title")}</CardTitle>
                   <CardDescription>
-                    Step {done + 1} of {steps.length}
+                    {t("home:gettingStarted.step", {
+                      done: done + 1,
+                      total: steps.length,
+                    })}
                   </CardDescription>
                   <Progress
                     value={(done / steps.length) * 100}
-                    aria-label={`${done} of ${steps.length} steps done`}
+                    aria-label={t("home:gettingStarted.progressLabel", {
+                      done,
+                      total: steps.length,
+                    })}
                     className="mt-3"
                   />
                 </CardHeader>
@@ -195,56 +214,40 @@ function GettingStartedBody(props: GettingStartedPageProps) {
   );
 }
 
-const FEATURES: { icon: Icon; title: string; hint: string }[] = [
-  {
-    icon: QrCodeIcon,
-    title: "Check in by QR",
-    hint: "A code on screen that rotates every few seconds, or a scanner at the door for a queue.",
-  },
-  {
-    icon: RepeatIcon,
-    title: "Schedules that plan themselves",
-    hint: "One rule creates every Monday standup, and invites the whole group with it.",
-  },
-  {
-    icon: ChartBarIcon,
-    title: "Reports you can hand over",
-    hint: "Present, late, excused, absent, per person or per group. Export it as CSV.",
-  },
+/** The key under `home:gettingStarted` that words each one. */
+const FEATURES: { icon: Icon; key: "featureQr" | "featureSchedules" | "featureReports" }[] = [
+  { icon: QrCodeIcon, key: "featureQr" },
+  { icon: RepeatIcon, key: "featureSchedules" },
+  { icon: ChartBarIcon, key: "featureReports" },
 ];
 
-const TIPS: { icon: Icon; text: string }[] = [
-  {
-    icon: LinkSimpleIcon,
-    text: "An open event has a public link. Whoever opens it can register themselves, with no invitation.",
-  },
-  {
-    icon: UploadSimpleIcon,
-    text: "Bring your people over in one go. A CSV from your spreadsheet is enough.",
-  },
-  {
-    icon: UsersThreeIcon,
-    text: "An organization can claim its email domain, so a new colleague finds it without being asked in.",
-  },
+const TIPS: { icon: Icon; key: "tipPublic" | "tipLanguage" | "tipDomain" }[] = [
+  { icon: LinkSimpleIcon, key: "tipPublic" },
+  { icon: TranslateIcon, key: "tipLanguage" },
+  { icon: UsersThreeIcon, key: "tipDomain" },
 ];
 
 /** The column beside the steps: what absqir is for, and a few things to know. */
 function Aside() {
+  const t = useTranslate();
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">What you get</CardTitle>
-          <CardDescription>Once you are in an organization.</CardDescription>
+          <CardTitle className="text-base">{t("home:gettingStarted.whatYouGet")}</CardTitle>
+          <CardDescription>{t("home:gettingStarted.whatYouGetHint")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="space-y-4">
             {A.map(FEATURES, (feature) => (
-              <li key={feature.title} className="flex items-start gap-3">
+              <li key={feature.key} className="flex items-start gap-3">
                 <feature.icon aria-hidden className="text-primary mt-0.5 size-5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">{feature.title}</p>
-                  <p className="text-muted-foreground text-sm">{feature.hint}</p>
+                  <p className="text-sm font-medium">{t(`home:gettingStarted.${feature.key}`)}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t(`home:gettingStarted.${feature.key}Hint`)}
+                  </p>
                 </div>
               </li>
             ))}
@@ -254,14 +257,14 @@ function Aside() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Good to know</CardTitle>
+          <CardTitle className="text-base">{t("home:gettingStarted.goodToKnow")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
             {A.map(TIPS, (tip) => (
-              <li key={tip.text} className="text-muted-foreground flex items-start gap-3 text-sm">
+              <li key={tip.key} className="text-muted-foreground flex items-start gap-3 text-sm">
                 <tip.icon aria-hidden className="mt-0.5 size-4 shrink-0" />
-                <span>{tip.text}</span>
+                <span>{t(`home:gettingStarted.${tip.key}`)}</span>
               </li>
             ))}
           </ul>
@@ -275,7 +278,7 @@ function Aside() {
         className="text-muted-foreground hover:text-foreground flex items-center gap-2 px-1 text-sm transition-colors"
       >
         <GithubLogoIcon weight="fill" className="size-4" />
-        absqir is open source. Read it on GitHub.
+        {t("home:gettingStarted.openSource")}
         <ArrowSquareOutIcon aria-hidden className="size-3.5" />
       </a>
     </div>
@@ -289,7 +292,7 @@ function Aside() {
  */
 export function GettingStartedPage(props: GettingStartedPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <GettingStartedBody {...props} />
     </Providers>
   );

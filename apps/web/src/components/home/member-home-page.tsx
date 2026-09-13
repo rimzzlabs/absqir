@@ -1,4 +1,6 @@
 import { describeTimezone } from "@absqir/core/timezone";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -25,6 +27,8 @@ import { useMyLeave } from "@/queries/use-leave";
 import { useMyEvents, useMyHistory } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
   organizationName: string;
   /** The account's zone. Null follows the device. */
@@ -32,12 +36,11 @@ export interface MemberHomePageProps {
 }
 
 function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
-  const waitingNote = match(props.pending)
-    .with(1, () => "One request waits for a decision." as const)
-    .otherwise((pending) => `${pending} requests wait for a decision.`);
+  const t = useTranslate();
+  const waitingNote = t("home:member.leaveWaiting", { count: props.pending });
   const restingNote = match(props.latest)
-    .with(P.string.minLength(1), () => "Your last request.")
-    .otherwise(() => "Cannot make an event? Ask before it starts." as const);
+    .with(P.string.minLength(1), () => t("home:member.leaveLatest"))
+    .otherwise(() => t("home:member.leaveResting"));
   const badge: LeaveStatus | null = match(props.pending > 0)
     .with(true, () => "pending" as const)
     .otherwise(() => props.latest);
@@ -47,7 +50,7 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <NotePencilIcon />
-          Leave
+          {t("home:member.leave")}
         </CardTitle>
         <CardDescription>
           {match(props.pending > 0)
@@ -64,7 +67,7 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
       </CardHeader>
       <CardContent>
         <a href="/my/leave" className={buttonVariants({ variant: "outline", size: "sm" })}>
-          My leave
+          {t("home:member.myLeave")}
           <CaretRightIcon />
         </a>
       </CardContent>
@@ -73,6 +76,7 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
 }
 
 function MemberHomeBody(props: MemberHomePageProps) {
+  const t = useTranslate();
   const events = useMyEvents();
   const history = useMyHistory();
   const leave = useMyLeave({ scope: "all" });
@@ -86,17 +90,17 @@ function MemberHomeBody(props: MemberHomePageProps) {
   return (
     <>
       <PageHeader
-        title={`Hello, ${firstName}`}
+        title={t("home:hello", { name: firstName })}
         description={
           <>
-            {props.organizationName}. Times read in{" "}
+            {t("home:member.readIn", { organization: props.organizationName })}{" "}
             <a
               href="/settings?tab=profile"
               className="text-foreground underline underline-offset-4"
             >
               {match(props.timezone)
                 .with(P.string.minLength(1), (timezone) => describeTimezone(timezone))
-                .otherwise(() => "this device's clock" as const)}
+                .otherwise(() => t("home:member.deviceClock"))}
             </a>
             .
           </>
@@ -104,7 +108,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
         actions={
           <a href="/check-in" className={buttonVariants()}>
             <ScanIcon />
-            Check in
+            {t("home:member.checkIn")}
           </a>
         }
       />
@@ -143,7 +147,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
 /** A member's front page: what runs now, the days ahead, and how it has gone. */
 export function MemberHomePage(props: MemberHomePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MemberHomeBody {...props} />
     </Providers>
   );

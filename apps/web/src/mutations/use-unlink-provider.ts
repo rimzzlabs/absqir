@@ -1,4 +1,5 @@
 import { accountKeys, accountMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-error";
@@ -8,6 +9,7 @@ import { authErrorMessage } from "@/lib/auth-error";
  * so nobody can lock themselves out from here.
  */
 export function useUnlinkProvider() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -15,7 +17,7 @@ export function useUnlinkProvider() {
     mutationFn: async (accountId: string) => {
       const { error } = await authClient.unlinkAccount({ accountId });
 
-      if (error) throw authErrorMessage(error, "Could not disconnect that account.");
+      if (error) throw authErrorMessage(t, error, t("errors:couldNotDisconnectAccount"));
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: accountKeys.credentials() });

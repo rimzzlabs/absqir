@@ -1,0 +1,55 @@
+/** Laporan: siapa yang datang, seberapa sering, dan seberapa terlambat. */
+export const reports = {
+  title: "Laporan",
+  description:
+    "Siapa yang datang, seberapa sering, dan seberapa terlambat. Setiap tabel bisa diunduh sebagai CSV.",
+  downloadCsv: "Unduh CSV",
+  range: "{{from}} sampai {{to}}",
+  tabs: {
+    people: "Per orang",
+    groups: "Per grup",
+    events: "Per acara",
+  },
+  presets: {
+    "7d": "7 hari terakhir",
+    "30d": "30 hari terakhir",
+    month: "Bulan ini",
+    custom: "Atur sendiri",
+  },
+  from: "Dari",
+  to: "Sampai",
+  group: "Grup",
+  everyEvent: "Semua acara",
+  groupsLabel: "Grup",
+  summary: {
+    events: "Acara",
+    eventsHint: "{{count, number}} sudah ditutup, jadi baris tidak hadirnya sudah ditulis",
+    people: "Orang yang terlihat",
+    peopleHint: "{{count, number}} catatan",
+    attendance: "Kehadiran",
+    attendanceHint: "Hadir atau terlambat, dari semua yang dinilai. Izin tidak dihitung.",
+    onTime: "Tepat waktu",
+    onTimeHint: "Dari orang yang datang, berapa yang mengalahkan batas terlambat.",
+    barTitle: "{{status}}: {{count, number}}",
+  },
+  tables: {
+    person: "Orang",
+    group: "Grup",
+    event: "Acara",
+    people: "Orang",
+    attendance: "Kehadiran",
+    onTime: "Tepat waktu",
+    stillOpen: " · masih terbuka",
+    byPerson: "Kehadiran per orang",
+    byGroup: "Kehadiran per grup",
+    byEvent: "Kehadiran per acara",
+    emptyPeopleTitle: "Tidak ada catatan dalam rentang ini",
+    emptyPeopleDescription:
+      "Catatan muncul setelah sebuah acara dalam rentang ini ditutup, atau setelah ada yang check-in.",
+    emptyGroupsTitle: "Belum ada grup",
+    emptyGroupsDescription:
+      "Masukkan orang ke dalam grup, dan satu acara bisa mengharapkan seluruh grup sekaligus.",
+    emptyEventsTitle: "Tidak ada acara dalam rentang ini",
+    emptyEventsDescription: "Pilih rentang yang lebih lebar, atau buat acara baru.",
+  },
+} as const;

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
@@ -13,9 +14,10 @@ import { useConfirmEmailChange } from "@/mutations/use-confirm-email-change";
 import { useRequestEmailChange } from "@/mutations/use-request-email-change";
 
 function AddressStep(props: { onSent: (email: string) => void; onCancel: () => void }) {
+  const t = useTranslate();
   const request = useRequestEmailChange();
   const form = useForm<NewEmailValues>({
-    resolver: zodResolver(newEmailSchema),
+    resolver: zodResolver(newEmailSchema(t)),
     defaultValues: { email: "" },
   });
 
@@ -31,8 +33,8 @@ function AddressStep(props: { onSent: (email: string) => void; onCancel: () => v
         <FormField
           control={form.control}
           name="email"
-          label="New email"
-          description="A code goes to the new address. Nothing changes until you enter it."
+          label={t("account:emailChange.newEmail")}
+          description={t("account:emailChange.newEmailHint")}
           render={(field) => (
             <Input
               {...field}
@@ -51,11 +53,11 @@ function AddressStep(props: { onSent: (email: string) => void; onCancel: () => v
         <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" disabled={request.isPending}>
             {match(request.isPending)
-              .with(true, () => "Sending…" as const)
-              .otherwise(() => "Send the code" as const)}
+              .with(true, () => t("account:emailChange.sending"))
+              .otherwise(() => t("account:emailChange.send"))}
           </Button>
           <Button type="button" variant="ghost" onClick={props.onCancel}>
-            Cancel
+            {t("common:actions.cancel")}
           </Button>
         </div>
       </form>
@@ -64,16 +66,17 @@ function AddressStep(props: { onSent: (email: string) => void; onCancel: () => v
 }
 
 function CodeStep(props: { newEmail: string; onBack: () => void }) {
+  const t = useTranslate();
   const confirm = useConfirmEmailChange();
   const resend = useRequestEmailChange();
   const form = useForm<CodeValues>({
-    resolver: zodResolver(codeSchema),
+    resolver: zodResolver(codeSchema(t)),
     defaultValues: { code: "" },
   });
 
   const resendLabel = match(resend.isSuccess)
-    .with(true, () => "Sent again" as const)
-    .otherwise(() => "Send a new code" as const);
+    .with(true, () => t("account:emailChange.sentAgain"))
+    .otherwise(() => t("account:emailChange.sendNew"));
   const submit = form.handleSubmit((values) =>
     confirm.mutate({ newEmail: props.newEmail, code: values.code }),
   );
@@ -84,8 +87,8 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
         <FormField
           control={form.control}
           name="code"
-          label="Code"
-          description={`We sent a 6 digit code to ${props.newEmail}. It works for 10 minutes.`}
+          label={t("account:emailChange.code")}
+          description={t("account:emailChange.codeHint", { email: props.newEmail })}
           render={(field) => (
             <CodeInput
               value={field.value}
@@ -103,8 +106,8 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={confirm.isPending}>
             {match(confirm.isPending)
-              .with(true, () => "Checking…" as const)
-              .otherwise(() => "Change email" as const)}
+              .with(true, () => t("account:emailChange.checking"))
+              .otherwise(() => t("account:emailChange.submit"))}
           </Button>
           <Button
             type="button"
@@ -115,11 +118,11 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
             onClick={() => resend.mutate(props.newEmail)}
           >
             {match(resend.isPending)
-              .with(true, () => "Sending…" as const)
+              .with(true, () => t("account:emailChange.sending"))
               .otherwise(() => resendLabel)}
           </Button>
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
-            Use another address
+            {t("account:emailChange.useAnother")}
           </Button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   Select,
   SelectContent,
@@ -21,16 +22,17 @@ export interface RoleSelectProps {
   includeOwner?: boolean;
 }
 
-const OWNER = { value: "owner", label: "Owner", hint: "Everything, including deleting the org." };
-
 export function RoleSelect(props: RoleSelectProps) {
+  const t = useTranslate();
+  // Only an owner hands out the owner seat, so the option joins the list
+  // for an owner and for nobody else.
   const options = match(Boolean(props.includeOwner))
-    .with(true, () => [...ROLE_OPTIONS, OWNER])
-    .otherwise(() => [...ROLE_OPTIONS]);
+    .with(true, () => [...ROLE_OPTIONS, "owner"] as const)
+    .otherwise(() => ROLE_OPTIONS);
 
   return (
     <Select
-      items={A.map(options, (option) => ({ value: option.value, label: option.label }))}
+      items={A.map(options, (option) => ({ value: option, label: t(`common:roles.${option}`) }))}
       value={props.value}
       disabled={props.disabled}
       onValueChange={(value) => {
@@ -42,12 +44,14 @@ export function RoleSelect(props: RoleSelectProps) {
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>Role</SelectLabel>
+          <SelectLabel>{t("common:roleSelect.label")}</SelectLabel>
           {A.map(options, (option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option} value={option}>
               <span className="flex flex-col">
-                <span>{option.label}</span>
-                <SelectItemDescription>{option.hint}</SelectItemDescription>
+                <span>{t(`common:roles.${option}`)}</span>
+                <SelectItemDescription>
+                  {t(`common:roleSelect.hints.${option}`)}
+                </SelectItemDescription>
               </span>
             </SelectItem>
           ))}

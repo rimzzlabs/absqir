@@ -5,6 +5,7 @@ import {
   formatRange,
   inDisplayZone,
   parseDisplayDay,
+  setDisplayLocaleResolver,
   setDisplayTimezoneResolver,
   startOfDay,
 } from "#src/date";
@@ -13,6 +14,7 @@ const noon = new Date("2026-09-09T12:00:00Z");
 
 afterEach(() => {
   setDisplayTimezoneResolver(() => null);
+  setDisplayLocaleResolver(() => "en");
 });
 
 describe("formatDate", () => {
@@ -74,5 +76,23 @@ describe("inDisplayZone", () => {
 
     expect(start.getTime()).toBe(Date.parse("2026-09-08T04:00:00Z"));
     expect(formatDate(start, "iso")).toBe("2026-09-08");
+  });
+});
+
+describe("the display language", () => {
+  it("names the month and the weekday in it", () => {
+    setDisplayLocaleResolver(() => "id");
+    expect(formatDate(noon, "weekdayDate")).toBe("Rab 9 Sep");
+
+    setDisplayLocaleResolver(() => "en");
+    expect(formatDate(noon, "weekdayDate")).toBe("Wed 9 Sep");
+  });
+
+  it("joins the two ends of a range in it", () => {
+    setDisplayLocaleResolver(() => "id");
+    expect(formatRange(noon, new Date("2026-09-09T13:00:00Z"))).toContain("sampai");
+
+    setDisplayLocaleResolver(() => "en");
+    expect(formatRange(noon, new Date("2026-09-09T13:00:00Z"))).toContain("to");
   });
 });

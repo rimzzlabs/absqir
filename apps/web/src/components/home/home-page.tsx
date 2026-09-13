@@ -1,5 +1,8 @@
 import { formatRange } from "@absqir/core/date";
 import { claimableDomainOfEmail } from "@absqir/core/email-domain";
+import { formatNumber } from "@absqir/core/numbers";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -24,6 +27,8 @@ import {
 } from "@/queries/use-reports";
 
 export interface HomePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
   /** The reader's own address. It decides whether a domain is theirs to claim. */
   userEmail: string;
@@ -46,17 +51,11 @@ interface Step {
 }
 
 function CountLinks(props: { counts: Organization["counts"] }) {
+  const t = useTranslate();
   const links = [
+    { label: t("home:groups", { count: props.counts.groups }), href: "/groups" },
     {
-      label: match(props.counts.groups)
-        .with(1, () => "1 group" as const)
-        .otherwise((groups) => `${groups} groups`),
-      href: "/groups",
-    },
-    {
-      label: match(props.counts.members)
-        .with(1, () => "1 account" as const)
-        .otherwise((members) => `${members} accounts`),
+      label: t("home:accounts", { count: props.counts.members }),
       href: "/settings?tab=members",
     },
   ];
@@ -79,17 +78,15 @@ function CountLinks(props: { counts: Organization["counts"] }) {
 
 /** Waiting invitations are a prompt, not a number to stare at. */
 function InvitationPrompt(props: { pending: number }) {
-  if (props.pending === 0) return null;
+  const t = useTranslate();
 
-  const line = match(props.pending)
-    .with(1, () => "One invitation is still waiting to be accepted." as const)
-    .otherwise((pending) => `${pending} invitations are still waiting to be accepted.`);
+  if (props.pending === 0) return null;
 
   return (
     <p className="text-muted-foreground text-sm">
-      {line}{" "}
+      {t("home:invitationsWaiting", { count: props.pending })}{" "}
       <a href="/settings?tab=invitations" className="text-foreground underline underline-offset-4">
-        Review them
+        {t("home:reviewInvitations")}
       </a>
       .
     </p>
@@ -114,6 +111,7 @@ const STAT_GRID = "grid gap-4 sm:grid-cols-2 lg:grid-cols-4";
 
 /** What the last thirty days came to. The same four measures as the report. */
 function ThirtyDayStats() {
+  const t = useTranslate();
   const summary = useReportSummary(RANGE);
 
   if (summary.isError) return <FormError error={summary.error} />;
@@ -132,17 +130,25 @@ function ThirtyDayStats() {
 
   return (
     <div className={STAT_GRID}>
-      <Stat label="Events" value={String(data.events)} hint={`${data.closedEvents} closed`} />
-      <Stat label="People seen" value={String(data.people)} hint="In the last 30 days" />
       <Stat
-        label="Attendance"
-        value={ratePercent(data.attendanceRate)}
-        hint="Present or late, over everyone judged"
+        label={t("home:stats.events")}
+        value={formatNumber(data.events)}
+        hint={t("home:stats.eventsHint", { count: data.closedEvents })}
       />
       <Stat
-        label="On time"
+        label={t("home:stats.people")}
+        value={formatNumber(data.people)}
+        hint={t("home:stats.peopleHint")}
+      />
+      <Stat
+        label={t("home:stats.attendance")}
+        value={ratePercent(data.attendanceRate)}
+        hint={t("home:stats.attendanceHint")}
+      />
+      <Stat
+        label={t("home:stats.onTime")}
         value={ratePercent(data.punctualityRate)}
-        hint="Of those who turned up, who beat the late mark"
+        hint={t("home:stats.onTimeHint")}
       />
     </div>
   );
@@ -171,34 +177,36 @@ function Charts() {
   );
 }
 
-function stepsOf(organization: Organization): Step[] {
+function stepsOf(t: Translate, organization: Organization): Step[] {
   const { counts } = organization;
 
   return [
     {
       done: counts.groups > 0,
-      label: "Put them in groups",
-      hint: "Teams, divisions, cohorts. An event will invite a whole group at once.",
+      label: t("home:setup.groups"),
+      hint: t("home:setup.groupsHint"),
       href: "/groups",
     },
     {
       done: counts.members > 1 || counts.pendingInvitations > 0,
-      label: "Invite an organizer or two",
-      hint: "They run events and scan at the door. Admins also manage people.",
+      label: t("home:setup.organizers"),
+      hint: t("home:setup.organizersHint"),
       href: "/settings?tab=invitations",
     },
   ];
 }
 
 function SetupSteps(props: { organization: Organization; steps: Step[] }) {
+  const t = useTranslate();
+
   // A finished list has nothing left to say, so the card goes away.
   if (A.every(props.steps, (step) => step.done)) return null;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Set up {props.organization.name}</CardTitle>
-        <CardDescription>What is left before the next event.</CardDescription>
+        <CardTitle>{t("home:setup.title", { name: props.organization.name })}</CardTitle>
+        <CardDescription>{t("home:setup.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <ol className="space-y-3">
@@ -231,9 +239,10 @@ function SetupSteps(props: { organization: Organization; steps: Step[] }) {
  * is why this component renders for those two only.
  */
 function AdminSetup(props: { organization: Organization; userEmail: string }) {
+  const t = useTranslate();
   const domains = useDomains();
   const claimable = claimableDomainOfEmail(props.userEmail);
-  const steps = stepsOf(props.organization);
+  const steps = stepsOf(t, props.organization);
 
   // Without the list there is no way to know the domain is unclaimed, and a
   // step that is already done must not appear at all.
@@ -245,8 +254,8 @@ function AdminSetup(props: { organization: Organization; userEmail: string }) {
   if (claimable !== null && domains.data !== undefined && !claimed) {
     steps.push({
       done: false,
-      label: `Claim ${claimable}`,
-      hint: "A new account at that domain then finds this workspace on its own.",
+      label: t("home:setup.claim", { domain: claimable }),
+      hint: t("home:setup.claimHint"),
       href: "/settings?tab=domains",
     });
   }
@@ -255,14 +264,16 @@ function AdminSetup(props: { organization: Organization; userEmail: string }) {
 }
 
 function Setup(props: { organization: Organization; userEmail: string }) {
+  const t = useTranslate();
   const { role } = props.organization;
 
   if (role === "owner" || role === "admin") return <AdminSetup {...props} />;
 
-  return <SetupSteps organization={props.organization} steps={stepsOf(props.organization)} />;
+  return <SetupSteps organization={props.organization} steps={stepsOf(t, props.organization)} />;
 }
 
 function UpcomingEvents() {
+  const t = useTranslate();
   const events = useEvents({ scope: "upcoming", q: "", groupId: "" });
   const rows = (events.data?.pages[0]?.items ?? []).slice(0, 5);
 
@@ -271,16 +282,12 @@ function UpcomingEvents() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCodeIcon />
-          Next events
+          {t("home:upcoming.title")}
         </CardTitle>
         <CardDescription>
           {match(rows.length)
-            .with(
-              0,
-              () =>
-                "Nothing is planned. Create an event, or a schedule that creates them for you." as const,
-            )
-            .otherwise(() => "Soonest first. Running ones accept check-ins now." as const)}
+            .with(0, () => t("home:upcoming.empty"))
+            .otherwise(() => t("home:upcoming.hint"))}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -311,10 +318,10 @@ function UpcomingEvents() {
           .otherwise(() => null)}
         <div className="flex gap-2">
           <a href="/events" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            All events
+            {t("home:upcoming.allEvents")}
           </a>
           <a href="/schedules" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            Schedules
+            {t("home:upcoming.schedules")}
           </a>
         </div>
       </CardContent>
@@ -323,14 +330,15 @@ function UpcomingEvents() {
 }
 
 function HomeBody(props: HomePageProps) {
+  const t = useTranslate();
   const organization = useOrganization();
 
   return (
     <>
       <PageHeader
-        title={`Hello, ${props.userName.split(" ")[0] ?? props.userName}`}
+        title={t("home:hello", { name: props.userName.split(" ")[0] ?? props.userName })}
         description={match(organization.data)
-          .with(P.nullish, () => "Where the organization stands today.")
+          .with(P.nullish, () => t("home:fallbackDescription"))
           .otherwise((data) => <CountLinks counts={data.counts} />)}
       />
 
@@ -364,7 +372,7 @@ function HomeBody(props: HomePageProps) {
 
 export function HomePage(props: HomePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <HomeBody {...props} />
     </Providers>
   );

@@ -1,9 +1,11 @@
 import { accountKeys, accountMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 /** For an account that has no password yet. Changing one goes elsewhere. */
 export function useSetPassword() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,7 +13,7 @@ export function useSetPassword() {
     mutationFn: async (password: string) => {
       const response = await api.me.password.$post({ json: { password } });
 
-      if (!response.ok) throw await apiError(response, "Could not set the password.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSetPassword"));
 
       return response.json();
     },

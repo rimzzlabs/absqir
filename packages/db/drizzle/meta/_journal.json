@@ -85,6 +85,20 @@
       "when": 1789320294392,
       "tag": "0011_known_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789324647163,
+      "tag": "0012_thankful_tempest",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789330419614,
+      "tag": "0013_abnormal_nextwave",
+      "breakpoints": true
     }
   ]
 }

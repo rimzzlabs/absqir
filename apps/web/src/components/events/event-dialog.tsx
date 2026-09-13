@@ -1,4 +1,5 @@
 import { inDisplayZone } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
@@ -101,9 +102,10 @@ function defaults(event: Event | null, initialStart?: Date | null): EventValues 
 }
 
 export function EventDialog(props: EventDialogProps) {
+  const t = useTranslate();
   const editing = props.event !== null;
   const form = useForm<EventValues>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(eventSchema(t)),
     defaultValues: defaults(props.event, props.initialStart),
   });
 
@@ -111,8 +113,8 @@ export function EventDialog(props: EventDialogProps) {
   const update = useUpdateEvent();
   const pending = create.isPending || update.isPending;
   const saveLabel = match(editing)
-    .with(true, () => "Save" as const)
-    .otherwise(() => "Create" as const);
+    .with(true, () => t("common:actions.save"))
+    .otherwise(() => t("events:dialog.create"));
 
   useEffect(() => {
     if (props.open) form.reset(defaults(props.event, props.initialStart));
@@ -160,16 +162,13 @@ export function EventDialog(props: EventDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
-              .with(true, () => "Edit event" as const)
-              .otherwise(() => "New event" as const)}
+              .with(true, () => t("events:dialog.editTitle"))
+              .otherwise(() => t("events:dialog.newTitle"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {match(editing)
-              .with(true, () => "Times and groups can change until the event closes." as const)
-              .otherwise(
-                () =>
-                  "One moment people are expected. Everyone in the ticked groups is on the list." as const,
-              )}
+              .with(true, () => t("events:dialog.editDescription"))
+              .otherwise(() => t("events:dialog.newDescription"))}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -183,9 +182,14 @@ export function EventDialog(props: EventDialogProps) {
               <FormField
                 control={form.control}
                 name="title"
-                label="Title"
+                label={t("events:dialog.title")}
                 render={(field) => (
-                  <Input {...field} id="event-title" placeholder="Monday standup" autoFocus />
+                  <Input
+                    {...field}
+                    id="event-title"
+                    placeholder={t("events:dialog.titlePlaceholder")}
+                    autoFocus
+                  />
                 )}
               />
 
@@ -193,7 +197,7 @@ export function EventDialog(props: EventDialogProps) {
                 <FormField
                   control={form.control}
                   name="startsAt"
-                  label="Starts"
+                  label={t("events:dialog.starts")}
                   render={(field) => (
                     <DateTimePicker
                       id="event-starts"
@@ -205,7 +209,7 @@ export function EventDialog(props: EventDialogProps) {
                 <FormField
                   control={form.control}
                   name="endsAt"
-                  label="Ends"
+                  label={t("events:dialog.ends")}
                   render={(field) => (
                     <DateTimePicker id="event-ends" value={field.value} onChange={field.onChange} />
                   )}
@@ -216,18 +220,11 @@ export function EventDialog(props: EventDialogProps) {
                 .with(true, () => (
                   <Alert>
                     <ClockCounterClockwiseIcon />
-                    <AlertTitle>This event is already over</AlertTitle>
+                    <AlertTitle>{t("events:dialog.backfillTitle")}</AlertTitle>
                     <AlertDescription>
                       {match(editing)
-                        .with(
-                          true,
-                          () =>
-                            "It closes as soon as you save, and everyone expected without a record is marked absent." as const,
-                        )
-                        .otherwise(
-                          () =>
-                            "It closes as soon as you save. Everyone expected without a record is marked absent, and nobody is told it closed. Use this to record an event that already happened." as const,
-                        )}
+                        .with(true, () => t("events:dialog.backfillEdit"))
+                        .otherwise(() => t("events:dialog.backfillNew"))}
                     </AlertDescription>
                   </Alert>
                 ))
@@ -237,8 +234,8 @@ export function EventDialog(props: EventDialogProps) {
                 <FormField
                   control={form.control}
                   name="lateAfterMinutes"
-                  label="Late after (minutes)"
-                  description="A check-in later than this after the start counts as late."
+                  label={t("events:dialog.lateAfter")}
+                  description={t("events:dialog.lateAfterHint")}
                   render={(field) => (
                     <Input {...field} id="event-late" type="number" min={0} inputMode="numeric" />
                   )}
@@ -246,8 +243,8 @@ export function EventDialog(props: EventDialogProps) {
                 <FormField
                   control={form.control}
                   name="opensBeforeMinutes"
-                  label="Opens before (minutes)"
-                  description="Check-in opens this long before the start."
+                  label={t("events:dialog.opensBefore")}
+                  description={t("events:dialog.opensBeforeHint")}
                   render={(field) => (
                     <Input {...field} id="event-opens" type="number" min={0} inputMode="numeric" />
                   )}
@@ -261,7 +258,7 @@ export function EventDialog(props: EventDialogProps) {
                   O.toUndefined,
                 )}
               >
-                <FieldLabel>Expected groups</FieldLabel>
+                <FieldLabel>{t("events:dialog.expectedGroups")}</FieldLabel>
                 <FieldContent>
                   <GroupPicker
                     value={form.watch("groupIds")}
@@ -289,9 +286,7 @@ export function EventDialog(props: EventDialogProps) {
                   checked={form.watch("allowWalkIns")}
                   onCheckedChange={(checked) => form.setValue("allowWalkIns", checked === true)}
                 />
-                <Label htmlFor="event-walk-ins">
-                  Let members outside these groups check in too
-                </Label>
+                <Label htmlFor="event-walk-ins">{t("events:dialog.walkIns")}</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -302,9 +297,7 @@ export function EventDialog(props: EventDialogProps) {
                     form.setValue("registrationOpen", checked === true, { shouldDirty: true })
                   }
                 />
-                <Label htmlFor="event-registration">
-                  Open a public page where anyone can register
-                </Label>
+                <Label htmlFor="event-registration">{t("events:dialog.registration")}</Label>
               </div>
 
               {match(form.watch("registrationOpen"))
@@ -312,8 +305,8 @@ export function EventDialog(props: EventDialogProps) {
                   <FormField
                     control={form.control}
                     name="registrationLimit"
-                    label="Seats"
-                    description="Leave empty for no limit. Someone who registers joins as a member."
+                    label={t("events:dialog.seats")}
+                    description={t("events:dialog.seatsHint")}
                     render={(field) => (
                       <Input
                         {...field}
@@ -321,7 +314,7 @@ export function EventDialog(props: EventDialogProps) {
                         type="number"
                         min={1}
                         inputMode="numeric"
-                        placeholder="No limit"
+                        placeholder={t("events:dialog.seatsPlaceholder")}
                       />
                     )}
                   />
@@ -331,8 +324,8 @@ export function EventDialog(props: EventDialogProps) {
               <FormField
                 control={form.control}
                 name="description"
-                label="Notes"
-                description="Optional. Room, agenda, what to bring."
+                label={t("events:dialog.notes")}
+                description={t("events:dialog.notesHint")}
                 render={(field) => <Textarea {...field} id="event-description" rows={2} />}
               />
 
@@ -340,11 +333,11 @@ export function EventDialog(props: EventDialogProps) {
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button type="submit" disabled={pending}>
                 {match(pending)
-                  .with(true, () => "Saving…" as const)
+                  .with(true, () => t("common:actions.saving"))
                   .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>

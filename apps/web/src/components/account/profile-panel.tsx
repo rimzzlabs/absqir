@@ -1,4 +1,6 @@
 import { formatDate } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
@@ -10,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { AccountDangerZone } from "@/components/account/account-danger-zone";
 import { EmailChange } from "@/components/account/email-change";
+import { LanguageRow } from "@/components/account/language-row";
 import { TimezoneRow } from "@/components/account/timezone-row";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
@@ -27,6 +30,8 @@ export interface ProfilePanelProps {
   role: RoleName | null;
   /** The stored zone. Null follows the device. */
   timezone: string | null;
+  /** The language this account reads absqir in. */
+  locale: Locale;
   /** Null alongside a null role. The danger zone offers to leave it. */
   organization: { id: string; name: string; slug: string } | null;
 }
@@ -36,24 +41,25 @@ export interface ProfilePanelProps {
  * with it, because the header renders on the server.
  */
 function Identity(props: ProfilePanelProps) {
+  const t = useTranslate();
   const [readError, setReadError] = useState<Error | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const save = useUpdateProfile();
   const pictureLabel = match(props.image)
-    .with(P.string.minLength(1), () => "Change picture")
-    .otherwise(() => "Add a picture" as const);
+    .with(P.string.minLength(1), () => t("account:profile.changePicture"))
+    .otherwise(() => t("account:profile.addPicture"));
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     setReadError(null);
 
     try {
-      save.mutate({ name: props.name, image: await toAvatarDataUrl(file) });
+      save.mutate({ name: props.name, image: await toAvatarDataUrl(file, t) });
     } catch (error) {
       setReadError(
         match(error)
           .with(P.instanceOf(Error), (error) => error)
-          .otherwise(() => new Error("Could not read that picture.")),
+          .otherwise(() => new Error(t("account:profile.unreadable"))),
       );
     }
   };
@@ -77,7 +83,7 @@ function Identity(props: ProfilePanelProps) {
             .with(P.string.minLength(1), (role) => <RoleBadge role={role} />)
             .otherwise(() => null)}
           <span className="text-muted-foreground text-xs">
-            Joined {formatDate(new Date(props.createdAt))}
+            {t("account:profile.joined", { date: formatDate(new Date(props.createdAt)) })}
           </span>
         </div>
       </div>
@@ -99,7 +105,7 @@ function Identity(props: ProfilePanelProps) {
           >
             <CameraIcon />
             {match(save.isPending)
-              .with(true, () => "Saving…" as const)
+              .with(true, () => t("common:actions.saving"))
               .otherwise(() => pictureLabel)}
           </Button>
           {match(props.image)
@@ -111,12 +117,12 @@ function Identity(props: ProfilePanelProps) {
                 onClick={() => save.mutate({ name: props.name, image: null })}
               >
                 <XIcon />
-                Remove
+                {t("common:actions.remove")}
               </Button>
             ))
             .otherwise(() => null)}
         </div>
-        <p className="text-muted-foreground text-xs">PNG, JPEG or WebP. Shrunk to 128px.</p>
+        <p className="text-muted-foreground text-xs">{t("account:profile.formats")}</p>
         <FormError error={readError ?? save.error} />
       </div>
     </div>
@@ -124,14 +130,15 @@ function Identity(props: ProfilePanelProps) {
 }
 
 function NameRow(props: { name: string }) {
+  const t = useTranslate();
   const save = useUpdateProfile();
   const form = useForm<NameValues>({
-    resolver: zodResolver(nameSchema),
+    resolver: zodResolver(nameSchema(t)),
     defaultValues: { name: props.name },
   });
 
   return (
-    <SettingsRow label="Name" hint="As organizers and the people in your groups see it.">
+    <SettingsRow label={t("account:profile.name")} hint={t("account:profile.nameHint")}>
       <form
         onSubmit={form.handleSubmit((values) => save.mutate({ name: values.name }))}
         className="flex flex-wrap items-start gap-2"
@@ -141,7 +148,7 @@ function NameRow(props: { name: string }) {
           <Input
             {...form.register("name")}
             id="name"
-            aria-label="Name"
+            aria-label={t("account:profile.name")}
             autoComplete="name"
             aria-invalid={pipe(
               O.fromNullable(form.formState.errors.name),
@@ -163,8 +170,8 @@ function NameRow(props: { name: string }) {
           disabled={save.isPending || !form.formState.isDirty}
         >
           {match(save.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Save" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("common:actions.save"))}
         </Button>
         <FormError error={save.error} />
       </form>
@@ -173,17 +180,18 @@ function NameRow(props: { name: string }) {
 }
 
 function EmailRow(props: { email: string }) {
+  const t = useTranslate();
   const [changing, setChanging] = useState(false);
 
   return (
-    <SettingsRow label="Email" hint="Where you sign in and where reminders go.">
+    <SettingsRow label={t("account:profile.email")} hint={t("account:profile.emailHint")}>
       {match(changing)
         .with(true, () => <EmailChange onCancel={() => setChanging(false)} />)
         .otherwise(() => (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="min-w-0 truncate text-sm">{props.email}</p>
             <Button type="button" variant="outline" onClick={() => setChanging(true)}>
-              Change email
+              {t("account:profile.changeEmail")}
             </Button>
           </div>
         ))}
@@ -193,13 +201,19 @@ function EmailRow(props: { email: string }) {
 
 /** Who you are to the people who run attendance. */
 export function ProfilePanel(props: ProfilePanelProps) {
+  const t = useTranslate();
+
   return (
     <div className="space-y-12">
-      <SettingsSection title="Profile" description="Your name and picture, as organizers see them.">
+      <SettingsSection
+        title={t("account:profile.title")}
+        description={t("account:profile.description")}
+      >
         <Identity {...props} />
         <div className="border-border border-t">
           <NameRow name={props.name} />
           <EmailRow email={props.email} />
+          <LanguageRow locale={props.locale} />
           <TimezoneRow timezone={props.timezone} />
         </div>
       </SettingsSection>

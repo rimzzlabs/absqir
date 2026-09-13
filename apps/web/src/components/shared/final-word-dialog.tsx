@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,8 @@ export interface FinalWordDialogProps {
  * read one more time and choose.
  */
 export function FinalWordDialog(props: FinalWordDialogProps) {
+  const t = useTranslate();
+
   return (
     <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
       <AlertDialogContent className="gap-6 p-5 sm:max-w-md">
@@ -49,14 +52,14 @@ export function FinalWordDialog(props: FinalWordDialogProps) {
 
         {/* The footer bleeds to the edge, so it tracks the padding above. */}
         <AlertDialogFooter className="-mx-5 -mb-5 p-5">
-          <AlertDialogCancel>Go back</AlertDialogCancel>
+          <AlertDialogCancel>{t("common:actions.goBack")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={props.pending}
             onClick={props.onConfirm}
           >
             {match(props.pending)
-              .with(true, () => "Working…" as const)
+              .with(true, () => t("common:actions.working"))
               .otherwise(() => props.confirmLabel)}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -1,4 +1,5 @@
 import { eventKeys, leaveKeys, leaveMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -10,6 +11,7 @@ export interface DecideLeaveInput {
 
 /** Approve or decline. An approval writes an excused record. */
 export function useDecideLeave() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -17,7 +19,7 @@ export function useDecideLeave() {
     mutationFn: async ({ id, ...values }: DecideLeaveInput) => {
       const response = await api.leave[":id"].decide.$post({ param: { id }, json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the decision.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveDecision"));
 
       return response.json();
     },

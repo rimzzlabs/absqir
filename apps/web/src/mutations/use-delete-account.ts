@@ -1,4 +1,5 @@
 import { accountMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { authClient } from "@/lib/auth-client";
@@ -16,6 +17,7 @@ export interface DeleteAccountInput {
  * sign-in page.
  */
 export function useDeleteAccount() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: accountMutationKeys.deleteAccount(),
     mutationFn: async (values: DeleteAccountInput) => {
@@ -23,7 +25,7 @@ export function useDeleteAccount() {
       // the freshness check, which deletes the account without the password
       // the reader was asked for.
       if (values.password !== undefined && values.password.length === 0) {
-        throw new Error("Give your password to delete the account.");
+        throw new Error(t("errors:givePasswordToDelete"));
       }
 
       const { error } = await authClient.deleteUser(
@@ -33,11 +35,11 @@ export function useDeleteAccount() {
       );
 
       if (error?.code === "SESSION_EXPIRED") {
-        throw new Error("You signed in a while ago. Sign out, sign in again, then delete it.");
+        throw new Error(t("errors:sessionNotFreshDelete"));
       }
 
       if (error?.code === "INVALID_PASSWORD") {
-        throw new Error("That password is wrong.");
+        throw new Error(t("errors:passwordWrong"));
       }
 
       if (error) {

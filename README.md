@@ -50,6 +50,8 @@ What works today:
   each reader's own time zone.
 - An operator CLI: `init`, `up`, `doctor` with a repair for the database
   password, `db reset`, and `admin create`.
+- English and Bahasa Indonesia. Each account picks one on the first run, and
+  reads every screen, notification and email in it.
 
 What it is not, yet: there is no hosted version, you self-host. It does not
 do payroll, and it does not track location. If something breaks, open an
@@ -146,6 +148,7 @@ must work with no account anywhere.
 | Database | Postgres through Drizzle ORM (Hyperdrive on Workers)          |
 | Auth     | Better Auth with the organization plugin, email and password  |
 | Email    | Resend with React Email, optional                             |
+| Language | i18next in `packages/i18n`, English and Bahasa Indonesia      |
 | Runtime  | Node.js in Docker for self-host, Cloudflare Workers for cloud |
 | Docs     | Vocs in `apps/docs`                                           |
 | CLI      | The `absqir` package in `packages/cli`                        |
@@ -188,6 +191,7 @@ packages/
   config/              Shared tsconfig and vitest presets
   core/                Money on bigint, dates, query keys
   db/                  Drizzle schema, client, migrations, operator ops
+  i18n/                The message catalogs, one folder per language
   transactional/       Resend mailer, the code and invitation templates
   ui/                  Base UI primitives, Tailwind theme, motion
 

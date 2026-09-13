@@ -3,6 +3,7 @@ import { createRequestContext } from "@absqir/api";
 import { isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { isOnboardingStep } from "@absqir/db/schema";
+import { DEFAULT_LOCALE, isLocale, localeFromHeader } from "@absqir/i18n";
 import { getRuntime } from "@app-runtime";
 import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
@@ -10,6 +11,15 @@ import { match, P } from "ts-pattern";
 
 /** The single sign-in door. A signed-in reader is sent to the dashboard. */
 const SIGN_IN_PATH = "/sign-in";
+
+/**
+ * Where this browser remembers the language of the account that last used
+ * it. The sign-in page has no session to ask, so without this it would fall
+ * back to whatever the operating system asks for, and a reader who chose
+ * Bahasa Indonesia inside absqir would meet an English door on the way back.
+ */
+const LOCALE_COOKIE = "locale";
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 /** Reachable without a session. */
 function isPublicPath(path: string): boolean {
@@ -65,10 +75,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
     runtime.bindings,
     context.url.origin,
     context.request.headers.get("origin"),
+    context.request.headers.get("accept-language"),
   );
+
+  // What this browser last read in, then what the operating system asks
+  // for. A signed-in account overrides both below.
+  const remembered = match(context.cookies.get(LOCALE_COOKIE)?.value)
+    .with(P.when(isLocale), (locale) => locale)
+    .otherwise(() => null);
+  const askedLocale =
+    remembered ??
+    localeFromHeader(context.request.headers.get("accept-language")) ??
+    DEFAULT_LOCALE;
 
   context.locals.user = null;
   context.locals.session = null;
+  context.locals.locale = askedLocale;
   context.locals.onboardingStep = null;
   context.locals.memberships = [];
   context.locals.activeMembership = null;
@@ -115,8 +137,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
       memberships[0] ??
       null;
 
+    const chosen = match(user.locale)
+      .with(P.when(isLocale), (locale) => locale)
+      .otherwise(() => null);
+
+    // An account that has chosen leaves the choice on the browser, so the
+    // sign-in page speaks it the next time this person comes back.
+    if (chosen !== null && chosen !== remembered) {
+      context.cookies.set(LOCALE_COOKIE, chosen, {
+        path: "/",
+        maxAge: ONE_YEAR_SECONDS,
+        sameSite: "lax",
+        secure: context.url.protocol === "https:",
+      });
+    }
+
     context.locals.user = user;
     context.locals.session = session;
+    context.locals.locale = chosen ?? askedLocale;
     context.locals.onboardingStep = onboardingStep;
     context.locals.memberships = memberships;
     context.locals.activeMembership = activeMembership;

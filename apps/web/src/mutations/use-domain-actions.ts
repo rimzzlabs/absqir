@@ -1,4 +1,5 @@
 import { domainKeys, domainMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -6,6 +7,7 @@ export type JoinPolicy = "closed" | "request" | "auto";
 
 /** Claims a domain. It stays unverified until the TXT record is in place. */
 export function useClaimDomain() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -13,7 +15,7 @@ export function useClaimDomain() {
     mutationFn: async (domain: string) => {
       const response = await api.organizations.domains.$post({ json: { domain } });
 
-      if (!response.ok) throw await apiError(response, "Could not claim the domain.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotClaimDomain"));
 
       return response.json();
     },
@@ -25,6 +27,7 @@ export function useClaimDomain() {
 
 /** Reads the TXT record. The reply says whether the claim is proven now. */
 export function useVerifyDomain() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -32,7 +35,7 @@ export function useVerifyDomain() {
     mutationFn: async (id: string) => {
       const response = await api.organizations.domains[":id"].verify.$post({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not check the record.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCheckRecord"));
 
       return response.json();
     },
@@ -43,6 +46,7 @@ export function useVerifyDomain() {
 }
 
 export function useReleaseDomain() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -50,7 +54,7 @@ export function useReleaseDomain() {
     mutationFn: async (id: string) => {
       const response = await api.organizations.domains[":id"].$delete({ param: { id } });
 
-      if (!response.ok) throw await apiError(response, "Could not release the domain.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotReleaseDomain"));
 
       return response.json();
     },
@@ -62,6 +66,7 @@ export function useReleaseDomain() {
 
 /** Says what a verified domain opens for a matching account. */
 export function useSetJoinPolicy() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -69,7 +74,7 @@ export function useSetJoinPolicy() {
     mutationFn: async (joinPolicy: JoinPolicy) => {
       const response = await api.organizations["join-policy"].$post({ json: { joinPolicy } });
 
-      if (!response.ok) throw await apiError(response, "Could not save the policy.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSavePolicy"));
 
       return response.json();
     },

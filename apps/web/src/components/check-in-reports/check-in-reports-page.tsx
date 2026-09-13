@@ -1,6 +1,8 @@
 import { formatDate } from "@absqir/core/date";
 import { formatDistance } from "@absqir/core/geo";
-import { isRiskReason, RISK_REASON_TEXT } from "@absqir/core/location-risk";
+import { isRiskReason } from "@absqir/core/location-risk";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent } from "@absqir/ui/card";
@@ -33,10 +35,12 @@ const RECORD_AS = ["present", "late", "excused"] as const;
 type RecordAs = (typeof RECORD_AS)[number];
 
 function StatusBadge(props: { status: CheckInReport["status"] }) {
+  const t = useTranslate();
+
   return match(props.status)
-    .with("approved", () => <Badge variant="secondary">Approved</Badge>)
-    .with("declined", () => <Badge variant="outline">Declined</Badge>)
-    .otherwise(() => <Badge>Waiting</Badge>);
+    .with("approved", () => <Badge variant="secondary">{t("checkin:reports.approved")}</Badge>)
+    .with("declined", () => <Badge variant="outline">{t("checkin:reports.declined")}</Badge>)
+    .otherwise(() => <Badge>{t("checkin:reports.waiting")}</Badge>);
 }
 
 /** One labelled fact. A bare number in a sentence is not readable. */
@@ -63,49 +67,54 @@ const FAR_METERS = 1000;
  */
 function Evidence(props: { attempt: NonNullable<CheckInReport["attempt"]> }) {
   const { attempt } = props;
+  const t = useTranslate();
   const reasons = A.filter(attempt.riskReasons, isRiskReason);
   const far = (attempt.distanceMeters ?? 0) >= FAR_METERS;
 
   return (
     <div className="bg-muted/40 flex flex-col gap-3 rounded-lg p-3">
-      <p className="text-muted-foreground text-xs font-medium uppercase">What was recorded</p>
+      <p className="text-muted-foreground text-xs font-medium uppercase">
+        {t("checkin:reports.recorded")}
+      </p>
 
       <dl className="flex flex-col gap-1.5 text-sm">
-        <Fact label="Scanned">
+        <Fact label={t("checkin:reports.scanned")}>
           {match(attempt.heldRoomCode)
-            .with(true, () => "A live code from the room screen")
-            .otherwise(() => "A pass, read by the organizer's scanner")}
+            .with(true, () => t("checkin:reports.scannedRoomCode"))
+            .otherwise(() => t("checkin:reports.scannedPass"))}
         </Fact>
 
-        <Fact label="Distance">
+        <Fact label={t("checkin:reports.distance")}>
           {match(attempt.distanceMeters)
-            .with(P.number, (meters) => `${formatDistance(meters)} from the place`)
+            .with(P.number, (meters) =>
+              t("checkin:reports.distanceFrom", { distance: formatDistance(meters) }),
+            )
             .otherwise(() =>
               match(attempt.verdict)
-                .with("missing", () => "The device sent no location")
-                .with("coarse", () => "Too vague to place them")
-                .otherwise(() => "Not recorded"),
+                .with("missing", () => t("checkin:reports.noLocation"))
+                .with("coarse", () => t("checkin:reports.coarse"))
+                .otherwise(() => t("checkin:reports.notRecorded")),
             )}
         </Fact>
 
-        <Fact label="Accuracy">
+        <Fact label={t("checkin:reports.accuracy")}>
           {match(attempt.accuracyMeters)
-            .with(P.number, (meters) => `About ${Math.round(meters)} m`)
-            .otherwise(() => "Not recorded")}
+            .with(P.number, (meters) =>
+              t("checkin:reports.accuracyAbout", { meters: Math.round(meters) }),
+            )
+            .otherwise(() => t("checkin:reports.notRecorded"))}
         </Fact>
 
-        <Fact label="Scanned at">{formatDate(new Date(attempt.at), "dateTime")}</Fact>
+        <Fact label={t("checkin:reports.scannedAt")}>
+          {formatDate(new Date(attempt.at), "dateTime")}
+        </Fact>
       </dl>
 
       {match(attempt.heldRoomCode && far)
         .with(true, () => (
           <p className="flex items-start gap-2 border-t pt-3 text-sm">
             <WarningIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-            <span>
-              These two do not fit. A live code means somebody was at the screen, and a reading this
-              far away means they were not. Either the phone placed them badly, which happens
-              indoors, or the code reached somebody else.
-            </span>
+            <span>{t("checkin:reports.conflict")}</span>
           </p>
         ))
         .otherwise(() => null)}
@@ -114,10 +123,12 @@ function Evidence(props: { attempt: NonNullable<CheckInReport["attempt"]> }) {
         .with(0, () => null)
         .otherwise(() => (
           <div className="flex flex-col gap-1 border-t pt-3">
-            <p className="text-muted-foreground text-xs font-medium uppercase">Signals</p>
+            <p className="text-muted-foreground text-xs font-medium uppercase">
+              {t("checkin:reports.signals")}
+            </p>
             <ul className="text-muted-foreground space-y-1 text-xs">
               {A.map(reasons, (reason) => (
-                <li key={reason}>{RISK_REASON_TEXT[reason]}</li>
+                <li key={reason}>{t(`checkin:risk.${reason}`)}</li>
               ))}
             </ul>
           </div>
@@ -128,6 +139,7 @@ function Evidence(props: { attempt: NonNullable<CheckInReport["attempt"]> }) {
 
 function ReportCard(props: { report: CheckInReport }) {
   const { report } = props;
+  const t = useTranslate();
   const decide = useDecideCheckInReport();
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<RecordAs>(report.clockSays ?? "present");
@@ -141,36 +153,33 @@ function ReportCard(props: { report: CheckInReport }) {
             <p className="font-medium">{report.person.name}</p>
             {/* Three instants live on this card. Each one says which it is. */}
             <p className="text-muted-foreground text-sm">
-              {report.event.title} · started{" "}
-              {formatDate(new Date(report.event.startsAt), "dateTime")}
+              {t("checkin:reports.started", {
+                event: report.event.title,
+                when: formatDate(new Date(report.event.startsAt), "dateTime"),
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">
             {match(report.priorReports)
               .with(0, () => null)
               .otherwise((count) => (
-                <Badge variant="outline">
-                  {count} earlier{" "}
-                  {match(count)
-                    .with(1, () => "report")
-                    .otherwise(() => "reports")}
-                </Badge>
+                <Badge variant="outline">{t("checkin:reports.earlier", { count })}</Badge>
               ))}
             <StatusBadge status={report.status} />
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-muted-foreground text-xs font-medium uppercase">They said</p>
+          <p className="text-muted-foreground text-xs font-medium uppercase">
+            {t("checkin:reports.theySaid")}
+          </p>
           <p className="text-sm">{report.message}</p>
         </div>
 
         {match(report.attempt)
           .with(P.nonNullable, (attempt) => <Evidence attempt={attempt} />)
           .otherwise(() => (
-            <p className="text-muted-foreground text-sm">
-              The refused check-in is no longer on record, so their own words are all there is.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("checkin:reports.noAttempt")}</p>
           ))}
 
         {match(pending)
@@ -179,7 +188,7 @@ function ReportCard(props: { report: CheckInReport }) {
               {/* The clock is a default, not an answer. An organizer who
                   watched the member walk in on time can say so. */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`${report.id}-status`}>Record them as</Label>
+                <Label htmlFor={`${report.id}-status`}>{t("checkin:reports.recordThemAs")}</Label>
                 <ToggleGroup
                   id={`${report.id}-status`}
                   value={[status]}
@@ -191,28 +200,28 @@ function ReportCard(props: { report: CheckInReport }) {
                 >
                   {A.map(RECORD_AS, (option) => (
                     <ToggleGroupItem key={option} value={option}>
-                      {attendanceLabel(option)}
+                      {attendanceLabel(t, option)}
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
                 <p className="text-muted-foreground text-xs">
                   {match(report.clockSays)
-                    .with(
-                      P.string,
-                      (says) =>
-                        `The clock says ${attendanceLabel(says).toLowerCase()}, from the time they scanned.`,
+                    .with(P.string, (says) =>
+                      t("checkin:reports.clockSays", {
+                        status: attendanceLabel(t, says).toLowerCase(),
+                      }),
                     )
-                    .otherwise(() => "No scan survives to time, so pick what happened.")}
+                    .otherwise(() => t("checkin:reports.noClock"))}
                 </p>
               </div>
 
               <Textarea
-                aria-label={`Note for ${report.person.name}`}
+                aria-label={t("checkin:reports.noteLabel", { name: report.person.name })}
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={2}
                 maxLength={500}
-                placeholder="Optional. The member reads this with the decision."
+                placeholder={t("checkin:reports.notePlaceholder")}
               />
 
               <FormError error={decide.error} />
@@ -230,7 +239,9 @@ function ReportCard(props: { report: CheckInReport }) {
                   }
                 >
                   <CheckCircleIcon />
-                  Record as {attendanceLabel(status).toLowerCase()}
+                  {t("checkin:reports.recordAs", {
+                    status: attendanceLabel(t, status).toLowerCase(),
+                  })}
                 </Button>
                 <Button
                   variant="outline"
@@ -240,22 +251,19 @@ function ReportCard(props: { report: CheckInReport }) {
                   }
                 >
                   <XCircleIcon />
-                  Decline
+                  {t("checkin:reports.decline")}
                 </Button>
               </div>
 
-              <p className="text-muted-foreground text-xs">
-                The record keeps the time they scanned, not the time you decided. Either way they
-                get a notification, and the event cannot be reported again.
-              </p>
+              <p className="text-muted-foreground text-xs">{t("checkin:reports.afterHint")}</p>
             </div>
           ))
           .otherwise(() => (
             <div className="text-muted-foreground flex flex-col gap-1 border-t pt-4 text-sm">
               <p>
                 {match(report.status)
-                  .with("approved", () => "Marked in")
-                  .otherwise(() => "Declined")}
+                  .with("approved", () => t("checkin:reports.markedIn"))
+                  .otherwise(() => t("checkin:reports.wasDeclined"))}
                 {match(report.decidedAt)
                   .with(P.string, (at) => ` · ${formatDate(new Date(at), "dateTime")}`)
                   .otherwise(() => "")}
@@ -273,6 +281,7 @@ function ReportCard(props: { report: CheckInReport }) {
 }
 
 function CheckInReportsBody() {
+  const t = useTranslate();
   const [scope, setScope] = useQueryState(
     "status",
     parseAsStringLiteral(SCOPES).withDefault("pending"),
@@ -283,15 +292,15 @@ function CheckInReportsBody() {
   return (
     <>
       <PageHeader
-        title="Check-in problems"
-        description="Members who say the place check refused them while they were at the event."
+        title={t("checkin:reports.title")}
+        description={t("checkin:reports.description")}
       />
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as ReportScope)}>
         <TabsList>
-          <TabsTrigger value="pending">Waiting</TabsTrigger>
-          <TabsTrigger value="decided">Decided</TabsTrigger>
-          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="pending">{t("checkin:reports.waiting")}</TabsTrigger>
+          <TabsTrigger value="decided">{t("checkin:reports.decided")}</TabsTrigger>
+          <TabsTrigger value="all">{t("checkin:reports.all")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -310,11 +319,8 @@ function CheckInReportsBody() {
               <EmptyMedia variant="icon">
                 <FlagIcon />
               </EmptyMedia>
-              <EmptyTitle>Nothing here</EmptyTitle>
-              <EmptyDescription>
-                Nobody has reported a problem with the place check. A member who is refused while
-                standing at the event can send one from the check-in page.
-              </EmptyDescription>
+              <EmptyTitle>{t("checkin:reports.emptyTitle")}</EmptyTitle>
+              <EmptyDescription>{t("checkin:reports.emptyDescription")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ))
@@ -330,9 +336,14 @@ function CheckInReportsBody() {
 }
 
 /** The organizer's queue of members the place check turned away. */
-export function CheckInReportsPage() {
+export interface CheckInReportsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function CheckInReportsPage(props: CheckInReportsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <CheckInReportsBody />
     </Providers>
   );

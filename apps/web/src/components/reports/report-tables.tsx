@@ -1,4 +1,7 @@
 import { formatDate } from "@absqir/core/date";
+import { formatNumber } from "@absqir/core/numbers";
+import type { Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -38,26 +41,28 @@ function NothingHere(props: { title: string; description: string }) {
 }
 
 const TALLIES = [
-  { key: "present", header: "Present" },
-  { key: "late", header: "Late" },
-  { key: "excused", header: "Excused" },
-  { key: "absent", header: "Absent" },
-] as const satisfies readonly { key: keyof Counts; header: string }[];
+  "present",
+  "late",
+  "excused",
+  "absent",
+] as const satisfies readonly (keyof Counts)[];
 
 /** Present, late, excused and absent, the same four columns in every report. */
-function countColumns<T extends { counts: Counts }>(): readonly DataColumn<T>[] {
+function countColumns<T extends { counts: Counts }>(t: Translate): readonly DataColumn<T>[] {
   return A.map(TALLIES, (tally) => ({
-    key: tally.key,
-    header: tally.header,
-    cell: (row: T) => row.counts[tally.key],
+    key: tally,
+    header: t(`common:attendance.${tally}`),
+    cell: (row: T) => formatNumber(row.counts[tally]),
     cellClassName: "tabular-nums",
   }));
 }
 
-function rateColumn<T extends { counts: Counts; attendanceRate: number | null }>(): DataColumn<T> {
+function rateColumn<T extends { counts: Counts; attendanceRate: number | null }>(
+  t: Translate,
+): DataColumn<T> {
   return {
     key: "attendance",
-    header: "Attendance",
+    header: t("reports:tables.attendance"),
     cell: (row) => (
       <div className="flex items-center justify-end gap-2 md:justify-start">
         <span className="w-10 tabular-nums">{ratePercent(row.attendanceRate)}</span>
@@ -85,47 +90,51 @@ function ReportQuery<T>(props: {
     .otherwise(() => null);
 }
 
-const PEOPLE_COLUMNS: DataColumn<PersonReportRow>[] = [
-  {
-    key: "person",
-    header: "Person",
-    place: "primary",
-    cell: (row) => (
-      <>
-        {row.name}
-        {match(row.identifier)
-          .with(P.string.minLength(1), (identifier) => (
-            <p className="text-muted-foreground text-xs">{identifier}</p>
-          ))
-          .otherwise(() => null)}
-      </>
-    ),
-    cellClassName: "font-medium",
-  },
-  ...countColumns<PersonReportRow>(),
-  rateColumn<PersonReportRow>(),
-  {
-    key: "punctuality",
-    header: "On time",
-    cell: (row) => ratePercent(row.punctualityRate),
-    cellClassName: "tabular-nums",
-  },
-];
+function peopleColumns(t: Translate): DataColumn<PersonReportRow>[] {
+  return [
+    {
+      key: "person",
+      header: t("reports:tables.person"),
+      place: "primary",
+      cell: (row) => (
+        <>
+          {row.name}
+          {match(row.identifier)
+            .with(P.string.minLength(1), (identifier) => (
+              <p className="text-muted-foreground text-xs">{identifier}</p>
+            ))
+            .otherwise(() => null)}
+        </>
+      ),
+      cellClassName: "font-medium",
+    },
+    ...countColumns<PersonReportRow>(t),
+    rateColumn<PersonReportRow>(t),
+    {
+      key: "punctuality",
+      header: t("reports:tables.onTime"),
+      cell: (row) => ratePercent(row.punctualityRate),
+      cellClassName: "tabular-nums",
+    },
+  ];
+}
 
 export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
+  const t = useTranslate();
+
   return (
     <ReportQuery
       query={props.query}
       empty={
         <NothingHere
-          title="No records in this range"
-          description="Records appear once an event in the range has closed, or someone checked in."
+          title={t("reports:tables.emptyPeopleTitle")}
+          description={t("reports:tables.emptyPeopleDescription")}
         />
       }
       render={(rows) => (
         <DataTable
-          label="Attendance by person"
-          columns={PEOPLE_COLUMNS}
+          label={t("reports:tables.byPerson")}
+          columns={peopleColumns(t)}
           rows={rows}
           getKey={(row) => row.personId}
         />
@@ -134,38 +143,42 @@ export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
   );
 }
 
-const GROUP_COLUMNS: DataColumn<GroupReportRow>[] = [
-  {
-    key: "group",
-    header: "Group",
-    place: "primary",
-    cell: (row) => row.name,
-    cellClassName: "font-medium",
-  },
-  {
-    key: "people",
-    header: "People",
-    cell: (row) => row.people,
-    cellClassName: "tabular-nums",
-  },
-  ...countColumns<GroupReportRow>(),
-  rateColumn<GroupReportRow>(),
-];
+function groupColumns(t: Translate): DataColumn<GroupReportRow>[] {
+  return [
+    {
+      key: "group",
+      header: t("reports:tables.group"),
+      place: "primary",
+      cell: (row) => row.name,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "people",
+      header: t("reports:tables.people"),
+      cell: (row) => formatNumber(row.people),
+      cellClassName: "tabular-nums",
+    },
+    ...countColumns<GroupReportRow>(t),
+    rateColumn<GroupReportRow>(t),
+  ];
+}
 
 export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
+  const t = useTranslate();
+
   return (
     <ReportQuery
       query={props.query}
       empty={
         <NothingHere
-          title="No groups yet"
-          description="Put people in a group, and an event can expect the whole group at once."
+          title={t("reports:tables.emptyGroupsTitle")}
+          description={t("reports:tables.emptyGroupsDescription")}
         />
       }
       render={(rows) => (
         <DataTable
-          label="Attendance by group"
-          columns={GROUP_COLUMNS}
+          label={t("reports:tables.byGroup")}
+          columns={groupColumns(t)}
           rows={rows}
           getKey={(row) => row.groupId}
         />
@@ -174,44 +187,48 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
   );
 }
 
-const EVENT_COLUMNS: DataColumn<EventReportRow>[] = [
-  {
-    key: "event",
-    header: "Event",
-    place: "primary",
-    cell: (row) => (
-      <>
-        <a href={`/events/${row.eventId}`} className="hover:underline">
-          {row.title}
-        </a>
-        <p className="text-muted-foreground text-xs">
-          {formatDate(new Date(row.startsAt), "weekdayDateTime")}
-          {match(row.closed)
-            .with(true, () => "" as const)
-            .otherwise(() => " · still open" as const)}
-        </p>
-      </>
-    ),
-    cellClassName: "font-medium",
-  },
-  ...countColumns<EventReportRow>(),
-  rateColumn<EventReportRow>(),
-];
+function eventColumns(t: Translate): DataColumn<EventReportRow>[] {
+  return [
+    {
+      key: "event",
+      header: t("reports:tables.event"),
+      place: "primary",
+      cell: (row) => (
+        <>
+          <a href={`/events/${row.eventId}`} className="hover:underline">
+            {row.title}
+          </a>
+          <p className="text-muted-foreground text-xs">
+            {formatDate(new Date(row.startsAt), "weekdayDateTime")}
+            {match(row.closed)
+              .with(true, () => "" as const)
+              .otherwise(() => t("reports:tables.stillOpen"))}
+          </p>
+        </>
+      ),
+      cellClassName: "font-medium",
+    },
+    ...countColumns<EventReportRow>(t),
+    rateColumn<EventReportRow>(t),
+  ];
+}
 
 export function EventReportTable(props: { query: Query<EventReportRow> }) {
+  const t = useTranslate();
+
   return (
     <ReportQuery
       query={props.query}
       empty={
         <NothingHere
-          title="No events in this range"
-          description="Pick a wider range, or create an event."
+          title={t("reports:tables.emptyEventsTitle")}
+          description={t("reports:tables.emptyEventsDescription")}
         />
       }
       render={(rows) => (
         <DataTable
-          label="Attendance by event"
-          columns={EVENT_COLUMNS}
+          label={t("reports:tables.byEvent")}
+          columns={eventColumns(t)}
           rows={rows}
           getKey={(row) => row.eventId}
         />

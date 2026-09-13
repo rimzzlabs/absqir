@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { ReportsPage } from "@/components/reports/reports-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
@@ -7,8 +8,9 @@ const role = Astro.locals.activeMembership?.role ?? "member";
 if (role === "member") {
   return Astro.redirect("/my/events", 302);
 }
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<DashboardLayout title="Reports">
-  <ReportsPage client:load />
+<DashboardLayout title={t("shell:titles.reports")}>
+  <ReportsPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

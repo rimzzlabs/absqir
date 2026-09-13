@@ -1,17 +1,21 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
+import type { Locale, Translate } from "@absqir/i18n";
 import { TZDate } from "@date-fns/tz";
 import { A } from "@mobily/ts-belt";
 import { format } from "date-fns";
+import { enUS, id } from "date-fns/locale";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 import { type EventRow, expectedPersonIds } from "#src/lib/expected";
 import {
   adminUserIds,
   createNotifications,
+  localesFor,
   managerUserIds,
   type NotificationInput,
   type NotificationRow,
+  translatorFrom,
   userIdsForPeople,
 } from "#src/lib/notifications";
 
@@ -68,11 +72,19 @@ async function userTimezones(
   );
 }
 
-function whenLine(event: EventRow, timezone: string): string {
+/** The month and weekday names each language writes. */
+const DATE_FNS_LOCALES = { en: enUS, id } as const;
+
+function whenLine(locale: Locale, t: Translate, event: EventRow, timezone: string): string {
   const start = new TZDate(event.startsAt, timezone);
   const end = new TZDate(event.endsAt, timezone);
+  const names = DATE_FNS_LOCALES[locale];
 
-  return `${format(start, "EEE d MMM, HH:mm")} to ${format(end, "HH:mm")} (${timezone}).`;
+  return t("email:notify.when", {
+    start: format(start, "EEE d MMM, HH:mm", { locale: names }),
+    end: format(end, "HH:mm", { locale: names }),
+    timezone,
+  });
 }
 
 type ReminderKind = "day" | "hour";
@@ -117,19 +129,34 @@ export async function notifyDueReminders(
     if (userIds.length === 0) continue;
 
     const zones = await userTimezones(db, userIds);
+    const locales = await localesFor(db, userIds);
 
     for (const kind of kinds) {
-      const title = match(kind)
-        .with("hour", () => `${event.title} starts within the hour`)
-        .otherwise(() => `${event.title} is coming up`);
-
       for (const userId of userIds) {
+        const locale = locales.get(userId) ?? "en";
+        const t = translatorFrom(locales, userId);
+        const title = match(kind)
+          .with("hour", () => t("email:notify.reminderHour", { event: event.title }))
+          .otherwise(() => t("email:notify.reminderDay", { event: event.title }));
+
+        const zone = zones.get(userId) ?? timezone;
+
         rows.push({
           organizationId,
           userId,
           type: "event-reminder",
           title,
-          body: whenLine(event, zones.get(userId) ?? timezone),
+          body: whenLine(locale, t, event, zone),
+          titleKey: match(kind)
+            .with("hour", () => "email:notify.reminderHour" as const)
+            .otherwise(() => "email:notify.reminderDay" as const),
+          titleParams: { event: event.title },
+          bodyKey: "email:notify.when",
+          bodyParams: {
+            startsAt: event.startsAt.toISOString(),
+            endsAt: event.endsAt.toISOString(),
+            timezone: zone,
+          },
           href: `/events/${event.id}`,
           dedupeKey: `event-reminder:${event.id}:${kind}`,
         });
@@ -156,19 +183,32 @@ export async function notifyEventClosed(
   const userIds = await managerUserIds(db, event.organizationId);
   if (userIds.length === 0) return [];
 
-  const body = `${counts.present} present, ${counts.late} late, ${counts.excused} excused, ${counts.absent} absent.`;
+  const locales = await localesFor(db, userIds);
 
   return createNotifications(
     db,
-    A.map(userIds, (userId) => ({
-      organizationId: event.organizationId,
-      userId,
-      type: "event-closed" as const,
-      title: `${event.title} closed`,
-      body,
-      href: `/events/${event.id}`,
-      dedupeKey: `event-closed:${event.id}`,
-    })),
+    A.map(userIds, (userId) => {
+      const t = translatorFrom(locales, userId);
+
+      return {
+        organizationId: event.organizationId,
+        userId,
+        type: "event-closed" as const,
+        title: t("email:notify.eventClosed", { event: event.title }),
+        body: t("email:notify.eventClosedBody", {
+          present: counts.present,
+          late: counts.late,
+          excused: counts.excused,
+          absent: counts.absent,
+        }),
+        titleKey: "email:notify.eventClosed" as const,
+        titleParams: { event: event.title },
+        bodyKey: "email:notify.eventClosedBody" as const,
+        bodyParams: { ...counts },
+        href: `/events/${event.id}`,
+        dedupeKey: `event-closed:${event.id}`,
+      };
+    }),
   );
 }
 
@@ -188,14 +228,21 @@ export async function notifyLeaveRequested(
   const userIds = await managerUserIds(db, params.organizationId);
   if (userIds.length === 0) return [];
 
+  const locales = await localesFor(db, userIds);
+
   return createNotifications(
     db,
     A.map(userIds, (userId) => ({
       organizationId: params.organizationId,
       userId,
       type: "leave-requested" as const,
-      title: `${params.personName} asks to miss ${params.eventTitle}`,
+      title: translatorFrom(locales, userId)("email:notify.leaveRequested", {
+        name: params.personName,
+        event: params.eventTitle,
+      }),
       body: params.reason,
+      titleKey: "email:notify.leaveRequested" as const,
+      titleParams: { name: params.personName, event: params.eventTitle },
       href: "/leave",
       dedupeKey: `leave-requested:${params.requestId}:${userId}`,
     })),
@@ -220,18 +267,33 @@ export async function notifyLeaveDecided(
   if (!params.userId) return [];
 
   const approved = params.decision === "approved";
+  const t = translatorFrom(await localesFor(db, [params.userId]), params.userId);
 
   return createNotifications(db, [
     {
       organizationId: params.organizationId,
       userId: params.userId,
       type: "leave-decided",
-      title: `Your leave for ${params.eventTitle} was ${params.decision}`,
+      title: match(approved)
+        .with(true, () => t("email:notify.leaveApproved", { event: params.eventTitle }))
+        .otherwise(() => t("email:notify.leaveDeclined", { event: params.eventTitle })),
       body:
         params.note ??
         match(approved)
-          .with(true, () => "The record for this event says excused.")
-          .otherwise(() => "The record stays as it is. Talk to an organizer if that is wrong."),
+          .with(true, () => t("email:notify.leaveApprovedBody"))
+          .otherwise(() => t("email:notify.leaveDeclinedBody")),
+      titleKey: match(approved)
+        .with(true, () => "email:notify.leaveApproved" as const)
+        .otherwise(() => "email:notify.leaveDeclined" as const),
+      titleParams: { event: params.eventTitle },
+      // The organizer's own note stays as they wrote it.
+      bodyKey: match(params.note)
+        .with(P.string, () => null)
+        .otherwise(() =>
+          match(approved)
+            .with(true, () => "email:notify.leaveApprovedBody" as const)
+            .otherwise(() => "email:notify.leaveDeclinedBody" as const),
+        ),
       href: "/my/leave",
       dedupeKey: `leave-decided:${params.requestId}`,
     },
@@ -255,13 +317,19 @@ export async function notifyJoinRequested(
   const userIds = await adminUserIds(db, params.organizationId);
   if (userIds.length === 0) return [];
 
+  const locales = await localesFor(db, userIds);
+
   return createNotifications(
     db,
     A.map(userIds, (userId) => ({
       organizationId: params.organizationId,
       userId,
       type: "join-requested" as const,
-      title: `${params.personName} asks to join`,
+      title: translatorFrom(locales, userId)("email:notify.joinRequested", {
+        name: params.personName,
+      }),
+      titleKey: "email:notify.joinRequested" as const,
+      titleParams: { name: params.personName },
       body: params.message ?? params.email,
       href: "/settings?tab=requests",
       dedupeKey: `join-requested:${params.requestId}:${userId}`,
@@ -284,6 +352,7 @@ export async function notifyJoinDecided(
   params: JoinDecidedParams,
 ): Promise<NotificationRow[]> {
   const approved = params.decision === "approved";
+  const t = translatorFrom(await localesFor(db, [params.userId]), params.userId);
 
   return createNotifications(db, [
     {
@@ -291,13 +360,13 @@ export async function notifyJoinDecided(
       userId: params.userId,
       type: "join-decided",
       title: match(approved)
-        .with(true, () => `You are in ${params.organizationName}`)
-        .otherwise(() => `${params.organizationName} declined your request`),
+        .with(true, () => t("email:notify.joinApproved", { organization: params.organizationName }))
+        .otherwise(() => t("email:notify.joinDeclined", { organization: params.organizationName })),
       body:
         params.note ??
         match(approved)
-          .with(true, () => "Open absqir to see your events.")
-          .otherwise(() => "Ask somebody there to invite you if that is wrong."),
+          .with(true, () => t("email:notify.joinApprovedBody"))
+          .otherwise(() => t("email:notify.joinDeclinedBody")),
       href: "/",
       dedupeKey: `join-decided:${params.requestId}`,
     },
@@ -325,13 +394,20 @@ export async function notifyCheckInReported(
   const userIds = await managerUserIds(db, params.organizationId);
   if (userIds.length === 0) return [];
 
+  const locales = await localesFor(db, userIds);
+
   return createNotifications(
     db,
     A.map(userIds, (userId) => ({
       organizationId: params.organizationId,
       userId,
       type: "check-in-reported" as const,
-      title: `${params.personName} could not check in to ${params.eventTitle}`,
+      title: translatorFrom(locales, userId)("email:notify.checkInReported", {
+        name: params.personName,
+        event: params.eventTitle,
+      }),
+      titleKey: "email:notify.checkInReported" as const,
+      titleParams: { name: params.personName, event: params.eventTitle },
       body: params.message,
       href: "/check-in-problems",
       dedupeKey: `check-in-reported:${params.reportId}:${userId}`,
@@ -356,19 +432,21 @@ export async function notifyCheckInDecided(
 ): Promise<NotificationRow[]> {
   if (!params.userId) return [];
 
+  const t = translatorFrom(await localesFor(db, [params.userId]), params.userId);
+
   return createNotifications(db, [
     {
       organizationId: params.organizationId,
       userId: params.userId,
       type: "check-in-decided",
       title: match(params.approved)
-        .with(true, () => `You are marked in for ${params.eventTitle}`)
-        .otherwise(() => `Your report about ${params.eventTitle} was not accepted`),
+        .with(true, () => t("email:notify.checkInDecidedApproved", { event: params.eventTitle }))
+        .otherwise(() => t("email:notify.checkInDecidedDeclined", { event: params.eventTitle })),
       body:
         params.note ??
         match(params.approved)
-          .with(true, () => "The record uses the time you scanned, not the time this was decided.")
-          .otherwise(() => "The record stays as it is. Talk to an organizer if that is wrong."),
+          .with(true, () => t("email:notify.checkInApprovedBody"))
+          .otherwise(() => t("email:notify.checkInDeclinedBody")),
       href: "/my/events",
       dedupeKey: `check-in-decided:${params.reportId}`,
     },

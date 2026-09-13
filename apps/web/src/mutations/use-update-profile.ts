@@ -1,4 +1,5 @@
 import { accountMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -10,12 +11,13 @@ export interface UpdateProfileInput {
 
 /** The header is rendered on the server, so a saved profile reloads the page. */
 export function useUpdateProfile() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: accountMutationKeys.profile(),
     mutationFn: async (values: UpdateProfileInput) => {
       const response = await api.me.$patch({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save your profile.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveYourProfile"));
 
       return response.json();
     },

@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { InviteAccept } from "@/components/invite/invite-accept";
 import AuthLayout from "@/layouts/auth-layout.astro";
 
@@ -13,8 +14,14 @@ if (!id) {
 if (Astro.locals.user && Astro.locals.onboardingStep !== "done") {
   return Astro.redirect(`/onboarding?invitation=${encodeURIComponent(id)}`, 302);
 }
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<AuthLayout title="Invitation — absqir">
-  <InviteAccept client:load invitationId={id} userEmail={Astro.locals.user?.email ?? null} />
+<AuthLayout title={`${t("shell:titles.invitation")} — absqir`}>
+  <InviteAccept
+    client:load
+    locale={Astro.locals.locale}
+    invitationId={id}
+    userEmail={Astro.locals.user?.email ?? null}
+  />
 </AuthLayout>

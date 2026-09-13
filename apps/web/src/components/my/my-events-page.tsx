@@ -1,3 +1,5 @@
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -26,6 +28,8 @@ function EventGrid(props: {
   scope: MyEventScope;
   onPass: (id: string) => void;
 }) {
+  const t = useTranslate();
+
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -35,16 +39,13 @@ function EventGrid(props: {
           </EmptyMedia>
           <EmptyTitle>
             {match(props.scope)
-              .with("past", () => "Nothing has happened yet" as const)
-              .otherwise(() => "Nothing expects you yet" as const)}
+              .with("past", () => t("my:events.emptyPast"))
+              .otherwise(() => t("my:events.emptyUpcoming"))}
           </EmptyTitle>
           <EmptyDescription>
             {match(props.scope)
-              .with("past", () => "Closed events land here with your record on each." as const)
-              .otherwise(
-                () =>
-                  "Events appear here once an organizer plans one for a group you belong to." as const,
-              )}
+              .with("past", () => t("my:events.emptyPastHint"))
+              .otherwise(() => t("my:events.emptyUpcomingHint"))}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -61,6 +62,7 @@ function EventGrid(props: {
 }
 
 function MyEventsBody() {
+  const t = useTranslate();
   const [scope, setScope] = useQueryState("scope", SCOPE);
   const events = useMyEvents({ scope });
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
@@ -68,15 +70,12 @@ function MyEventsBody() {
 
   return (
     <>
-      <PageHeader
-        title="My events"
-        description="Where you are expected. When one runs, scan the screen in the room, or show your pass at the door."
-      />
+      <PageHeader title={t("my:events.title")} description={t("my:events.description")} />
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as MyEventScope)}>
         <TabsList>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
+          <TabsTrigger value="upcoming">{t("my:events.upcoming")}</TabsTrigger>
+          <TabsTrigger value="past">{t("my:events.past")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -102,8 +101,8 @@ function MyEventsBody() {
                     onClick={() => void events.fetchNextPage()}
                   >
                     {match(events.isFetchingNextPage)
-                      .with(true, () => "Loading…" as const)
-                      .otherwise(() => "Load more" as const)}
+                      .with(true, () => t("common:actions.loading"))
+                      .otherwise(() => t("my:events.loadMore"))}
                   </Button>
                 </div>
               ))
@@ -117,9 +116,14 @@ function MyEventsBody() {
   );
 }
 
-export function MyEventsPage() {
+export interface MyEventsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MyEventsPage(props: MyEventsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MyEventsBody />
     </Providers>
   );

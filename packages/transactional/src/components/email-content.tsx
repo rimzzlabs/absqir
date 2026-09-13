@@ -1,3 +1,4 @@
+import { type Locale, translatorFor } from "@absqir/i18n";
 import { Button, Heading, Text } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
 import { color, font } from "#src/theme";
@@ -90,12 +91,14 @@ export function EmailButton(props: { href: string; children: ReactNode }) {
  * The fallback under every button. A reader whose client strips the link, or
  * who forwards the message as text, still has the address.
  */
-export function EmailFallbackLink(props: { href: string }) {
+export function EmailFallbackLink(props: { href: string; locale: Locale }) {
+  const t = translatorFor(props.locale);
+
   return (
     // The plain-text part already spells the address out beside the button,
     // so this block would say it twice there.
     <Text className="abs-muted" data-skip-in-text="true" style={note}>
-      Or paste this into your browser:
+      {t("email:fallbackLink")}
       <br />
       <a
         className="abs-link"

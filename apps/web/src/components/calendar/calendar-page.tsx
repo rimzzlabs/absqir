@@ -12,6 +12,8 @@ import {
   startOfMonth,
   startOfWeek,
 } from "@absqir/core/date";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { IconAction } from "@absqir/ui/icon-action";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -49,13 +51,16 @@ function visibleRange(view: CalendarView, cursor: Date) {
   };
 }
 
-function headerLabel(view: CalendarView, cursor: Date): string {
+function headerLabel(t: Translate, view: CalendarView, cursor: Date): string {
   if (view === "month") return formatDate(cursor, "monthYear");
 
   const from = startOfWeek(cursor, WEEK_OPTIONS);
   const to = endOfWeek(cursor, WEEK_OPTIONS);
 
-  return `${formatDate(from, "dayMonth")} to ${formatDate(to, "date")}`;
+  return t("calendar:weekRange", {
+    from: formatDate(from, "dayMonth"),
+    to: formatDate(to, "date"),
+  });
 }
 
 const PARAMS = {
@@ -76,6 +81,7 @@ function today() {
 }
 
 function CalendarBody() {
+  const t = useTranslate();
   const [params, setParams] = useQueryStates(PARAMS);
   const view = params.view;
   const cursor = params.date ?? today();
@@ -117,28 +123,40 @@ function CalendarBody() {
   return (
     <>
       <PageHeader
-        title="Calendar"
-        description="Every event on one grid, with the ones your schedules still owe."
+        title={t("calendar:title")}
+        description={t("calendar:description")}
         actions={
           <Button size="sm" onClick={() => setNewEventDay(new Date())}>
             <PlusIcon />
-            New event
+            {t("calendar:newEvent")}
           </Button>
         }
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <IconAction variant="outline" size="icon" label="Previous" onClick={() => step(-1)}>
+          <IconAction
+            variant="outline"
+            size="icon"
+            label={t("calendar:previous")}
+            onClick={() => step(-1)}
+          >
             <CaretLeftIcon />
           </IconAction>
-          <IconAction variant="outline" size="icon" label="Next" onClick={() => step(1)}>
+          <IconAction
+            variant="outline"
+            size="icon"
+            label={t("calendar:next")}
+            onClick={() => step(1)}
+          >
             <CaretRightIcon />
           </IconAction>
           <Button variant="outline" size="sm" onClick={() => setCursor(today())}>
-            Today
+            {t("calendar:today")}
           </Button>
-          <h2 className="font-heading ml-2 text-lg font-semibold">{headerLabel(view, cursor)}</h2>
+          <h2 className="font-heading ml-2 text-lg font-semibold">
+            {headerLabel(t, view, cursor)}
+          </h2>
         </div>
 
         <ToggleGroup
@@ -149,8 +167,8 @@ function CalendarBody() {
           }}
           variant="outline"
         >
-          <ToggleGroupItem value="month">Month</ToggleGroupItem>
-          <ToggleGroupItem value="week">Week</ToggleGroupItem>
+          <ToggleGroupItem value="month">{t("calendar:month")}</ToggleGroupItem>
+          <ToggleGroupItem value="week">{t("calendar:week")}</ToggleGroupItem>
         </ToggleGroup>
       </div>
 
@@ -192,9 +210,14 @@ function CalendarBody() {
   );
 }
 
-export function CalendarPage() {
+export interface CalendarPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function CalendarPage(props: CalendarPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <CalendarBody />
     </Providers>
   );

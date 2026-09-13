@@ -1,4 +1,5 @@
 import { relativeToNow } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import {
@@ -67,6 +68,7 @@ function initialsOf(name: string) {
  */
 export function JoinOrganization(props: JoinOrganizationProps) {
   const { status, variant } = props;
+  const t = useTranslate();
 
   const accept = useOnboardingAccept();
   const ask = useAskToJoin();
@@ -90,51 +92,42 @@ export function JoinOrganization(props: JoinOrganizationProps) {
   const workspace = status.workspace;
   const waiting = status.joinRequest;
   const requestLabel = match(writing)
-    .with(true, () => "Send request" as const)
-    .otherwise(() => "Ask to join" as const);
+    .with(true, () => t("join:workspace.send"))
+    .otherwise(() => t("join:workspace.ask"));
   const joinLabel = match(workspace)
-    .with({ joinPolicy: "auto" }, () => "Join" as const)
+    .with({ joinPolicy: "auto" }, () => t("join:workspace.join"))
     .otherwise(() => requestLabel);
 
   const heading = (() => {
     if (waiting) {
       return {
-        title: "Your request is with them",
-        description: `${waiting.organizationName} decides who comes in. You will hear back in absqir and by email.`,
+        title: t("join:waiting.title"),
+        description: t("join:waiting.description", { name: waiting.organizationName }),
       };
     }
 
     if (hasEvent) {
-      return {
-        title: "Join an organization",
-        description: "Register for the event, and you join its organization as a member.",
-      };
+      return { title: t("join:event.title"), description: t("join:event.description") };
     }
 
     if (hasInvitations) {
-      return {
-        title: "You have been invited",
-        description: "Accept to get started.",
-      };
+      return { title: t("join:invited.title"), description: t("join:invited.description") };
     }
 
     if (workspace) {
-      return match(workspace.joinPolicy)
-        .with("auto", () => ({
-          title: `${workspace.name} is on absqir`,
-          description: `Everybody at ${workspace.domain} can come straight in.`,
-        }))
-        .otherwise(() => ({
-          title: `${workspace.name} is on absqir`,
-          description: `They take people from ${workspace.domain}. Ask, and an organizer decides.`,
-        }));
+      return {
+        title: t("join:workspace.title", { name: workspace.name }),
+        description: match(workspace.joinPolicy)
+          .with("auto", () => t("join:workspace.autoDescription", { domain: workspace.domain }))
+          .otherwise(() => t("join:workspace.requestDescription", { domain: workspace.domain })),
+      };
     }
 
     return {
-      title: "You are not in an organization yet",
+      title: t("join:none.title"),
       description: match(status.canCreateOrganizations)
-        .with(true, () => "Start one below, or wait for an invitation." as const)
-        .otherwise(() => "An organizer has to invite you." as const),
+        .with(true, () => t("join:none.canCreate"))
+        .otherwise(() => t("join:none.cannotCreate")),
     };
   })();
 
@@ -156,7 +149,9 @@ export function JoinOrganization(props: JoinOrganizationProps) {
           <Item variant="outline">
             <ItemContent>
               <ItemTitle>{waiting.organizationName}</ItemTitle>
-              <ItemDescription>Sent {relativeToNow(new Date(waiting.createdAt))}</ItemDescription>
+              <ItemDescription>
+                {t("join:waiting.sent", { when: relativeToNow(new Date(waiting.createdAt)) })}
+              </ItemDescription>
             </ItemContent>
             <ItemActions>
               <Button
@@ -166,8 +161,8 @@ export function JoinOrganization(props: JoinOrganizationProps) {
                 onClick={() => withdraw.mutate()}
               >
                 {match(withdraw.isPending)
-                  .with(true, () => "Withdrawing…" as const)
-                  .otherwise(() => "Withdraw" as const)}
+                  .with(true, () => t("join:waiting.withdrawing"))
+                  .otherwise(() => t("join:waiting.withdraw"))}
               </Button>
             </ItemActions>
           </Item>
@@ -180,7 +175,9 @@ export function JoinOrganization(props: JoinOrganizationProps) {
               <Item key={invitation.id} variant="outline">
                 <ItemContent>
                   <ItemTitle>{invitation.organizationName}</ItemTitle>
-                  <ItemDescription>Join as {roleLabel(asRole(invitation.role))}</ItemDescription>
+                  <ItemDescription>
+                    {t("join:invited.joinAs", { role: roleLabel(t, asRole(invitation.role)) })}
+                  </ItemDescription>
                 </ItemContent>
                 <ItemActions>
                   <Button
@@ -189,8 +186,8 @@ export function JoinOrganization(props: JoinOrganizationProps) {
                     onClick={() => accept.mutate(invitation.id)}
                   >
                     {match(accept.isPending)
-                      .with(true, () => "Joining…" as const)
-                      .otherwise(() => "Accept" as const)}
+                      .with(true, () => t("join:invited.joining"))
+                      .otherwise(() => t("join:invited.accept"))}
                   </Button>
                 </ItemActions>
               </Item>
@@ -229,7 +226,7 @@ export function JoinOrganization(props: JoinOrganizationProps) {
                   }}
                 >
                   {match(ask.isPending)
-                    .with(true, () => "Sending…" as const)
+                    .with(true, () => t("join:workspace.sending"))
                     .otherwise(() => joinLabel)}
                 </Button>
               </ItemActions>
@@ -243,8 +240,8 @@ export function JoinOrganization(props: JoinOrganizationProps) {
                   maxLength={MAX_MESSAGE_LENGTH}
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
-                  placeholder={`Tell ${workspace.name} who you are. This is optional.`}
-                  aria-label="A note for the organizers"
+                  placeholder={t("join:workspace.notePlaceholder", { name: workspace.name })}
+                  aria-label={t("join:workspace.noteLabel")}
                 />
               ))
               .otherwise(() => null)}
@@ -260,8 +257,8 @@ export function JoinOrganization(props: JoinOrganizationProps) {
               .otherwise(() => null)}
             <OrganizationForm
               submitLabel={match(workspace)
-                .with(P.nullish, () => "Create organization")
-                .otherwise(() => "Start a separate organization")}
+                .with(P.nullish, () => t("join:create"))
+                .otherwise(() => t("join:createSeparate"))}
               pending={create.isPending}
               onSubmit={(values) => create.mutate(values)}
             />
@@ -272,7 +269,7 @@ export function JoinOrganization(props: JoinOrganizationProps) {
       {match(!hasInvitations && !workspace && !waiting && !hasEvent)
         .with(true, () => (
           <p className="text-muted-foreground text-sm">
-            An invitation to {status.email} brings you straight in. Open its link and you are there.
+            {t("join:invitationHint", { email: status.email })}
           </p>
         ))
         .otherwise(() => null)}

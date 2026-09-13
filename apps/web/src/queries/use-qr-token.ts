@@ -1,4 +1,5 @@
 import { eventKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { api, apiError } from "@/lib/api";
@@ -8,6 +9,7 @@ const EARLY_MS = 500;
 const MIN_INTERVAL_MS = 1000;
 
 export function useQrToken(eventId: string) {
+  const t = useTranslate();
   return useQuery({
     queryKey: eventKeys.qrToken(eventId),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -16,7 +18,7 @@ export function useQrToken(eventId: string) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the QR token.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadQrToken"));
 
       const data = await response.json();
       const checkinUrl = new URL(data.checkinPath, window.location.origin).toString();

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-group";
 import {
   Select,
@@ -25,6 +26,7 @@ const EVERY_GROUP = "";
 
 /** A title search and a group filter above the grid. */
 export function EventsToolbar(props: EventsToolbarProps) {
+  const t = useTranslate();
   const groups = useGroups();
   const rows = groups.data ?? [];
 
@@ -36,8 +38,8 @@ export function EventsToolbar(props: EventsToolbarProps) {
         </InputGroupAddon>
         <InputGroupInput
           type="search"
-          aria-label="Search events by title"
-          placeholder="Search by title"
+          aria-label={t("events:searchLabel")}
+          placeholder={t("events:search")}
           value={props.q}
           onChange={(event) => props.onQChange(event.target.value)}
         />
@@ -45,7 +47,7 @@ export function EventsToolbar(props: EventsToolbarProps) {
 
       <Select
         items={[
-          { value: EVERY_GROUP, label: "Every group" },
+          { value: EVERY_GROUP, label: t("events:everyGroup") },
           ...A.map(rows, (group) => ({ value: group.id, label: group.name })),
         ]}
         value={props.groupId}
@@ -53,17 +55,17 @@ export function EventsToolbar(props: EventsToolbarProps) {
           if (typeof value === "string") props.onGroupChange(value);
         }}
       >
-        <SelectTrigger aria-label="Filter by group" className="w-full sm:w-56">
+        <SelectTrigger aria-label={t("events:filterByGroup")} className="w-full sm:w-56">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value={EVERY_GROUP}>Every group</SelectItem>
+            <SelectItem value={EVERY_GROUP}>{t("events:everyGroup")}</SelectItem>
           </SelectGroup>
           {match(rows.length > 0)
             .with(true, () => (
               <SelectGroup>
-                <SelectLabel>Groups</SelectLabel>
+                <SelectLabel>{t("events:groupsLabel")}</SelectLabel>
                 {A.map(rows, (group) => (
                   <SelectItem key={group.id} value={group.id}>
                     {group.name}

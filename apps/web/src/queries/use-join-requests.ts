@@ -1,4 +1,5 @@
 import { joinRequestKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -6,6 +7,7 @@ export type JoinRequestStatusFilter = "pending" | "decided" | "all";
 
 /** Who asks to join the active organization. Admins and owners only. */
 export function useJoinRequests(status: JoinRequestStatusFilter = "pending") {
+  const t = useTranslate();
   return useQuery({
     queryKey: joinRequestKeys.list(status),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -14,7 +16,7 @@ export function useJoinRequests(status: JoinRequestStatusFilter = "pending") {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not read the requests.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotReadRequests"));
 
       return response.json();
     },

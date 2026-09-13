@@ -1,6 +1,8 @@
+import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
+import { type Locale, type NotifyKey, translatorFor } from "@absqir/i18n";
 import type { Mailer } from "@absqir/transactional";
 import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
@@ -16,8 +18,15 @@ export interface NotificationInput {
   organizationId: string;
   userId: string;
   type: NotificationType;
+  /** The words as they stand now, for anything that reads the row raw. */
   title: string;
   body?: string | null;
+  /** The key and the values the words are made from at read time. */
+  titleKey?: NotifyKey | null;
+  titleParams?: Record<string, string | number> | null;
+  /** Absent when the body is somebody's own words. */
+  bodyKey?: NotifyKey | null;
+  bodyParams?: Record<string, string | number> | null;
   href?: string | null;
   /** Two writes with the same key for one person make one row. */
   dedupeKey?: string | null;
@@ -36,16 +45,34 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
   "check-in-decided",
 ]);
 
-const ACTIONS: Record<NotificationType, string> = {
-  "event-reminder": "Open my events",
-  "event-closed": "Open the event",
-  "leave-requested": "Open the queue",
-  "leave-decided": "Open my leave",
-  "join-requested": "Open the requests",
-  "join-decided": "Open absqir",
-  "check-in-reported": "Open the queue",
-  "check-in-decided": "Open my events",
-};
+/**
+ * The language each account reads in. A notification is written once per
+ * reader, so each row can carry that reader's own words.
+ */
+export async function localesFor(
+  db: Database,
+  userIds: readonly string[],
+): Promise<Map<string, Locale>> {
+  if (userIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: user.id, locale: user.locale })
+    .from(user)
+    .where(inArray(user.id, [...userIds]));
+
+  return new Map(
+    A.flatMap(rows, (row) =>
+      match(row.locale)
+        .with(P.nonNullable, (locale) => [[row.id, locale] as const])
+        .otherwise(() => []),
+    ),
+  );
+}
+
+/** The translator for one reader, English for an account that chose nothing. */
+export function translatorFrom(locales: Map<string, Locale>, userId: string) {
+  return translatorFor(locales.get(userId) ?? "en");
+}
 
 /** A channel a written row can carry. `none` never reaches the table. */
 export type DeliveredChannel = Exclude<NotificationChannel, "none">;
@@ -117,6 +144,10 @@ export async function createNotifications(
           type: row.type,
           title: row.title,
           body: row.body ?? null,
+          titleKey: row.titleKey ?? null,
+          titleParams: row.titleParams ?? null,
+          bodyKey: row.bodyKey ?? null,
+          bodyParams: row.bodyParams ?? null,
           href: row.href ?? null,
           dedupeKey: row.dedupeKey ?? null,
           channel: row.channel,
@@ -150,7 +181,10 @@ export async function emailNotifications(
   const organizationIds = [...new Set(A.map(worth, (row) => row.organizationId))];
 
   const [people, organizations] = await Promise.all([
-    db.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, userIds)),
+    db
+      .select({ id: user.id, email: user.email, locale: user.locale, timezone: user.timezone })
+      .from(user)
+      .where(inArray(user.id, userIds)),
     db
       .select({ id: organization.id, name: organization.name })
       .from(organization)
@@ -158,19 +192,28 @@ export async function emailNotifications(
   ]);
 
   const emailOf = new Map(A.map(people, (row) => [row.id, row.email]));
+  const localeOf = new Map(A.map(people, (row) => [row.id, row.locale ?? "en"] as const));
+  const zoneOf = new Map(A.map(people, (row) => [row.id, row.timezone] as const));
   const nameOf = new Map(A.map(organizations, (row) => [row.id, row.name]));
 
   for (const row of worth) {
     const to = emailOf.get(row.userId);
     if (!to) continue;
 
+    const locale = localeOf.get(row.userId) ?? "en";
+    const t = translatorFor(locale);
+
     try {
       await mailer.sendNotification(to, {
-        title: row.title,
-        body: row.body,
-        organizationName: nameOf.get(row.organizationId) ?? "your organization",
+        locale,
+        // The words are made here rather than read off the row, so the
+        // message says the same thing the app will say when they open it.
+        title: notificationTitle(t, row),
+        body: notificationBody(t, row, { timezone: zoneOf.get(row.userId) ?? null, locale }),
+        organizationName:
+          nameOf.get(row.organizationId) ?? t("email:notification.yourOrganization"),
         url: `${origin}${row.href ?? "/notifications"}`,
-        action: ACTIONS[row.type],
+        action: t(`email:actions.${row.type}`),
       });
     } catch (error) {
       console.error({ message: "notification email failed", id: row.id, error });
@@ -351,6 +394,10 @@ export function toNotificationJson(row: NotificationRow) {
     type: row.type,
     title: row.title,
     body: row.body ?? null,
+    titleKey: row.titleKey ?? null,
+    titleParams: row.titleParams ?? null,
+    bodyKey: row.bodyKey ?? null,
+    bodyParams: row.bodyParams ?? null,
     href: row.href ?? null,
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),

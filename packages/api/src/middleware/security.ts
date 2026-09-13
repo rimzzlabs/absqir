@@ -81,7 +81,7 @@ export function csrfPolicy(): MiddlewareHandler<AppEnv> {
 export function payloadLimit(): MiddlewareHandler<AppEnv> {
   return bodyLimit({
     maxSize: MAX_BODY_BYTES,
-    onError: (c) => c.json({ error: "Payload too large" }, 413),
+    onError: (c) => c.json({ error: c.var.t("errors:payloadTooLarge") }, 413),
   });
 }
 
@@ -110,7 +110,7 @@ export function rateLimit(): MiddlewareHandler<AppEnv> {
     const { success } = await limiter.limit({ key: clientKey(c) });
 
     if (!success) {
-      return c.json({ error: "Too many requests" }, 429);
+      return c.json({ error: c.var.t("errors:tooManyRequests") }, 429);
     }
 
     await next();

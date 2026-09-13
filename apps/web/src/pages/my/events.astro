@@ -1,8 +1,11 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { MyEventsPage } from "@/components/my/my-events-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<DashboardLayout title="My events">
-  <MyEventsPage client:load />
+<DashboardLayout title={t("shell:titles.myEvents")}>
+  <MyEventsPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

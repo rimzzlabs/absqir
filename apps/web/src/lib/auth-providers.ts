@@ -1,3 +1,4 @@
+import type { Translate } from "@absqir/i18n";
 import { match, P } from "ts-pattern";
 /** The providers this build knows, in the order the buttons appear. */
 export const AUTH_PROVIDERS = ["github", "google"] as const;
@@ -10,10 +11,10 @@ export function isAuthProvider(value: string): value is AuthProviderId {
   return (AUTH_PROVIDERS as readonly string[]).includes(value);
 }
 
-export function providerLabel(provider: AuthProviderId | null): string {
+export function providerLabel(t: Translate, provider: AuthProviderId | null): string {
   return match(provider)
     .with(P.string.minLength(1), (provider) => LABELS[provider])
-    .otherwise(() => "The provider");
+    .otherwise(() => t("auth:providers.fallbackName"));
 }
 
 /**
@@ -52,15 +53,18 @@ function emailIn(description: string | null): string | null {
  * because `error` and `error_description` arrive in the address bar and a
  * sign-in page that prints a stranger's sentence is a phishing surface.
  */
-export function readCallbackError(params: {
-  code: string | null;
-  description: string | null;
-  provider: AuthProviderId | null;
-}): CallbackError | null {
+export function readCallbackError(
+  t: Translate,
+  params: {
+    code: string | null;
+    description: string | null;
+    provider: AuthProviderId | null;
+  },
+): CallbackError | null {
   if (!params.code) return null;
 
   const code = params.code.toLowerCase();
-  const name = providerLabel(params.provider);
+  const provider = providerLabel(t, params.provider);
   const email = emailIn(params.description);
 
   if (code === NO_INVITATION) {
@@ -68,11 +72,10 @@ export function readCallbackError(params: {
       needsInvitation: true,
       email,
       message: match(email)
-        .with(
-          P.string.minLength(1),
-          (email) => `${name} signed you in as ${email}. That address has no invitation here.`,
+        .with(P.string.minLength(1), (email) =>
+          t("auth:callback.noInvitationWithEmail", { provider, email }),
         )
-        .otherwise(() => `The address ${name} returned has no invitation here.`),
+        .otherwise(() => t("auth:callback.noInvitation", { provider })),
     };
   }
 
@@ -84,18 +87,18 @@ export function readCallbackError(params: {
 
   switch (code) {
     case "access_denied":
-      return generic(`The ${name} sign-in was cancelled.`);
+      return generic(t("auth:callback.accessDenied", { provider }));
     case "email_does_not_match":
-      return generic(`That ${name} account uses a different address than this account.`);
+      return generic(t("auth:callback.emailMismatch", { provider }));
     case "account_already_linked_to_different_user":
-      return generic(`That ${name} account already belongs to someone else here.`);
+      return generic(t("auth:callback.alreadyLinked", { provider }));
     case "unable_to_link_account":
-      return generic(`absqir could not link that ${name} account.`);
+      return generic(t("auth:callback.unableToLink", { provider }));
     case "email_not_found":
-      return generic(`${name} shared no address. Add one there, then try again.`);
+      return generic(t("auth:callback.emailNotFound", { provider }));
     case "email_not_verified":
-      return generic(`${name} has not verified that address yet.`);
+      return generic(t("auth:callback.emailNotVerified", { provider }));
     default:
-      return generic(`The ${name} sign-in did not finish. Try again, or use your email.`);
+      return generic(t("auth:callback.unknown", { provider }));
   }
 }

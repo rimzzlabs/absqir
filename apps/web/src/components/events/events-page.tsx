@@ -1,3 +1,5 @@
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -17,6 +19,8 @@ import type { RoleName } from "@/components/shared/role-badge";
 import { type Event, type EventScope, useEvents } from "@/queries/use-events";
 
 export interface EventsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   role: RoleName;
 }
 
@@ -31,13 +35,14 @@ const TEXT = parseAsString.withDefault("");
 const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
 
 function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: boolean }) {
+  const t = useTranslate();
   const past = props.scope === "past";
   const emptyTitle = match(past)
-    .with(true, () => "Nothing has happened yet" as const)
-    .otherwise(() => "Nothing is planned" as const);
+    .with(true, () => t("events:empty.nothingPast"))
+    .otherwise(() => t("events:empty.nothingPlanned"));
   const emptyHint = match(past)
-    .with(true, () => "Closed events land here with their records." as const)
-    .otherwise(() => "Create an event, or set up a schedule that creates them for you." as const);
+    .with(true, () => t("events:empty.nothingPastHint"))
+    .otherwise(() => t("events:empty.nothingPlannedHint"));
 
   if (props.rows.length === 0) {
     return (
@@ -48,12 +53,12 @@ function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: 
           </EmptyMedia>
           <EmptyTitle>
             {match(props.filtered)
-              .with(true, () => "Nothing matches" as const)
+              .with(true, () => t("events:empty.noMatch"))
               .otherwise(() => emptyTitle)}
           </EmptyTitle>
           <EmptyDescription>
             {match(props.filtered)
-              .with(true, () => "Try another title, or every group." as const)
+              .with(true, () => t("events:empty.noMatchHint"))
               .otherwise(() => emptyHint)}
           </EmptyDescription>
         </EmptyHeader>
@@ -71,6 +76,7 @@ function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: 
 }
 
 function EventsBody(props: EventsPageProps) {
+  const t = useTranslate();
   const [scope, setScope] = useQueryState("scope", SCOPE);
   const [q, setQ] = useQueryState("q", TEXT.withOptions({ throttleMs: 300 }));
   const [groupId, setGroupId] = useQueryState("group", TEXT);
@@ -84,13 +90,13 @@ function EventsBody(props: EventsPageProps) {
   return (
     <>
       <PageHeader
-        title="Events"
-        description="One event is one moment people are expected. It opens and closes on its own clock."
+        title={t("events:title")}
+        description={t("events:description")}
         actions={match(canCreate)
           .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
-              New event
+              {t("events:new")}
             </Button>
           ))
           .otherwise(() => null)}
@@ -99,8 +105,8 @@ function EventsBody(props: EventsPageProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={scope} onValueChange={(value) => void setScope(value as ListScope)}>
           <TabsList>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="past">Past</TabsTrigger>
+            <TabsTrigger value="upcoming">{t("events:upcoming")}</TabsTrigger>
+            <TabsTrigger value="past">{t("events:past")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -134,8 +140,8 @@ function EventsBody(props: EventsPageProps) {
                     onClick={() => void events.fetchNextPage()}
                   >
                     {match(events.isFetchingNextPage)
-                      .with(true, () => "Loading…" as const)
-                      .otherwise(() => "Load more" as const)}
+                      .with(true, () => t("common:actions.loading"))
+                      .otherwise(() => t("events:loadMore"))}
                   </Button>
                 </div>
               ))
@@ -151,7 +157,7 @@ function EventsBody(props: EventsPageProps) {
 
 export function EventsPage(props: EventsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <EventsBody {...props} />
     </Providers>
   );

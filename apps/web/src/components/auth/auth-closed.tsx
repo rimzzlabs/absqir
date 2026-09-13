@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { AuthHeading } from "@/components/auth/auth-heading";
 
@@ -10,23 +11,19 @@ export interface AuthClosedProps {
 
 /** The email is unknown and this instance only admits invited people. */
 export function AuthClosed(props: AuthClosedProps) {
+  const t = useTranslate();
+
   return (
     <div className="space-y-5">
       <AuthHeading
-        title="This email needs an invitation"
-        description={
-          props.reason ??
-          `There is no account for ${props.email}, and this absqir only lets invited people in.`
-        }
+        title={t("auth:closed.title")}
+        description={props.reason ?? t("auth:closed.description", { email: props.email })}
       />
 
-      <p className="text-muted-foreground text-sm">
-        Ask an organizer of your organization to invite you. The invitation email carries a link
-        that opens this page with your address ready to go.
-      </p>
+      <p className="text-muted-foreground text-sm">{t("auth:closed.hint")}</p>
 
       <Button type="button" variant="outline" className="w-full" onClick={props.onBack}>
-        Try another email
+        {t("auth:closed.tryAnother")}
       </Button>
     </div>
   );

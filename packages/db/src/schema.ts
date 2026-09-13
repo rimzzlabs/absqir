@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n/locales";
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -5,6 +6,7 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -108,6 +110,8 @@ export {
   type RiskReason,
 } from "@absqir/core/location-risk";
 
+export { isLocale, LOCALES, type Locale } from "@absqir/i18n/locales";
+
 // Tables required by Better Auth. Keep the property names in sync with the
 // Better Auth field names: the Drizzle adapter looks columns up by property.
 export const user = pgTable("user", {
@@ -131,6 +135,11 @@ export const user = pgTable("user", {
     .default("all"),
   /** IANA zone the account reads times in. Null follows the device. */
   timezone: text("timezone"),
+  /**
+   * The language the account reads the app and its email in. Null means
+   * nobody has chosen yet, so the browser's own language decides.
+   */
+  locale: text("locale").$type<Locale>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -727,8 +736,23 @@ export const notification = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     type: text("type").$type<NotificationType>().notNull(),
+    /**
+     * The words as they stood when the row was written. A reader who changes
+     * their language reads the key below instead, so these two are the
+     * fallback for a row written before absqir kept keys.
+     */
     title: text("title").notNull(),
     body: text("body"),
+    /**
+     * What the title says, as a message key and the values it takes. Reading
+     * these at render time is what lets one row read in whatever language
+     * its reader has chosen today.
+     */
+    titleKey: text("title_key"),
+    titleParams: jsonb("title_params").$type<Record<string, string | number>>(),
+    /** The same for the body. Null when the body is somebody's own words. */
+    bodyKey: text("body_key"),
+    bodyParams: jsonb("body_params").$type<Record<string, string | number>>(),
     /** Where the notification takes the reader. */
     href: text("href"),
     /**

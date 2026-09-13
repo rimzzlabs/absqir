@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { A, O, pipe } from "@mobily/ts-belt";
 
 ("use client");
@@ -34,7 +35,7 @@ function DatePicker({
   id,
   value,
   onChange,
-  placeholder = "Pick a date",
+  placeholder,
   disabled,
   fromDate,
   toDate,
@@ -42,7 +43,9 @@ function DatePicker({
   className,
   ...props
 }: DatePickerProps) {
+  const t = useTranslate();
   const [open, setOpen] = React.useState(false);
+  const empty = placeholder ?? t("common:fields.pickDate");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -65,7 +68,7 @@ function DatePicker({
       >
         <CalendarBlankIcon className="text-muted-foreground" />
         {match(value)
-          .with(P.nullish, () => placeholder)
+          .with(P.nullish, () => empty)
           .otherwise((value) => format(value, displayFormat))}
       </PopoverTrigger>
       <PopoverContent className="w-fit p-0" align="start">
@@ -251,12 +254,14 @@ function DateTimePicker({
   disabled,
   fromDate,
   toDate,
-  placeholder = "Pick a date and time",
+  placeholder,
   displayFormat = "EEE d MMM yyyy, HH:mm",
   className,
   ...props
 }: DateTimePickerProps) {
+  const t = useTranslate();
   const [open, setOpen] = React.useState(false);
+  const empty = placeholder ?? t("common:fields.pickDateTime");
   const clock = match(value)
     .with(P.nonNullable.and(P.when(isValid)), (value) => format(value, "HH:mm"))
     .otherwise(() => "09:00");
@@ -283,7 +288,7 @@ function DateTimePicker({
         <CalendarBlankIcon className="text-muted-foreground" />
         <span className="truncate">
           {match(value)
-            .with(P.nullish, () => placeholder)
+            .with(P.nullish, () => empty)
             .otherwise((value) => format(value, displayFormat))}
         </span>
       </PopoverTrigger>
@@ -316,13 +321,13 @@ function DateTimePicker({
             id={match(id)
               .with(P.string.minLength(1), (id) => `${id}-time`)
               .otherwise(() => undefined)}
-            aria-label="Time"
+            aria-label={t("common:fields.time")}
             value={match(value)
               .with(P.nullish, () => "")
               .otherwise(() => clock)}
             disabled={!value}
             placeholder={match(value)
-              .with(P.nullish, () => "Pick a day first")
+              .with(P.nullish, () => t("common:fields.pickDayFirst"))
               .otherwise(() => undefined)}
             className="flex-1"
             onChange={(next) => {

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
@@ -36,6 +37,7 @@ export interface PlacePickerProps {
  * tells a member where to go, and it costs nobody a permission prompt.
  */
 export function PlacePicker(props: PlacePickerProps) {
+  const t = useTranslate();
   const places = useLocations();
   const rows = places.data ?? [];
   const chosen = match(props.locationId)
@@ -45,7 +47,7 @@ export function PlacePicker(props: PlacePickerProps) {
   return (
     <div className="flex flex-col gap-3">
       <Field>
-        <FieldLabel htmlFor={`${props.idPrefix}-place`}>Place</FieldLabel>
+        <FieldLabel htmlFor={`${props.idPrefix}-place`}>{t("common:placePicker.label")}</FieldLabel>
         <FieldContent>
           <Select
             value={chosen}
@@ -59,16 +61,16 @@ export function PlacePicker(props: PlacePickerProps) {
             }
           >
             <SelectTrigger id={`${props.idPrefix}-place`}>
-              <SelectValue placeholder="No place" />
+              <SelectValue placeholder={t("common:placePicker.placeholder")} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel>Where people check in</SelectLabel>
+                <SelectLabel>{t("common:placePicker.groupLabel")}</SelectLabel>
                 <SelectItem value={NONE}>
                   <span className="flex flex-col">
-                    <span>No place</span>
+                    <span>{t("common:placePicker.none")}</span>
                     <SelectItemDescription>
-                      Anyone with the code checks in, wherever they are.
+                      {t("common:placePicker.noneHint")}
                     </SelectItemDescription>
                   </span>
                 </SelectItem>
@@ -80,7 +82,7 @@ export function PlacePicker(props: PlacePickerProps) {
                         {match(place.address)
                           .with(P.string.minLength(1), (address) => `${address} · `)
                           .otherwise(() => "")}
-                        within {place.radiusMeters} m
+                        {t("common:placePicker.within", { radius: place.radiusMeters })}
                       </SelectItemDescription>
                     </span>
                   </SelectItem>
@@ -93,9 +95,9 @@ export function PlacePicker(props: PlacePickerProps) {
             .with(0, () => (
               <FieldDescription>
                 <a href="/settings?tab=places" className="underline underline-offset-4">
-                  Save a place first
+                  {t("common:placePicker.savePlaceLink")}
                 </a>{" "}
-                to check where people are.
+                {t("common:placePicker.savePlaceRest")}
               </FieldDescription>
             ))
             .otherwise(() => null)}
@@ -123,18 +125,15 @@ export function PlacePicker(props: PlacePickerProps) {
                 className="flex flex-wrap items-center gap-1.5"
               >
                 <MapPinIcon className="size-4" />
-                Refuse a check-in made outside this place
-                <Badge variant="outline">Experimental</Badge>
+                {t("common:placePicker.require")}
+                <Badge variant="outline">{t("common:placePicker.experimental")}</Badge>
               </Label>
             </div>
 
             {match(props.requireLocation)
               .with(true, () => (
                 <p className="text-muted-foreground pl-6 text-xs">
-                  Each member's browser asks for their location. A reading outside the circle is
-                  refused, and one that looks made up is accepted and flagged for you. The code on
-                  the room screen is still what proves they were there. A flag is a reason to look,
-                  not a verdict.
+                  {t("common:placePicker.requireHint")}
                 </p>
               ))
               .otherwise(() => null)}

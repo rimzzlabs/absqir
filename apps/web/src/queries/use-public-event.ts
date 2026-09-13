@@ -1,9 +1,11 @@
 import { publicEventKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 /** The public face of an open event. Works signed out. */
 export function usePublicEvent(id: string | null) {
+  const t = useTranslate();
   return useQuery({
     queryKey: publicEventKeys.detail(id ?? ""),
     enabled: id !== null,
@@ -13,7 +15,7 @@ export function usePublicEvent(id: string | null) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "This event is not open to the public.");
+      if (!response.ok) throw await apiError(response, t("errors:eventNotPublic"));
 
       return response.json();
     },

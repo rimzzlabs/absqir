@@ -1,4 +1,5 @@
 import { reportKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -31,6 +32,7 @@ export function reportCsvHref(table: "people" | "groups" | "events", range: Repo
 }
 
 export function useReportSummary(range: ReportRange) {
+  const t = useTranslate();
   return useQuery({
     queryKey: reportKeys.summary(rangeKey(range)),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -39,7 +41,7 @@ export function useReportSummary(range: ReportRange) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the totals.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadTotals"));
 
       return response.json();
     },
@@ -47,6 +49,7 @@ export function useReportSummary(range: ReportRange) {
 }
 
 export function useReportPeople(range: ReportRange) {
+  const t = useTranslate();
   return useQuery({
     queryKey: reportKeys.people(rangeKey(range)),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -55,7 +58,7 @@ export function useReportPeople(range: ReportRange) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the people report.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadPeopleReport"));
 
       return response.json();
     },
@@ -63,6 +66,7 @@ export function useReportPeople(range: ReportRange) {
 }
 
 export function useReportGroups(range: ReportRange) {
+  const t = useTranslate();
   return useQuery({
     queryKey: reportKeys.groups(rangeKey(range)),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -71,7 +75,7 @@ export function useReportGroups(range: ReportRange) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the group report.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadGroupReport"));
 
       return response.json();
     },
@@ -79,6 +83,7 @@ export function useReportGroups(range: ReportRange) {
 }
 
 export function useReportEvents(range: ReportRange) {
+  const t = useTranslate();
   return useQuery({
     queryKey: reportKeys.events(rangeKey(range)),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -87,7 +92,7 @@ export function useReportEvents(range: ReportRange) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the event report.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadEventReport"));
 
       return response.json();
     },

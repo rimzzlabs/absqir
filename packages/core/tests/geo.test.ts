@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { setDisplayLocaleResolver } from "../src/date";
 import {
   type Circle,
   type Coordinates,
@@ -10,6 +11,10 @@ import {
   readFence,
   readTrack,
 } from "../src/geo";
+
+afterEach(() => {
+  setDisplayLocaleResolver(() => "en");
+});
 
 const office: Circle = { latitude: -6.2, longitude: 106.816666, radiusMeters: 150 };
 
@@ -172,10 +177,19 @@ describe("formatDistance", () => {
 
   it("drops the decimal once it stops meaning anything", () => {
     expect(formatDistance(100_000)).toBe("100 km");
-    expect(formatDistance(11_719_000)).toBe("11719 km");
+    expect(formatDistance(11_719_000)).toBe("11,719 km");
   });
 
   it("never reports a negative distance", () => {
     expect(formatDistance(-5)).toBe("0 m");
+  });
+
+  it("groups and points the way the reader's language does", () => {
+    setDisplayLocaleResolver(() => "id");
+    expect(formatDistance(53_800)).toBe("53,8 km");
+    expect(formatDistance(11_719_000)).toBe("11.719 km");
+
+    setDisplayLocaleResolver(() => "en");
+    expect(formatDistance(53_800)).toBe("53.8 km");
   });
 });

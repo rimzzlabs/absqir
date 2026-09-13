@@ -1,4 +1,5 @@
 import { myKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { match } from "ts-pattern";
@@ -18,6 +19,7 @@ export interface MyEventsFilter {
  * on the clock, so the list refetches on its own.
  */
 export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
+  const t = useTranslate();
   return useInfiniteQuery({
     queryKey: myKeys.eventsPage(filter.scope, filter.limit ?? null),
     initialPageParam: null as string | null,
@@ -35,7 +37,7 @@ export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load your events.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourEvents"));
 
       return response.json();
     },
@@ -50,6 +52,7 @@ export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
  * roster by guessing an id.
  */
 export function useMyEvent(eventId: string) {
+  const t = useTranslate();
   return useQuery({
     queryKey: myKeys.event(eventId),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -58,7 +61,7 @@ export function useMyEvent(eventId: string) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load this event.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadThisEvent"));
 
       return response.json();
     },
@@ -67,6 +70,7 @@ export function useMyEvent(eventId: string) {
 }
 
 export function useMyPass(eventId: string | null) {
+  const t = useTranslate();
   return useQuery({
     queryKey: myKeys.pass(eventId ?? ""),
     enabled: eventId !== null,
@@ -76,7 +80,7 @@ export function useMyPass(eventId: string | null) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load your pass.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourPass"));
 
       const data = await response.json();
 
@@ -86,12 +90,13 @@ export function useMyPass(eventId: string | null) {
 }
 
 export function useMyHistory() {
+  const t = useTranslate();
   return useQuery({
     queryKey: myKeys.history(),
     queryFn: async (ctx: QueryFunctionContext) => {
       const response = await api.my.history.$get(undefined, { init: { signal: ctx.signal } });
 
-      if (!response.ok) throw await apiError(response, "Could not load your history.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourHistory"));
 
       return response.json();
     },

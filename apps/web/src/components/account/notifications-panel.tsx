@@ -1,4 +1,5 @@
 import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@absqir/core/notification-channel";
+import { useTranslate } from "@absqir/i18n/react";
 import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
@@ -22,39 +23,27 @@ export interface NotificationsPanelProps {
   channel: NotificationChannel;
 }
 
-const OPTIONS: { value: NotificationChannel; title: string; hint: string; icon: Icon }[] = [
-  {
-    value: "all",
-    title: "App and email",
-    hint: "The bell counts it. Reminders and leave also arrive by email.",
-    icon: BellRingingIcon,
-  },
-  {
-    value: "in-app",
-    title: "App only",
-    hint: "The bell and the notifications page. No email.",
-    icon: BellSimpleIcon,
-  },
-  {
-    value: "email",
-    title: "Email only",
-    hint: "Reminders and leave by email. The bell stays quiet.",
-    icon: EnvelopeSimpleIcon,
-  },
-  {
-    value: "none",
-    title: "Off",
-    hint: "Nothing at all. Events still expect you.",
-    icon: BellSlashIcon,
-  },
+/** The channel, the icon beside it, and the key that words it. */
+const OPTIONS: {
+  value: NotificationChannel;
+  key: "all" | "inApp" | "email" | "none";
+  icon: Icon;
+}[] = [
+  { value: "all", key: "all", icon: BellRingingIcon },
+  { value: "in-app", key: "inApp", icon: BellSimpleIcon },
+  { value: "email", key: "email", icon: EnvelopeSimpleIcon },
+  { value: "none", key: "none", icon: BellSlashIcon },
 ];
 
 /** What absqir writes, who reads it, and whether an email ever follows. */
-const KINDS: { title: string; who: string; emailed: boolean }[] = [
-  { title: "Event reminder", who: "Everyone expected", emailed: true },
-  { title: "Leave requested", who: "Organizers", emailed: true },
-  { title: "Leave decided", who: "The member who asked", emailed: true },
-  { title: "Event closed", who: "Organizers", emailed: false },
+const KINDS: {
+  key: "reminder" | "leaveRequested" | "leaveDecided" | "eventClosed";
+  emailed: boolean;
+}[] = [
+  { key: "reminder", emailed: true },
+  { key: "leaveRequested", emailed: true },
+  { key: "leaveDecided", emailed: true },
+  { key: "eventClosed", emailed: false },
 ];
 
 function reachesApp(channel: NotificationChannel): boolean {
@@ -65,7 +54,7 @@ function reachesEmail(channel: NotificationChannel): boolean {
   return channel === "all" || channel === "email";
 }
 
-function Mark(props: { on: boolean; label: string }) {
+function Mark(props: { on: boolean; label: string; absent: string }) {
   return match(props.on)
     .with(true, () => (
       <span className="text-primary inline-flex items-center gap-1 text-sm">
@@ -76,7 +65,7 @@ function Mark(props: { on: boolean; label: string }) {
     .otherwise(() => (
       <span className="text-muted-foreground/60 inline-flex items-center">
         <MinusIcon className="size-4" />
-        <span className="sr-only">No {props.label.toLowerCase()}</span>
+        <span className="sr-only">{props.absent}</span>
       </span>
     ));
 }
@@ -87,11 +76,12 @@ function isChannel(value: string): value is NotificationChannel {
 
 /** Where notifications reach this account. Saved as soon as it changes. */
 export function NotificationsPanel(props: NotificationsPanelProps) {
+  const t = useTranslate();
   const [channel, setChannel] = useState(props.channel);
   const save = useUpdateNotificationChannel();
   const saveNote = match(save)
-    .with({ isPending: true }, () => "Saving…")
-    .with({ isSuccess: true }, () => "Saved.")
+    .with({ isPending: true }, () => t("common:actions.saving"))
+    .with({ isSuccess: true }, () => t("account:notifications.saved"))
     .otherwise(() => null);
 
   const choose = (value: unknown) => {
@@ -104,14 +94,14 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
 
   return (
     <SettingsSection
-      title="Notifications"
-      description="Where absqir reaches you. The choice belongs to the account, so it follows you to every device."
+      title={t("account:notifications.title")}
+      description={t("account:notifications.description")}
     >
       <SettingsRow
-        label="Delivery"
+        label={t("account:notifications.delivery")}
         hint={
           <>
-            Applies from now on. What was already written stays where it is.
+            {t("account:notifications.deliveryHint")}
             {match(saveNote)
               .with(P.string.minLength(1), (saveNote) => (
                 <span className="text-foreground block pt-2" role="status">
@@ -123,7 +113,7 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
         }
       >
         <RadioGroup
-          aria-label="Delivery"
+          aria-label={t("account:notifications.delivery")}
           value={channel}
           onValueChange={choose}
           className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4"
@@ -147,8 +137,10 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
                   />
                 </span>
                 <FieldContent>
-                  <FieldTitle>{option.title}</FieldTitle>
-                  <FieldDescription>{option.hint}</FieldDescription>
+                  <FieldTitle>{t(`account:notifications.channels.${option.key}`)}</FieldTitle>
+                  <FieldDescription>
+                    {t(`account:notifications.channels.${option.key}Hint`)}
+                  </FieldDescription>
                 </FieldContent>
                 <RadioGroupItem id={`channel-${option.value}`} value={option.value} />
               </Field>
@@ -159,39 +151,49 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
       </SettingsRow>
 
       <SettingsRow
-        label="What arrives"
-        hint="Each kind, who it is for, and where it goes with the choice above."
+        label={t("account:notifications.table.label")}
+        hint={t("account:notifications.table.hint")}
       >
         <div className="overflow-x-auto rounded-lg ring-1 ring-foreground/10">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-muted-foreground text-xs">
               <tr>
                 <th scope="col" className="px-3 py-2 text-left font-medium">
-                  Kind
+                  {t("account:notifications.table.kind")}
                 </th>
                 <th scope="col" className="px-3 py-2 text-left font-medium">
-                  Who
+                  {t("account:notifications.table.who")}
                 </th>
                 <th scope="col" className="px-3 py-2 text-center font-medium">
-                  In the app
+                  {t("account:notifications.table.inApp")}
                 </th>
                 <th scope="col" className="px-3 py-2 text-center font-medium">
-                  Email
+                  {t("account:notifications.table.email")}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
               {A.map(KINDS, (kind) => (
-                <tr key={kind.title}>
-                  <td className="px-3 py-2.5 font-medium whitespace-nowrap">{kind.title}</td>
+                <tr key={kind.key}>
+                  <td className="px-3 py-2.5 font-medium whitespace-nowrap">
+                    {t(`account:notifications.kinds.${kind.key}`)}
+                  </td>
                   <td className="text-muted-foreground px-3 py-2.5 whitespace-nowrap">
-                    {kind.who}
+                    {t(`account:notifications.kinds.${kind.key}Who`)}
                   </td>
                   <td className="px-3 py-2.5 text-center">
-                    <Mark on={reachesApp(channel)} label="In the app" />
+                    <Mark
+                      on={reachesApp(channel)}
+                      label={t("account:notifications.table.inApp")}
+                      absent={t("account:notifications.table.noInApp")}
+                    />
                   </td>
                   <td className="px-3 py-2.5 text-center">
-                    <Mark on={kind.emailed && reachesEmail(channel)} label="Email" />
+                    <Mark
+                      on={kind.emailed && reachesEmail(channel)}
+                      label={t("account:notifications.table.email")}
+                      absent={t("account:notifications.table.noEmail")}
+                    />
                   </td>
                 </tr>
               ))}
@@ -199,7 +201,7 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
           </table>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
-          Email needs the instance to have a mail provider. Without one, only the app receives.
+          {t("account:notifications.table.footnote")}
         </p>
       </SettingsRow>
     </SettingsSection>

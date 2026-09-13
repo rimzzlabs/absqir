@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Form, FormField } from "@absqir/ui/form";
@@ -22,8 +23,9 @@ export interface AuthPasswordStepProps {
 }
 
 export function AuthPasswordStep(props: AuthPasswordStepProps) {
+  const t = useTranslate();
   const form = useForm<PasswordValues>({
-    resolver: zodResolver(passwordSchema),
+    resolver: zodResolver(passwordSchema(t)),
     defaultValues: { password: props.initialPassword, rememberMe: true },
   });
 
@@ -44,7 +46,7 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
         className="space-y-5"
         noValidate
       >
-        <AuthHeading title="Welcome back" description={props.email} />
+        <AuthHeading title={t("auth:password.title")} description={props.email} />
 
         {/*
           The email is not typed on this step, so the password manager reads
@@ -64,7 +66,7 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
         <FormField
           control={form.control}
           name="password"
-          label="Password"
+          label={t("auth:password.label")}
           render={(field) => (
             <Input
               {...field}
@@ -82,20 +84,20 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
             checked={form.watch("rememberMe")}
             onCheckedChange={(checked) => form.setValue("rememberMe", checked === true)}
           />
-          <Label htmlFor="remember">Keep me signed in</Label>
+          <Label htmlFor="remember">{t("auth:password.remember")}</Label>
         </div>
 
         <FormError error={signIn.error ?? sendCode.error} />
 
         <Button type="submit" disabled={signIn.isPending} className="w-full">
           {match(signIn.isPending)
-            .with(true, () => "Signing in…" as const)
-            .otherwise(() => "Sign in" as const)}
+            .with(true, () => t("auth:password.signingIn"))
+            .otherwise(() => t("auth:password.signIn"))}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
-            Use another email
+            {t("auth:password.useAnotherEmail")}
           </Button>
           <Button
             type="button"
@@ -106,8 +108,8 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
             onClick={onCode}
           >
             {match(sendCode.isPending)
-              .with(true, () => "Sending…" as const)
-              .otherwise(() => "Email me a code instead" as const)}
+              .with(true, () => t("auth:code.sending"))
+              .otherwise(() => t("auth:password.emailCodeInstead"))}
           </Button>
         </div>
       </form>

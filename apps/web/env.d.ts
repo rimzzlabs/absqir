@@ -4,6 +4,7 @@
 type AbsqirSession = import("@absqir/auth").Session;
 type AbsqirRole = import("@absqir/auth").RoleName;
 type AbsqirOnboardingStep = import("@absqir/db/schema").OnboardingStep;
+type AbsqirLocale = import("@absqir/i18n/locales").Locale;
 
 interface AbsqirMembership {
   organizationId: string;
@@ -24,5 +25,10 @@ declare namespace App {
     memberships: readonly AbsqirMembership[];
     /** The membership behind the session's active organization. */
     activeMembership: AbsqirMembership | null;
+    /**
+     * The language this page answers in: the account's choice when it has
+     * one, the language the browser asks for when it does not.
+     */
+    locale: AbsqirLocale;
   }
 }

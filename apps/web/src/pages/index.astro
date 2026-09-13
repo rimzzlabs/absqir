@@ -11,16 +11,22 @@ const isMember = activeMembership?.role === "member";
 <DashboardLayout title={activeMembership ? "Home" : "Getting started"}>
   {
     !activeMembership ? (
-      <GettingStartedPage client:load userName={user?.name ?? ""} />
+      <GettingStartedPage client:load locale={Astro.locals.locale} userName={user?.name ?? ""} />
     ) : isMember ? (
       <MemberHomePage
         client:load
+        locale={Astro.locals.locale}
         userName={user?.name ?? ""}
         organizationName={activeMembership.name}
         timezone={user?.timezone ?? null}
       />
     ) : (
-      <HomePage client:load userName={user?.name ?? ""} userEmail={user?.email ?? ""} />
+      <HomePage
+        client:load
+        locale={Astro.locals.locale}
+        userName={user?.name ?? ""}
+        userEmail={user?.email ?? ""}
+      />
     )
   }
 </DashboardLayout>

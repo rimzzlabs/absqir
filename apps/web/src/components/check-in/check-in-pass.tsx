@@ -1,4 +1,5 @@
 import { formatDate, formatRange, relativeToNow } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import {
@@ -29,13 +30,14 @@ export interface CheckInPassProps {
 /** One event that accepts a pass right now. */
 function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
   const { event } = props;
+  const t = useTranslate();
 
   return (
     <li className="ring-primary/40 bg-primary/5 flex flex-col gap-3 rounded-lg p-3 ring-1">
       <div className="min-w-0">
         <p className="text-sm leading-snug font-medium">{event.title}</p>
         <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">
-          Runs until {formatDate(new Date(event.endsAt), "time")}
+          {t("checkin:pass.runsUntil", { time: formatDate(new Date(event.endsAt), "time") })}
         </p>
       </div>
 
@@ -55,7 +57,7 @@ function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
         .with(P.nullish, () => (
           <Button size="sm" className="w-fit" onClick={() => props.onPass(event.id)}>
             <TicketIcon />
-            My pass
+            {t("checkin:pass.myPass")}
           </Button>
         ))
         .otherwise((record) => (
@@ -64,7 +66,7 @@ function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
             {match(record.checkedInAt)
               .with(P.string.minLength(1), (checkedInAt) => (
                 <span className="text-muted-foreground text-xs tabular-nums">
-                  at {formatDate(new Date(checkedInAt), "time")}
+                  {t("checkin:result.at", { time: formatDate(new Date(checkedInAt), "time") })}
                 </span>
               ))
               .otherwise(() => null)}
@@ -76,12 +78,13 @@ function RunningRow(props: { event: MyEvent; onPass: (id: string) => void }) {
 
 /** The event the reader waits for, and the minute its door opens. */
 function NextBlock(props: { event: MyEvent }) {
+  const t = useTranslate();
   const opensAt = opensAtOf(props.event);
 
   return (
     <div className="border-border rounded-lg border border-dashed p-3">
       <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-        Up next
+        {t("checkin:pass.upNext")}
       </p>
       <p className="mt-1 text-sm leading-snug font-medium">{props.event.title}</p>
       <p className="text-muted-foreground mt-0.5 text-xs">
@@ -89,7 +92,7 @@ function NextBlock(props: { event: MyEvent }) {
       </p>
       <p className="mt-2 flex items-center gap-1.5 text-xs font-medium">
         <ClockIcon aria-hidden className="shrink-0" />
-        Check-in opens {formatDate(opensAt, "weekdayDateTime")}
+        {t("checkin:pass.opens", { when: formatDate(opensAt, "weekdayDateTime") })}
         <span className="text-muted-foreground font-normal">({relativeToNow(opensAt)})</span>
       </p>
     </div>
@@ -101,6 +104,7 @@ function NextBlock(props: { event: MyEvent }) {
  * pass, and says when the next door opens while nothing runs.
  */
 export function CheckInPass(props: CheckInPassProps) {
+  const t = useTranslate();
   const running = A.filter(props.events, (row) => row.status === "running");
   const next = A.getBy(props.events, (row) => row.status === "scheduled");
 
@@ -109,14 +113,12 @@ export function CheckInPass(props: CheckInPassProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TicketIcon />
-          Show my pass
+          {t("checkin:pass.title")}
         </CardTitle>
-        <CardDescription>
-          When the organizer scans instead of the room screen, hold this up. One pass per event.
-        </CardDescription>
+        <CardDescription>{t("checkin:pass.description")}</CardDescription>
         <CardAction>
           <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            My events
+            {t("checkin:pass.myEvents")}
             <CaretRightIcon />
           </a>
         </CardAction>
@@ -139,10 +141,8 @@ export function CheckInPass(props: CheckInPassProps) {
                     <EmptyMedia variant="icon">
                       <CalendarBlankIcon />
                     </EmptyMedia>
-                    <EmptyTitle>Nothing expects you yet</EmptyTitle>
-                    <EmptyDescription>
-                      Events appear here once an organizer plans one for a group you belong to.
-                    </EmptyDescription>
+                    <EmptyTitle>{t("checkin:pass.emptyTitle")}</EmptyTitle>
+                    <EmptyDescription>{t("checkin:pass.emptyDescription")}</EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               );
@@ -159,9 +159,7 @@ export function CheckInPass(props: CheckInPassProps) {
                     </ul>
                   ))
                   .otherwise(() => (
-                    <p className="text-muted-foreground text-sm">
-                      Nothing runs right now, so no pass works yet.
-                    </p>
+                    <p className="text-muted-foreground text-sm">{t("checkin:pass.nothingRuns")}</p>
                   ))}
 
                 {match(next)

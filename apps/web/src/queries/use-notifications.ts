@@ -1,4 +1,5 @@
 import { notificationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -13,6 +14,7 @@ export function useNotifications(
   scope: NotificationScope = "all",
   options: UseNotificationsOptions = {},
 ) {
+  const t = useTranslate();
   return useQuery({
     queryKey: notificationKeys.list(scope),
     enabled: options.enabled ?? true,
@@ -22,7 +24,7 @@ export function useNotifications(
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load your notifications.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourNotifications"));
 
       return response.json();
     },
@@ -34,6 +36,7 @@ export function useNotifications(
  * the fallback for a browser that lost the stream.
  */
 export function useUnreadCount() {
+  const t = useTranslate();
   return useQuery({
     queryKey: notificationKeys.unread(),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -41,7 +44,7 @@ export function useUnreadCount() {
         init: { signal: ctx.signal },
       });
 
-      if (!response.ok) throw await apiError(response, "Could not count your notifications.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCountYourNotifications"));
 
       return response.json();
     },

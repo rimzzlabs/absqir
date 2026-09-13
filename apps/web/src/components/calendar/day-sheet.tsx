@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import {
@@ -26,6 +27,7 @@ export interface DaySheetProps {
 
 /** Everything on one day, with the room to say more than a cell can. */
 export function DaySheet(props: DaySheetProps) {
+  const t = useTranslate();
   const entries = match(props.day)
     .with(P.nullish, () => [])
     .otherwise((day) => props.entries.get(dayKey(day)) ?? []);
@@ -41,8 +43,8 @@ export function DaySheet(props: DaySheetProps) {
           </SheetTitle>
           <SheetDescription>
             {match(entries.length)
-              .with(0, () => "Nothing is planned on this day yet." as const)
-              .otherwise((length) => `${length} on the calendar.`)}
+              .with(0, () => t("calendar:sheet.empty"))
+              .otherwise((count) => t("calendar:sheet.count", { count }))}
           </SheetDescription>
         </SheetHeader>
 
@@ -60,11 +62,18 @@ export function DaySheet(props: DaySheetProps) {
                     <EventStatusBadge status={entry.event.status} />
                   </div>
                   <p className="text-muted-foreground mt-1 text-sm tabular-nums">
-                    {formatDate(entry.startsAt, "time")} to {formatDate(entry.endsAt, "time")}
+                    {t("calendar:sheet.range", {
+                      from: formatDate(entry.startsAt, "time"),
+                      to: formatDate(entry.endsAt, "time"),
+                    })}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {entry.event.counts.expected} expected · {entry.event.counts.present} present ·{" "}
-                    {entry.event.counts.late} late · {entry.event.counts.absent} absent
+                    {t("calendar:sheet.counts", {
+                      expected: entry.event.counts.expected,
+                      present: entry.event.counts.present,
+                      late: entry.event.counts.late,
+                      absent: entry.event.counts.absent,
+                    })}
                   </p>
                   {match(entry.event.groups.length > 0)
                     .with(true, () => (
@@ -85,14 +94,17 @@ export function DaySheet(props: DaySheetProps) {
                     <span className="text-muted-foreground font-medium">{entry.title}</span>
                     <Badge variant="outline" className="text-muted-foreground">
                       <RepeatIcon />
-                      From a schedule
+                      {t("calendar:sheet.fromSchedule")}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mt-1 text-sm tabular-nums">
-                    {formatDate(entry.startsAt, "time")} to {formatDate(entry.endsAt, "time")}
+                    {t("calendar:sheet.range", {
+                      from: formatDate(entry.startsAt, "time"),
+                      to: formatDate(entry.endsAt, "time"),
+                    })}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    The schedule creates this event a fortnight ahead. Nothing to do now.
+                    {t("calendar:sheet.projectedHint")}
                   </p>
                 </div>
               )),
@@ -106,7 +118,7 @@ export function DaySheet(props: DaySheetProps) {
             onClick={() => props.day && props.onNewEvent(props.day)}
           >
             <PlusIcon />
-            New event on this day
+            {t("calendar:sheet.newEvent")}
           </Button>
         </SheetFooter>
       </SheetContent>

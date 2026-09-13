@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { match } from "ts-pattern";
 import { OrganizationCounts } from "@/components/settings/organization-counts";
 import { OrganizationDangerZone } from "@/components/settings/organization-danger-zone";
@@ -15,23 +16,20 @@ export interface OrganizationPanelProps {
 }
 
 function NameRow(props: OrganizationPanelProps) {
+  const t = useTranslate();
   const update = useUpdateOrganization();
   const canEdit = props.role === "owner" || props.role === "admin";
 
   return (
     <SettingsRow
-      label="Name and slug"
+      label={t("settings:organization.nameRow")}
       hint={match(canEdit)
-        .with(
-          true,
-          () =>
-            "The name people read, and the short word that names this organization everywhere else." as const,
-        )
-        .otherwise(() => "Only owners and admins can change these." as const)}
+        .with(true, () => t("settings:organization.nameHintEditable"))
+        .otherwise(() => t("settings:organization.nameHintReadOnly"))}
     >
       <fieldset disabled={!canEdit} className="max-w-md">
         <OrganizationForm
-          submitLabel="Save"
+          submitLabel={t("common:actions.save")}
           pending={update.isPending}
           defaultValues={{ name: props.organization.name, slug: props.organization.slug }}
           onSubmit={(values) => update.mutate({ organizationId: props.organization.id, ...values })}
@@ -44,13 +42,14 @@ function NameRow(props: OrganizationPanelProps) {
 
 /** Everything about the organization itself, from its logo down to its grave. */
 export function OrganizationPanel(props: OrganizationPanelProps) {
+  const t = useTranslate();
   const canEdit = props.role === "owner" || props.role === "admin";
 
   return (
     <div className="space-y-12">
       <SettingsSection
-        title="Organization"
-        description="The logo and the name people see, and the words that name it in links and on the command line."
+        title={t("settings:organization.title")}
+        description={t("settings:organization.description")}
       >
         <OrganizationIdentity organization={props.organization} canEdit={canEdit} />
         <div className="border-border border-t">
@@ -59,7 +58,10 @@ export function OrganizationPanel(props: OrganizationPanelProps) {
         </div>
       </SettingsSection>
 
-      <SettingsSection title="At a glance" description="How big this organization has become.">
+      <SettingsSection
+        title={t("settings:organization.glance")}
+        description={t("settings:organization.glanceDescription")}
+      >
         <OrganizationCounts />
       </SettingsSection>
 

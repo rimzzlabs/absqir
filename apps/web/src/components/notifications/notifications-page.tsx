@@ -1,4 +1,7 @@
-import { relativeToNow } from "@absqir/core/date";
+import { displayTimezone, relativeToNow } from "@absqir/core/date";
+import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { cn } from "@absqir/ui/lib/utils";
@@ -21,6 +24,11 @@ import {
 
 function Row(props: { notification: Notification; onRead: (id: string) => void }) {
   const { notification } = props;
+  const t = useTranslate();
+  // The words are made here, from the key the row kept, so a reader who
+  // changed their language reads the whole list in it.
+  const title = notificationTitle(t, notification);
+  const body = notificationBody(t, notification, { timezone: displayTimezone() });
   const Icon = NOTIFICATION_ICONS[notification.type];
   const unread = notification.readAt === null;
 
@@ -40,20 +48,20 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
           {match(notification.href)
             .with(P.string.minLength(1), (href) => (
               <a href={href} className="hover:underline">
-                {notification.title}
+                {title}
               </a>
             ))
-            .otherwise(() => notification.title)}
+            .otherwise(() => title)}
           {match(unread)
             .with(true, () => (
               <>
                 <span aria-hidden className="bg-primary size-1.5 rounded-full" />
-                <span className="sr-only">Unread</span>
+                <span className="sr-only">{t("notifications:unread")}</span>
               </>
             ))
             .otherwise(() => null)}
         </p>
-        {match(notification.body)
+        {match(body)
           .with(P.string.minLength(1), (body) => (
             <p className="text-muted-foreground mt-0.5 text-sm">{body}</p>
           ))
@@ -66,7 +74,7 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
       {match(unread)
         .with(true, () => (
           <Button variant="ghost" size="sm" onClick={() => props.onRead(notification.id)}>
-            Mark read
+            {t("notifications:markRead")}
           </Button>
         ))
         .otherwise(() => null)}
@@ -75,6 +83,8 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
 }
 
 function NothingHere(props: { scope: NotificationScope }) {
+  const t = useTranslate();
+
   return (
     <Empty className="border-border rounded-xl border border-dashed py-16">
       <EmptyHeader>
@@ -83,15 +93,13 @@ function NothingHere(props: { scope: NotificationScope }) {
         </EmptyMedia>
         <EmptyTitle>
           {match(props.scope)
-            .with("unread", () => "Nothing waiting" as const)
-            .otherwise(() => "Nothing yet" as const)}
+            .with("unread", () => t("notifications:emptyUnreadTitle"))
+            .otherwise(() => t("notifications:emptyTitle"))}
         </EmptyTitle>
         <EmptyDescription>
           {match(props.scope)
-            .with("unread", () => "You have read everything." as const)
-            .otherwise(
-              () => "Reminders before an event, leave requests, and closings land here." as const,
-            )}
+            .with("unread", () => t("notifications:emptyUnreadDescription"))
+            .otherwise(() => t("notifications:emptyDescription"))}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -104,6 +112,7 @@ const SCOPE = parseAsStringLiteral([
 ] as const satisfies NotificationScope[]).withDefault("all");
 
 function NotificationsBody() {
+  const t = useTranslate();
   const [scope, setScope] = useQueryState("scope", SCOPE);
   const notifications = useNotifications(scope);
   const markRead = useMarkRead();
@@ -113,8 +122,8 @@ function NotificationsBody() {
   return (
     <>
       <PageHeader
-        title="Notifications"
-        description="Everything that happened that concerns you. Email as well, when the instance sends it."
+        title={t("notifications:title")}
+        description={t("notifications:description")}
         actions={match(unread > 0)
           .with(true, () => (
             <Button
@@ -123,7 +132,7 @@ function NotificationsBody() {
               onClick={() => markRead.mutate(null)}
               disabled={markRead.isPending}
             >
-              Mark all read
+              {t("notifications:markAllRead")}
             </Button>
           ))
           .otherwise(() => null)}
@@ -131,8 +140,8 @@ function NotificationsBody() {
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as NotificationScope)}>
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="unread">Unread</TabsTrigger>
+          <TabsTrigger value="all">{t("notifications:all")}</TabsTrigger>
+          <TabsTrigger value="unread">{t("notifications:unreadTab")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -159,9 +168,14 @@ function NotificationsBody() {
   );
 }
 
-export function NotificationsPage() {
+export interface NotificationsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function NotificationsPage(props: NotificationsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <NotificationsBody />
     </Providers>
   );

@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { CheckCircleIcon, ClockIcon, FlagIcon, InfoIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
@@ -39,6 +40,7 @@ function Note(props: { icon: ReactNode; children: ReactNode }) {
  * plainly and pointed at a person rather than at the same form again.
  */
 export function ReportAction(props: ReportActionProps) {
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -48,29 +50,24 @@ export function ReportAction(props: ReportActionProps) {
 
   return match(state)
     .with("pending", () => (
-      <Note icon={<ClockIcon className="size-4" />}>
-        You reported this, and an organizer has not decided yet. You will get a notification either
-        way.
-      </Note>
+      <Note icon={<ClockIcon className="size-4" />}>{t("checkin:report.pending")}</Note>
     ))
     .with("approved", () => (
       <Note icon={<CheckCircleIcon weight="fill" className="size-4 text-emerald-500" />}>
-        An organizer accepted your report, so your attendance is already recorded for this event.
+        {t("checkin:report.approved")}
       </Note>
     ))
     .with("declined", () => (
       // Never call the member a liar. An organizer can turn a report down for
       // reasons that have nothing to do with honesty, and the member needs a
       // next step rather than a verdict.
-      <Note icon={<InfoIcon className="size-4" />}>
-        An organizer read your report and did not accept it, so this event stays as it is. Talk to
-        them if that is wrong. They can still mark you in by hand.
-      </Note>
+      <Note icon={<InfoIcon className="size-4" />}>{t("checkin:report.declined")}</Note>
     ))
     .with(P.nullish, () => (
       <>
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          <FlagIcon />I am here, tell the organizer
+          <FlagIcon />
+          {t("checkin:report.open")}
         </Button>
 
         <ReportDialog

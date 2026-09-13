@@ -1,4 +1,6 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
@@ -32,9 +34,10 @@ import { type LeaveRequest, type LeaveScope, useLeaveQueue } from "@/queries/use
 type Decision = { request: LeaveRequest; decision: "approved" | "declined" } | null;
 
 function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
+  const t = useTranslate();
   const decide = useDecideLeave();
   const form = useForm<DecideLeaveValues>({
-    resolver: zodResolver(decideLeaveSchema),
+    resolver: zodResolver(decideLeaveSchema(t)),
     defaultValues: { note: "" },
   });
   const open = props.pending !== null;
@@ -45,8 +48,8 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
 
   const approving = props.pending?.decision === "approved";
   const decideLabel = match(approving)
-    .with(true, () => "Approve" as const)
-    .otherwise(() => "Decline" as const);
+    .with(true, () => t("leave:approve"))
+    .otherwise(() => t("leave:decline"));
 
   const onSubmit = (values: DecideLeaveValues) => {
     if (!props.pending) return;
@@ -66,18 +69,15 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            {match(approving)
-              .with(true, () => "Approve" as const)
-              .otherwise(() => "Decline" as const)}{" "}
-            {props.pending?.request.personName}
+            {t("leave:dialog.title", {
+              decision: decideLabel,
+              name: props.pending?.request.personName ?? "",
+            })}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {match(approving)
-              .with(
-                true,
-                () => "The record for this event shows excused instead of absent." as const,
-              )
-              .otherwise(() => "The record stays as it is. The member sees your note." as const)}
+              .with(true, () => t("leave:dialog.approveDescription"))
+              .otherwise(() => t("leave:dialog.declineDescription"))}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <Form {...form}>
@@ -97,15 +97,15 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
               <FormField
                 control={form.control}
                 name="note"
-                label="Note"
-                description="Optional. The member sees it."
+                label={t("leave:dialog.note")}
+                description={t("leave:dialog.noteHint")}
                 render={(field) => <Textarea {...field} id="leave-note" rows={2} autoFocus />}
               />
               <FormError error={decide.error} />
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={props.onClose}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -115,7 +115,7 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
                 disabled={decide.isPending}
               >
                 {match(decide.isPending)
-                  .with(true, () => "Saving…" as const)
+                  .with(true, () => t("common:actions.saving"))
                   .otherwise(() => decideLabel)}
               </Button>
             </ResponsiveDialogFooter>
@@ -126,18 +126,18 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   );
 }
 
-function leaveColumns(onDecide: (d: Decision) => void): DataColumn<LeaveRequest>[] {
+function leaveColumns(t: Translate, onDecide: (d: Decision) => void): DataColumn<LeaveRequest>[] {
   return [
     {
       key: "person",
-      header: "Person",
+      header: t("leave:person"),
       place: "primary",
       cell: (row) => row.personName,
       cellClassName: "font-medium",
     },
     {
       key: "event",
-      header: "Event",
+      header: t("leave:event"),
       cell: (row) => (
         <>
           <a href={`/events/${row.eventId}`} className="hover:underline">
@@ -151,13 +151,15 @@ function leaveColumns(onDecide: (d: Decision) => void): DataColumn<LeaveRequest>
     },
     {
       key: "reason",
-      header: "Reason",
+      header: t("leave:reason"),
       cell: (row) => (
         <>
           {row.reason}
           {match(row.decisionNote)
             .with(P.string.minLength(1), (decisionNote) => (
-              <p className="text-muted-foreground text-xs">Note: {decisionNote}</p>
+              <p className="text-muted-foreground text-xs">
+                {t("leave:note", { note: decisionNote })}
+              </p>
             ))
             .otherwise(() => null)}
         </>
@@ -166,13 +168,13 @@ function leaveColumns(onDecide: (d: Decision) => void): DataColumn<LeaveRequest>
     },
     {
       key: "asked",
-      header: "Asked",
+      header: t("leave:asked"),
       cell: (row) => formatDate(new Date(row.createdAt), "date"),
       cellClassName: "text-muted-foreground tabular-nums",
     },
     {
       key: "status",
-      header: "Status",
+      header: t("leave:status"),
       cell: (row) => <LeaveStatusBadge status={row.status} />,
     },
     {
@@ -189,14 +191,14 @@ function leaveColumns(onDecide: (d: Decision) => void): DataColumn<LeaveRequest>
                 className="flex-1 md:flex-none"
                 onClick={() => onDecide({ request: row, decision: "declined" })}
               >
-                Decline
+                {t("leave:decline")}
               </Button>
               <Button
                 size="sm"
                 className="flex-1 md:flex-none"
                 onClick={() => onDecide({ request: row, decision: "approved" })}
               >
-                Approve
+                {t("leave:approve")}
               </Button>
             </div>
           ))
@@ -210,6 +212,8 @@ function Queue(props: {
   scope: LeaveScope;
   onDecide: (d: Decision) => void;
 }) {
+  const t = useTranslate();
+
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -219,17 +223,13 @@ function Queue(props: {
           </EmptyMedia>
           <EmptyTitle>
             {match(props.scope)
-              .with("pending", () => "Nothing to decide" as const)
-              .otherwise(() => "Nothing decided yet" as const)}
+              .with("pending", () => t("leave:emptyPendingTitle"))
+              .otherwise(() => t("leave:emptyDecidedTitle"))}
           </EmptyTitle>
           <EmptyDescription>
             {match(props.scope)
-              .with(
-                "pending",
-                () =>
-                  "A member who cannot make an event asks here. You approve or decline." as const,
-              )
-              .otherwise(() => "Approved and declined requests land here." as const)}
+              .with("pending", () => t("leave:emptyPendingDescription"))
+              .otherwise(() => t("leave:emptyDecidedDescription"))}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -238,8 +238,8 @@ function Queue(props: {
 
   return (
     <DataTable
-      label="Leave requests"
-      columns={leaveColumns(props.onDecide)}
+      label={t("leave:tableLabel")}
+      columns={leaveColumns(t, props.onDecide)}
       rows={props.rows}
       getKey={(row) => row.id}
     />
@@ -255,21 +255,19 @@ const SCOPE = parseAsStringLiteral([
 ] as const satisfies QueueScope[]).withDefault("pending");
 
 function LeaveBody() {
+  const t = useTranslate();
   const [scope, setScope] = useQueryState("status", SCOPE);
   const queue = useLeaveQueue(scope);
   const [pending, setPending] = useState<Decision>(null);
 
   return (
     <>
-      <PageHeader
-        title="Leave requests"
-        description="A member asks to be excused before an event. Approve, and the record shows excused instead of absent."
-      />
+      <PageHeader title={t("leave:title")} description={t("leave:description")} />
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>
         <TabsList>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="decided">Decided</TabsTrigger>
+          <TabsTrigger value="pending">{t("leave:pending")}</TabsTrigger>
+          <TabsTrigger value="decided">{t("leave:decided")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -286,9 +284,14 @@ function LeaveBody() {
   );
 }
 
-export function LeavePage() {
+export interface LeavePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function LeavePage(props: LeavePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <LeaveBody />
     </Providers>
   );

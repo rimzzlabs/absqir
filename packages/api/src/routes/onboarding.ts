@@ -1,6 +1,7 @@
 import { authErrorOf, isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
+import { isLocale, LOCALES } from "@absqir/i18n/locales";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, O, pipe } from "@mobily/ts-belt";
 import { and, count, eq, gt, ne } from "drizzle-orm";
@@ -24,6 +25,8 @@ const statusSchema = z.object({
   step: stepSchema,
   name: z.string(),
   email: z.string(),
+  /** The language this account reads absqir in. Null follows the browser. */
+  locale: z.enum(LOCALES).nullable(),
   image: z.string().nullable(),
   hasPassword: z.boolean(),
   /** The providers already linked to this account, such as "github". */
@@ -95,6 +98,12 @@ const profileRoute = createRoute({
             name: z.string().trim().min(1).max(80),
             /** Omitted when the account has a password already. */
             password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH).optional(),
+            /**
+             * The language every screen and every email reads in from here
+             * on. The picker opens on the browser's own language, so a
+             * reader who agrees with it still confirms the choice.
+             */
+            locale: z.enum(LOCALES),
           }),
         },
       },
@@ -236,7 +245,7 @@ const finishRoute = createRoute({
 function requireUser(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (!c.get("user")) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     }
 
     await next();
@@ -297,7 +306,7 @@ export const onboardingRoutes = app
     ]);
 
     const row = rows[0];
-    if (!row) return c.json({ error: "Unauthorized" }, 401);
+    if (!row) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const found = await findOrganizationForEmail(db, row.email);
     const workspace = match(found)
@@ -328,6 +337,9 @@ export const onboardingRoutes = app
         step: row.onboardingStep,
         name: row.name,
         email: row.email,
+        locale: match(row.locale)
+          .with(P.when(isLocale), (locale) => locale)
+          .otherwise(() => null),
         image: row.image ?? null,
         hasPassword: await hasCredential(c, row.id),
         linkedProviders: [...(await linkedProvidersOf(c, row.id))],
@@ -356,7 +368,7 @@ export const onboardingRoutes = app
   })
   .openapi(profileRoute, async (c) => {
     const current = userOf(c);
-    const { name, password } = c.req.valid("json");
+    const { name, password, locale } = c.req.valid("json");
 
     const credential = await hasCredential(c, current.id);
 
@@ -367,7 +379,7 @@ export const onboardingRoutes = app
       const linked = await linkedProvidersOf(c, current.id);
 
       if (!password && linked.length === 0) {
-        return c.json({ error: "Choose a password to finish the account." }, 400);
+        return c.json({ error: c.var.t("errors:choosePasswordToFinish") }, 400);
       }
 
       if (password) {
@@ -378,7 +390,10 @@ export const onboardingRoutes = app
       }
     }
 
-    await c.var.db.update(user).set({ name, updatedAt: new Date() }).where(eq(user.id, current.id));
+    await c.var.db
+      .update(user)
+      .set({ name, locale, updatedAt: new Date() })
+      .where(eq(user.id, current.id));
 
     await setOnboardingStep(c, current.id, "avatar");
 
@@ -404,7 +419,7 @@ export const onboardingRoutes = app
     const { name, slug } = c.req.valid("json");
 
     if (!isSlug(slug)) {
-      return c.json({ error: "Use lowercase letters, digits, and hyphens for the slug." }, 400);
+      return c.json({ error: c.var.t("errors:slugCharacters") }, 400);
     }
 
     try {
@@ -429,7 +444,7 @@ export const onboardingRoutes = app
 
       if (known.status === 403) return c.json({ error: known.message }, 403);
       if (known.status === 400 && /slug/i.test(known.message)) {
-        return c.json({ error: "That slug is taken. Try another." }, 409);
+        return c.json({ error: c.var.t("errors:slugTaken") }, 409);
       }
 
       return c.json({ error: known.message }, 400);
@@ -454,7 +469,7 @@ export const onboardingRoutes = app
 
     const found = rows[0];
     if (!found || (found.role && !isRoleName(found.role))) {
-      return c.json({ error: "This invitation is not for this account, or it expired." }, 404);
+      return c.json({ error: c.var.t("errors:invitationNotForThisAccount") }, 404);
     }
 
     const accepted = await c.var.auth.api.acceptInvitation({
@@ -476,7 +491,7 @@ export const onboardingRoutes = app
 
     const found = await findPublicEvent(c.var.db, eventId);
     if (!found?.event.registrationOpen) {
-      return c.json({ error: "This event does not take registrations." }, 404);
+      return c.json({ error: c.var.t("errors:noRegistrations") }, 404);
     }
 
     const result = await registerForEvent(c.var.db, { event: found.event, user: current });

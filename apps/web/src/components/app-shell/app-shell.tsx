@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { SidebarInset, SidebarProvider } from "@absqir/ui/sidebar";
 import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app-shell/app-header";
@@ -21,6 +22,8 @@ export interface ShellUser {
 }
 
 export interface AppShellProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   user: ShellUser;
   memberships: readonly ShellMembership[];
   /** Null while the account belongs to no organization. */
@@ -45,7 +48,7 @@ const PAGE =
  */
 export function AppShell(props: AppShellProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <SidebarProvider defaultOpen={props.sidebarOpen ?? true}>
         <AppSidebar
           memberships={props.memberships}

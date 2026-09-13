@@ -1,4 +1,5 @@
 import { eventKeys, eventMutationKeys, myKeys, organizationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -19,6 +20,7 @@ export interface EventInput {
 }
 
 export function useCreateEvent() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -26,7 +28,7 @@ export function useCreateEvent() {
     mutationFn: async (values: EventInput) => {
       const response = await api.events.$post({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not create the event.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCreateEvent"));
 
       return response.json();
     },

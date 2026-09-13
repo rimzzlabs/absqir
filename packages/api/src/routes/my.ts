@@ -280,10 +280,10 @@ export const myRoutes = app
   .openapi(eventsRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const query = c.req.valid("query");
     const now = new Date();
@@ -345,21 +345,21 @@ export const myRoutes = app
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
     const { id } = c.req.valid("param");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const now = new Date();
     await settle(c.var.db, organizationId, now);
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     // An event that never expected this reader tells them nothing, not even
     // that it exists. The same rule as the pass.
     const expected = await isExpected(c.var.db, id, me.id);
-    if (!expected) return c.json({ error: "Not found" }, 404);
+    if (!expected) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const [json, expectedIds, records, leaves, reports] = await Promise.all([
       toEventJson(c.var.db, [found], now),
@@ -408,14 +408,14 @@ export const myRoutes = app
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
     const { id } = c.req.valid("param");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
-    if (statusOf(found) === "done") return c.json({ error: "This event is over." }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (statusOf(found) === "done") return c.json({ error: c.var.t("errors:eventIsOver") }, 404);
 
     const code = await createPass({ secret: found.secret, eventId: id, personId: me.id });
 
@@ -424,10 +424,10 @@ export const myRoutes = app
   .openapi(historyRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const now = new Date();
     await settle(c.var.db, organizationId, now);

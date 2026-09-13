@@ -1,8 +1,11 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { NotificationsPage } from "@/components/notifications/notifications-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<DashboardLayout title="Notifications">
-  <NotificationsPage client:load />
+<DashboardLayout title={t("shell:titles.notifications")}>
+  <NotificationsPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

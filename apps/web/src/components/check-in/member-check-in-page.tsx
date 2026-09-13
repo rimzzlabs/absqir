@@ -1,4 +1,6 @@
 import { parseCheckInLink } from "@absqir/core/check-in-link";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
@@ -37,6 +39,7 @@ const REPEAT_MS = 4000;
 const BLOCK_EDGE = "rounded-xl border-0 ring-1 ring-foreground/10";
 
 function Scanner() {
+  const t = useTranslate();
   const checkIn = useCheckIn();
   const [manual, setManual] = useState("");
   const [lastEventId, setLastEventId] = useState<string | null>(null);
@@ -48,7 +51,7 @@ function Scanner() {
 
     const link = parseCheckInLink(text, window.location.origin);
     if (!link) {
-      setRejected("That is not the code from the room screen.");
+      setRejected(t("checkin:scanner.notALink"));
       return;
     }
 
@@ -66,11 +69,11 @@ function Scanner() {
   // The camera stops once the reader is in; a result should not flicker.
   const camera = useCamera(submit, {
     enabled: !checkIn.isSuccess,
-    fallback: "Paste the link printed under the code on the room screen.",
+    fallback: t("checkin:scanner.pasteFallback"),
   });
   const progressNote = match(checkIn.stage)
-    .with("locating", () => "Finding where you are." as const)
-    .with("checking", () => "Checking you in." as const)
+    .with("locating", () => t("checkin:scanner.locatingNote"))
+    .with("checking", () => t("checkin:scanner.checkingNote"))
     .otherwise(() => "" as const);
   const error = rejected ?? checkIn.error?.message ?? null;
 
@@ -79,18 +82,18 @@ function Scanner() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ScanIcon />
-          Scan the room screen
+          {t("checkin:scanner.title")}
         </CardTitle>
-        <CardDescription>
-          Hold the code inside the frame. It reads on its own, so there is nothing to press.
-        </CardDescription>
+        <CardDescription>{t("checkin:scanner.description")}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-4">
         {/* The region lives through every state, so a reader hears the outcome. */}
         <p aria-live="polite" className="sr-only">
           {match(checkIn.data)
-            .with(P.nonNullable, (data) => `${data.personName}, you are in for ${data.eventTitle}.`)
+            .with(P.nonNullable, (data) =>
+              t("checkin:scanner.youAreIn", { name: data.personName, event: data.eventTitle }),
+            )
             .otherwise(() => progressNote)}
         </p>
 
@@ -115,11 +118,8 @@ function Scanner() {
           .with("locating", () => (
             <Alert className={BLOCK_EDGE}>
               <MapPinIcon />
-              <AlertTitle>Finding where you are</AlertTitle>
-              <AlertDescription>
-                This event checks that you are at the place. Allow location, and hold still for a
-                moment.
-              </AlertDescription>
+              <AlertTitle>{t("checkin:scanner.locatingTitle")}</AlertTitle>
+              <AlertDescription>{t("checkin:scanner.locatingHint")}</AlertDescription>
             </Alert>
           ))
           .otherwise(() => null)}
@@ -128,7 +128,7 @@ function Scanner() {
           .with(true, () => (
             <Alert variant="destructive" className={BLOCK_EDGE}>
               <WarningCircleIcon />
-              <AlertTitle>Not checked in</AlertTitle>
+              <AlertTitle>{t("checkin:scanner.refusedTitle")}</AlertTitle>
               <AlertDescription className="flex flex-col items-start gap-2">
                 <span>{error}</span>
 
@@ -162,7 +162,7 @@ function Scanner() {
                 setManual("");
               }}
             >
-              <Label htmlFor="check-in-link">Cannot scan? Paste the link</Label>
+              <Label htmlFor="check-in-link">{t("checkin:scanner.manualLabel")}</Label>
               <div className="flex gap-2">
                 <Input
                   id="check-in-link"
@@ -172,12 +172,10 @@ function Scanner() {
                   autoComplete="off"
                 />
                 <Button type="submit" variant="outline" disabled={checkIn.isPending}>
-                  Check in
+                  {t("checkin:scanner.manualSubmit")}
                 </Button>
               </div>
-              <p className="text-muted-foreground text-xs">
-                The room screen prints the link under its code.
-              </p>
+              <p className="text-muted-foreground text-xs">{t("checkin:scanner.manualHint")}</p>
             </form>
           ))}
       </CardContent>
@@ -188,6 +186,7 @@ function Scanner() {
 }
 
 function MemberCheckInBody() {
+  const t = useTranslate();
   const events = useMyEvents();
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
   const [passFor, setPassFor] = useState<string | null>(null);
@@ -206,10 +205,7 @@ function MemberCheckInBody() {
 
   return (
     <>
-      <PageHeader
-        title="Check in"
-        description="Point the camera at the screen in the room. Or show your pass to the organizer."
-      />
+      <PageHeader title={t("checkin:title")} description={t("checkin:description")} />
 
       {/* The camera keeps a narrow rail of its own. Everything else stacks in the
           wide rail, so the tall card leaves no hole under the short ones. */}
@@ -238,9 +234,14 @@ function MemberCheckInBody() {
 }
 
 /** The member's way in: scan the room screen, or show a pass at the door. */
-export function MemberCheckInPage() {
+export interface MemberCheckInPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MemberCheckInPage(props: MemberCheckInPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MemberCheckInBody />
     </Providers>
   );

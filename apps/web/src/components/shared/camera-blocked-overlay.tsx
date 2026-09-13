@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import {
   Dialog,
@@ -38,59 +39,43 @@ function Mark(props: { children: ReactNode }) {
 interface Coach {
   /** The screen edge that holds the address bar, which the band marks. */
   side: "top" | "bottom";
-  /** How to reach the site's own settings. */
-  find: ReactNode;
-  /** What to do once they are open. */
-  allow: string;
+  /** The key under `common:camera` that words the two steps. */
+  key: "chromium" | "firefox" | "safari" | "iphone";
+  /** The button as the browser draws it, between the two halves of step one. */
+  mark: ReactNode;
 }
 
 const CHROMIUM: Coach = {
   side: "top",
-  find: (
-    <>
-      Click the
-      <Mark>
-        <FadersHorizontalIcon className="size-3.5" />
-      </Mark>
-      button on the left of the address bar above.
-    </>
+  key: "chromium",
+  mark: (
+    <Mark>
+      <FadersHorizontalIcon className="size-3.5" />
+    </Mark>
   ),
-  allow: "Set Camera to Allow.",
 };
 
 const FIREFOX: Coach = {
   side: "top",
-  find: (
-    <>
-      Click the
-      <Mark>
-        <LockIcon className="size-3.5" />
-      </Mark>
-      padlock on the left of the address bar above.
-    </>
+  key: "firefox",
+  mark: (
+    <Mark>
+      <LockIcon className="size-3.5" />
+    </Mark>
   ),
-  allow: "Open Connection settings, then clear the blocked camera.",
 };
 
-const SAFARI: Coach = {
-  side: "top",
-  find: <>Open the Safari menu, then Settings for This Website.</>,
-  allow: "Set Camera to Allow.",
-};
+const SAFARI: Coach = { side: "top", key: "safari", mark: null };
 
 /** Safari and Brave put the address bar at the foot of an iPhone screen. */
 const IPHONE: Coach = {
   side: "bottom",
-  find: (
-    <>
-      Tap the
-      <Mark>
-        <span className="text-[10px] font-semibold">aA</span>
-      </Mark>
-      button in the address bar below.
-    </>
+  key: "iphone",
+  mark: (
+    <Mark>
+      <span className="text-[10px] font-semibold">aA</span>
+    </Mark>
   ),
-  allow: "Open Website Settings, then set Camera to Allow.",
 };
 
 /**
@@ -127,6 +112,7 @@ function Step(props: { index: number; children: ReactNode }) {
  * Dismissing it gives the page back, with the paste box still there.
  */
 export function CameraBlockedOverlay(props: CameraBlockedOverlayProps) {
+  const t = useTranslate();
   const [dismissed, setDismissed] = useState(false);
   const blocked = props.fault?.kind === "refused";
 
@@ -179,28 +165,36 @@ export function CameraBlockedOverlay(props: CameraBlockedOverlayProps) {
           <div className="bg-muted flex size-8 items-center justify-center rounded-lg">
             <VideoCameraIcon className="size-4" />
           </div>
-          <DialogTitle>The camera is turned off for this site</DialogTitle>
-          <DialogDescription>
-            Your browser holds the switch, so we cannot turn it on from here.
-          </DialogDescription>
+          <DialogTitle>{t("common:camera.title")}</DialogTitle>
+          <DialogDescription>{t("common:camera.description")}</DialogDescription>
         </DialogHeader>
 
         <ol className="flex flex-col gap-2">
-          <Step index={1}>{coach.find}</Step>
-          <Step index={2}>{coach.allow}</Step>
-          <Step index={3}>Come back here and select Try again.</Step>
+          <Step index={1}>
+            {match(coach.key)
+              .with("safari", (key) => t(`common:camera.${key}.find`))
+              .otherwise((key) => (
+                <>
+                  {t(`common:camera.${key}.findBefore`)}
+                  {coach.mark}
+                  {t(`common:camera.${key}.findAfter`)}
+                </>
+              ))}
+          </Step>
+          <Step index={2}>{t(`common:camera.${coach.key}.allow`)}</Step>
+          <Step index={3}>{t("common:camera.lastStep")}</Step>
         </ol>
 
-        <p className="text-muted-foreground text-xs">
-          If the camera stays off, reload the page. You can always paste the code by hand instead.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("common:camera.note")}</p>
 
         <div className="flex gap-2">
           <Button className="flex-1" onClick={props.onRetry}>
             <ArrowClockwiseIcon />
-            Try again
+            {t("common:actions.tryAgain")}
           </Button>
-          <DialogClose render={<Button variant="outline" />}>Not now</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>
+            {t("common:actions.notNow")}
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>

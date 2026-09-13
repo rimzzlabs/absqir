@@ -8,6 +8,14 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./numbers": {
+      "development": "./src/numbers.ts",
+      "default": "./dist/numbers.js"
+    },
+    "./notification-text": {
+      "development": "./src/notification-text.ts",
+      "default": "./dist/notification-text.js"
+    },
     "./money": {
       "development": "./src/money.ts",
       "default": "./dist/money.js"
@@ -68,6 +76,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@absqir/i18n": "workspace:^",
     "@date-fns/tz": "^1.5.0",
     "@mobily/ts-belt": "4.0.0-rc.5",
     "date-fns": "^4.4.0",

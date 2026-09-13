@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Form, FormField } from "@absqir/ui/form";
@@ -24,16 +25,17 @@ import { useSetPassword } from "@/mutations/use-set-password";
 import { useCredentials } from "@/queries/use-credentials";
 
 function PasswordRow() {
+  const t = useTranslate();
   const change = useChangePassword();
   const form = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(changePasswordSchema(t)),
     defaultValues: { currentPassword: "", newPassword: "", signOutOthers: false },
   });
 
   return (
     <SettingsRow
-      label="Password"
-      hint={`At least ${MIN_PASSWORD_LENGTH} characters. Forgot it? Sign out, then choose the emailed code on the sign-in page.`}
+      label={t("account:security.password")}
+      hint={t("account:security.passwordHint", { count: MIN_PASSWORD_LENGTH })}
     >
       <Form {...form}>
         <form
@@ -47,7 +49,7 @@ function PasswordRow() {
             <FormField
               control={form.control}
               name="currentPassword"
-              label="Current password"
+              label={t("account:security.currentPassword")}
               render={(field) => (
                 <Input
                   {...field}
@@ -60,7 +62,7 @@ function PasswordRow() {
             <FormField
               control={form.control}
               name="newPassword"
-              label="New password"
+              label={t("account:security.newPassword")}
               render={(field) => (
                 <Input {...field} id="newPassword" type="password" autoComplete="new-password" />
               )}
@@ -73,7 +75,7 @@ function PasswordRow() {
               checked={form.watch("signOutOthers")}
               onCheckedChange={(checked) => form.setValue("signOutOthers", checked === true)}
             />
-            <Label htmlFor="signOutOthers">Sign out my other devices</Label>
+            <Label htmlFor="signOutOthers">{t("account:security.signOutOthers")}</Label>
           </div>
 
           <FormError error={change.error} />
@@ -81,14 +83,14 @@ function PasswordRow() {
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={change.isPending}>
               {match(change.isPending)
-                .with(true, () => "Changing…" as const)
-                .otherwise(() => "Change password" as const)}
+                .with(true, () => t("account:security.changing"))
+                .otherwise(() => t("account:security.change"))}
             </Button>
             {match(change.isSuccess)
               .with(true, () => (
                 <p role="status" className="flex items-center gap-1.5 text-sm text-emerald-600">
                   <CheckCircleIcon weight="fill" className="size-4" />
-                  Password changed.
+                  {t("account:security.changed")}
                 </p>
               ))
               .otherwise(() => null)}
@@ -101,17 +103,15 @@ function PasswordRow() {
 
 /** An account that arrived through a provider, or only ever used a code. */
 function SetPasswordRow() {
+  const t = useTranslate();
   const set = useSetPassword();
   const form = useForm<SetPasswordValues>({
-    resolver: zodResolver(setPasswordSchema),
+    resolver: zodResolver(setPasswordSchema(t)),
     defaultValues: { password: "" },
   });
 
   return (
-    <SettingsRow
-      label="Password"
-      hint="This account has none. An emailed code signs you in either way, so a password is optional."
-    >
+    <SettingsRow label={t("account:security.password")} hint={t("account:security.noPasswordHint")}>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit((values) =>
@@ -123,8 +123,8 @@ function SetPasswordRow() {
           <FormField
             control={form.control}
             name="password"
-            label="New password"
-            description={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+            label={t("account:security.newPassword")}
+            description={t("account:security.minLength", { count: MIN_PASSWORD_LENGTH })}
             render={(field) => (
               <Input {...field} id="password" type="password" autoComplete="new-password" />
             )}
@@ -134,8 +134,8 @@ function SetPasswordRow() {
 
           <Button type="submit" disabled={set.isPending}>
             {match(set.isPending)
-              .with(true, () => "Saving…" as const)
-              .otherwise(() => "Set a password" as const)}
+              .with(true, () => t("common:actions.saving"))
+              .otherwise(() => t("account:security.setPassword"))}
           </Button>
         </form>
       </Form>
@@ -155,6 +155,7 @@ function PasswordSection() {
 }
 
 function SignOutOthers() {
+  const t = useTranslate();
   const hasOthers = useHasOtherDevices();
   const revoke = useRevokeSession();
 
@@ -162,23 +163,28 @@ function SignOutOthers() {
 
   return (
     <Button variant="outline" disabled={revoke.isPending} onClick={() => revoke.mutate(null)}>
-      Sign out everywhere else
+      {t("account:devices.signOutEverywhere")}
     </Button>
   );
 }
 
 /** The password, and every browser that holds a session. */
 export function SecurityPanel() {
+  const t = useTranslate();
+
   return (
     <div className="space-y-12">
-      <SettingsSection title="Sign-in" description="What proves it is you.">
+      <SettingsSection
+        title={t("account:security.signInTitle")}
+        description={t("account:security.signInDescription")}
+      >
         <PasswordSection />
         <ConnectedAccounts />
       </SettingsSection>
 
       <SettingsSection
-        title="Devices"
-        description="Every browser signed in as you. Sign out the ones you do not know."
+        title={t("account:devices.title")}
+        description={t("account:devices.description")}
         actions={<SignOutOthers />}
       >
         <div className="pt-6">

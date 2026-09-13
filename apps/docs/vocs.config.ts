@@ -32,6 +32,7 @@ export default defineConfig({
         { text: "Checking where people are", link: "/location" },
         { text: "Reports and calendar", link: "/reports" },
         { text: "Notifications and reminders", link: "/notifications" },
+        { text: "Language", link: "/language" },
       ],
     },
     {

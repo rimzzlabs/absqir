@@ -246,7 +246,7 @@ async function csvLines(
 async function csvHandler(c: Context<AppEnv>, table: CsvTable) {
   const organizationId = organizationIdOf(c);
   const range = rangeOfUrl(new URL(c.req.url));
-  if (!range) return c.json({ error: "Give a from and a to, both ISO instants." }, 400);
+  if (!range) return c.json({ error: c.var.t("errors:giveFromAndTo") }, 400);
 
   await settle(c.var.db, organizationId);
 

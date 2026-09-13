@@ -1,4 +1,6 @@
 import type { NotificationChannel } from "@absqir/core/notification-channel";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Reveal } from "@absqir/ui/reveal";
 import {
   BellIcon,
@@ -32,6 +34,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import type { RoleName } from "@/components/shared/role-badge";
 
 export interface SettingsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
   currentUserId: string;
@@ -65,38 +69,43 @@ type SettingsTab = (typeof ORGANIZATION_TABS)[number] | (typeof PERSONAL_TABS)[n
 /** Old links say `account`. They land on the profile. */
 const ALIASES: Record<string, SettingsTab> = { account: "profile" };
 
-const ORGANIZATION_GROUP: SettingsNavGroup<SettingsTab> = {
-  label: "Organization",
-  items: [
-    { value: "members", label: "Members", icon: UsersThreeIcon },
-    { value: "invitations", label: "Invitations", icon: EnvelopeSimpleIcon },
-    { value: "requests", label: "Requests", icon: HandWavingIcon },
-    { value: "places", label: "Places", icon: MapPinIcon },
-    { value: "domains", label: "Domains", icon: GlobeHemisphereWestIcon },
-    { value: "organization", label: "Organization", icon: BuildingsIcon },
-  ],
-};
+function organizationGroup(t: Translate): SettingsNavGroup<SettingsTab> {
+  return {
+    label: t("settings:nav.organization"),
+    items: [
+      { value: "members", label: t("settings:nav.members"), icon: UsersThreeIcon },
+      { value: "invitations", label: t("settings:nav.invitations"), icon: EnvelopeSimpleIcon },
+      { value: "requests", label: t("settings:nav.requests"), icon: HandWavingIcon },
+      { value: "places", label: t("settings:nav.places"), icon: MapPinIcon },
+      { value: "domains", label: t("settings:nav.domains"), icon: GlobeHemisphereWestIcon },
+      { value: "organization", label: t("settings:nav.organizationTab"), icon: BuildingsIcon },
+    ],
+  };
+}
 
-const PERSONAL_GROUP: SettingsNavGroup<SettingsTab> = {
-  label: "You",
-  items: [
-    { value: "profile", label: "Profile", icon: UserCircleIcon },
-    { value: "preferences", label: "Preferences", icon: SlidersHorizontalIcon },
-    { value: "notifications", label: "Notifications", icon: BellIcon },
-    { value: "security", label: "Security", icon: ShieldCheckIcon },
-  ],
-};
+function personalGroup(t: Translate): SettingsNavGroup<SettingsTab> {
+  return {
+    label: t("settings:nav.you"),
+    items: [
+      { value: "profile", label: t("settings:nav.profile"), icon: UserCircleIcon },
+      { value: "preferences", label: t("settings:nav.preferences"), icon: SlidersHorizontalIcon },
+      { value: "notifications", label: t("settings:nav.notifications"), icon: BellIcon },
+      { value: "security", label: t("settings:nav.security"), icon: ShieldCheckIcon },
+    ],
+  };
+}
 
 function isTab(value: string, allowed: readonly SettingsTab[]): value is SettingsTab {
   return (allowed as readonly string[]).includes(value);
 }
 
 function SettingsBody(props: SettingsPageProps) {
+  const t = useTranslate();
   const runsOrganization =
     props.organization !== null && (props.role === "owner" || props.role === "admin");
   const groups = match(runsOrganization)
-    .with(true, () => [ORGANIZATION_GROUP, PERSONAL_GROUP])
-    .otherwise(() => [PERSONAL_GROUP]);
+    .with(true, () => [organizationGroup(t), personalGroup(t)])
+    .otherwise(() => [personalGroup(t)]);
   const allowed: readonly SettingsTab[] = match(runsOrganization)
     .with(true, () => [...ORGANIZATION_TABS, ...PERSONAL_TABS])
     .otherwise(() => PERSONAL_TABS);
@@ -123,8 +132,8 @@ function SettingsBody(props: SettingsPageProps) {
     members: match(role)
       .with(P.string.minLength(1), (role) => (
         <SettingsSection
-          title="Members"
-          description="Everyone with an account in the organization, and what each one can do."
+          title={t("settings:sections.members")}
+          description={t("settings:sections.membersDescription")}
         >
           <div className="pt-6">
             <MembersTable role={role} currentUserId={props.currentUserId} />
@@ -134,8 +143,8 @@ function SettingsBody(props: SettingsPageProps) {
       .otherwise(() => null),
     invitations: (
       <SettingsSection
-        title="Invitations"
-        description="Bring someone in by email. The link works for seven days."
+        title={t("settings:sections.invitations")}
+        description={t("settings:sections.invitationsDescription")}
       >
         <div className="pt-6">
           <InvitationsPanel />
@@ -144,8 +153,8 @@ function SettingsBody(props: SettingsPageProps) {
     ),
     requests: (
       <SettingsSection
-        title="Requests"
-        description="People at one of your domains who ask to come in."
+        title={t("settings:sections.requests")}
+        description={t("settings:sections.requestsDescription")}
       >
         <div className="pt-6">
           <JoinRequestsPanel />
@@ -154,8 +163,8 @@ function SettingsBody(props: SettingsPageProps) {
     ),
     places: (
       <SettingsSection
-        title="Places"
-        description="Where you check people in. An event set to a place refuses a check-in made somewhere else."
+        title={t("settings:sections.places")}
+        description={t("settings:sections.placesDescription")}
       >
         <div className="pt-6">
           <PlacesPanel />
@@ -164,8 +173,8 @@ function SettingsBody(props: SettingsPageProps) {
     ),
     domains: (
       <SettingsSection
-        title="Domains"
-        description="Claim the email domain your people share, so a new account finds this workspace on its own."
+        title={t("settings:sections.domains")}
+        description={t("settings:sections.domainsDescription")}
       >
         <div className="pt-6">
           <DomainsPanel />
@@ -184,6 +193,7 @@ function SettingsBody(props: SettingsPageProps) {
         image={props.user.image}
         createdAt={props.user.createdAt}
         role={role}
+        locale={props.locale}
         timezone={props.user.timezone}
         organization={organization}
       />
@@ -196,10 +206,10 @@ function SettingsBody(props: SettingsPageProps) {
   return (
     <>
       <PageHeader
-        title="Settings"
+        title={t("settings:title")}
         description={match(runsOrganization)
-          .with(true, () => "The organization, the accounts in it, and your own." as const)
-          .otherwise(() => "Your account and how the app behaves for you." as const)}
+          .with(true, () => t("settings:descriptionOrganization"))
+          .otherwise(() => t("settings:descriptionPersonal"))}
       />
 
       <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
@@ -215,7 +225,7 @@ function SettingsBody(props: SettingsPageProps) {
 
 export function SettingsPage(props: SettingsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <SettingsBody {...props} />
     </Providers>
   );

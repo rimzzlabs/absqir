@@ -1,4 +1,5 @@
 import { eventKeys, eventMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { match, P } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
@@ -24,6 +25,7 @@ async function post(eventId: string, body: ScanBody) {
  * says it wanted one. The reading is then reused for the rest of the queue.
  */
 export function useScan() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -44,13 +46,13 @@ export function useScan() {
       if (!wantsLocation) {
         throw match(body)
           .with({ error: P.string.minLength(1) }, (found) => new Error(found.error))
-          .otherwise(() => new Error("Could not read that pass."));
+          .otherwise(() => new Error(t("errors:couldNotReadPass")));
       }
 
       const location = await cachedLocationClaim();
 
       const second = await post(eventId, { code, location });
-      if (!second.ok) throw await apiError(second, "Could not read that pass.");
+      if (!second.ok) throw await apiError(second, t("errors:couldNotReadPass"));
 
       return await second.json();
     },

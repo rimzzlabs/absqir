@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import { Spinner } from "@absqir/ui/spinner";
 import { A } from "@mobily/ts-belt";
@@ -24,6 +25,7 @@ const CORNERS = [
 
 /** The square the reader aims with: the picture, the frame, and its state. */
 export function ScanViewfinder(props: ScanViewfinderProps) {
+  const t = useTranslate();
   const framed = props.active && !props.busy;
 
   return (
@@ -69,7 +71,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
         .with(true, () => (
           <p className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
             <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
-            Looking for a code
+            {t("checkin:viewfinder.looking")}
           </p>
         ))
         .otherwise(() => null)}
@@ -78,7 +80,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
         .with(true, () => (
           <p className="text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm">
             <Spinner className="size-5" />
-            Opening the camera…
+            {t("checkin:viewfinder.opening")}
           </p>
         ))
         .otherwise(() => null)}
@@ -99,7 +101,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
             className="bg-background/75 absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-[inherit] text-sm font-medium backdrop-blur-sm"
           >
             <Spinner className="size-5" />
-            Checking you in…
+            {t("checkin:viewfinder.checking")}
           </p>
         ))
         .otherwise(() => null)}

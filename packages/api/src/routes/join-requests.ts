@@ -159,7 +159,7 @@ const decideRoute = createRoute({
 
 function requireUser(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
-    if (!c.get("user")) return c.json({ error: "Unauthorized" }, 401);
+    if (!c.get("user")) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     await next();
   };
 }
@@ -217,7 +217,7 @@ export const joinRequestRoutes = app
     const found = await findOrganizationForEmail(db, current.email);
 
     if (!found || found.joinPolicy === "closed") {
-      return c.json({ error: "No workspace takes people from this email domain." }, 403);
+      return c.json({ error: c.var.t("errors:noWorkspaceForThisDomain") }, 403);
     }
 
     const already = await db
@@ -227,7 +227,7 @@ export const joinRequestRoutes = app
       .limit(1);
 
     if (already[0]) {
-      return c.json({ error: `You are already in ${found.name}.` }, 409);
+      return c.json({ error: c.var.t("errors:alreadyInOrganization", { name: found.name }) }, 409);
     }
 
     if (found.joinPolicy === "auto") {
@@ -252,7 +252,10 @@ export const joinRequestRoutes = app
     });
 
     if (open) {
-      return c.json({ error: `${found.name} already has your request.` }, 409);
+      return c.json(
+        { error: c.var.t("errors:organizationHasYourRequest", { name: found.name }) },
+        409,
+      );
     }
 
     const id = crypto.randomUUID();
@@ -302,7 +305,7 @@ export const joinRequestRoutes = app
       .limit(1);
 
     const found = rows[0];
-    if (!found) return c.json({ error: "You have no open request." }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:noOpenRequest") }, 404);
 
     await c.var.db.delete(joinRequest).where(eq(joinRequest.id, found.id));
 
@@ -385,7 +388,7 @@ export const joinRequestRoutes = app
       .limit(1);
 
     const found = rows[0];
-    if (!found) return c.json({ error: "No such open request." }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:noSuchOpenRequest") }, 404);
 
     if (decision === "approved") {
       await joinAsMember(c, organizationId, found);

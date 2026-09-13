@@ -1,4 +1,6 @@
 import { endOfDay, formatDate, startOfDay } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
@@ -34,11 +36,7 @@ import {
 
 type ReportTab = "people" | "groups" | "events";
 
-const TABS: { value: ReportTab; label: string }[] = [
-  { value: "people", label: "By person" },
-  { value: "groups", label: "By group" },
-  { value: "events", label: "By event" },
-];
+const TABS: ReportTab[] = ["people", "groups", "events"];
 
 const PARAMS = {
   range: parseAsStringLiteral([
@@ -58,6 +56,7 @@ const PARAMS = {
 };
 
 function ReportsBody() {
+  const t = useTranslate();
   const [params, setParams] = useQueryStates(PARAMS);
   const preset = params.range;
   const tab = params.tab;
@@ -111,15 +110,15 @@ function ReportsBody() {
   return (
     <>
       <PageHeader
-        title="Reports"
-        description="Who showed up, how often, and how late. Every table downloads as a CSV."
+        title={t("reports:title")}
+        description={t("reports:description")}
         actions={
           <a
             href={reportCsvHref(tab, range)}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <DownloadSimpleIcon />
-            Download CSV
+            {t("reports:downloadCsv")}
           </a>
         }
       />
@@ -133,7 +132,10 @@ function ReportsBody() {
       />
 
       <p className="text-muted-foreground text-sm">
-        {formatDate(range.from, "date")} to {formatDate(range.to, "date")}
+        {t("reports:range", {
+          from: formatDate(range.from, "date"),
+          to: formatDate(range.to, "date"),
+        })}
       </p>
 
       {match(summary)
@@ -145,8 +147,8 @@ function ReportsBody() {
       <Tabs value={tab} onValueChange={(value) => setTab(value as ReportTab)}>
         <TabsList>
           {A.map(TABS, (item) => (
-            <TabsTrigger key={item.value} value={item.value}>
-              {item.label}
+            <TabsTrigger key={item} value={item}>
+              {t(`reports:tabs.${item}`)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -165,9 +167,14 @@ function ReportsBody() {
   );
 }
 
-export function ReportsPage() {
+export interface ReportsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function ReportsPage(props: ReportsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <ReportsBody />
     </Providers>
   );

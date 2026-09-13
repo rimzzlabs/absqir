@@ -1,3 +1,5 @@
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,24 +28,37 @@ import { useRemoveSchedule } from "@/mutations/use-remove-schedule";
 import { type Schedule, useSchedules } from "@/queries/use-schedules";
 
 export interface SchedulesPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   role: RoleName;
 }
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** The weekday numbers the API stores, as the keys under `schedules:days`. */
+type DayKey = "0" | "1" | "2" | "3" | "4" | "5" | "6";
 
-function describe(schedule: Schedule): string {
+function describe(t: Translate, schedule: Schedule): string {
   const when = match(schedule.frequency)
-    .with("daily", () => "Every day" as const)
-    .otherwise(() => A.map(schedule.weekdays, (day) => DAY_LABELS[day]).join(", "));
+    .with("daily", () => t("schedules:everyDay"))
+    .otherwise(() =>
+      A.map(schedule.weekdays, (day) => t(`schedules:days.${String(day) as DayKey}`)).join(", "),
+    );
   const end = match(schedule.endsOn)
-    .with(P.string.minLength(1), (endsOn) => ` until ${endsOn}`)
+    .with(P.string.minLength(1), (endsOn) => t("schedules:until", { date: endsOn }))
     .otherwise(() => "" as const);
 
-  return `${when} at ${schedule.startTime}, ${schedule.durationMinutes} min, from ${schedule.startsOn}${end} (${schedule.timezone})`;
+  return t("schedules:summary", {
+    when,
+    time: schedule.startTime,
+    minutes: schedule.durationMinutes,
+    start: schedule.startsOn,
+    end,
+    timezone: schedule.timezone,
+  });
 }
 
 function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
   const { schedule } = props;
+  const t = useTranslate();
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const remove = useRemoveSchedule();
@@ -56,10 +71,10 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
           {match(schedule.active)
             .with(true, () => null)
             .otherwise(() => (
-              <Badge variant="outline">Paused</Badge>
+              <Badge variant="outline">{t("schedules:paused")}</Badge>
             ))}
         </CardTitle>
-        <CardDescription>{describe(schedule)}</CardDescription>
+        <CardDescription>{describe(t, schedule)}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2">
         {A.map(schedule.groups, (group) => (
@@ -69,9 +84,7 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
         ))}
         {match(schedule.groups.length)
           .with(0, () => (
-            <span className="text-muted-foreground text-xs">
-              No group yet, so nobody is expected.
-            </span>
+            <span className="text-muted-foreground text-xs">{t("schedules:noGroup")}</span>
           ))
           .otherwise(() => null)}
         {match(props.canManage)
@@ -79,11 +92,11 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
             <div className="ml-auto flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
                 <PencilSimpleIcon />
-                Edit
+                {t("common:actions.edit")}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
                 <TrashIcon />
-                Delete
+                {t("common:actions.delete")}
               </Button>
             </div>
           ))
@@ -95,22 +108,22 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
       <AlertDialog open={removing} onOpenChange={setRemoving}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {schedule.title}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Future events it created and nobody touched go with it. Past ones stay.
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("schedules:deleteTitle", { title: schedule.title })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("schedules:deleteDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <FormError error={remove.error} />
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep</AlertDialogCancel>
+            <AlertDialogCancel>{t("schedules:keep")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={remove.isPending}
               onClick={() => remove.mutate(schedule.id, { onSuccess: () => setRemoving(false) })}
             >
               {match(remove.isPending)
-                .with(true, () => "Deleting…" as const)
-                .otherwise(() => "Delete" as const)}
+                .with(true, () => t("schedules:deleting"))
+                .otherwise(() => t("common:actions.delete"))}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -120,6 +133,7 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
 }
 
 function SchedulesBody(props: SchedulesPageProps) {
+  const t = useTranslate();
   const schedules = useSchedules();
   const [creating, setCreating] = useState(false);
   const canManage = props.role === "owner" || props.role === "admin";
@@ -127,13 +141,13 @@ function SchedulesBody(props: SchedulesPageProps) {
   return (
     <>
       <PageHeader
-        title="Schedules"
-        description="Rules that create events on their own. Each spawns two weeks ahead and keeps going."
+        title={t("schedules:title")}
+        description={t("schedules:description")}
         actions={match(canManage)
           .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
-              New schedule
+              {t("schedules:new")}
             </Button>
           ))
           .otherwise(() => null)}
@@ -150,11 +164,8 @@ function SchedulesBody(props: SchedulesPageProps) {
                   <EmptyMedia variant="icon">
                     <RepeatIcon />
                   </EmptyMedia>
-                  <EmptyTitle>No schedule yet</EmptyTitle>
-                  <EmptyDescription>
-                    Every weekday at nine, every Tuesday evening: set the rule once and the events
-                    appear by themselves.
-                  </EmptyDescription>
+                  <EmptyTitle>{t("schedules:emptyTitle")}</EmptyTitle>
+                  <EmptyDescription>{t("schedules:emptyDescription")}</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ))
@@ -175,7 +186,7 @@ function SchedulesBody(props: SchedulesPageProps) {
 
 export function SchedulesPage(props: SchedulesPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <SchedulesBody {...props} />
     </Providers>
   );

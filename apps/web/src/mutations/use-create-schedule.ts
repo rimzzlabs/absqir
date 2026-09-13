@@ -1,4 +1,5 @@
 import { eventKeys, scheduleKeys, scheduleMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -23,6 +24,7 @@ export interface ScheduleInput {
 }
 
 export function useCreateSchedule() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -30,7 +32,7 @@ export function useCreateSchedule() {
     mutationFn: async (values: ScheduleInput) => {
       const response = await api.schedules.$post({ json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not create the schedule.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCreateSchedule"));
 
       return response.json();
     },

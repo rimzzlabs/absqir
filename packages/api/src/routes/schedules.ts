@@ -273,10 +273,10 @@ export const scheduleRoutes = app
     const body = c.req.valid("json");
 
     if (body.frequency === "weekly" && body.weekdays.length === 0) {
-      return c.json({ error: "Pick at least one weekday." }, 400);
+      return c.json({ error: c.var.t("errors:pickAtLeastOneWeekday") }, 400);
     }
     if (!validTimezone(body.timezone)) {
-      return c.json({ error: "Unknown timezone." }, 400);
+      return c.json({ error: c.var.t("errors:unknownTimeZone") }, 400);
     }
 
     const groupIds = await validGroupIds(c, body.groupIds);
@@ -340,16 +340,16 @@ export const scheduleRoutes = app
     const body = c.req.valid("json");
 
     const found = await findSchedule(c, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const frequency = body.frequency ?? found.frequency;
     const weekdays = body.weekdays ?? found.weekdays;
 
     if (frequency === "weekly" && weekdays.length === 0) {
-      return c.json({ error: "Pick at least one weekday." }, 400);
+      return c.json({ error: c.var.t("errors:pickAtLeastOneWeekday") }, 400);
     }
     if (body.timezone !== undefined && !validTimezone(body.timezone)) {
-      return c.json({ error: "Unknown timezone." }, 400);
+      return c.json({ error: c.var.t("errors:unknownTimeZone") }, 400);
     }
 
     const groupIds = await pipe(
@@ -454,7 +454,7 @@ export const scheduleRoutes = app
     const { id } = c.req.valid("param");
 
     const found = await findSchedule(c, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     await dropFutureEvents(c, id);
     await c.var.db.delete(schedule).where(eq(schedule.id, id));

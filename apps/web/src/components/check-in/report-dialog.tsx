@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Label } from "@absqir/ui/label";
 import {
@@ -37,6 +38,7 @@ export interface ReportDialogProps {
  * missing is the member's own account of what went wrong.
  */
 export function ReportDialog(props: ReportDialogProps) {
+  const t = useTranslate();
   const [message, setMessage] = useState("");
   const send = useSendCheckInReport();
   const { reset } = send;
@@ -56,20 +58,13 @@ export function ReportDialog(props: ReportDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(send.isSuccess)
-              .with(true, () => "Report sent" as const)
-              .otherwise(() => "Tell the organizer" as const)}
+              .with(true, () => t("checkin:report.sentTitle"))
+              .otherwise(() => t("checkin:report.title"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             {match(send.isSuccess)
-              .with(
-                true,
-                () =>
-                  "An organizer will read it and decide. If they agree, you are marked in at the time you scanned, not at the time they read this.",
-              )
-              .otherwise(
-                () =>
-                  "If you are at the event and the check still refused you, say so here. Your scan of the room screen is already on record.",
-              )}
+              .with(true, () => t("checkin:report.sentDescription"))
+              .otherwise(() => t("checkin:report.description"))}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -83,13 +78,14 @@ export function ReportDialog(props: ReportDialogProps) {
                     className="mt-0.5 size-5 shrink-0 text-emerald-500"
                   />
                   <span>
-                    Nothing else is needed from you. You can close this page and check your record
-                    later on <b>My events</b>.
+                    {t("checkin:report.doneBefore")} <b>{t("checkin:report.doneLink")}</b>.
                   </span>
                 </p>
               </ResponsiveDialogBody>
               <ResponsiveDialogFooter>
-                <Button onClick={() => props.onOpenChange(false)}>Close</Button>
+                <Button onClick={() => props.onOpenChange(false)}>
+                  {t("common:actions.close")}
+                </Button>
               </ResponsiveDialogFooter>
             </>
           ))
@@ -118,19 +114,17 @@ export function ReportDialog(props: ReportDialogProps) {
                 </p>
 
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="report-message">What happened?</Label>
+                  <Label htmlFor="report-message">{t("checkin:report.message")}</Label>
                   <Textarea
                     id="report-message"
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     rows={4}
                     maxLength={1000}
-                    placeholder="I am in the hall, but my phone keeps putting me on the next street."
+                    placeholder={t("checkin:report.messagePlaceholder")}
                     autoFocus
                   />
-                  <p className="text-muted-foreground text-xs">
-                    One report per event. Say where you actually are.
-                  </p>
+                  <p className="text-muted-foreground text-xs">{t("checkin:report.messageHint")}</p>
                 </div>
 
                 <FormError error={send.error} />
@@ -138,12 +132,12 @@ export function ReportDialog(props: ReportDialogProps) {
 
               <ResponsiveDialogFooter>
                 <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-                  Cancel
+                  {t("common:actions.cancel")}
                 </Button>
                 <Button type="submit" disabled={!ready || send.isPending}>
                   {match(send.isPending)
-                    .with(true, () => "Sending…" as const)
-                    .otherwise(() => "Send report" as const)}
+                    .with(true, () => t("checkin:report.sending"))
+                    .otherwise(() => t("checkin:report.send"))}
                 </Button>
               </ResponsiveDialogFooter>
             </form>

@@ -1,4 +1,5 @@
 import { DEFAULT_RADIUS_METERS, MAX_RADIUS_METERS, MIN_RADIUS_METERS } from "@absqir/core/geo";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
@@ -44,6 +45,7 @@ function defaults(place: Place | null): Draft {
 }
 
 export function PlaceDialog(props: PlaceDialogProps) {
+  const t = useTranslate();
   const editing = props.place !== null;
   const [draft, setDraft] = useState<Draft>(() => defaults(props.place));
 
@@ -79,12 +81,11 @@ export function PlaceDialog(props: PlaceDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
-              .with(true, () => "Edit place" as const)
-              .otherwise(() => "New place" as const)}
+              .with(true, () => t("settings:places.dialog.editTitle"))
+              .otherwise(() => t("settings:places.dialog.newTitle"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            An event set to this place accepts a check-in inside the circle, and refuses one outside
-            it.
+            {t("settings:places.dialog.description")}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -98,30 +99,30 @@ export function PlaceDialog(props: PlaceDialogProps) {
         >
           <ResponsiveDialogBody className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-name">Name</Label>
+              <Label htmlFor="place-name">{t("settings:places.dialog.name")}</Label>
               <Input
                 id="place-name"
                 value={draft.name}
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                placeholder="Head office, Hall B, Site 3"
+                placeholder={t("settings:places.dialog.namePlaceholder")}
                 autoFocus
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-address">Address</Label>
+              <Label htmlFor="place-address">{t("settings:places.dialog.address")}</Label>
               <Input
                 id="place-address"
                 value={draft.address}
                 onChange={(event) => setDraft({ ...draft, address: event.target.value })}
-                placeholder="Optional. For the reader, nothing is looked up from it."
+                placeholder={t("settings:places.dialog.addressPlaceholder")}
               />
             </div>
 
             <MapPicker value={draft} onChange={(value) => setDraft({ ...draft, ...value })} />
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-radius">How far from the pin a check-in still counts</Label>
+              <Label htmlFor="place-radius">{t("settings:places.dialog.radius")}</Label>
               <div className="flex items-center gap-3">
                 <input
                   id="place-radius"
@@ -136,7 +137,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
                   className="accent-primary h-2 flex-1"
                 />
                 <Input
-                  aria-label="Radius in metres"
+                  aria-label={t("settings:places.dialog.radiusLabel")}
                   type="number"
                   inputMode="numeric"
                   min={MIN_RADIUS_METERS}
@@ -147,11 +148,12 @@ export function PlaceDialog(props: PlaceDialogProps) {
                   }
                   className="w-24 tabular-nums"
                 />
-                <span className="text-muted-foreground text-sm">m</span>
+                <span className="text-muted-foreground text-sm">
+                  {t("settings:places.dialog.metres")}
+                </span>
               </div>
               <p className="text-muted-foreground text-xs">
-                A phone is accurate to about ten metres outdoors, and far less indoors. Under{" "}
-                {MIN_RADIUS_METERS} m the circle is smaller than the error, so it is the floor.
+                {t("settings:places.dialog.radiusHint", { count: MIN_RADIUS_METERS })}
               </p>
             </div>
 
@@ -159,7 +161,8 @@ export function PlaceDialog(props: PlaceDialogProps) {
             {match(placed)
               .with(false, () => (
                 <p className="text-muted-foreground text-sm">
-                  Tap the map to put the pin down, or press <b>Use my location</b>.
+                  {t("settings:places.dialog.placeHintBefore")}{" "}
+                  <b>{t("settings:places.dialog.placeHintButton")}</b>.
                 </p>
               ))
               .otherwise(() => null)}
@@ -169,15 +172,15 @@ export function PlaceDialog(props: PlaceDialogProps) {
 
           <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-              Cancel
+              {t("common:actions.cancel")}
             </Button>
             <Button type="submit" disabled={pending || !placed || !named}>
               {match(pending)
-                .with(true, () => "Saving…" as const)
+                .with(true, () => t("common:actions.saving"))
                 .otherwise(() =>
                   match(editing)
-                    .with(true, () => "Save" as const)
-                    .otherwise(() => "Create" as const),
+                    .with(true, () => t("common:actions.save"))
+                    .otherwise(() => t("settings:places.dialog.create")),
                 )}
             </Button>
           </ResponsiveDialogFooter>

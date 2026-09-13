@@ -1,4 +1,5 @@
 import { formatRange } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import {
@@ -45,11 +46,12 @@ export interface AskLeaveDialogProps {
 const CHOICES = 50;
 
 export function AskLeaveDialog(props: AskLeaveDialogProps) {
+  const t = useTranslate();
   const events = useMyEvents({ scope: "upcoming", limit: CHOICES });
   const mine = useMyLeave({ scope: "all", limit: CHOICES });
   const ask = useAskLeave();
   const form = useForm<AskLeaveValues>({
-    resolver: zodResolver(askLeaveSchema),
+    resolver: zodResolver(askLeaveSchema(t)),
     defaultValues: { eventId: "", reason: "" },
   });
 
@@ -86,9 +88,9 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Ask for leave</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>{t("my:leave.dialog.title")}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            An organizer decides. If approved, the event shows you as excused.
+            {t("my:leave.dialog.description")}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <Form {...form}>
@@ -103,7 +105,7 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                   <FormField
                     control={form.control}
                     name="eventId"
-                    label="Event"
+                    label={t("my:leave.dialog.event")}
                     render={(field) => (
                       <Select
                         items={A.map(options, (option) => ({
@@ -114,15 +116,15 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                         onValueChange={(value) => field.onChange(value ?? "")}
                       >
                         <SelectTrigger id="leave-event" className="w-full">
-                          <SelectValue placeholder="Pick an event" />
+                          <SelectValue placeholder={t("my:leave.dialog.pickEvent")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>Upcoming events</SelectLabel>
+                            <SelectLabel>{t("my:leave.dialog.upcoming")}</SelectLabel>
                             {match(options.length)
                               .with(0, () => (
                                 <p className="text-muted-foreground px-1.5 py-1 text-sm">
-                                  Nothing ahead of you to ask about.
+                                  {t("my:leave.dialog.nothingAhead")}
                                 </p>
                               ))
                               .otherwise(() =>
@@ -143,7 +145,7 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                 ))
                 .otherwise((preset) => (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Event</p>
+                    <p className="text-sm font-medium">{t("my:leave.dialog.event")}</p>
                     <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
                       <p className="text-sm font-medium">{preset.title}</p>
                       <p className="text-muted-foreground text-xs">
@@ -155,13 +157,13 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
               <FormField
                 control={form.control}
                 name="reason"
-                label="Reason"
+                label={t("my:leave.dialog.reason")}
                 render={(field) => (
                   <Textarea
                     {...field}
                     id="leave-reason"
                     rows={3}
-                    placeholder="Doctor's appointment"
+                    placeholder={t("my:leave.dialog.reasonPlaceholder")}
                   />
                 )}
               />
@@ -169,12 +171,12 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button type="submit" disabled={ask.isPending}>
                 {match(ask.isPending)
-                  .with(true, () => "Sending…" as const)
-                  .otherwise(() => "Send" as const)}
+                  .with(true, () => t("my:leave.dialog.sending"))
+                  .otherwise(() => t("my:leave.dialog.send"))}
               </Button>
             </ResponsiveDialogFooter>
           </form>

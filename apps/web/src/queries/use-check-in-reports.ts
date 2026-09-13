@@ -1,4 +1,5 @@
 import { checkInReportKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -6,6 +7,7 @@ export type ReportScope = "pending" | "decided" | "all";
 
 /** The reports waiting on an organizer. */
 export function useCheckInReports(scope: ReportScope) {
+  const t = useTranslate();
   return useQuery({
     queryKey: checkInReportKeys.queue(scope),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -14,7 +16,7 @@ export function useCheckInReports(scope: ReportScope) {
         { init: { signal: ctx.signal } },
       );
 
-      if (!response.ok) throw await apiError(response, "Could not load the reports.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadReports"));
 
       return response.json();
     },

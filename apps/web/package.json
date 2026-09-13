@@ -17,6 +17,7 @@
     "@absqir/auth": "workspace:^",
     "@absqir/core": "workspace:^",
     "@absqir/db": "workspace:^",
+    "@absqir/i18n": "workspace:^",
     "@absqir/ui": "workspace:^",
     "@hookform/resolvers": "^5.9.1",
     "@mobily/ts-belt": "4.0.0-rc.5",

@@ -1,10 +1,12 @@
 import { authMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { match, P } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
 /** Step 1 of the single door: what comes next for this email. */
 export function useLookupEmail() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: authMutationKeys.lookup(),
     mutationFn: async (input: { email: string; eventId: string | null }) => {
@@ -17,7 +19,7 @@ export function useLookupEmail() {
         },
       });
 
-      if (!response.ok) throw await apiError(response, "Could not check that email.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotCheckEmail"));
 
       return response.json();
     },

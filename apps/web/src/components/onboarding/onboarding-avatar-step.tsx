@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { UploadSimpleIcon } from "@phosphor-icons/react";
@@ -14,6 +15,7 @@ export interface OnboardingAvatarStepProps {
 }
 
 export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
+  const t = useTranslate();
   const [image, setImage] = useState<string | null>(props.status.image);
   const [resizeError, setResizeError] = useState<Error | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -24,12 +26,12 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
     setResizeError(null);
 
     try {
-      setImage(await toAvatarDataUrl(file));
+      setImage(await toAvatarDataUrl(file, t));
     } catch (error) {
       setResizeError(
         match(error)
           .with(P.instanceOf(Error), (error) => error)
-          .otherwise(() => new Error("Could not read that picture.")),
+          .otherwise(() => new Error(t("onboarding:avatar.unreadable"))),
       );
     }
   };
@@ -37,8 +39,8 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
   return (
     <div className="space-y-6">
       <AuthHeading
-        title="Add a picture"
-        description="Optional. It helps organizers spot you in a list. You can skip this."
+        title={t("onboarding:avatar.title")}
+        description={t("onboarding:avatar.description")}
       />
 
       <div className="flex items-center gap-5">
@@ -62,10 +64,10 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
           <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
             <UploadSimpleIcon />
             {match(image)
-              .with(P.string.minLength(1), () => "Choose another" as const)
-              .otherwise(() => "Choose a picture" as const)}
+              .with(P.string.minLength(1), () => t("onboarding:avatar.chooseAnother"))
+              .otherwise(() => t("onboarding:avatar.choose"))}
           </Button>
-          <p className="text-muted-foreground text-xs">PNG, JPEG, or WebP. Shrunk to 128px.</p>
+          <p className="text-muted-foreground text-xs">{t("onboarding:avatar.formats")}</p>
         </div>
       </div>
 
@@ -79,8 +81,8 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
           onClick={() => save.mutate(image)}
         >
           {match(save.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Save and continue" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("onboarding:avatar.saveAndContinue"))}
         </Button>
         <Button
           type="button"
@@ -88,7 +90,7 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
           disabled={save.isPending}
           onClick={() => save.mutate(null)}
         >
-          Skip
+          {t("common:actions.skip")}
         </Button>
       </div>
     </div>

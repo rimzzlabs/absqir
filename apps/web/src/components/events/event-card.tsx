@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, UsersThreeIcon } from "@phosphor-icons/react";
@@ -8,22 +9,28 @@ import type { Event } from "@/queries/use-events";
 
 function Counts(props: { event: Event }) {
   const { counts, status } = props.event;
+  const t = useTranslate();
   const checkedIn = counts.present + counts.late;
 
   if (status === "scheduled") {
     return (
-      <span className="text-muted-foreground text-xs tabular-nums">{counts.expected} expected</span>
+      <span className="text-muted-foreground text-xs tabular-nums">
+        {t("events:card.expected", { count: counts.expected })}
+      </span>
     );
   }
 
   return (
     <span className="text-muted-foreground text-xs tabular-nums">
-      {checkedIn}/{counts.expected} in
+      {t("events:card.checkedIn", {
+        checkedIn,
+        expected: counts.expected,
+      })}
       {match(counts.late > 0)
-        .with(true, () => ` · ${counts.late} late`)
+        .with(true, () => t("events:card.late", { count: counts.late }))
         .otherwise(() => "" as const)}
       {match(status === "done" && counts.absent > 0)
-        .with(true, () => ` · ${counts.absent} absent`)
+        .with(true, () => t("events:card.absent", { count: counts.absent }))
         .otherwise(() => "" as const)}
     </span>
   );
@@ -32,6 +39,7 @@ function Counts(props: { event: Event }) {
 /** One event as a card. The whole card is the link. */
 export function EventCard(props: { event: Event }) {
   const { event } = props;
+  const t = useTranslate();
   const startsAt = new Date(event.startsAt);
   const endsAt = new Date(event.endsAt);
   const sameDay = formatDate(startsAt, "iso") === formatDate(endsAt, "iso");
@@ -45,10 +53,12 @@ export function EventCard(props: { event: Event }) {
         <div className="flex items-center justify-between gap-3">
           <EventStatusBadge status={event.status} />
           <span className="text-muted-foreground text-xs tabular-nums">
-            {formatDate(startsAt, "time")} to{" "}
-            {match(sameDay)
-              .with(true, () => formatDate(endsAt, "time"))
-              .otherwise(() => formatDate(endsAt, "weekdayDateTime"))}
+            {t("events:card.to", {
+              start: formatDate(startsAt, "time"),
+              end: match(sameDay)
+                .with(true, () => formatDate(endsAt, "time"))
+                .otherwise(() => formatDate(endsAt, "weekdayDateTime")),
+            })}
           </span>
         </div>
 
@@ -72,7 +82,7 @@ export function EventCard(props: { event: Event }) {
           .otherwise(() => (
             <p className="text-muted-foreground flex items-center gap-1 text-xs">
               <UsersThreeIcon aria-hidden />
-              No group
+              {t("events:card.noGroup")}
             </p>
           ))}
 

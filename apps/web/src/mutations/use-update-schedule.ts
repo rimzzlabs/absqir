@@ -1,9 +1,11 @@
 import { eventKeys, scheduleKeys, scheduleMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 import type { ScheduleInput } from "@/mutations/use-create-schedule";
 
 export function useUpdateSchedule() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,7 +13,7 @@ export function useUpdateSchedule() {
     mutationFn: async ({ id, ...values }: ScheduleInput & { id: string }) => {
       const response = await api.schedules[":id"].$patch({ param: { id }, json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the schedule.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSaveSchedule"));
 
       return response.json();
     },

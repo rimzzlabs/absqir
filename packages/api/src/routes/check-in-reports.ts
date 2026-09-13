@@ -254,13 +254,13 @@ export const checkInReportRoutes = app
     const user = c.get("user");
     const { id: eventId } = c.req.valid("param");
     const { message, attemptId } = c.req.valid("json");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const event = await findEvent(c.var.db, organizationId, eventId);
-    if (!event) return c.json({ error: "Not found" }, 404);
+    if (!event) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     // Somebody already in needs nothing from this.
     const existingRecords = await c.var.db
@@ -269,7 +269,7 @@ export const checkInReportRoutes = app
       .where(and(eq(attendanceRecord.eventId, eventId), eq(attendanceRecord.personId, me.id)))
       .limit(1);
     if (existingRecords[0]?.checkedInAt) {
-      return c.json({ error: "You are already checked in for this event." }, 409);
+      return c.json({ error: c.var.t("errors:alreadyCheckedIn") }, 409);
     }
 
     // Name the attempt, or take this person's latest refused one. A member
@@ -292,7 +292,7 @@ export const checkInReportRoutes = app
       .otherwise(() => attempts[0]?.id ?? null);
 
     if (!attempt) {
-      return c.json({ error: "There is no refused check-in on this event to report." }, 404);
+      return c.json({ error: c.var.t("errors:noRefusedCheckInToReport") }, 404);
     }
 
     const id = crypto.randomUUID();
@@ -307,7 +307,7 @@ export const checkInReportRoutes = app
         message,
       });
     } catch {
-      return c.json({ error: "You already reported this event." }, 409);
+      return c.json({ error: c.var.t("errors:alreadyReportedThisEvent") }, 409);
     }
 
     const [created] = await rows(c).where(eq(checkInReport.id, id)).limit(1);
@@ -355,11 +355,12 @@ export const checkInReportRoutes = app
     const [found] = await rows(c)
       .where(and(eq(checkInReport.id, id), eq(checkInReport.organizationId, organizationId)))
       .limit(1);
-    if (!found) return c.json({ error: "Not found" }, 404);
-    if (found.report.status !== "pending") return c.json({ error: "Already decided." }, 409);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (found.report.status !== "pending")
+      return c.json({ error: c.var.t("errors:alreadyDecided") }, 409);
 
     const event = await findEvent(c.var.db, organizationId, found.event.id);
-    if (!event) return c.json({ error: "Not found" }, 404);
+    if (!event) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     await c.var.db.transaction(async (tx) => {
       await tx

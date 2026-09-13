@@ -242,6 +242,7 @@ export const accountMutationKeys = {
   changePassword: () => [...accountMutationKeys.all, "change-password"] as const,
   notificationChannel: () => [...accountMutationKeys.all, "notification-channel"] as const,
   timezone: () => [...accountMutationKeys.all, "timezone"] as const,
+  locale: () => [...accountMutationKeys.all, "locale"] as const,
   revokeSession: () => [...accountMutationKeys.all, "revoke-session"] as const,
   revokeOtherSessions: () => [...accountMutationKeys.all, "revoke-other-sessions"] as const,
   setPassword: () => [...accountMutationKeys.all, "set-password"] as const,

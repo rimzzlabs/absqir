@@ -1,4 +1,5 @@
 import { peopleKeys, peopleMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
@@ -11,6 +12,7 @@ export interface UpdatePersonInput {
 }
 
 export function useUpdatePerson() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -18,7 +20,7 @@ export function useUpdatePerson() {
     mutationFn: async ({ id, ...values }: UpdatePersonInput) => {
       const response = await api.people[":id"].$patch({ param: { id }, json: values });
 
-      if (!response.ok) throw await apiError(response, "Could not save the person.");
+      if (!response.ok) throw await apiError(response, t("errors:couldNotSavePerson"));
 
       return response.json();
     },

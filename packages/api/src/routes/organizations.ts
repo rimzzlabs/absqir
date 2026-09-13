@@ -70,7 +70,7 @@ export const organizationRoutes = app.openapi(currentRoute, async (c) => {
   ]);
 
   const found = rows[0];
-  if (!found) return c.json({ error: "No organization membership" }, 403);
+  if (!found) return c.json({ error: c.var.t("errors:noOrganizationMembership") }, 403);
 
   return c.json(
     {

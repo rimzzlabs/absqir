@@ -18,6 +18,7 @@ COPY packages/cli/package.json packages/cli/
 COPY packages/config/package.json packages/config/
 COPY packages/core/package.json packages/core/
 COPY packages/db/package.json packages/db/
+COPY packages/i18n/package.json packages/i18n/
 COPY packages/transactional/package.json packages/transactional/
 COPY packages/ui/package.json packages/ui/
 # --ignore-scripts skips the repo's git-dependent prepare hook. The build does

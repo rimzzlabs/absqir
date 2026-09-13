@@ -18,16 +18,44 @@ import { match } from "ts-pattern";
 
 export type RoleName = "owner" | "admin" | "organizer" | "member";
 
+/** The message key under `shell:nav` that names an entry. */
+export type NavId =
+  | "home"
+  | "gettingStarted"
+  | "events"
+  | "calendar"
+  | "schedules"
+  | "groups"
+  | "leave"
+  | "checkInProblems"
+  | "reports"
+  | "settings"
+  | "checkIn"
+  | "myEvents"
+  | "history"
+  | "myLeave";
+
+/** The message key under `shell:groups` that names a group of entries. */
+export type NavGroupId =
+  | "overview"
+  | "attendance"
+  | "directory"
+  | "requests"
+  | "other"
+  | "me"
+  | "you";
+
 export interface NavItem {
   href: string;
-  label: string;
+  /** Named, not worded: the sidebar reads the name in the reader's language. */
+  id: NavId;
   icon: Icon;
   /** Lowest role that sees the entry. */
   minimum: RoleName;
 }
 
 export interface NavGroup {
-  label: string;
+  id: NavGroupId;
   items: readonly NavItem[];
 }
 
@@ -40,44 +68,44 @@ export function roleAtLeast(role: RoleName, minimum: RoleName): boolean {
 /** What owners, admins, and organizers see. */
 export const MANAGER_NAV: NavGroup[] = [
   {
-    label: "Overview",
-    items: [{ href: "/", label: "Home", icon: HouseIcon, minimum: "organizer" }],
+    id: "overview",
+    items: [{ href: "/", id: "home", icon: HouseIcon, minimum: "organizer" }],
   },
   {
-    label: "Attendance",
+    id: "attendance",
     items: [
-      { href: "/events", label: "Events", icon: QrCodeIcon, minimum: "organizer" },
-      { href: "/calendar", label: "Calendar", icon: CalendarBlankIcon, minimum: "organizer" },
-      { href: "/schedules", label: "Schedules", icon: RepeatIcon, minimum: "organizer" },
+      { href: "/events", id: "events", icon: QrCodeIcon, minimum: "organizer" },
+      { href: "/calendar", id: "calendar", icon: CalendarBlankIcon, minimum: "organizer" },
+      { href: "/schedules", id: "schedules", icon: RepeatIcon, minimum: "organizer" },
     ],
   },
   {
-    label: "Directory",
-    items: [{ href: "/groups", label: "Groups", icon: UsersThreeIcon, minimum: "organizer" }],
+    id: "directory",
+    items: [{ href: "/groups", id: "groups", icon: UsersThreeIcon, minimum: "organizer" }],
   },
   {
-    label: "Requests and insight",
+    id: "requests",
     items: [
-      { href: "/leave", label: "Leave requests", icon: NotePencilIcon, minimum: "organizer" },
+      { href: "/leave", id: "leave", icon: NotePencilIcon, minimum: "organizer" },
       {
         href: "/check-in-problems",
-        label: "Check-in problems",
+        id: "checkInProblems",
         icon: FlagIcon,
         minimum: "organizer",
       },
-      { href: "/reports", label: "Reports", icon: ChartBarIcon, minimum: "organizer" },
+      { href: "/reports", id: "reports", icon: ChartBarIcon, minimum: "organizer" },
     ],
   },
   {
-    label: "Other",
-    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "organizer" }],
+    id: "other",
+    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "organizer" }],
   },
 ];
 
 /** A member's one action. It sits above the list, not in it. */
 export const CHECK_IN: NavItem = {
   href: "/check-in",
-  label: "Check in",
+  id: "checkIn",
   icon: ScanIcon,
   minimum: "member",
 };
@@ -85,20 +113,20 @@ export const CHECK_IN: NavItem = {
 /** What a member sees. */
 export const MEMBER_NAV: NavGroup[] = [
   {
-    label: "Overview",
-    items: [{ href: "/", label: "Home", icon: HouseIcon, minimum: "member" }],
+    id: "overview",
+    items: [{ href: "/", id: "home", icon: HouseIcon, minimum: "member" }],
   },
   {
-    label: "Me",
+    id: "me",
     items: [
-      { href: "/my/events", label: "My events", icon: QrCodeIcon, minimum: "member" },
-      { href: "/my/history", label: "History", icon: ClockCounterClockwiseIcon, minimum: "member" },
-      { href: "/my/leave", label: "My leave", icon: NotePencilIcon, minimum: "member" },
+      { href: "/my/events", id: "myEvents", icon: QrCodeIcon, minimum: "member" },
+      { href: "/my/history", id: "history", icon: ClockCounterClockwiseIcon, minimum: "member" },
+      { href: "/my/leave", id: "myLeave", icon: NotePencilIcon, minimum: "member" },
     ],
   },
   {
-    label: "Other",
-    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" }],
+    id: "other",
+    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "member" }],
   },
 ];
 
@@ -108,12 +136,12 @@ export const MEMBER_NAV: NavGroup[] = [
  */
 export const SOLO_NAV: NavGroup[] = [
   {
-    label: "Overview",
-    items: [{ href: "/", label: "Getting started", icon: HouseIcon, minimum: "member" }],
+    id: "overview",
+    items: [{ href: "/", id: "gettingStarted", icon: HouseIcon, minimum: "member" }],
   },
   {
-    label: "You",
-    items: [{ href: "/settings", label: "Settings", icon: GearIcon, minimum: "member" }],
+    id: "you",
+    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "member" }],
   },
 ];
 

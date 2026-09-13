@@ -1,5 +1,8 @@
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@absqir/ui/collapsible";
+import { Field, FieldDescription, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { FormError } from "@/components/shared/form-error";
+import { LanguageField } from "@/components/shared/language-field";
 import { isAuthProvider, providerLabel } from "@/lib/auth-providers";
 import {
   MIN_PASSWORD_LENGTH,
@@ -22,19 +26,29 @@ import type { OnboardingStatus } from "@/queries/use-onboarding";
 
 export interface OnboardingProfileStepProps {
   status: OnboardingStatus;
+  /**
+   * What this page already reads in: the account's choice when it has one,
+   * the browser's own language when it does not. The picker opens on it.
+   */
+  locale: Locale;
 }
 
-/** "GitHub", or "Your provider" for one this build does not name. */
-function firstProviderLabel(providers: string[]): string {
+/** "GitHub", or a stand-in name for a provider this build does not name. */
+function firstProviderLabel(t: Translate, providers: string[]): string {
   const first = A.getBy(providers, (provider) => isAuthProvider(provider));
 
   return match(O.toNullable(first))
-    .with(P.string.and(P.when(isAuthProvider)), (provider) => providerLabel(provider))
-    .otherwise(() => "Your provider");
+    .with(P.string.and(P.when(isAuthProvider)), (provider) => providerLabel(t, provider))
+    .otherwise(() => t("auth:providers.fallbackName"));
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const { status } = props;
+  const t = useTranslate();
+
+  // Everybody meets this picker once: the owner who starts an organization,
+  // and the member who arrives from an invitation. Both land here first.
+  const [locale, setLocale] = useState<Locale>(status.locale ?? props.locale);
 
   // A linked provider is a credential too. Asking for a password right after
   // the reader chose the provider button takes back what the button offered,
@@ -47,8 +61,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const form = useForm<ProfileValues>({
     resolver: zodResolver(
       match(mustSetPassword)
-        .with(true, () => profileWithPasswordSchema)
-        .otherwise(() => profileSchema),
+        .with(true, () => profileWithPasswordSchema(t))
+        .otherwise(() => profileSchema(t)),
     ),
     defaultValues: { name: status.name, password: "" },
   });
@@ -59,8 +73,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
     <FormField
       control={form.control}
       name="password"
-      label="Password"
-      description={`At least ${MIN_PASSWORD_LENGTH} characters. You can also sign in with an emailed code later.`}
+      label={t("onboarding:profile.password")}
+      description={t("onboarding:profile.passwordHint", { count: MIN_PASSWORD_LENGTH })}
       render={(field) => (
         <Input {...field} id="password" type="password" autoComplete="new-password" />
       )}
@@ -72,24 +86,39 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       <form
         onSubmit={form.handleSubmit((values) =>
           // An empty field means no password. The route refuses an empty one.
-          save.mutate({ name: values.name, password: values.password || undefined }),
+          save.mutate(
+            { name: values.name, password: values.password || undefined, locale },
+            {
+              // The island took its language from the page. A reader who just
+              // chose another one reads the next step in it, not the old one.
+              onSuccess: () => {
+                if (locale !== props.locale) window.location.reload();
+              },
+            },
+          ),
         )}
         className="space-y-5"
         noValidate
       >
         <AuthHeading
-          title="Tell us your name"
+          title={t("onboarding:profile.title")}
           description={match(mustSetPassword)
-            .with(true, () => "The name your organizers see, and a password for next time.")
-            .otherwise(() => "The name your organizers see.")}
+            .with(true, () => t("onboarding:profile.descriptionWithPassword"))
+            .otherwise(() => t("onboarding:profile.description"))}
         />
 
         <FormField
           control={form.control}
           name="name"
-          label="Full name"
+          label={t("onboarding:profile.fullName")}
           render={(field) => <Input {...field} id="name" autoComplete="name" autoFocus />}
         />
+
+        <Field>
+          <FieldLabel htmlFor="onboarding-language">{t("onboarding:language.label")}</FieldLabel>
+          <LanguageField id="onboarding-language" value={locale} onChange={setLocale} />
+          <FieldDescription>{t("onboarding:language.hint")}</FieldDescription>
+        </Field>
 
         {match(mustSetPassword)
           .with(true, () => passwordField)
@@ -115,7 +144,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                   />
                 }
               >
-                Add a password
+                {t("onboarding:profile.addPassword")}
                 <CaretDownIcon
                   className={match(addingPassword)
                     .with(true, () => "rotate-180")
@@ -124,8 +153,9 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4">
                 <p className="text-muted-foreground mb-4 text-sm">
-                  {firstProviderLabel(status.linkedProviders)} already signs you in. A password is
-                  one more way back, for a device where that account is not set up.
+                  {t("onboarding:profile.addPasswordHint", {
+                    provider: firstProviderLabel(t, status.linkedProviders),
+                  })}
                 </p>
                 {passwordField}
               </CollapsibleContent>
@@ -137,8 +167,8 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
 
         <Button type="submit" disabled={save.isPending} className="w-full">
           {match(save.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Continue" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("onboarding:profile.continue"))}
         </Button>
       </form>
     </Form>

@@ -1,3 +1,4 @@
+import { type Locale, translatorFor } from "@absqir/i18n";
 import type { CSSProperties } from "react";
 import { EmailHeading, EmailNote, EmailText } from "#src/components/email-content";
 import { EmailLayout } from "#src/components/email-layout";
@@ -6,6 +7,8 @@ import { color, font } from "#src/theme";
 export type OtpEmailPurpose = "sign-in" | "email-verification" | "forget-password" | "change-email";
 
 export interface OtpEmailProps {
+  /** The language this reader gets. */
+  locale: Locale;
   code: string;
   purpose: OtpEmailPurpose;
   /** Minutes until the code stops working. */
@@ -14,18 +17,12 @@ export interface OtpEmailProps {
   appUrl?: string;
 }
 
-const HEADINGS: Record<OtpEmailPurpose, string> = {
-  "sign-in": "Your sign-in code",
-  "email-verification": "Confirm your email",
-  "forget-password": "Reset your password",
-  "change-email": "Confirm your new email",
-};
-
-const LEADS: Record<OtpEmailPurpose, string> = {
-  "sign-in": "Enter this code to finish signing in. It works once.",
-  "email-verification": "Enter this code to confirm this address. It works once.",
-  "forget-password": "Enter this code to set a new password. It works once.",
-  "change-email": "Enter this code to move your account to this address. It works once.",
+/** The key under `email:otp` that words each purpose. */
+const PURPOSE_KEYS: Record<OtpEmailPurpose, "signIn" | "verify" | "reset" | "change"> = {
+  "sign-in": "signIn",
+  "email-verification": "verify",
+  "forget-password": "reset",
+  "change-email": "change",
 };
 
 const well: CSSProperties = {
@@ -53,16 +50,19 @@ const digits: CSSProperties = {
 };
 
 export function OtpEmail(props: OtpEmailProps) {
-  const { code, purpose, expiresInMinutes, appUrl } = props;
+  const { code, purpose, expiresInMinutes, appUrl, locale } = props;
+  const t = translatorFor(locale);
+  const key = PURPOSE_KEYS[purpose];
 
   return (
     <EmailLayout
-      preview={`${code} is your absqir code`}
+      preview={t("email:otp.preview", { code })}
       appUrl={appUrl}
-      footer="absqir sends a code only when someone asks for one. No one from absqir will ever ask you to forward it."
+      locale={locale}
+      footer={t("email:otp.footer")}
     >
-      <EmailHeading>{HEADINGS[purpose]}</EmailHeading>
-      <EmailText>{LEADS[purpose]}</EmailText>
+      <EmailHeading>{t(`email:otp.${key}Heading`)}</EmailHeading>
+      <EmailText>{t(`email:otp.${key}Lead`)}</EmailText>
       <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0}>
         <tbody>
           <tr>
@@ -82,15 +82,13 @@ export function OtpEmail(props: OtpEmailProps) {
           </tr>
         </tbody>
       </table>
-      <EmailNote>
-        The code expires in {expiresInMinutes} minutes. If you did not ask for it, ignore this
-        email. Nothing changes until the code is used.
-      </EmailNote>
+      <EmailNote>{t("email:otp.expiry", { count: expiresInMinutes })}</EmailNote>
     </EmailLayout>
   );
 }
 
 OtpEmail.PreviewProps = {
+  locale: "en",
   code: "482913",
   purpose: "sign-in",
   expiresInMinutes: 10,

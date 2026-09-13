@@ -1,4 +1,5 @@
 ---
+import { translatorFor } from "@absqir/i18n";
 import { CheckInPage } from "@/components/check-in/check-in-page";
 import AuthLayout from "@/layouts/auth-layout.astro";
 
@@ -11,8 +12,9 @@ if (!id) {
 // The QR code carries the rotating token in the URL the camera opens. The
 // middleware already made sure the reader is signed in.
 const token = Astro.url.searchParams.get("t");
+const t = translatorFor(Astro.locals.locale);
 ---
 
-<AuthLayout title="Check in — absqir">
-  <CheckInPage client:load eventId={id} token={token} />
+<AuthLayout title={`${t("shell:titles.checkIn")} — absqir`}>
+  <CheckInPage client:load locale={Astro.locals.locale} eventId={id} token={token} />
 </AuthLayout>

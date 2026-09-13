@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeUserAgent, deviceLabel } from "../src/user-agent";
+import { describeUserAgent } from "../src/user-agent";
 
 const CHROME_MAC =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
@@ -49,6 +49,7 @@ describe("describeUserAgent", () => {
   });
 
   it("copes with nothing", () => {
-    expect(deviceLabel(null)).toBe("Unknown browser on unknown device");
+    expect(describeUserAgent(null).browser).toBeNull();
+    expect(describeUserAgent(null).platform).toBeNull();
   });
 });

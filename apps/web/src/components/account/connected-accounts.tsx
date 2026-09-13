@@ -1,3 +1,5 @@
+import type { Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { A, pipe } from "@mobily/ts-belt";
 import { useEffect, useState } from "react";
@@ -22,19 +24,19 @@ const RETURN_PATH = "/settings?tab=security";
  * the server render stays the same for every reader, and the parameters are
  * cleared once read: a reload must not repeat a message about a past attempt.
  */
-function useLinkFailure(): string | null {
+function useLinkFailure(t: Translate): string | null {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("error");
+    const code = params.get("account:error");
 
     if (!code) return;
 
-    const provider = params.get("provider") ?? "";
-    const failure = readCallbackError({
+    const provider = params.get("account:provider") ?? "";
+    const failure = readCallbackError(t, {
       code,
-      description: params.get("error_description"),
+      description: params.get("account:error_description"),
       provider: match(provider)
         .with(P.when(isAuthProvider), (provider) => provider)
         .otherwise(() => null),
@@ -54,7 +56,7 @@ function useLinkFailure(): string | null {
         .with(P.string.minLength(1), (query) => `?${query}`)
         .otherwise(() => window.location.pathname),
     );
-  }, []);
+  }, [t]);
 
   return message;
 }
@@ -71,9 +73,10 @@ interface ProviderRow {
  * refused by the server, so the last credential cannot be dropped here.
  */
 export function ConnectedAccounts() {
+  const t = useTranslate();
   const credentials = useCredentials();
   const unlink = useUnlinkProvider();
-  const linkFailure = useLinkFailure();
+  const linkFailure = useLinkFailure(t);
 
   if (!credentials.data) return null;
 
@@ -100,15 +103,12 @@ export function ConnectedAccounts() {
       .otherwise(() => 0 as const);
 
   return (
-    <SettingsRow
-      label="Connected accounts"
-      hint="Sign in with a provider instead of a code. The address on the provider does not have to match this account. The last way in cannot be disconnected."
-    >
+    <SettingsRow label={t("account:connected.label")} hint={t("account:connected.hint")}>
       <div className="space-y-3">
         <ul className="divide-y divide-border rounded-lg border border-border">
           {A.map(rows, (row) => {
             const { provider, accountId } = row;
-            const name = providerLabel(provider);
+            const name = providerLabel(t, provider);
 
             return (
               <li key={provider} className="flex items-center gap-3 px-3 py-2.5">
@@ -117,8 +117,8 @@ export function ConnectedAccounts() {
                   <p className="text-sm">{name}</p>
                   <p className="text-muted-foreground text-xs">
                     {match(accountId)
-                      .with(P.string.minLength(1), () => "Connected" as const)
-                      .otherwise(() => "Not connected" as const)}
+                      .with(P.string.minLength(1), () => t("account:connected.connected"))
+                      .otherwise(() => t("account:connected.notConnected"))}
                   </p>
                 </div>
 
@@ -130,7 +130,7 @@ export function ConnectedAccounts() {
                       disabled={unlink.isPending || ways < 2}
                       onClick={() => unlink.mutate(accountId)}
                     >
-                      Disconnect
+                      {t("account:connected.disconnect")}
                     </Button>
                   ))
                   .otherwise(() => (
@@ -147,7 +147,7 @@ export function ConnectedAccounts() {
                         });
                       }}
                     >
-                      Connect
+                      {t("account:connected.connect")}
                     </Button>
                   ))}
               </li>

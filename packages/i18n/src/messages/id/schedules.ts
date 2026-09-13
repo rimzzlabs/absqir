@@ -1,0 +1,54 @@
+/** Jadwal: aturan yang membuat acara dengan sendirinya. */
+export const schedules = {
+  title: "Jadwal",
+  description:
+    "Aturan yang membuat acara sendiri. Tiap jadwal membuat acara dua minggu ke depan, terus-menerus.",
+  new: "Jadwal baru",
+  paused: "Dijeda",
+  emptyTitle: "Belum ada jadwal",
+  emptyDescription:
+    "Setiap hari kerja jam sembilan, setiap Selasa sore: atur aturannya sekali dan acaranya muncul sendiri.",
+  noGroup: "Belum ada grup, jadi belum ada yang diharapkan hadir.",
+  deleteTitle: "Hapus {{title}}?",
+  deleteDescription:
+    "Acara mendatang yang dibuat jadwal ini dan belum disentuh siapa pun ikut hilang. Yang sudah lewat tetap ada.",
+  keep: "Biarkan",
+  deleting: "Menghapus…",
+  everyDay: "Setiap hari",
+  summary:
+    "{{when}} pukul {{time}}, {{minutes, number}} menit, mulai {{start}}{{end}} ({{timezone}})",
+  until: " sampai {{date}}",
+  days: {
+    "0": "Min",
+    "1": "Sen",
+    "2": "Sel",
+    "3": "Rab",
+    "4": "Kam",
+    "5": "Jum",
+    "6": "Sab",
+  },
+  dialog: {
+    editTitle: "Ubah jadwal",
+    newTitle: "Jadwal baru",
+    description:
+      "Aturan yang membuat acara sendiri, dua minggu ke depan. Waktunya memakai {{timezone}}.",
+    title: "Judul",
+    titlePlaceholder: "Sif pagi",
+    repeats: "Pengulangan",
+    weekly: "Mingguan, pada hari terpilih",
+    daily: "Setiap hari",
+    startsAt: "Mulai pukul",
+    on: "Pada",
+    length: "Durasi (menit)",
+    lateAfter: "Terlambat setelah (menit)",
+    opensBefore: "Buka sebelum (menit)",
+    from: "Dari",
+    until: "Sampai",
+    untilHint: "Kosongkan supaya terus berjalan.",
+    noEnd: "Tanpa akhir",
+    expectedGroups: "Grup yang diharapkan",
+    active: "Aktif",
+    walkIns: "Izinkan tamu tanpa daftar",
+    create: "Buat",
+  },
+} as const;

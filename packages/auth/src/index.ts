@@ -237,6 +237,14 @@ export function createAuth(options: CreateAuthOptions) {
           required: false,
           input: false,
         },
+        // The language the account reads the app and its email in. The web
+        // app writes the browser's own language here on the first sign-in,
+        // and the reader can change it afterwards.
+        locale: {
+          type: "string",
+          required: false,
+          input: false,
+        },
       },
     },
     plugins: [

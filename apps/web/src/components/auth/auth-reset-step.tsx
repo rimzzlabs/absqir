@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
@@ -21,8 +22,9 @@ export interface AuthResetStepProps {
 
 /** The code path for a known account: the code and a new password, then in. */
 export function AuthResetStep(props: AuthResetStepProps) {
+  const t = useTranslate();
   const form = useForm<ResetValues>({
-    resolver: zodResolver(resetSchema),
+    resolver: zodResolver(resetSchema(t)),
     defaultValues: { code: "", password: "" },
   });
 
@@ -30,8 +32,8 @@ export function AuthResetStep(props: AuthResetStepProps) {
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
   const resendLabel = match(cooldown.ready)
-    .with(true, () => "Send a new code" as const)
-    .otherwise(() => `New code in ${cooldown.remaining}s`);
+    .with(true, () => t("auth:code.sendNewCode"))
+    .otherwise(() => t("auth:code.newCodeIn", { seconds: cooldown.remaining }));
 
   return (
     <Form {...form}>
@@ -41,14 +43,14 @@ export function AuthResetStep(props: AuthResetStepProps) {
         noValidate
       >
         <AuthHeading
-          title="Enter your code"
-          description={`We sent a 6 digit code to ${props.email}. Choose a new password with it.`}
+          title={t("auth:reset.title")}
+          description={t("auth:reset.description", { email: props.email })}
         />
 
         <FormField
           control={form.control}
           name="code"
-          label="Code"
+          label={t("auth:code.label")}
           render={(field) => (
             <CodeInput value={field.value} onChange={field.onChange} disabled={reset.isPending} />
           )}
@@ -57,8 +59,8 @@ export function AuthResetStep(props: AuthResetStepProps) {
         <FormField
           control={form.control}
           name="password"
-          label="New password"
-          description={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+          label={t("auth:reset.newPassword")}
+          description={t("auth:reset.minLength", { count: MIN_PASSWORD_LENGTH })}
           render={(field) => (
             <Input {...field} id="password" type="password" autoComplete="new-password" />
           )}
@@ -68,13 +70,13 @@ export function AuthResetStep(props: AuthResetStepProps) {
 
         <Button type="submit" disabled={reset.isPending} className="w-full">
           {match(reset.isPending)
-            .with(true, () => "Saving…" as const)
-            .otherwise(() => "Set password and sign in" as const)}
+            .with(true, () => t("common:actions.saving"))
+            .otherwise(() => t("auth:reset.submit"))}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
-            Back to password
+            {t("auth:reset.backToPassword")}
           </Button>
           <Button
             type="button"
@@ -90,7 +92,7 @@ export function AuthResetStep(props: AuthResetStepProps) {
             }
           >
             {match(resend.isPending)
-              .with(true, () => "Sending…" as const)
+              .with(true, () => t("auth:code.sending"))
               .otherwise(() => resendLabel)}
           </Button>
         </div>
