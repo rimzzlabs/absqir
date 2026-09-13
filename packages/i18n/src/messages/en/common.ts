@@ -34,6 +34,7 @@ export const common = {
     toggleSidebar: "Toggle the sidebar",
     loading: "Loading",
   },
+  dateRange: "{{from}} to {{to}}",
   island: {
     title: "This part could not load",
     description: "The rest of the page still works. Try again, or reload the page.",

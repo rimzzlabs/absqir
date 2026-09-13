@@ -86,7 +86,16 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       <form
         onSubmit={form.handleSubmit((values) =>
           // An empty field means no password. The route refuses an empty one.
-          save.mutate({ name: values.name, password: values.password || undefined, locale }),
+          save.mutate(
+            { name: values.name, password: values.password || undefined, locale },
+            {
+              // The island took its language from the page. A reader who just
+              // chose another one reads the next step in it, not the old one.
+              onSuccess: () => {
+                if (locale !== props.locale) window.location.reload();
+              },
+            },
+          ),
         )}
         className="space-y-5"
         noValidate

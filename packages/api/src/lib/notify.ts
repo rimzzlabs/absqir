@@ -1,9 +1,10 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
-import type { Translate } from "@absqir/i18n";
+import type { Locale, Translate } from "@absqir/i18n";
 import { TZDate } from "@date-fns/tz";
 import { A } from "@mobily/ts-belt";
 import { format } from "date-fns";
+import { enUS, id } from "date-fns/locale";
 import { and, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 import { type EventRow, expectedPersonIds } from "#src/lib/expected";
@@ -71,13 +72,17 @@ async function userTimezones(
   );
 }
 
-function whenLine(t: Translate, event: EventRow, timezone: string): string {
+/** The month and weekday names each language writes. */
+const DATE_FNS_LOCALES = { en: enUS, id } as const;
+
+function whenLine(locale: Locale, t: Translate, event: EventRow, timezone: string): string {
   const start = new TZDate(event.startsAt, timezone);
   const end = new TZDate(event.endsAt, timezone);
+  const names = DATE_FNS_LOCALES[locale];
 
   return t("email:notify.when", {
-    start: format(start, "EEE d MMM, HH:mm"),
-    end: format(end, "HH:mm"),
+    start: format(start, "EEE d MMM, HH:mm", { locale: names }),
+    end: format(end, "HH:mm", { locale: names }),
     timezone,
   });
 }
@@ -128,6 +133,7 @@ export async function notifyDueReminders(
 
     for (const kind of kinds) {
       for (const userId of userIds) {
+        const locale = locales.get(userId) ?? "en";
         const t = translatorFrom(locales, userId);
         const title = match(kind)
           .with("hour", () => t("email:notify.reminderHour", { event: event.title }))
@@ -138,7 +144,7 @@ export async function notifyDueReminders(
           userId,
           type: "event-reminder",
           title,
-          body: whenLine(t, event, zones.get(userId) ?? timezone),
+          body: whenLine(locale, t, event, zones.get(userId) ?? timezone),
           href: `/events/${event.id}`,
           dedupeKey: `event-reminder:${event.id}:${kind}`,
         });

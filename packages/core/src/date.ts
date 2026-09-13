@@ -1,11 +1,14 @@
+import { DEFAULT_LOCALE, type Locale, translatorFor } from "@absqir/i18n";
 import { TZDate } from "@date-fns/tz";
 import {
+  type Locale as DateFnsLocale,
   differenceInCalendarDays,
   format,
   formatDistanceToNowStrict,
   isAfter,
   isSameDay,
 } from "date-fns";
+import { enUS, id } from "date-fns/locale";
 import { match, P } from "ts-pattern";
 
 /** One format per intent. Callers pick an intent, never a pattern string. */
@@ -30,6 +33,27 @@ const PATTERNS = {
 export type DateIntent = keyof typeof PATTERNS;
 
 type TimezoneResolver = () => string | null;
+
+type LocaleResolver = () => Locale;
+
+/** The month and weekday names date-fns writes, one set per language. */
+const DATE_FNS_LOCALES: Record<Locale, DateFnsLocale> = { en: enUS, id };
+
+/**
+ * Where the display language comes from. The web app installs a resolver
+ * that reads it off the page, the same way the zone arrives. Module state,
+ * for the same reason: every date on every screen goes through formatDate.
+ */
+let resolveLocale: LocaleResolver = () => DEFAULT_LOCALE;
+
+export function setDisplayLocaleResolver(resolver: LocaleResolver): void {
+  resolveLocale = resolver;
+}
+
+/** The language dates read in. */
+export function displayLocale(): Locale {
+  return resolveLocale();
+}
 
 /**
  * Where the display zone comes from. The web app installs a resolver that
@@ -88,11 +112,16 @@ export function parseDisplayDay(value: string): Date | null {
 }
 
 export function formatDate(value: Date, intent: DateIntent = "date"): string {
-  return format(inDisplayZone(value), PATTERNS[intent]);
+  return format(inDisplayZone(value), PATTERNS[intent], {
+    locale: DATE_FNS_LOCALES[resolveLocale()],
+  });
 }
 
 export function relativeToNow(value: Date): string {
-  return formatDistanceToNowStrict(value, { addSuffix: true });
+  return formatDistanceToNowStrict(value, {
+    addSuffix: true,
+    locale: DATE_FNS_LOCALES[resolveLocale()],
+  });
 }
 
 export function isExpired(expiresAt: Date, now: Date = new Date()): boolean {
@@ -105,11 +134,14 @@ export function daysUntil(target: Date, now: Date = new Date()): number {
 
 /** "Mon 8 Sep, 09:00 to 10:00", or both ends in full when they fall on different days. */
 export function formatRange(start: Date, end: Date): string {
+  const t = translatorFor(resolveLocale());
+  const from = formatDate(start, "weekdayDateTime");
+
   if (isSameDay(inDisplayZone(start), inDisplayZone(end))) {
-    return `${formatDate(start, "weekdayDateTime")} to ${formatDate(end, "time")}`;
+    return t("common:dateRange", { from, to: formatDate(end, "time") });
   }
 
-  return `${formatDate(start, "weekdayDateTime")} to ${formatDate(end, "weekdayDateTime")}`;
+  return t("common:dateRange", { from, to: formatDate(end, "weekdayDateTime") });
 }
 
 /** Whole minutes between two instants, never negative. */

@@ -68,6 +68,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@absqir/i18n": "workspace:^",
     "@date-fns/tz": "^1.5.0",
     "@mobily/ts-belt": "4.0.0-rc.5",
     "date-fns": "^4.4.0",

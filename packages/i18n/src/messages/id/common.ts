@@ -34,6 +34,7 @@ export const common = {
     toggleSidebar: "Buka atau tutup bilah samping",
     loading: "Memuat",
   },
+  dateRange: "{{from}} sampai {{to}}",
   island: {
     title: "Bagian ini gagal dimuat",
     description: "Bagian lain halaman ini tetap jalan. Coba lagi, atau muat ulang halaman.",
