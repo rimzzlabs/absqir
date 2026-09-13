@@ -13,6 +13,7 @@ import {
   startOfWeek,
 } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
+import { IconAction } from "@absqir/ui/icon-action";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
@@ -128,12 +129,12 @@ function CalendarBody() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" aria-label="Previous" onClick={() => step(-1)}>
+          <IconAction variant="outline" size="icon" label="Previous" onClick={() => step(-1)}>
             <CaretLeftIcon />
-          </Button>
-          <Button variant="outline" size="icon" aria-label="Next" onClick={() => step(1)}>
+          </IconAction>
+          <IconAction variant="outline" size="icon" label="Next" onClick={() => step(1)}>
             <CaretRightIcon />
-          </Button>
+          </IconAction>
           <Button variant="outline" size="sm" onClick={() => setCursor(today())}>
             Today
           </Button>

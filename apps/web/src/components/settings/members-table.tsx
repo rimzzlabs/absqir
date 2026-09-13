@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
+import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
 import { Separator } from "@absqir/ui/separator";
@@ -206,14 +207,13 @@ function RemoveAction(props: { member: Member }) {
 
   return (
     <>
-      <Button
+      <IconAction
         variant="ghost"
-        size="icon-sm"
-        aria-label={`Remove ${props.member.user.name}`}
+        label={`Remove ${props.member.user.name}`}
         onClick={() => setRemoving(true)}
       >
         <TrashIcon />
-      </Button>
+      </IconAction>
       <RemoveDialog member={props.member} open={removing} onOpenChange={setRemoving} />
     </>
   );
@@ -224,10 +224,16 @@ function RemoveAction(props: { member: Member }) {
  * field and the remove button fold into a popover there, so the card stays a
  * name, an email, and a role.
  */
-function CardActions(props: { member: Member; person: Person | undefined; canChange: boolean }) {
+function CardActions(props: {
+  member: Member;
+  person: Person | undefined;
+  canChange: boolean;
+  canGrantOwner: boolean;
+}) {
   const { member, person } = props;
   const [removing, setRemoving] = useState(false);
   const draft = useIdentifierDraft(person);
+  const updateRole = useUpdateMemberRole();
 
   if (!person && !props.canChange) return null;
 
@@ -238,12 +244,9 @@ function CardActions(props: { member: Member; person: Person | undefined; canCha
           if (!open) draft.commit();
         }}
       >
-        <PopoverTrigger
-          render={
-            <Button variant="ghost" size="icon-sm" aria-label={`More for ${member.user.name}`} />
-          }
-        >
+        <PopoverTrigger render={<Button variant="ghost" size="icon-sm" />}>
           <DotsThreeIcon weight="bold" />
+          <span className="sr-only">Identifier, role and removal for {member.user.name}</span>
         </PopoverTrigger>
         <PopoverContent align="end">
           {match(person)
@@ -266,7 +269,22 @@ function CardActions(props: { member: Member; person: Person | undefined; canCha
           {match(props.canChange)
             .with(true, () => (
               <>
+                <Field>
+                  <FieldLabel htmlFor={`card-role-${member.id}`}>Role</FieldLabel>
+                  <FieldContent>
+                    <RoleSelect
+                      id={`card-role-${member.id}`}
+                      value={asRole(member.role) as InvitableRole}
+                      includeOwner={props.canGrantOwner}
+                      disabled={updateRole.isPending}
+                      onChange={(role) => updateRole.mutate({ memberId: member.id, role })}
+                    />
+                  </FieldContent>
+                  <FormError error={updateRole.error} />
+                </Field>
+
                 <Separator />
+
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
@@ -327,6 +345,9 @@ export function MembersTable(props: MembersTableProps) {
       cell: (member) => (
         <RoleCell member={member} canChange={canChange(member)} canGrantOwner={grantsOwner} />
       ),
+      // A card states the role and holds the select in the popover, so the
+      // three controls of a row arrive from one corner instead of three.
+      card: (member) => <RoleBadge role={asRole(member.role)} />,
     },
     {
       key: "actions",
@@ -342,6 +363,7 @@ export function MembersTable(props: MembersTableProps) {
           member={member}
           person={directory.get(member.userId)}
           canChange={canChange(member)}
+          canGrantOwner={grantsOwner}
         />
       ),
     },

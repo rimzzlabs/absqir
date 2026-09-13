@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absq
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
+import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,24 +100,22 @@ function InvitationActions(props: { invitation: Invitation }) {
 
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button
+      <IconAction
         variant="ghost"
-        size="icon-sm"
-        aria-label={`Send the invitation for ${invitation.email} again`}
+        label={`Send again to ${invitation.email}`}
         disabled={busy}
         onClick={() => resend.mutate({ email: invitation.email, role })}
       >
         <PaperPlaneTiltIcon />
-      </Button>
-      <Button
+      </IconAction>
+      <IconAction
         variant="ghost"
-        size="icon-sm"
-        aria-label={`Cancel the invitation for ${invitation.email}`}
+        label={`Cancel the invitation for ${invitation.email}`}
         disabled={busy}
         onClick={() => cancel.mutate(invitation.id)}
       >
         <XIcon />
-      </Button>
+      </IconAction>
       <FormError error={resend.error ?? cancel.error} />
     </div>
   );
