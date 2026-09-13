@@ -18,13 +18,19 @@ flowchart LR
   D --> F["No<br/>read Accept-Language"]
 ```
 
-Before anybody signs in, absqir reads the `Accept-Language` header the
-browser sends. A phone set to Bahasa Indonesia opens the sign-in page in
-Bahasa Indonesia, with nothing to press first. A browser that asks for a
-language absqir does not speak gets English.
+Before anybody signs in, absqir reads two things: a cookie this browser
+carries, and then the `Accept-Language` header. A phone set to Bahasa
+Indonesia opens the sign-in page in Bahasa Indonesia, with nothing to press
+first. A browser that asks for a language absqir does not speak gets
+English.
 
-After sign-in, the account decides. The stored choice wins over the header,
-so the same account reads the same language on a borrowed laptop.
+After sign-in, the account decides. The stored choice wins over both, so the
+same account reads the same language on a borrowed laptop.
+
+The cookie is how the sign-in page keeps up. An account that has chosen a
+language leaves that choice on the browser as it reads, so the door speaks
+it the next time the same person arrives, before there is any session to
+ask. Signing out does not clear it.
 
 ## Where the reader chooses
 
@@ -48,13 +54,20 @@ screen still finds theirs.
 | Every page and every dialog | The reader's                                       |
 | Field errors and refusals   | The reader's                                       |
 | API answers                 | The account that called, or the browser that asked |
-| Notifications               | The reader of each row, written one row per reader |
+| Notifications               | The reader's, worked out as they open the list     |
 | Email                       | The reader of that message                         |
 | The documentation you read  | English only                                       |
 
-A notification is written once per reader, so the row in the database
-already carries that reader's words. Changing the language later does not
-rewrite what is already written; it applies to everything from that moment.
+Dates and numbers follow the language too. English writes `1,234.5` and
+`Mon 14 Sep`; Bahasa Indonesia writes `1.234,5` and `Sen 14 Sep`. Distances,
+percentages and counts all read that way, so nothing on a screen is half
+translated.
+
+A notification keeps the message it was written from rather than the
+sentence, so changing your language changes the list you already have.
+Somebody's own words inside one, a leave reason or an organizer's note, stay
+exactly as they were typed. A row written before this version keeps the
+sentence it was written with.
 
 An invitation often reaches an address with no account, and so with no
 choice of its own. absqir uses the language of that address when it has an
@@ -70,9 +83,9 @@ is a separate choice on the same settings page: see
 Nothing. Both languages ship in the build, and no key or service is
 involved. A self-host gets the picker the moment it runs this version.
 
-One migration adds the column that holds the choice. An instance that
-applies migrations on start needs nothing; an instance that runs them by
-hand runs:
+Two migrations add the column that holds the choice and the keys a
+notification is worded from. An instance that applies migrations on start
+needs nothing; an instance that runs them by hand runs:
 
 ```bash
 npx absqir migrate
