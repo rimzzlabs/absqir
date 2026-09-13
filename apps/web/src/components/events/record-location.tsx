@@ -1,5 +1,6 @@
 import { formatDistance } from "@absqir/core/geo";
-import { isRiskReason, RISK_REASON_TEXT } from "@absqir/core/location-risk";
+import { isRiskReason } from "@absqir/core/location-risk";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
@@ -26,6 +27,7 @@ function distanceText(location: RecordLocation): string {
  * the person absent from the row menu, which is the existing way to say so.
  */
 export function RecordLocationCell(props: { eventId: string; record: EventRecord }) {
+  const t = useTranslate();
   const location = props.record.location;
   const review = useReviewRecord();
 
@@ -41,7 +43,7 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
         {match(location.reviewedAt)
           .with(P.string.minLength(1), () => (
             <Badge variant="outline" className="ml-1">
-              Reviewed
+              {t("events:location.reviewed")}
             </Badge>
           ))
           .otherwise(() => null)}
@@ -55,14 +57,13 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
           }
         >
           <WarningIcon weight="fill" />
-          Worth a look
+          {t("events:location.worthALook")}
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 space-y-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium">This reading looks odd</p>
+            <p className="text-sm font-medium">{t("events:location.oddTitle")}</p>
             <p className="text-muted-foreground text-xs">
-              {distanceText(location)} from the place. The check-in was accepted, because none of
-              this is proof on its own.
+              {t("events:location.oddHint", { distance: distanceText(location) })}
             </p>
           </div>
 
@@ -72,7 +73,7 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
                 <span aria-hidden="true" className="text-muted-foreground">
                   ·
                 </span>
-                <span>{RISK_REASON_TEXT[reason]}</span>
+                <span>{t(`checkin:risk.${reason}`)}</span>
               </li>
             ))}
           </ul>
@@ -88,11 +89,11 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
             >
               <CheckIcon />
               {match(review.isPending)
-                .with(true, () => "Clearing…" as const)
-                .otherwise(() => "Looks fine, clear the flag" as const)}
+                .with(true, () => t("events:location.clearing"))
+                .otherwise(() => t("events:location.clear"))}
             </Button>
             <p className="text-muted-foreground text-xs">
-              To reject it, mark {props.record.name} absent from the row menu.
+              {t("events:location.reject", { name: props.record.name })}
             </p>
           </div>
         </PopoverContent>

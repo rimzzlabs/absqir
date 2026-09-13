@@ -1,5 +1,6 @@
 import { formatDate } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
@@ -33,6 +34,7 @@ interface ScanEntry {
 const REPEAT_MS = 4000;
 
 function ScannerBody(props: ScannerProps) {
+  const t = useTranslate();
   const event = useEvent(props.eventId);
   const scan = useScan();
   const [entries, setEntries] = useState<ScanEntry[]>([]);
@@ -64,14 +66,14 @@ function ScannerBody(props: ScannerProps) {
   };
 
   const camera = useCamera(submit, {
-    fallback: "Ask the member for the pass code under their QR, then type it below.",
+    fallback: t("checkin:scannerPage.fallback"),
   });
   const data = event.data;
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 py-6">
       <div className="flex items-center justify-between">
-        <BackLink href={`/events/${props.eventId}`}>Back</BackLink>
+        <BackLink href={`/events/${props.eventId}`}>{t("common:actions.back")}</BackLink>
         {match(data)
           .with(P.nullish, () => null)
           .otherwise((data) => (
@@ -81,11 +83,9 @@ function ScannerBody(props: ScannerProps) {
 
       <div>
         <h1 className="font-heading text-xl font-semibold tracking-tight">
-          {data?.title ?? "Scanner"}
+          {data?.title ?? t("checkin:scannerPage.fallbackTitle")}
         </h1>
-        <p className="text-muted-foreground text-sm">
-          Point the camera at the pass on the member's phone. Each pass counts once.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("checkin:scannerPage.description")}</p>
       </div>
 
       <div className="bg-muted relative aspect-square overflow-hidden rounded-2xl">
@@ -93,7 +93,7 @@ function ScannerBody(props: ScannerProps) {
         {match(!camera.active && !camera.fault)
           .with(true, () => (
             <p className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm">
-              Opening the camera…
+              {t("checkin:scannerPage.opening")}
             </p>
           ))
           .otherwise(() => null)}
@@ -103,7 +103,7 @@ function ScannerBody(props: ScannerProps) {
         .with(P.nullish, () => null)
         .otherwise((fault) => (
           <Alert>
-            <AlertTitle>The camera is not available</AlertTitle>
+            <AlertTitle>{t("checkin:scannerPage.notAvailable")}</AlertTitle>
             <AlertDescription>{fault.message}</AlertDescription>
           </Alert>
         ))}
@@ -121,12 +121,12 @@ function ScannerBody(props: ScannerProps) {
         <Input
           value={manual}
           onChange={(event) => setManual(event.target.value)}
-          placeholder="Or paste a pass here"
-          aria-label="Pass code"
+          placeholder={t("checkin:scannerPage.manualPlaceholder")}
+          aria-label={t("checkin:scannerPage.manualLabel")}
           autoComplete="off"
         />
         <Button type="submit" variant="outline" disabled={scan.isPending}>
-          Check in
+          {t("checkin:scannerPage.checkIn")}
         </Button>
       </form>
 
@@ -153,9 +153,16 @@ function ScannerBody(props: ScannerProps) {
                     <p className="truncate font-medium">{result.personName}</p>
                     <p className="text-muted-foreground text-xs">
                       {match(result.already)
-                        .with(true, () => "Already in since " as const)
-                        .otherwise(() => "Checked in at " as const)}
-                      {formatDate(new Date(result.checkedInAt), "time")}
+                        .with(true, () =>
+                          t("checkin:scannerPage.alreadyIn", {
+                            time: formatDate(new Date(result.checkedInAt), "time"),
+                          }),
+                        )
+                        .otherwise(() =>
+                          t("checkin:scannerPage.checkedIn", {
+                            time: formatDate(new Date(result.checkedInAt), "time"),
+                          }),
+                        )}
                     </p>
                   </>
                 ))}

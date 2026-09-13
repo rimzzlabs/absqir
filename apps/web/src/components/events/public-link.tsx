@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-group";
 import { CheckIcon, CopyIcon, GlobeIcon } from "@phosphor-icons/react";
@@ -12,6 +13,7 @@ export interface PublicLinkProps {
 /** The registration page's address, ready to paste into an announcement. */
 export function PublicLink(props: PublicLinkProps) {
   const { event } = props;
+  const t = useTranslate();
   const [copied, setCopied] = useState(false);
   const url = `${window.location.origin}/e/${event.id}`;
 
@@ -31,16 +33,19 @@ export function PublicLink(props: PublicLinkProps) {
   };
 
   const seats = match(event.registrationLimit)
-    .with(null, () => `${event.registrationCount} registered`)
-    .otherwise(
-      (registrationLimit) => `${event.registrationCount} of ${registrationLimit} seats taken`,
+    .with(null, () => t("events:publicLink.registered", { count: event.registrationCount }))
+    .otherwise((registrationLimit) =>
+      t("events:publicLink.seats", {
+        count: event.registrationCount,
+        limit: String(registrationLimit),
+      }),
     );
 
   return (
     <div className="border-border space-y-2 rounded-xl border p-4">
       <div className="flex items-center gap-2 text-sm font-medium">
         <GlobeIcon className="text-muted-foreground" />
-        Public registration
+        {t("events:publicLink.title")}
         <span className="text-muted-foreground font-normal tabular-nums">· {seats}</span>
       </div>
       <InputGroup>
@@ -53,14 +58,12 @@ export function PublicLink(props: PublicLinkProps) {
                 <CopyIcon />
               ))}
             {match(copied)
-              .with(true, () => "Copied" as const)
-              .otherwise(() => "Copy" as const)}
+              .with(true, () => t("common:actions.copied"))
+              .otherwise(() => t("common:actions.copy"))}
           </Button>
         </InputGroupAddon>
       </InputGroup>
-      <p className="text-muted-foreground text-xs">
-        Anyone with the link can register. Someone new creates an account and joins as a member.
-      </p>
+      <p className="text-muted-foreground text-xs">{t("events:publicLink.hint")}</p>
     </div>
   );
 }

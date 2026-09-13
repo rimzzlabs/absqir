@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Reveal } from "@absqir/ui/reveal";
 import { CheckCircleIcon, ScanIcon } from "@phosphor-icons/react";
@@ -15,6 +16,7 @@ export interface CheckInResultProps {
 /** What the reader sees the moment the check-in lands. */
 export function CheckInResult(props: CheckInResultProps) {
   const { result } = props;
+  const t = useTranslate();
 
   return (
     <Reveal className="flex flex-col items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 text-center sm:p-8">
@@ -25,8 +27,8 @@ export function CheckInResult(props: CheckInResultProps) {
       <div>
         <h2 className="font-heading text-xl font-semibold tracking-tight text-balance">
           {match(result.already)
-            .with(true, () => `Already in, ${result.personName}`)
-            .otherwise(() => `You are in, ${result.personName}`)}
+            .with(true, () => t("checkin:result.already", { name: result.personName }))
+            .otherwise(() => t("checkin:result.welcome", { name: result.personName }))}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">{result.eventTitle}</p>
       </div>
@@ -34,17 +36,17 @@ export function CheckInResult(props: CheckInResultProps) {
       <div className="flex items-center gap-2 text-sm">
         <AttendanceStatusBadge status={result.status} />
         <span className="text-muted-foreground tabular-nums">
-          at {formatDate(new Date(result.checkedInAt), "time")}
+          {t("checkin:result.at", { time: formatDate(new Date(result.checkedInAt), "time") })}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button variant="outline" onClick={props.onAgain}>
           <ScanIcon />
-          Scan another
+          {t("checkin:result.scanAnother")}
         </Button>
         <a href="/my/history" className={buttonVariants({ variant: "ghost" })}>
-          My history
+          {t("checkin:result.myHistory")}
         </a>
       </div>
     </Reveal>

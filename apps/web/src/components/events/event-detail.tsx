@@ -1,5 +1,6 @@
 import { formatDate, formatRange } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,7 @@ function Stat(props: { label: string; value: number }) {
 
 function Header(props: { event: Event; role: RoleName }) {
   const { event } = props;
+  const t = useTranslate();
   const open = useOpenEvent();
   const close = useCloseEvent();
   const remove = useRemoveEvent();
@@ -68,7 +70,7 @@ function Header(props: { event: Event; role: RoleName }) {
 
   return (
     <header className="space-y-4">
-      <BackLink href="/events">Events</BackLink>
+      <BackLink href="/events">{t("events:title")}</BackLink>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -77,8 +79,11 @@ function Header(props: { event: Event; role: RoleName }) {
             <EventStatusBadge status={event.status} />
           </div>
           <p className="text-muted-foreground mt-1 text-sm">
-            {formatRange(new Date(event.startsAt), new Date(event.endsAt))} · late after{" "}
-            {event.lateAfterMinutes} min · opens {event.opensBeforeMinutes} min early
+            {t("events:detail.times", {
+              range: formatRange(new Date(event.startsAt), new Date(event.endsAt)),
+              late: String(event.lateAfterMinutes),
+              opens: String(event.opensBeforeMinutes),
+            })}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
             {A.map(event.groups, (group) => (
@@ -87,7 +92,7 @@ function Header(props: { event: Event; role: RoleName }) {
               </Badge>
             ))}
             {match(event.allowWalkIns)
-              .with(true, () => <Badge variant="secondary">Walk-ins allowed</Badge>)
+              .with(true, () => <Badge variant="secondary">{t("events:detail.walkIns")}</Badge>)
               .otherwise(() => null)}
           </div>
           {match(event.description)
@@ -104,14 +109,14 @@ function Header(props: { event: Event; role: RoleName }) {
               <>
                 <a href={`/events/${event.id}/display`} className={buttonVariants({ size: "sm" })}>
                   <QrCodeIcon />
-                  Room screen
+                  {t("events:detail.roomScreen")}
                 </a>
                 <a
                   href={`/events/${event.id}/scan`}
                   className={buttonVariants({ size: "sm", variant: "outline" })}
                 >
                   <CameraIcon />
-                  Scanner
+                  {t("events:detail.scanner")}
                 </a>
               </>
             ))}
@@ -124,7 +129,7 @@ function Header(props: { event: Event; role: RoleName }) {
                 onClick={() => open.mutate(event.id)}
               >
                 <LockOpenIcon />
-                Open now
+                {t("events:detail.openNow")}
               </Button>
             ))
             .otherwise(() => null)}
@@ -137,26 +142,26 @@ function Header(props: { event: Event; role: RoleName }) {
                 onClick={() => close.mutate(event.id)}
               >
                 <LockIcon />
-                Close now
+                {t("events:detail.closeNow")}
               </Button>
             ))
             .otherwise(() => null)}
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
             <PencilSimpleIcon />
-            Edit
+            {t("common:actions.edit")}
           </Button>
           <a
             href={`/api/events/${event.id}/records.csv`}
             className={buttonVariants({ size: "sm", variant: "outline" })}
           >
             <DownloadSimpleIcon />
-            CSV
+            {t("events:detail.csv")}
           </a>
           {match(isAdmin)
             .with(true, () => (
               <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
                 <TrashIcon />
-                Delete
+                {t("common:actions.delete")}
               </Button>
             ))
             .otherwise(() => null)}
@@ -172,8 +177,7 @@ function Header(props: { event: Event; role: RoleName }) {
       {match(event.closedAt)
         .with(P.string.minLength(1), (closedAt) => (
           <p className="text-muted-foreground text-xs">
-            Closed {formatDate(new Date(closedAt), "dateTime")}. Everyone expected without a
-            check-in was marked absent.
+            {t("events:detail.closed", { when: formatDate(new Date(closedAt), "dateTime") })}
           </p>
         ))
         .otherwise(() => null)}
@@ -183,13 +187,13 @@ function Header(props: { event: Event; role: RoleName }) {
       <AlertDialog open={removing} onOpenChange={setRemoving}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {event.title}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Every record of this event goes with it. There is no undo.
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("events:detail.deleteTitle", { title: event.title })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("events:detail.deleteDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep</AlertDialogCancel>
+            <AlertDialogCancel>{t("events:detail.keep")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={remove.isPending}
@@ -198,8 +202,8 @@ function Header(props: { event: Event; role: RoleName }) {
               }
             >
               {match(remove.isPending)
-                .with(true, () => "Deleting…" as const)
-                .otherwise(() => "Delete" as const)}
+                .with(true, () => t("events:detail.deleting"))
+                .otherwise(() => t("common:actions.delete"))}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -209,6 +213,7 @@ function Header(props: { event: Event; role: RoleName }) {
 }
 
 function EventDetailBody(props: EventDetailProps) {
+  const t = useTranslate();
   const event = useEvent(props.eventId);
 
   return match(event)
@@ -224,11 +229,11 @@ function EventDetailBody(props: EventDetailProps) {
         <Header event={data} role={props.role} />
 
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <Stat label="Expected" value={data.counts.expected} />
-          <Stat label="Present" value={data.counts.present} />
-          <Stat label="Late" value={data.counts.late} />
-          <Stat label="Excused" value={data.counts.excused} />
-          <Stat label="Absent" value={data.counts.absent} />
+          <Stat label={t("events:detail.stats.expected")} value={data.counts.expected} />
+          <Stat label={t("events:detail.stats.present")} value={data.counts.present} />
+          <Stat label={t("events:detail.stats.late")} value={data.counts.late} />
+          <Stat label={t("events:detail.stats.excused")} value={data.counts.excused} />
+          <Stat label={t("events:detail.stats.absent")} value={data.counts.absent} />
         </div>
 
         <EventRecords event={data} />

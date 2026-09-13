@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -21,6 +22,7 @@ const RECENT = 4;
 
 /** The last few records, so the reader can tell a scan really landed. */
 export function CheckInRecent() {
+  const t = useTranslate();
   const history = useMyHistory();
 
   return (
@@ -28,12 +30,12 @@ export function CheckInRecent() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClockCounterClockwiseIcon />
-          Your last check-ins
+          {t("checkin:recent.title")}
         </CardTitle>
-        <CardDescription>Newest first.</CardDescription>
+        <CardDescription>{t("checkin:recent.description")}</CardDescription>
         <CardAction>
           <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            History
+            {t("checkin:recent.history")}
             <CaretRightIcon />
           </a>
         </CardAction>
@@ -50,11 +52,7 @@ export function CheckInRecent() {
           .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
           .with({ data: P.select(P.nonNullable) }, (rows) => {
             if (rows.length === 0) {
-              return (
-                <p className="text-muted-foreground text-sm">
-                  No closed event has your name yet. Your first scan lands here.
-                </p>
-              );
+              return <p className="text-muted-foreground text-sm">{t("checkin:recent.empty")}</p>;
             }
 
             return (
@@ -66,10 +64,10 @@ export function CheckInRecent() {
                       <span className="text-muted-foreground block text-xs tabular-nums">
                         {formatDate(new Date(row.startsAt), "weekdayDate")}
                         {match(row.checkedInAt)
-                          .with(
-                            P.string.minLength(1),
-                            (checkedInAt) =>
-                              ` · in at ${formatDate(new Date(checkedInAt), "time")}`,
+                          .with(P.string.minLength(1), (checkedInAt) =>
+                            t("checkin:recent.inAt", {
+                              time: formatDate(new Date(checkedInAt), "time"),
+                            }),
                           )
                           .otherwise(() => "" as const)}
                       </span>

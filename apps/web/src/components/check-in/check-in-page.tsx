@@ -1,5 +1,6 @@
 import { formatDate } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { Reveal } from "@absqir/ui/reveal";
@@ -46,6 +47,7 @@ function Mark(props: { children: React.ReactNode; className: string }) {
  * check-in fires on load; the reader only sees the result.
  */
 function CheckInBody(props: CheckInPageProps) {
+  const t = useTranslate();
   const checkIn = useCheckIn();
   const { mutate } = checkIn;
 
@@ -60,14 +62,14 @@ function CheckInBody(props: CheckInPageProps) {
           <QrCodeIcon className="text-muted-foreground size-7" />
         </Mark>
         <AuthHeading
-          title="Scan the screen"
-          description="This page opens from the QR code in the room. Point your phone camera at it, or open the scanner here."
+          title={t("checkin:scanPage.title")}
+          description={t("checkin:scanPage.description")}
         />
         <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
-          Open the scanner
+          {t("checkin:scanPage.openScanner")}
         </a>
         <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
-          My events
+          {t("checkin:result.myEvents")}
         </a>
       </div>
     );
@@ -79,7 +81,7 @@ function CheckInBody(props: CheckInPageProps) {
         <Mark className="bg-destructive/10 ring-destructive/10">
           <WarningCircleIcon weight="fill" className="text-destructive size-8" />
         </Mark>
-        <AuthHeading title="Not checked in" description={error.message} />
+        <AuthHeading title={t("checkin:scanner.refusedTitle")} description={error.message} />
 
         {/* The camera on a phone opens this page, so most refusals land here
             rather than in the app's own scanner. The way back belongs here too. */}
@@ -102,25 +104,25 @@ function CheckInBody(props: CheckInPageProps) {
           .with(true, () => (
             <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
               <ScanIcon />
-              Scan the screen again
+              {t("checkin:scanPage.scanAgain")}
             </a>
           ))
           .otherwise(() => (
             <>
               <Button className="w-full" onClick={() => window.location.reload()}>
                 <ArrowClockwiseIcon />
-                Try again
+                {t("common:actions.tryAgain")}
               </Button>
               <a
                 href="/check-in"
                 className={buttonVariants({ variant: "outline", className: "w-full" })}
               >
-                Scan it myself
+                {t("checkin:scanPage.scanMyself")}
               </a>
             </>
           ))}
         <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
-          My events
+          {t("checkin:result.myEvents")}
         </a>
       </div>
     ))
@@ -131,27 +133,25 @@ function CheckInBody(props: CheckInPageProps) {
         </Mark>
         <AuthHeading
           title={match(result.already)
-            .with(true, () => `Already in, ${result.personName}`)
-            .otherwise(() => `You are in, ${result.personName}`)}
+            .with(true, () => t("checkin:result.already", { name: result.personName }))
+            .otherwise(() => t("checkin:result.welcome", { name: result.personName }))}
           description={result.eventTitle}
         />
         <div className="border-border flex items-center gap-3 rounded-lg border p-3 text-sm">
           <AttendanceStatusBadge status={result.status} />
           <span className="text-muted-foreground tabular-nums">
-            in at {formatDate(new Date(result.checkedInAt), "time")}
+            {t("checkin:result.inAt", { time: formatDate(new Date(result.checkedInAt), "time") })}
           </span>
         </div>
-        <p className="text-muted-foreground text-sm">
-          You can close this page. The record is saved.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("checkin:result.saved")}</p>
         <a
           href="/my/events"
           className={buttonVariants({ variant: "outline", className: "w-full" })}
         >
-          My events
+          {t("checkin:result.myEvents")}
         </a>
         <a href="/my/history" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
-          My history
+          {t("checkin:result.myHistory")}
         </a>
       </Reveal>
     ))
@@ -165,12 +165,15 @@ function CheckInBody(props: CheckInPageProps) {
         {match(checkIn.stage)
           .with("locating", () => (
             <AuthHeading
-              title="Finding where you are…"
-              description="This event checks that you are at the place. Allow location, and hold still for a moment."
+              title={t("checkin:scanPage.locatingTitle")}
+              description={t("checkin:scanner.locatingHint")}
             />
           ))
           .otherwise(() => (
-            <AuthHeading title="Checking you in…" description="One moment. Keep this page open." />
+            <AuthHeading
+              title={t("checkin:scanPage.checkingTitle")}
+              description={t("checkin:scanPage.checkingHint")}
+            />
           ))}
       </div>
     ));

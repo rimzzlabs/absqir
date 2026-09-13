@@ -1,5 +1,6 @@
 import { displayTimezone, formatDate } from "@absqir/core/date";
 import { deviceTimezone } from "@absqir/core/timezone";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { DatePicker, TimeField } from "@absqir/ui/date-picker";
@@ -44,15 +45,8 @@ export interface ScheduleDialogProps {
   schedule: Schedule | null;
 }
 
-const WEEKDAYS = [
-  { value: 1, label: "Mon" },
-  { value: 2, label: "Tue" },
-  { value: 3, label: "Wed" },
-  { value: 4, label: "Thu" },
-  { value: 5, label: "Fri" },
-  { value: 6, label: "Sat" },
-  { value: 0, label: "Sun" },
-];
+/** Monday first, because a working week starts there. */
+const WEEKDAYS = ["1", "2", "3", "4", "5", "6", "0"] as const;
 
 /** "yyyy-MM-dd" → a local midnight, so the calendar shows the right day. */
 function fromDay(value: string): Date {
@@ -107,9 +101,10 @@ function defaults(schedule: Schedule | null): ScheduleValues {
 }
 
 export function ScheduleDialog(props: ScheduleDialogProps) {
+  const t = useTranslate();
   const editing = props.schedule !== null;
   const form = useForm<ScheduleValues>({
-    resolver: zodResolver(scheduleSchema),
+    resolver: zodResolver(scheduleSchema(t)),
     defaultValues: defaults(props.schedule),
   });
 
@@ -117,8 +112,8 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
   const update = useUpdateSchedule();
   const pending = create.isPending || update.isPending;
   const saveLabel = match(editing)
-    .with(true, () => "Save" as const)
-    .otherwise(() => "Create" as const);
+    .with(true, () => t("common:actions.save"))
+    .otherwise(() => t("schedules:dialog.create"));
   // A new rule starts in the zone the organizer reads times in.
   const timezone = props.schedule?.timezone ?? displayTimezone() ?? deviceTimezone();
 
@@ -173,11 +168,11 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
-              .with(true, () => "Edit schedule" as const)
-              .otherwise(() => "New schedule" as const)}
+              .with(true, () => t("schedules:dialog.editTitle"))
+              .otherwise(() => t("schedules:dialog.newTitle"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            A rule that creates events on its own, two weeks ahead. Times are in {timezone}.
+            {t("schedules:dialog.description", { timezone })}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -191,20 +186,27 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
               <FormField
                 control={form.control}
                 name="title"
-                label="Title"
+                label={t("schedules:dialog.title")}
                 render={(field) => (
-                  <Input {...field} id="schedule-title" placeholder="Morning shift" autoFocus />
+                  <Input
+                    {...field}
+                    id="schedule-title"
+                    placeholder={t("schedules:dialog.titlePlaceholder")}
+                    autoFocus
+                  />
                 )}
               />
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor="schedule-frequency">Repeats</FieldLabel>
+                  <FieldLabel htmlFor="schedule-frequency">
+                    {t("schedules:dialog.repeats")}
+                  </FieldLabel>
                   <FieldContent>
                     <Select
                       items={[
-                        { value: "weekly", label: "Weekly, on chosen days" },
-                        { value: "daily", label: "Every day" },
+                        { value: "weekly", label: t("schedules:dialog.weekly") },
+                        { value: "daily", label: t("schedules:dialog.daily") },
                       ]}
                       value={frequency}
                       onValueChange={(value) => {
@@ -217,8 +219,8 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="weekly">Weekly, on chosen days</SelectItem>
-                          <SelectItem value="daily">Every day</SelectItem>
+                          <SelectItem value="weekly">{t("schedules:dialog.weekly")}</SelectItem>
+                          <SelectItem value="daily">{t("schedules:dialog.daily")}</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -227,7 +229,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="startTime"
-                  label="Starts at"
+                  label={t("schedules:dialog.startsAt")}
                   render={(field) => (
                     <TimeField
                       id="schedule-start-time"
@@ -247,7 +249,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                       O.toUndefined,
                     )}
                   >
-                    <FieldLabel>On</FieldLabel>
+                    <FieldLabel>{t("schedules:dialog.on")}</FieldLabel>
                     <FieldContent>
                       <ToggleGroup
                         multiple
@@ -261,8 +263,8 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                         className="flex-wrap"
                       >
                         {A.map(WEEKDAYS, (day) => (
-                          <ToggleGroupItem key={day.value} value={String(day.value)}>
-                            {day.label}
+                          <ToggleGroupItem key={day} value={day}>
+                            {t(`schedules:days.${day}`)}
                           </ToggleGroupItem>
                         ))}
                       </ToggleGroup>
@@ -276,7 +278,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="durationMinutes"
-                  label="Length (min)"
+                  label={t("schedules:dialog.length")}
                   render={(field) => (
                     <Input
                       {...field}
@@ -290,7 +292,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="lateAfterMinutes"
-                  label="Late after (min)"
+                  label={t("schedules:dialog.lateAfter")}
                   render={(field) => (
                     <Input
                       {...field}
@@ -304,7 +306,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="opensBeforeMinutes"
-                  label="Opens before (min)"
+                  label={t("schedules:dialog.opensBefore")}
                   render={(field) => (
                     <Input
                       {...field}
@@ -321,7 +323,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="startsOn"
-                  label="From"
+                  label={t("schedules:dialog.from")}
                   render={(field) => (
                     <DatePicker
                       id="schedule-starts-on"
@@ -333,21 +335,21 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 <FormField
                   control={form.control}
                   name="endsOn"
-                  label="Until"
-                  description="Leave empty to keep going."
+                  label={t("schedules:dialog.until")}
+                  description={t("schedules:dialog.untilHint")}
                   render={(field) => (
                     <DatePicker
                       id="schedule-ends-on"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="No end"
+                      placeholder={t("schedules:dialog.noEnd")}
                     />
                   )}
                 />
               </div>
 
               <Field>
-                <FieldLabel>Expected groups</FieldLabel>
+                <FieldLabel>{t("schedules:dialog.expectedGroups")}</FieldLabel>
                 <FieldContent>
                   <GroupPicker
                     value={form.watch("groupIds")}
@@ -365,7 +367,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                     checked={form.watch("active")}
                     onCheckedChange={(checked) => form.setValue("active", checked === true)}
                   />
-                  <Label htmlFor="schedule-active">Active</Label>
+                  <Label htmlFor="schedule-active">{t("schedules:dialog.active")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -373,7 +375,7 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                     checked={form.watch("allowWalkIns")}
                     onCheckedChange={(checked) => form.setValue("allowWalkIns", checked === true)}
                   />
-                  <Label htmlFor="schedule-walk-ins">Allow walk-ins</Label>
+                  <Label htmlFor="schedule-walk-ins">{t("schedules:dialog.walkIns")}</Label>
                 </div>
               </div>
 
@@ -393,11 +395,11 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button type="submit" disabled={pending}>
                 {match(pending)
-                  .with(true, () => "Saving…" as const)
+                  .with(true, () => t("common:actions.saving"))
                   .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>

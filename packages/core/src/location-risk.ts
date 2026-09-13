@@ -250,19 +250,3 @@ export function scoreRisk(input: RiskInput): RiskReport {
     reasons: [...reasons],
   };
 }
-
-/** What the organizer reads in the review list. One line per reason. */
-export const RISK_REASON_TEXT: Record<RiskReason, string> = {
-  "patched-api": "Something in the browser replaced the location API.",
-  "automated-browser": "The browser reported that a script drives it.",
-  "frozen-track": "Every reading named the same spot to the half metre.",
-  teleport: "Too far from the last check-in to have travelled in the time.",
-  "shared-coordinates": "Another person sent the very same coordinates.",
-  "network-far": "The network address resolves far from the claimed spot.",
-  "network-relay": "The network address belongs to a VPN or a hosting provider.",
-  "perfect-accuracy": "The reading claimed an accuracy no phone reports.",
-  "constant-accuracy": "Every reading claimed the same round accuracy.",
-  "no-altitude": "No reading carried an altitude, so none came from satellites.",
-  "timezone-mismatch": "The device clock belongs to another part of the world.",
-  "single-fix": "Only one reading arrived, so movement could not be checked.",
-};
