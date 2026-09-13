@@ -245,7 +245,7 @@ const finishRoute = createRoute({
 function requireUser(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (!c.get("user")) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     }
 
     await next();
@@ -306,7 +306,7 @@ export const onboardingRoutes = app
     ]);
 
     const row = rows[0];
-    if (!row) return c.json({ error: "Unauthorized" }, 401);
+    if (!row) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const found = await findOrganizationForEmail(db, row.email);
     const workspace = match(found)
@@ -379,7 +379,7 @@ export const onboardingRoutes = app
       const linked = await linkedProvidersOf(c, current.id);
 
       if (!password && linked.length === 0) {
-        return c.json({ error: "Choose a password to finish the account." }, 400);
+        return c.json({ error: c.var.t("errors:choosePasswordToFinish") }, 400);
       }
 
       if (password) {
@@ -419,7 +419,7 @@ export const onboardingRoutes = app
     const { name, slug } = c.req.valid("json");
 
     if (!isSlug(slug)) {
-      return c.json({ error: "Use lowercase letters, digits, and hyphens for the slug." }, 400);
+      return c.json({ error: c.var.t("errors:slugCharacters") }, 400);
     }
 
     try {
@@ -444,7 +444,7 @@ export const onboardingRoutes = app
 
       if (known.status === 403) return c.json({ error: known.message }, 403);
       if (known.status === 400 && /slug/i.test(known.message)) {
-        return c.json({ error: "That slug is taken. Try another." }, 409);
+        return c.json({ error: c.var.t("errors:slugTaken") }, 409);
       }
 
       return c.json({ error: known.message }, 400);
@@ -469,7 +469,7 @@ export const onboardingRoutes = app
 
     const found = rows[0];
     if (!found || (found.role && !isRoleName(found.role))) {
-      return c.json({ error: "This invitation is not for this account, or it expired." }, 404);
+      return c.json({ error: c.var.t("errors:invitationNotForThisAccount") }, 404);
     }
 
     const accepted = await c.var.auth.api.acceptInvitation({
@@ -491,7 +491,7 @@ export const onboardingRoutes = app
 
     const found = await findPublicEvent(c.var.db, eventId);
     if (!found?.event.registrationOpen) {
-      return c.json({ error: "This event does not take registrations." }, 404);
+      return c.json({ error: c.var.t("errors:noRegistrations") }, 404);
     }
 
     const result = await registerForEvent(c.var.db, { event: found.event, user: current });

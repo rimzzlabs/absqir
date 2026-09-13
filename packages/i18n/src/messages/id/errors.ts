@@ -163,4 +163,12 @@ export const errors = {
   sessionNotFresh: "Anda masuk sudah cukup lama. Keluar, masuk lagi, lalu ulangi ini.",
   sessionNotFreshDelete: "Anda masuk sudah cukup lama. Keluar, masuk lagi, lalu hapus akunnya.",
   pictureTooDetailed: "Gambar itu terlalu detail untuk dikecilkan. Coba yang lebih sederhana.",
+  locationNeeded: "Acara ini memeriksa posisi Anda. Izinkan lokasi di peramban, lalu pindai lagi.",
+  noLocationSent:
+    "Perangkat Anda tidak mengirim lokasi. Izinkan lokasi di peramban, lalu pindai lagi.",
+  locationTooVague:
+    "Perangkat Anda tidak bisa menentukan posisi dengan cukup tepat. Keluarlah atau dekati jendela, lalu pindai lagi.",
+  tooFarAway: "Anda kira-kira {{distance}} dari tempatnya. Mendekatlah, lalu pindai lagi.",
+  notAtThePlace: "Anda tidak berada di tempat acara ini.",
+  scannerNotAtThePlace: "Pemindai ini tidak berada di tempat acara.",
 } as const;

@@ -10,6 +10,7 @@ import { type RiskReason, SUSPECT_AT, scoreRisk } from "@absqir/core/location-ri
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { AttemptOutcome, AttendanceMethod, LocationVerdict } from "@absqir/db/schema";
+import type { Translate } from "@absqir/i18n";
 import { A } from "@mobily/ts-belt";
 import { and, desc, eq, isNotNull, ne } from "drizzle-orm";
 import { match, P } from "ts-pattern";
@@ -115,6 +116,8 @@ export interface CheckLocationParams {
    * those positions belongs to the person's own history.
    */
   method: AttendanceMethod;
+  /** Words the refusal in the language the member reads. */
+  t: Translate;
 }
 
 /**
@@ -180,18 +183,12 @@ export async function checkLocation(params: CheckLocationParams): Promise<Locati
 
   const claim = params.claim;
   if (!claim) {
-    return refusal(
-      "missing",
-      "This event checks where you are. Allow location in your browser, then scan again.",
-    );
+    return refusal("missing", params.t("errors:locationNeeded"));
   }
 
   const track = readTrack(claim.fixes);
   if (!track) {
-    return refusal(
-      "missing",
-      "Your device sent no location. Allow location in your browser, then scan again.",
-    );
+    return refusal("missing", params.t("errors:noLocationSent"));
   }
 
   // A vague reading is refused rather than guessed at. A two-kilometre error
@@ -199,10 +196,7 @@ export async function checkLocation(params: CheckLocationParams): Promise<Locati
   // fence stops meaning anything for everyone.
   if (track.best.accuracy > MAX_ACCURACY_METERS) {
     return {
-      ...refusal(
-        "coarse",
-        "Your device could not place you accurately enough. Step outside or near a window, then scan again.",
-      ),
+      ...refusal("coarse", params.t("errors:locationTooVague")),
       columns: {
         ...NOT_REQUIRED.columns,
         latitude: track.best.latitude,
@@ -256,7 +250,9 @@ export async function checkLocation(params: CheckLocationParams): Promise<Locati
     return {
       required: true,
       accepted: false,
-      message: `You are about ${formatDistance(reading.distanceMeters)} away. Move closer, then scan again.`,
+      message: params.t("errors:tooFarAway", {
+        distance: formatDistance(reading.distanceMeters),
+      }),
       verdict: reading.verdict,
       score: risk.score,
       reasons: risk.reasons,

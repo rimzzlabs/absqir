@@ -257,7 +257,7 @@ export const groupRoutes = app
       return c.json(toJson(created, 0), 201);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "A group with that name exists." }, 409);
+        return c.json({ error: c.var.t("errors:groupNameTaken") }, 409);
       }
       throw error;
     }
@@ -267,7 +267,7 @@ export const groupRoutes = app
     const { id } = c.req.valid("param");
 
     const found = await findGroup(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json(await detail(c.var.db, found), 200);
   })
@@ -279,7 +279,7 @@ export const groupRoutes = app
     const body = c.req.valid("json");
 
     const found = await findGroup(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     try {
       const [updated] = await c.var.db
@@ -303,7 +303,7 @@ export const groupRoutes = app
       return c.json(toJson(updated, members.length), 200);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "A group with that name exists." }, 409);
+        return c.json({ error: c.var.t("errors:groupNameTaken") }, 409);
       }
       throw error;
     }
@@ -315,7 +315,7 @@ export const groupRoutes = app
     const { id } = c.req.valid("param");
 
     const found = await findGroup(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     await c.var.db.delete(group).where(eq(group.id, id));
 
@@ -329,7 +329,7 @@ export const groupRoutes = app
     const { personIds } = c.req.valid("json");
 
     const found = await findGroup(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     // Only people of this organization can join; ids from elsewhere are dropped.
     const wanted = [...new Set(personIds)];

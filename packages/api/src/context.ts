@@ -1,6 +1,8 @@
 import { type Auth, createAuth, OTP_EXPIRES_IN_SECONDS } from "@absqir/auth";
-import { createDb, type Database } from "@absqir/db";
+import { createDb, type Database, schema } from "@absqir/db";
+import { DEFAULT_LOCALE, isLocale, type Locale, localeFromHeader } from "@absqir/i18n";
 import { createMailer, type Mailer } from "@absqir/transactional";
+import { eq } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 import type { ApiBindings } from "#src/bindings";
 import { type ApiEnv, parseEnv, secureCookies, socialProviderKeys } from "#src/env";
@@ -99,6 +101,22 @@ export function trustedOriginsFor(
 }
 
 /**
+ * The language the account at this address reads in. An address with no
+ * account yet has made no choice, so the caller's fallback decides.
+ */
+async function localeForEmail(db: Database, email: string, fallback: Locale): Promise<Locale> {
+  const rows = await db
+    .select({ locale: schema.user.locale })
+    .from(schema.user)
+    .where(eq(schema.user.email, email.toLowerCase()))
+    .limit(1);
+
+  return match(rows[0]?.locale)
+    .with(P.when(isLocale), (locale) => locale)
+    .otherwise(() => fallback);
+}
+
+/**
  * One database pool and one auth instance for one Worker invocation.
  * Both the Hono app and the Astro middleware build their context here, so a
  * page render and an API call agree on how a session is read.
@@ -108,6 +126,11 @@ export function createRequestContext(
   origin: string,
   /** The browser's own Origin header. Development trusts it; see above. */
   requestOrigin?: string | null,
+  /**
+   * What the browser asks to read in. A code or an invitation for an address
+   * with no account yet has no stored choice to follow, so this decides.
+   */
+  acceptLanguage?: string | null,
 ): RequestContext {
   const env = parseEnv(bindings);
 
@@ -116,6 +139,7 @@ export function createRequestContext(
     .otherwise((SHARED_DB) => ({ db: SHARED_DB, close: async () => {} }));
 
   const mailer = createMailerFor(env, origin);
+  const asked = localeFromHeader(acceptLanguage) ?? DEFAULT_LOCALE;
 
   const auth = createAuth({
     db,
@@ -137,6 +161,7 @@ export function createRequestContext(
       }
 
       await mailer.sendOtp(email, {
+        locale: await localeForEmail(db, email, asked),
         code: otp,
         purpose: type,
         expiresInMinutes: OTP_EXPIRES_IN_SECONDS / 60,
@@ -151,6 +176,10 @@ export function createRequestContext(
       }
 
       await mailer.sendInvitation(invitation.email, {
+        // An invitation often reaches somebody with no account, and so no
+        // choice of their own. The language of the admin who pressed send is
+        // the closest guess: colleagues usually share one.
+        locale: await localeForEmail(db, invitation.email, asked),
         organizationName: invitation.organizationName,
         inviterName: invitation.inviterName,
         role: invitation.role,

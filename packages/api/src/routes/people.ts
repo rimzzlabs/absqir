@@ -413,7 +413,7 @@ export const peopleRoutes = app
     const identifier = normalizeIdentifier(body.identifier);
 
     if (body.invite && !email) {
-      return c.json({ error: "An invitation needs an email address." }, 400);
+      return c.json({ error: c.var.t("errors:invitationNeedsEmail") }, 400);
     }
 
     let created: PersonRow | undefined;
@@ -425,7 +425,7 @@ export const peopleRoutes = app
         .returning();
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "Someone with that email or identifier is already listed." }, 409);
+        return c.json({ error: c.var.t("errors:someoneWithThatEmailIsListed") }, 409);
       }
       throw error;
     }
@@ -446,7 +446,7 @@ export const peopleRoutes = app
     const body = c.req.valid("json");
 
     const found = await findPerson(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     // The account owns its name and its email, so settings changes those. The
     // identifier belongs to the directory, and the reader may set their own.
@@ -476,7 +476,7 @@ export const peopleRoutes = app
       return c.json(await one(c, updated), 200);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "Someone with that email or identifier is already listed." }, 409);
+        return c.json({ error: c.var.t("errors:someoneWithThatEmailIsListed") }, 409);
       }
       throw error;
     }
@@ -488,13 +488,10 @@ export const peopleRoutes = app
     const { id } = c.req.valid("param");
 
     const found = await findPerson(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     if (isCaller(c, found)) {
-      return c.json(
-        { error: "You cannot remove yourself. Leave the organization in settings." },
-        409,
-      );
+      return c.json({ error: c.var.t("errors:cannotRemoveYourself") }, 409);
     }
 
     if (found.userId) {
@@ -507,7 +504,7 @@ export const peopleRoutes = app
       const membership = memberships[0];
 
       if (membership?.role === "owner") {
-        return c.json({ error: "The owner cannot be removed. Transfer ownership first." }, 409);
+        return c.json({ error: c.var.t("errors:ownerCannotBeRemoved") }, 409);
       }
 
       if (membership) {
@@ -527,8 +524,8 @@ export const peopleRoutes = app
     const { role } = c.req.valid("json");
 
     const found = await findPerson(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
-    if (!found.email) return c.json({ error: "Add an email address first." }, 400);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (!found.email) return c.json({ error: c.var.t("errors:addEmailAddressFirst") }, 400);
 
     try {
       await invite(c, found.email, role);
@@ -549,7 +546,7 @@ export const peopleRoutes = app
     const table = csvToRecords(body.csv);
 
     if (!table.header.includes("name")) {
-      return c.json({ error: "The first row must name a `name` column." }, 400);
+      return c.json({ error: c.var.t("errors:firstRowNeedsNameColumn") }, 400);
     }
 
     const records = table.records.slice(0, MAX_IMPORT_ROWS);

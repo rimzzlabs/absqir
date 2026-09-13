@@ -1,3 +1,4 @@
+import { type Locale, translatorFor } from "@absqir/i18n";
 import { render } from "@react-email/render";
 import type { ReactElement } from "react";
 import { Resend } from "resend";
@@ -27,12 +28,17 @@ interface SendOptions {
   headers?: Record<string, string>;
 }
 
-const OTP_SUBJECTS: Record<OtpEmailPurpose, (code: string) => string> = {
-  "sign-in": (code) => `${code} is your absqir sign-in code`,
-  "email-verification": (code) => `${code} confirms your email`,
-  "forget-password": (code) => `${code} resets your password`,
-  "change-email": (code) => `${code} confirms your new email`,
+/** The key under `email:otp` that words each subject. */
+const SUBJECT_KEYS: Record<OtpEmailPurpose, "signIn" | "verify" | "reset" | "change"> = {
+  "sign-in": "signIn",
+  "email-verification": "verify",
+  "forget-password": "reset",
+  "change-email": "change",
 };
+
+function otpSubject(locale: Locale, purpose: OtpEmailPurpose, code: string): string {
+  return translatorFor(locale)(`email:otp.${SUBJECT_KEYS[purpose]}Subject`, { code });
+}
 
 export function createMailer(options: CreateMailerOptions) {
   const { apiKey, from, appUrl } = options;
@@ -68,14 +74,16 @@ export function createMailer(options: CreateMailerOptions) {
     sendOtp(to: string, props: Payload<OtpEmailProps>) {
       return send({
         to,
-        subject: OTP_SUBJECTS[props.purpose](props.code),
+        subject: otpSubject(props.locale, props.purpose, props.code),
         element: OtpEmail({ ...props, appUrl }),
       });
     },
     sendInvitation(to: string, props: Payload<InvitationEmailProps>) {
       return send({
         to,
-        subject: `Join ${props.organizationName} on absqir`,
+        subject: translatorFor(props.locale)("email:invitation.subject", {
+          organization: props.organizationName,
+        }),
         element: InvitationEmail({ ...props, appUrl }),
       });
     },

@@ -47,7 +47,7 @@ export function organizationGuard(): MiddlewareHandler<AppEnv> {
     const session = c.get("session");
 
     if (!user || !session) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     }
 
     const active = session.activeOrganizationId;
@@ -73,7 +73,7 @@ export function organizationGuard(): MiddlewareHandler<AppEnv> {
     const first = fallback[0];
 
     if (!first || !isRoleName(first.role)) {
-      return c.json({ error: "No organization membership" }, 403);
+      return c.json({ error: c.var.t("errors:noOrganizationMembership") }, 403);
     }
 
     await c.var.db
@@ -93,11 +93,11 @@ export function requireRole(minimum: RoleName): MiddlewareHandler<AppEnv> {
     const role = c.get("role");
 
     if (!role) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     }
 
     if (!roleAtLeast(role, minimum)) {
-      return c.json({ error: `This needs the ${minimum} role or higher` }, 403);
+      return c.json({ error: c.var.t("errors:roleNeeded", { role: minimum }) }, 403);
     }
 
     await next();

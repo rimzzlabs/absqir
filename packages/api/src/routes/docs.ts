@@ -11,7 +11,7 @@ import type { AppEnv } from "#src/types";
 export function mountDocs(app: OpenAPIHono<AppEnv>) {
   const guard: MiddlewareHandler<AppEnv> = async (c, next) => {
     if (!docsEnabled(parseEnv(c.env))) {
-      return c.json({ error: "Not found" }, 404);
+      return c.json({ error: c.var.t("errors:notFound") }, 404);
     }
 
     await next();

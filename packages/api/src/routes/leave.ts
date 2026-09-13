@@ -231,10 +231,10 @@ export const leaveRoutes = base
   .openapi(mineRoute, async (c) => {
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const query = c.req.valid("query");
     const limit = query.limit ?? PAGE_SIZE;
@@ -277,16 +277,16 @@ export const leaveRoutes = base
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
     const { eventId, reason } = c.req.valid("json");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const event = await findEvent(c.var.db, organizationId, eventId);
-    if (!event) return c.json({ error: "Not found" }, 404);
-    if (statusOf(event) === "done") return c.json({ error: "This event is over." }, 409);
+    if (!event) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (statusOf(event) === "done") return c.json({ error: c.var.t("errors:eventIsOver") }, 409);
     if (!(await isExpected(c.var.db, eventId, me.id))) {
-      return c.json({ error: "You are not expected at this event." }, 409);
+      return c.json({ error: c.var.t("errors:notExpectedAtThisEvent") }, 409);
     }
 
     const existing = await c.var.db
@@ -295,7 +295,7 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.eventId, eventId), eq(leaveRequest.personId, me.id)))
       .limit(1);
     if (existing[0]) {
-      return c.json({ error: "You already asked for leave from this event." }, 409);
+      return c.json({ error: c.var.t("errors:alreadyAskedForLeave") }, 409);
     }
 
     const id = crypto.randomUUID();
@@ -328,10 +328,10 @@ export const leaveRoutes = base
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
     const { id } = c.req.valid("param");
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const me = await personForUser(c.var.db, organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in the directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
     const found = await c.var.db
       .select()
@@ -339,8 +339,9 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.id, id), eq(leaveRequest.personId, me.id)))
       .limit(1);
     const request = found[0];
-    if (!request) return c.json({ error: "Not found" }, 404);
-    if (request.status !== "pending") return c.json({ error: "Already decided." }, 409);
+    if (!request) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (request.status !== "pending")
+      return c.json({ error: c.var.t("errors:alreadyDecided") }, 409);
 
     await c.var.db.delete(leaveRequest).where(eq(leaveRequest.id, id));
 
@@ -348,7 +349,7 @@ export const leaveRoutes = base
   })
   .openapi(queueRoute, async (c) => {
     if (roleBelow(c, "organizer")) {
-      return c.json({ error: "This needs the organizer role or higher" }, 403);
+      return c.json({ error: c.var.t("errors:needsOrganizer") }, 403);
     }
 
     const organizationId = organizationIdOf(c);
@@ -363,7 +364,7 @@ export const leaveRoutes = base
   })
   .openapi(decideRoute, async (c) => {
     if (roleBelow(c, "organizer")) {
-      return c.json({ error: "This needs the organizer role or higher" }, 403);
+      return c.json({ error: c.var.t("errors:needsOrganizer") }, 403);
     }
 
     const organizationId = organizationIdOf(c);
@@ -375,8 +376,9 @@ export const leaveRoutes = base
       .where(and(eq(leaveRequest.id, id), eq(leaveRequest.organizationId, organizationId)))
       .limit(1);
     const row = found[0];
-    if (!row) return c.json({ error: "Not found" }, 404);
-    if (row.request.status !== "pending") return c.json({ error: "Already decided." }, 409);
+    if (!row) return c.json({ error: c.var.t("errors:notFound") }, 404);
+    if (row.request.status !== "pending")
+      return c.json({ error: c.var.t("errors:alreadyDecided") }, 409);
 
     const now = new Date();
 

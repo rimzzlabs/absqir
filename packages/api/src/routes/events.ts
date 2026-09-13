@@ -577,7 +577,8 @@ async function reportStateFor(
     .otherwise((row) => ({ status: row.status }));
 }
 
-const FORBIDDEN_MESSAGE = "This needs the organizer role or higher";
+/** The key the role guard answers with when a reader is too junior. */
+const FORBIDDEN_KEY = "errors:needsOrganizer" as const;
 
 const app = new OpenAPIHono<AppEnv>();
 
@@ -588,7 +589,7 @@ app.use("/events/*", organizationGuard());
 
 export const eventRoutes = app
   .openapi(listRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const query = c.req.valid("query");
@@ -611,7 +612,7 @@ export const eventRoutes = app
     );
   })
   .openapi(createRouteDef, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
@@ -620,7 +621,7 @@ export const eventRoutes = app
     const endsAt = new Date(body.endsAt);
 
     if (!validTimes(startsAt, endsAt)) {
-      return c.json({ error: "The event must end after it starts." }, 400);
+      return c.json({ error: c.var.t("errors:eventMustEndAfterStart") }, 400);
     }
 
     const groupIds = await validGroupIds(c, body.groupIds);
@@ -663,7 +664,7 @@ export const eventRoutes = app
     return c.json(json, 201);
   })
   .openapi(detailRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
@@ -671,20 +672,20 @@ export const eventRoutes = app
 
     await settle(c.var.db, organizationId, now);
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const [json] = await toEventJson(c.var.db, [found], now);
     return c.json(json, 200);
   })
   .openapi(updateRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const startsAt = match(body.startsAt)
       .with(P.string.minLength(1), (startsAt) => new Date(startsAt))
@@ -694,7 +695,7 @@ export const eventRoutes = app
       .otherwise(() => found.endsAt);
 
     if (!validTimes(startsAt, endsAt)) {
-      return c.json({ error: "The event must end after it starts." }, 400);
+      return c.json({ error: c.var.t("errors:eventMustEndAfterStart") }, 400);
     }
 
     const groupIds = await pipe(
@@ -768,29 +769,29 @@ export const eventRoutes = app
     return c.json(json, 200);
   })
   .openapi(removeRoute, async (c) => {
-    if (roleBelow(c, "admin")) return c.json({ error: "This needs the admin role or higher" }, 403);
+    if (roleBelow(c, "admin")) return c.json({ error: c.var.t("errors:needsAdmin") }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     await c.var.db.delete(eventTable).where(eq(eventTable.id, id));
 
     return c.json({ deleted: true as const }, 200);
   })
   .openapi(openRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
     if (statusOf(found, now) === "done") {
-      return c.json({ error: "This event is over." }, 409);
+      return c.json({ error: c.var.t("errors:eventIsOver") }, 409);
     }
 
     if (!found.openedAt) {
@@ -807,14 +808,14 @@ export const eventRoutes = app
     return c.json(json, 200);
   })
   .openapi(closeRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     if (!found.closedAt) {
       await finalizeEvent(
@@ -833,19 +834,19 @@ export const eventRoutes = app
     return c.json(json, 200);
   })
   .openapi(recordsRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
     await settle(c.var.db, organizationId);
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json([...(await eventRecords(c.var.db, id))], 200);
   })
   .openapi(setRecordRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id, personId } = c.req.valid("param");
@@ -853,14 +854,14 @@ export const eventRoutes = app
     const user = c.get("user");
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const people = await c.var.db
       .select({ id: schema.person.id })
       .from(schema.person)
       .where(and(eq(schema.person.id, personId), eq(schema.person.organizationId, organizationId)))
       .limit(1);
-    if (!people[0]) return c.json({ error: "Not found" }, 404);
+    if (!people[0]) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const current = await existingRecord(c.var.db, id, personId);
     const checkedInAt = match(status === "present" || status === "late")
@@ -884,14 +885,14 @@ export const eventRoutes = app
     return c.json(record, 200);
   })
   .openapi(qrTokenRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const { token, expiresAt } = await createQrToken({ secret: found.secret, eventId: id, now });
 
@@ -911,13 +912,13 @@ export const eventRoutes = app
     const { token, location } = c.req.valid("json");
     const now = new Date();
 
-    if (!user) return c.json({ error: "Unauthorized" }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     // The scanned link may point at an event of another organization the
     // reader belongs to, so membership is checked on the event's own.
     const rows = await c.var.db.select().from(eventTable).where(eq(eventTable.id, id)).limit(1);
     const found = rows[0];
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const memberships = await c.var.db
       .select({ id: member.id })
@@ -925,22 +926,22 @@ export const eventRoutes = app
       .where(and(eq(member.organizationId, found.organizationId), eq(member.userId, user.id)))
       .limit(1);
     if (!memberships[0]) {
-      return c.json({ error: "You are not a member of this organization." }, 403);
+      return c.json({ error: c.var.t("errors:notAMemberOfThisOrganization") }, 403);
     }
 
     const valid = await verifyQrToken({ secret: found.secret, eventId: id, token, now });
-    if (!valid) return c.json({ error: "The QR code expired. Scan the screen again." }, 401);
+    if (!valid) return c.json({ error: c.var.t("errors:qrCodeExpired") }, 401);
 
     if (!acceptsCheckIns(found, now)) {
-      return c.json({ error: "Check-in is not open for this event." }, 410);
+      return c.json({ error: c.var.t("errors:checkInNotOpen") }, 410);
     }
 
     const me = await personForUser(c.var.db, found.organizationId, user.id);
-    if (!me) return c.json({ error: "You are not in this organization's directory yet." }, 403);
+    if (!me) return c.json({ error: c.var.t("errors:youAreNotInThisDirectory") }, 403);
 
     const expected = await isExpected(c.var.db, id, me.id);
     if (!expected && !found.allowWalkIns) {
-      return c.json({ error: "You are not on the list for this event." }, 403);
+      return c.json({ error: c.var.t("errors:notOnTheListForThisEvent") }, 403);
     }
 
     const current = await existingRecord(c.var.db, id, me.id);
@@ -968,6 +969,7 @@ export const eventRoutes = app
       claim,
       network,
       method: "screen",
+      t: c.var.t,
     });
 
     const attempt = {
@@ -990,7 +992,7 @@ export const eventRoutes = app
 
       return c.json(
         {
-          error: decision.message ?? "You are not at this event's place.",
+          error: decision.message ?? c.var.t("errors:notAtThePlace"),
           location: {
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
@@ -1037,7 +1039,7 @@ export const eventRoutes = app
     );
   })
   .openapi(reviewRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id, personId } = c.req.valid("param");
@@ -1045,7 +1047,7 @@ export const eventRoutes = app
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     // The signals are never erased. Clearing the flag says an organizer read
     // them and let the record stand, which is itself worth keeping.
@@ -1060,12 +1062,12 @@ export const eventRoutes = app
       )
       .returning();
 
-    if (!updated) return c.json({ error: "Not found" }, 404);
+    if (!updated) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json({ reviewedAt: now.toISOString() }, 200);
   })
   .openapi(scanRoute, async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
@@ -1073,17 +1075,17 @@ export const eventRoutes = app
     const now = new Date();
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const pass = parsePass(code.trim());
-    if (!pass) return c.json({ error: "That is not an absqir pass." }, 400);
-    if (pass.eventId !== id) return c.json({ error: "This pass is for another event." }, 400);
+    if (!pass) return c.json({ error: c.var.t("errors:notAnAbsqirPass") }, 400);
+    if (pass.eventId !== id) return c.json({ error: c.var.t("errors:passForAnotherEvent") }, 400);
     if (!(await verifyPass(found.secret, pass))) {
-      return c.json({ error: "This pass does not check out." }, 400);
+      return c.json({ error: c.var.t("errors:passDoesNotCheckOut") }, 400);
     }
 
     if (!acceptsCheckIns(found, now)) {
-      return c.json({ error: "Check-in is not open for this event." }, 410);
+      return c.json({ error: c.var.t("errors:checkInNotOpen") }, 410);
     }
 
     const people = await c.var.db
@@ -1094,7 +1096,7 @@ export const eventRoutes = app
       )
       .limit(1);
     const who = people[0];
-    if (!who) return c.json({ error: "Not found" }, 404);
+    if (!who) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const current = await existingRecord(c.var.db, id, who.id);
     if (current?.checkedInAt) {
@@ -1124,6 +1126,7 @@ export const eventRoutes = app
       claim,
       network,
       method: "scanner",
+      t: c.var.t,
     });
 
     const attempt = {
@@ -1143,7 +1146,7 @@ export const eventRoutes = app
 
       return c.json(
         {
-          error: decision.message ?? "This scanner is not at the event's place.",
+          error: decision.message ?? c.var.t("errors:scannerNotAtThePlace"),
           location: {
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
@@ -1188,13 +1191,13 @@ export const eventRoutes = app
     );
   })
   .get("/events/:id/records.csv", async (c) => {
-    if (roleBelow(c, "organizer")) return c.json({ error: FORBIDDEN_MESSAGE }, 403);
+    if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);
 
     const organizationId = organizationIdOf(c);
     const id = c.req.param("id");
 
     const found = await findEvent(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const records = await eventRecords(c.var.db, id);
 

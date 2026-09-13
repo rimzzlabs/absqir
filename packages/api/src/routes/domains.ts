@@ -209,14 +209,11 @@ export const domainRoutes = app
     const domain = normalizeDomain(c.req.valid("json").domain);
 
     if (domain === null) {
-      return c.json({ error: "That is not a domain name." }, 400);
+      return c.json({ error: c.var.t("errors:notADomainName") }, 400);
     }
 
     if (!isClaimableDomain(domain)) {
-      return c.json(
-        { error: `${domain} belongs to a mailbox provider, so no workspace can claim it.` },
-        400,
-      );
+      return c.json({ error: c.var.t("errors:mailboxProviderDomain", { domain }) }, 400);
     }
 
     const taken = await c.var.db
@@ -244,7 +241,7 @@ export const domainRoutes = app
       .limit(MAX_DOMAINS);
 
     if (count.length >= MAX_DOMAINS) {
-      return c.json({ error: `An organization can claim ${MAX_DOMAINS} domains at most.` }, 400);
+      return c.json({ error: c.var.t("errors:domainLimit", { count: MAX_DOMAINS }) }, 400);
     }
 
     const [row] = await c.var.db
@@ -274,7 +271,7 @@ export const domainRoutes = app
       .limit(1);
 
     const found = rows[0];
-    if (!found) return c.json({ error: "No such domain." }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:noSuchDomain") }, 404);
     if (found.verifiedAt) return c.json(toJson(found), 200);
 
     const wanted = domainVerificationRecord(found.verificationToken);
@@ -283,7 +280,7 @@ export const domainRoutes = app
     // A resolver that never answered is not a record that is missing. Saying
     // "still not verified" here would send the operator to fix working DNS.
     if (O.isNone(records)) {
-      return c.json({ error: "The DNS lookup did not finish. Try again shortly." }, 502);
+      return c.json({ error: c.var.t("errors:dnsLookupUnfinished") }, 502);
     }
 
     if (!records.includes(wanted)) return c.json(toJson(found), 200);
@@ -309,7 +306,7 @@ export const domainRoutes = app
       )
       .returning({ id: organizationDomain.id });
 
-    if (!deleted[0]) return c.json({ error: "No such domain." }, 404);
+    if (!deleted[0]) return c.json({ error: c.var.t("errors:noSuchDomain") }, 404);
 
     return c.json({ ok: true }, 200);
   })

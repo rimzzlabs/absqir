@@ -66,6 +66,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     runtime.bindings,
     context.url.origin,
     context.request.headers.get("origin"),
+    context.request.headers.get("accept-language"),
   );
 
   // The browser's own preference, until a signed-in account names another.

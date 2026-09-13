@@ -218,7 +218,7 @@ export const locationRoutes = app
       return c.json(toJson(created, 0, 0), 201);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "A place with that name exists." }, 409);
+        return c.json({ error: c.var.t("errors:placeNameTaken") }, 409);
       }
 
       throw error;
@@ -232,7 +232,7 @@ export const locationRoutes = app
     const body = c.req.valid("json");
 
     const found = await findLocation(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     try {
       const [updated] = await c.var.db
@@ -250,14 +250,14 @@ export const locationRoutes = app
         .where(eq(location.id, id))
         .returning();
 
-      if (!updated) return c.json({ error: "Not found" }, 404);
+      if (!updated) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
       const usage = await usageOf(c.var.db, id);
 
       return c.json(toJson(updated, usage.eventCount, usage.scheduleCount), 200);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        return c.json({ error: "A place with that name exists." }, 409);
+        return c.json({ error: c.var.t("errors:placeNameTaken") }, 409);
       }
 
       throw error;
@@ -270,7 +270,7 @@ export const locationRoutes = app
     const { id } = c.req.valid("param");
 
     const found = await findLocation(c.var.db, organizationId, id);
-    if (!found) return c.json({ error: "Not found" }, 404);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     await c.var.db.delete(location).where(eq(location.id, id));
 

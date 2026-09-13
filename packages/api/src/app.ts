@@ -31,7 +31,10 @@ import type { AppEnv } from "#src/types";
 const app = new OpenAPIHono<AppEnv>({
   defaultHook: (result, c) => {
     if (!result.success) {
-      return c.json({ error: "Validation failed", issues: result.error.issues }, 422);
+      return c.json(
+        { error: c.var.t("errors:validationFailed"), issues: result.error.issues },
+        422,
+      );
     }
   },
 }).basePath("/api");
@@ -78,11 +81,11 @@ app.onError((error, c) => {
       console.error({ requestId, error: unknown });
 
       // The message can carry a connection string or a query, so it never ships.
-      return c.json({ error: "Internal server error", requestId }, 500);
+      return c.json({ error: c.var.t("errors:internalServerError"), requestId }, 500);
     });
 });
 
-app.notFound((c) => c.json({ error: "Not found" }, 404));
+app.notFound((c) => c.json({ error: c.var.t("errors:notFound") }, 404));
 
 export { app };
 export type AppType = typeof routes;

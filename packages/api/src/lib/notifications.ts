@@ -1,6 +1,7 @@
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
+import { type Locale, translatorFor } from "@absqir/i18n";
 import type { Mailer } from "@absqir/transactional";
 import { A, pipe } from "@mobily/ts-belt";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
@@ -36,16 +37,34 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
   "check-in-decided",
 ]);
 
-const ACTIONS: Record<NotificationType, string> = {
-  "event-reminder": "Open my events",
-  "event-closed": "Open the event",
-  "leave-requested": "Open the queue",
-  "leave-decided": "Open my leave",
-  "join-requested": "Open the requests",
-  "join-decided": "Open absqir",
-  "check-in-reported": "Open the queue",
-  "check-in-decided": "Open my events",
-};
+/**
+ * The language each account reads in. A notification is written once per
+ * reader, so each row can carry that reader's own words.
+ */
+export async function localesFor(
+  db: Database,
+  userIds: readonly string[],
+): Promise<Map<string, Locale>> {
+  if (userIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: user.id, locale: user.locale })
+    .from(user)
+    .where(inArray(user.id, [...userIds]));
+
+  return new Map(
+    A.flatMap(rows, (row) =>
+      match(row.locale)
+        .with(P.nonNullable, (locale) => [[row.id, locale] as const])
+        .otherwise(() => []),
+    ),
+  );
+}
+
+/** The translator for one reader, English for an account that chose nothing. */
+export function translatorFrom(locales: Map<string, Locale>, userId: string) {
+  return translatorFor(locales.get(userId) ?? "en");
+}
 
 /** A channel a written row can carry. `none` never reaches the table. */
 export type DeliveredChannel = Exclude<NotificationChannel, "none">;
@@ -150,7 +169,10 @@ export async function emailNotifications(
   const organizationIds = [...new Set(A.map(worth, (row) => row.organizationId))];
 
   const [people, organizations] = await Promise.all([
-    db.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, userIds)),
+    db
+      .select({ id: user.id, email: user.email, locale: user.locale })
+      .from(user)
+      .where(inArray(user.id, userIds)),
     db
       .select({ id: organization.id, name: organization.name })
       .from(organization)
@@ -158,19 +180,25 @@ export async function emailNotifications(
   ]);
 
   const emailOf = new Map(A.map(people, (row) => [row.id, row.email]));
+  const localeOf = new Map(A.map(people, (row) => [row.id, row.locale ?? "en"] as const));
   const nameOf = new Map(A.map(organizations, (row) => [row.id, row.name]));
 
   for (const row of worth) {
     const to = emailOf.get(row.userId);
     if (!to) continue;
 
+    const locale = localeOf.get(row.userId) ?? "en";
+    const t = translatorFor(locale);
+
     try {
       await mailer.sendNotification(to, {
+        locale,
         title: row.title,
         body: row.body,
-        organizationName: nameOf.get(row.organizationId) ?? "your organization",
+        organizationName:
+          nameOf.get(row.organizationId) ?? t("email:notification.yourOrganization"),
         url: `${origin}${row.href ?? "/notifications"}`,
-        action: ACTIONS[row.type],
+        action: t(`email:actions.${row.type}`),
       });
     } catch (error) {
       console.error({ message: "notification email failed", id: row.id, error });

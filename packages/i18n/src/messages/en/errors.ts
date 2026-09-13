@@ -162,4 +162,12 @@ export const errors = {
   sessionNotFresh: "You signed in a while ago. Sign out, sign in again, then retry this.",
   sessionNotFreshDelete: "You signed in a while ago. Sign out, sign in again, then delete it.",
   pictureTooDetailed: "That picture is too detailed to shrink. Try a simpler one.",
+  locationNeeded:
+    "This event checks where you are. Allow location in your browser, then scan again.",
+  noLocationSent: "Your device sent no location. Allow location in your browser, then scan again.",
+  locationTooVague:
+    "Your device could not place you accurately enough. Step outside or near a window, then scan again.",
+  tooFarAway: "You are about {{distance}} away. Move closer, then scan again.",
+  notAtThePlace: "You are not at this event's place.",
+  scannerNotAtThePlace: "This scanner is not at the event's place.",
 } as const;

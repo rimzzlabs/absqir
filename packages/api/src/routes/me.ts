@@ -271,7 +271,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   .openapi(devicesRoute, async (c) => {
     const current = c.get("user");
     const mine = c.get("session");
-    if (!current || !mine) return c.json({ error: "Unauthorized" }, 401);
+    if (!current || !mine) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const query = c.req.valid("query");
     const limit = query.limit ?? DEVICE_PAGE_SIZE;
@@ -339,7 +339,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(channelRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { channel } = c.req.valid("json");
 
@@ -361,11 +361,11 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(timezoneRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { timezone } = c.req.valid("json");
     if (timezone !== null && !isTimezone(timezone)) {
-      return c.json({ error: "Unknown time zone." }, 400);
+      return c.json({ error: c.var.t("errors:unknownTimeZone") }, 400);
     }
 
     await c.var.db
@@ -385,7 +385,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(localeRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { locale } = c.req.valid("json");
 
@@ -406,7 +406,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(updateRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const { name, image } = c.req.valid("json");
 
@@ -426,7 +426,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(credentialsRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const rows = await c.var.db
       .select({ id: account.id, providerId: account.providerId })
@@ -450,7 +450,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
   })
   .openapi(setPasswordRoute, async (c) => {
     const current = c.get("user");
-    if (!current) return c.json({ error: "Unauthorized" }, 401);
+    if (!current) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
     const existing = await c.var.db
       .select({ id: account.id })
@@ -459,7 +459,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
       .limit(1);
 
     if (existing[0]) {
-      return c.json({ error: "This account already has a password. Change it instead." }, 400);
+      return c.json({ error: c.var.t("errors:accountAlreadyHasPassword") }, 400);
     }
 
     const { password } = c.req.valid("json");
@@ -476,7 +476,7 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
     const session = c.get("session");
 
     if (!user || !session) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: c.var.t("errors:unauthorized") }, 401);
     }
 
     const rows = await c.var.db

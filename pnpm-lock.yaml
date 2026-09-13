@@ -349,6 +349,9 @@ importers:
       '@absqir/core':
         specifier: workspace:^
         version: link:../core
+      '@absqir/i18n':
+        specifier: workspace:^
+        version: link:../i18n
       '@mobily/ts-belt':
         specifier: 4.0.0-rc.5
         version: 4.0.0-rc.5

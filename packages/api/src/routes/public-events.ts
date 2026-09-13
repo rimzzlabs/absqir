@@ -109,17 +109,17 @@ export const publicEventRoutes = new OpenAPIHono<AppEnv>()
   .openapi(detailRoute, async (c) => {
     const { id } = c.req.valid("param");
     const json = await eventJson(c, id);
-    if (!json) return c.json({ error: "Not found" }, 404);
+    if (!json) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json(json, 200);
   })
   .openapi(registerRoute, async (c) => {
     const { id } = c.req.valid("param");
     const user = c.get("user");
-    if (!user) return c.json({ error: "Sign in first." }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:signInFirst") }, 401);
 
     const found = await findPublicEvent(c.var.db, id);
-    if (!found?.event.registrationOpen) return c.json({ error: "Not found" }, 404);
+    if (!found?.event.registrationOpen) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     const result = await registerForEvent(c.var.db, { event: found.event, user });
     if (!result.ok) return c.json({ error: REASONS[result.reason] }, 409);
@@ -137,19 +137,19 @@ export const publicEventRoutes = new OpenAPIHono<AppEnv>()
     }
 
     const json = await eventJson(c, id);
-    if (!json) return c.json({ error: "Not found" }, 404);
+    if (!json) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json(json, 200);
   })
   .openapi(withdrawRoute, async (c) => {
     const { id } = c.req.valid("param");
     const user = c.get("user");
-    if (!user) return c.json({ error: "Sign in first." }, 401);
+    if (!user) return c.json({ error: c.var.t("errors:signInFirst") }, 401);
 
     const found = await findPublicEvent(c.var.db, id);
-    if (!found?.event.registrationOpen) return c.json({ error: "Not found" }, 404);
+    if (!found?.event.registrationOpen) return c.json({ error: c.var.t("errors:notFound") }, 404);
     if (statusOf(found.event) !== "scheduled") {
-      return c.json({ error: "The event already started." }, 409);
+      return c.json({ error: c.var.t("errors:eventAlreadyStarted") }, 409);
     }
 
     const me = await personForUser(c.var.db, found.event.organizationId, user.id);
@@ -160,7 +160,7 @@ export const publicEventRoutes = new OpenAPIHono<AppEnv>()
     }
 
     const json = await eventJson(c, id);
-    if (!json) return c.json({ error: "Not found" }, 404);
+    if (!json) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
     return c.json(json, 200);
   });

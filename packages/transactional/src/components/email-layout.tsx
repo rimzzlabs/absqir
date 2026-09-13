@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { A } from "@mobily/ts-belt";
 import { Body, Head, Html, Img, Preview } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
@@ -7,6 +8,8 @@ import { CONTENT_WIDTH, color, font } from "#src/theme";
 export interface EmailLayoutProps {
   /** The line the inbox shows beside the subject. */
   preview: string;
+  /** The language this message reads in, for the `lang` of the document. */
+  locale: Locale;
   /** The instance origin. Undefined on a self-host that never set APP_URL. */
   appUrl?: string;
   /** The small print under the card that says why the message arrived. */
@@ -101,10 +104,10 @@ const footnote: CSSProperties = {
  * and little else.
  */
 export function EmailLayout(props: EmailLayoutProps) {
-  const { preview, appUrl, footer, children } = props;
+  const { preview, appUrl, footer, children, locale } = props;
 
   return (
-    <Html lang="en" dir="ltr">
+    <Html lang={locale} dir="ltr">
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />

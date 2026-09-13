@@ -1,5 +1,6 @@
 import type { Auth, RoleName, Session } from "@absqir/auth";
 import type { Database } from "@absqir/db";
+import type { Locale, Translate } from "@absqir/i18n";
 import type { Mailer } from "@absqir/transactional";
 import type { RequestIdVariables } from "hono/request-id";
 import type { ApiBindings } from "#src/bindings";
@@ -12,6 +13,10 @@ export interface AppEnv {
     /** Null when the instance sends no email. */
     mailer: Mailer | null;
     user: Session["user"] | null;
+    /** The language this answer reads in. */
+    locale: Locale;
+    /** The message reader for that language. */
+    t: Translate;
     session: Session["session"] | null;
     /** Set by organizationGuard after it proves membership. */
     organizationId?: string;

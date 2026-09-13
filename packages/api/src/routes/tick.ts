@@ -40,10 +40,10 @@ const app = new OpenAPIHono<AppEnv>();
 
 export const tickRoutes = app.openapi(tickRoute, async (c) => {
   const env = parseEnv(c.env);
-  if (!env.CRON_SECRET) return c.json({ error: "Not found" }, 404);
+  if (!env.CRON_SECRET) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
   const token = c.req.header("authorization")?.replace(/^Bearer /i, "");
-  if (token !== env.CRON_SECRET) return c.json({ error: "Unauthorized" }, 401);
+  if (token !== env.CRON_SECRET) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
 
   const result = await runTick(c.var.db, {
     mailer: c.var.mailer,
