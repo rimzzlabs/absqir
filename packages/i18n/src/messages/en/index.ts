@@ -14,7 +14,7 @@ import { leave } from "#src/messages/en/leave";
 import { my } from "#src/messages/en/my";
 import { notifications } from "#src/messages/en/notifications";
 import { onboarding } from "#src/messages/en/onboarding";
-import { publicEvent } from "#src/messages/en/publicEvent";
+import { publicEvent } from "#src/messages/en/public-event";
 import { reports } from "#src/messages/en/reports";
 import { schedules } from "#src/messages/en/schedules";
 import { settings } from "#src/messages/en/settings";
