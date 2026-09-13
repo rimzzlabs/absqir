@@ -303,3 +303,74 @@ export async function notifyJoinDecided(
     },
   ]);
 }
+
+export interface CheckInReportedParams {
+  organizationId: string;
+  reportId: string;
+  /** The member, as the organizers will read it. */
+  personName: string;
+  eventTitle: string;
+  message: string;
+}
+
+/**
+ * Tells the organizers that the place check turned somebody away who says
+ * they were there. Nobody watches a queue they were never pointed at, and a
+ * report nobody reads leaves the member absent.
+ */
+export async function notifyCheckInReported(
+  db: Database,
+  params: CheckInReportedParams,
+): Promise<NotificationRow[]> {
+  const userIds = await managerUserIds(db, params.organizationId);
+  if (userIds.length === 0) return [];
+
+  return createNotifications(
+    db,
+    A.map(userIds, (userId) => ({
+      organizationId: params.organizationId,
+      userId,
+      type: "check-in-reported" as const,
+      title: `${params.personName} could not check in to ${params.eventTitle}`,
+      body: params.message,
+      href: "/check-in-problems",
+      dedupeKey: `check-in-reported:${params.reportId}:${userId}`,
+    })),
+  );
+}
+
+export interface CheckInDecidedParams {
+  organizationId: string;
+  reportId: string;
+  /** Null when the person has no account yet, and so nothing to read it with. */
+  userId: string | null;
+  eventTitle: string;
+  approved: boolean;
+  note: string | null;
+}
+
+/** Tells the member what came of their report. */
+export async function notifyCheckInDecided(
+  db: Database,
+  params: CheckInDecidedParams,
+): Promise<NotificationRow[]> {
+  if (!params.userId) return [];
+
+  return createNotifications(db, [
+    {
+      organizationId: params.organizationId,
+      userId: params.userId,
+      type: "check-in-decided",
+      title: match(params.approved)
+        .with(true, () => `You are marked in for ${params.eventTitle}`)
+        .otherwise(() => `Your report about ${params.eventTitle} was not accepted`),
+      body:
+        params.note ??
+        match(params.approved)
+          .with(true, () => "The record uses the time you scanned, not the time this was decided.")
+          .otherwise(() => "The record stays as it is. Talk to an organizer if that is wrong."),
+      href: "/my/events",
+      dedupeKey: `check-in-decided:${params.reportId}`,
+    },
+  ]);
+}

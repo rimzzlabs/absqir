@@ -7,6 +7,8 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 import { statusForCheckIn } from "#src/lib/event-status";
 import { findEvent, personForUser, upsertRecord } from "#src/lib/events";
+import { deliver } from "#src/lib/notifications";
+import { notifyCheckInDecided, notifyCheckInReported } from "#src/lib/notify";
 import { organizationGuard, organizationIdOf, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
 
@@ -295,6 +297,18 @@ export const checkInReportRoutes = app
     const [created] = await rows(c).where(eq(checkInReport.id, id)).limit(1);
     if (!created) throw new Error("Insert returned no row");
 
+    // Nobody watches a queue they were never pointed at.
+    deliver(
+      c,
+      await notifyCheckInReported(c.var.db, {
+        organizationId,
+        reportId: id,
+        personName: me.name,
+        eventTitle: event.title,
+        message,
+      }),
+    );
+
     return c.json(toJson(created, await priorCountFor(c, me.id, id)), 201);
   })
   .openapi(queueRoute, async (c) => {
@@ -365,6 +379,25 @@ export const checkInReportRoutes = app
 
     const [updated] = await rows(c).where(eq(checkInReport.id, id)).limit(1);
     if (!updated) throw new Error("Update returned no row");
+
+    // The person row carries the account, when there is one to tell.
+    const owners = await c.var.db
+      .select({ userId: person.userId })
+      .from(person)
+      .where(eq(person.id, found.person.id))
+      .limit(1);
+
+    deliver(
+      c,
+      await notifyCheckInDecided(c.var.db, {
+        organizationId,
+        reportId: id,
+        userId: owners[0]?.userId ?? null,
+        eventTitle: found.event.title,
+        approved: approve,
+        note: note?.trim() || null,
+      }),
+    );
 
     return c.json(toJson(updated, await priorCountFor(c, updated.person.id, id)), 200);
   });

@@ -13,6 +13,7 @@ import {
 import { useEffect } from "react";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
+import { ReportAction } from "@/components/check-in/report-action";
 import { Providers } from "@/components/providers";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useCheckIn } from "@/mutations/use-check-in";
@@ -76,6 +77,19 @@ function CheckInBody(props: CheckInPageProps) {
           <WarningCircleIcon weight="fill" className="text-destructive size-8" />
         </Mark>
         <AuthHeading title="Not checked in" description={error.message} />
+
+        {/* The camera on a phone opens this page, so most refusals land here
+            rather than in the app's own scanner. The way back belongs here too. */}
+        {match(checkIn.locationRefusal)
+          .with(P.nonNullable, (refusal) => (
+            <ReportAction
+              key={refusal.attemptId ?? props.eventId}
+              eventId={props.eventId}
+              attemptId={refusal.attemptId}
+              refusal={error.message}
+            />
+          ))
+          .otherwise(() => null)}
 
         {/* The token lives in this page's address. Once it has expired a
             reload replays the same dead token and fails the same way, so the

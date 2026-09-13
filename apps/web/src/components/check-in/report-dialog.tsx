@@ -24,6 +24,8 @@ export interface ReportDialogProps {
   attemptId: string | null;
   /** What the server said, repeated back so the member knows what they report. */
   refusal: string;
+  /** Fired once the report lands, so the page behind can stop offering it. */
+  onSent: () => void;
 }
 
 /**
@@ -97,11 +99,14 @@ export function ReportDialog(props: ReportDialogProps) {
                 event.preventDefault();
                 if (!ready) return;
 
-                send.mutate({
-                  eventId: props.eventId,
-                  attemptId: props.attemptId,
-                  message: message.trim(),
-                });
+                send.mutate(
+                  {
+                    eventId: props.eventId,
+                    attemptId: props.attemptId,
+                    message: message.trim(),
+                  },
+                  { onSuccess: props.onSent },
+                );
               }}
               className="flex min-h-0 flex-1 flex-col gap-4"
               noValidate

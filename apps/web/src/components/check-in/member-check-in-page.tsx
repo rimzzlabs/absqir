@@ -6,14 +6,14 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
-import { FlagIcon, MapPinIcon, ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { MapPinIcon, ScanIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { match, P } from "ts-pattern";
 import { CheckInPass } from "@/components/check-in/check-in-pass";
 import { CheckInRecent } from "@/components/check-in/check-in-recent";
 import { CheckInResult } from "@/components/check-in/check-in-result";
 import { CheckInSteps } from "@/components/check-in/check-in-steps";
-import { ReportDialog } from "@/components/check-in/report-dialog";
+import { ReportAction } from "@/components/check-in/report-action";
 import { ScanViewfinder } from "@/components/check-in/scan-viewfinder";
 import { opensAtOf } from "@/components/my/opens-at";
 import { PassDialog } from "@/components/my/pass-dialog";
@@ -39,7 +39,6 @@ const BLOCK_EDGE = "rounded-xl border-0 ring-1 ring-foreground/10";
 function Scanner() {
   const checkIn = useCheckIn();
   const [manual, setManual] = useState("");
-  const [reporting, setReporting] = useState(false);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);
   const recent = useRef(new Map<string, number>());
@@ -136,11 +135,14 @@ function Scanner() {
                 {/* The place check is the one rule that can turn away somebody
                     who did everything right, so it is the one that offers a
                     way back. */}
-                {match(checkIn.locationRefusal)
-                  .with(P.nonNullable, () => (
-                    <Button variant="outline" size="sm" onClick={() => setReporting(true)}>
-                      <FlagIcon />I am here, tell the organizer
-                    </Button>
+                {match([lastEventId, checkIn.locationRefusal] as const)
+                  .with([P.string, P.nonNullable], ([eventId, refusal]) => (
+                    <ReportAction
+                      key={refusal.attemptId ?? eventId}
+                      eventId={eventId}
+                      attemptId={refusal.attemptId}
+                      refusal={error ?? ""}
+                    />
                   ))
                   .otherwise(() => null)}
               </AlertDescription>
@@ -180,18 +182,6 @@ function Scanner() {
       </CardContent>
 
       <CameraBlockedOverlay fault={camera.fault} onRetry={camera.retry} />
-
-      {match([lastEventId, checkIn.locationRefusal] as const)
-        .with([P.string, P.nonNullable], ([eventId, refusal]) => (
-          <ReportDialog
-            open={reporting}
-            onOpenChange={setReporting}
-            eventId={eventId}
-            attemptId={refusal.attemptId}
-            refusal={error ?? ""}
-          />
-        ))
-        .otherwise(() => null)}
     </Card>
   );
 }

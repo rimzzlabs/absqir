@@ -1,6 +1,8 @@
 import {
   CheckCircleIcon,
+  FlagIcon,
   type Icon,
+  MapPinIcon,
   NotePencilIcon,
   QrCodeIcon,
   SealCheckIcon,
@@ -17,4 +19,6 @@ export const NOTIFICATION_ICONS: Record<Notification["type"], Icon> = {
   "leave-decided": CheckCircleIcon,
   "join-requested": UserPlusIcon,
   "join-decided": UserCheckIcon,
+  "check-in-reported": FlagIcon,
+  "check-in-decided": MapPinIcon,
 };

@@ -36,6 +36,8 @@ export const NOTIFICATION_TYPES = [
   "leave-decided",
   "join-requested",
   "join-decided",
+  "check-in-reported",
+  "check-in-decided",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

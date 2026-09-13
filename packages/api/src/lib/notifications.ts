@@ -30,6 +30,10 @@ const EMAILED: ReadonlySet<NotificationType> = new Set([
   "leave-requested",
   "join-requested",
   "join-decided",
+  // A member who cannot check in is stuck until somebody reads this, and a
+  // decision changes their attendance record, so both leave the app.
+  "check-in-reported",
+  "check-in-decided",
 ]);
 
 const ACTIONS: Record<NotificationType, string> = {
@@ -39,6 +43,8 @@ const ACTIONS: Record<NotificationType, string> = {
   "leave-decided": "Open my leave",
   "join-requested": "Open the requests",
   "join-decided": "Open absqir",
+  "check-in-reported": "Open the queue",
+  "check-in-decided": "Open my events",
 };
 
 /** A channel a written row can carry. `none` never reaches the table. */
