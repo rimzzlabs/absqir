@@ -42,11 +42,11 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
       />
 
       <div className="flex items-center gap-5">
-        <Avatar size="lg" className="size-20">
+        <Avatar className="size-20">
           {match(image)
             .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
             .otherwise(() => null)}
-          <AvatarFallback name={props.status.name} className="text-lg">
+          <AvatarFallback name={props.status.name} className="text-2xl font-medium tracking-wide">
             {initialsOf(props.status.name)}
           </AvatarFallback>
         </Avatar>

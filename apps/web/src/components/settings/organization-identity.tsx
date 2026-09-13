@@ -48,26 +48,26 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
-      <Avatar size="lg" className="size-24">
+      <Avatar className="size-16">
         {match(logo)
           .with(P.string.minLength(1), (logo) => <AvatarImage src={logo} alt="" />)
           .otherwise(() => null)}
         <AvatarFallback
           name={props.organization.name}
-          className="text-2xl font-medium tracking-wide"
+          className="text-xl font-medium tracking-wide"
         >
           {initialsOf(props.organization.name)}
         </AvatarFallback>
       </Avatar>
 
       <div className="min-w-0 flex-1 basis-56">
-        <p className="font-heading truncate text-xl font-semibold tracking-tight">
+        <p className="font-heading truncate text-base font-semibold tracking-tight">
           {props.organization.name}
         </p>
         <p className="text-muted-foreground truncate font-mono text-sm">
           {props.organization.slug}
         </p>
-        <div className="mt-2">
+        <div className="mt-1.5">
           {match(current.data)
             .with(P.nullish, () => <Skeleton className="h-4 w-32" />)
             .otherwise((data) => (
