@@ -1,7 +1,7 @@
 import { formatDate } from "@absqir/core/date";
+import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { A } from "@mobily/ts-belt";
 import { ChartBarIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
@@ -20,6 +20,9 @@ type Query<T> = Pick<ReturnType<typeof useReportPeople>, "isPending" | "isError"
   data?: T[];
 };
 
+/** The four tallies every report row carries. */
+type Counts = PersonReportRow["counts"];
+
 function NothingHere(props: { title: string; description: string }) {
   return (
     <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -34,30 +37,35 @@ function NothingHere(props: { title: string; description: string }) {
   );
 }
 
-function TableFrame(props: { children: ReactNode }) {
-  return <div className="border-border overflow-x-auto rounded-xl border">{props.children}</div>;
+const TALLIES = [
+  { key: "present", header: "Present" },
+  { key: "late", header: "Late" },
+  { key: "excused", header: "Excused" },
+  { key: "absent", header: "Absent" },
+] as const satisfies readonly { key: keyof Counts; header: string }[];
+
+/** Present, late, excused and absent, the same four columns in every report. */
+function countColumns<T extends { counts: Counts }>(): readonly DataColumn<T>[] {
+  return A.map(TALLIES, (tally) => ({
+    key: tally.key,
+    header: tally.header,
+    cell: (row: T) => row.counts[tally.key],
+    cellClassName: "tabular-nums",
+  }));
 }
 
-function CountCells(props: { counts: PersonReportRow["counts"] }) {
-  return (
-    <>
-      <TableCell className="tabular-nums">{props.counts.present}</TableCell>
-      <TableCell className="tabular-nums">{props.counts.late}</TableCell>
-      <TableCell className="tabular-nums">{props.counts.excused}</TableCell>
-      <TableCell className="tabular-nums">{props.counts.absent}</TableCell>
-    </>
-  );
-}
-
-function RateCell(props: { rate: number | null; counts: PersonReportRow["counts"] }) {
-  return (
-    <TableCell className="w-36">
-      <div className="flex items-center gap-2">
-        <span className="w-10 tabular-nums">{ratePercent(props.rate)}</span>
-        <StatusBar counts={props.counts} className="w-20" />
+function rateColumn<T extends { counts: Counts; attendanceRate: number | null }>(): DataColumn<T> {
+  return {
+    key: "attendance",
+    header: "Attendance",
+    cell: (row) => (
+      <div className="flex items-center justify-end gap-2 md:justify-start">
+        <span className="w-10 tabular-nums">{ratePercent(row.attendanceRate)}</span>
+        <StatusBar counts={row.counts} className="w-20" />
       </div>
-    </TableCell>
-  );
+    ),
+    headClassName: "w-36",
+  };
 }
 
 /** Renders a table once its query settles, and the right blank state before. */
@@ -77,6 +85,33 @@ function ReportQuery<T>(props: {
     .otherwise(() => null);
 }
 
+const PEOPLE_COLUMNS: DataColumn<PersonReportRow>[] = [
+  {
+    key: "person",
+    header: "Person",
+    place: "primary",
+    cell: (row) => (
+      <>
+        {row.name}
+        {match(row.identifier)
+          .with(P.string.minLength(1), (identifier) => (
+            <p className="text-muted-foreground text-xs">{identifier}</p>
+          ))
+          .otherwise(() => null)}
+      </>
+    ),
+    cellClassName: "font-medium",
+  },
+  ...countColumns<PersonReportRow>(),
+  rateColumn<PersonReportRow>(),
+  {
+    key: "punctuality",
+    header: "On time",
+    cell: (row) => ratePercent(row.punctualityRate),
+    cellClassName: "tabular-nums",
+  },
+];
+
 export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
   return (
     <ReportQuery
@@ -88,42 +123,34 @@ export function PeopleReportTable(props: { query: Query<PersonReportRow> }) {
         />
       }
       render={(rows) => (
-        <TableFrame>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Person</TableHead>
-                <TableHead>Present</TableHead>
-                <TableHead>Late</TableHead>
-                <TableHead>Excused</TableHead>
-                <TableHead>Absent</TableHead>
-                <TableHead>Attendance</TableHead>
-                <TableHead>On time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {A.map(rows, (row) => (
-                <TableRow key={row.personId}>
-                  <TableCell className="font-medium">
-                    {row.name}
-                    {match(row.identifier)
-                      .with(P.string.minLength(1), (identifier) => (
-                        <p className="text-muted-foreground text-xs">{identifier}</p>
-                      ))
-                      .otherwise(() => null)}
-                  </TableCell>
-                  <CountCells counts={row.counts} />
-                  <RateCell rate={row.attendanceRate} counts={row.counts} />
-                  <TableCell className="tabular-nums">{ratePercent(row.punctualityRate)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableFrame>
+        <DataTable
+          label="Attendance by person"
+          columns={PEOPLE_COLUMNS}
+          rows={rows}
+          getKey={(row) => row.personId}
+        />
       )}
     />
   );
 }
+
+const GROUP_COLUMNS: DataColumn<GroupReportRow>[] = [
+  {
+    key: "group",
+    header: "Group",
+    place: "primary",
+    cell: (row) => row.name,
+    cellClassName: "font-medium",
+  },
+  {
+    key: "people",
+    header: "People",
+    cell: (row) => row.people,
+    cellClassName: "tabular-nums",
+  },
+  ...countColumns<GroupReportRow>(),
+  rateColumn<GroupReportRow>(),
+];
 
 export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
   return (
@@ -136,35 +163,40 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
         />
       }
       render={(rows) => (
-        <TableFrame>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Group</TableHead>
-                <TableHead>People</TableHead>
-                <TableHead>Present</TableHead>
-                <TableHead>Late</TableHead>
-                <TableHead>Excused</TableHead>
-                <TableHead>Absent</TableHead>
-                <TableHead>Attendance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {A.map(rows, (row) => (
-                <TableRow key={row.groupId}>
-                  <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell className="tabular-nums">{row.people}</TableCell>
-                  <CountCells counts={row.counts} />
-                  <RateCell rate={row.attendanceRate} counts={row.counts} />
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableFrame>
+        <DataTable
+          label="Attendance by group"
+          columns={GROUP_COLUMNS}
+          rows={rows}
+          getKey={(row) => row.groupId}
+        />
       )}
     />
   );
 }
+
+const EVENT_COLUMNS: DataColumn<EventReportRow>[] = [
+  {
+    key: "event",
+    header: "Event",
+    place: "primary",
+    cell: (row) => (
+      <>
+        <a href={`/events/${row.eventId}`} className="hover:underline">
+          {row.title}
+        </a>
+        <p className="text-muted-foreground text-xs">
+          {formatDate(new Date(row.startsAt), "weekdayDateTime")}
+          {match(row.closed)
+            .with(true, () => "" as const)
+            .otherwise(() => " · still open" as const)}
+        </p>
+      </>
+    ),
+    cellClassName: "font-medium",
+  },
+  ...countColumns<EventReportRow>(),
+  rateColumn<EventReportRow>(),
+];
 
 export function EventReportTable(props: { query: Query<EventReportRow> }) {
   return (
@@ -177,39 +209,12 @@ export function EventReportTable(props: { query: Query<EventReportRow> }) {
         />
       }
       render={(rows) => (
-        <TableFrame>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Present</TableHead>
-                <TableHead>Late</TableHead>
-                <TableHead>Excused</TableHead>
-                <TableHead>Absent</TableHead>
-                <TableHead>Attendance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {A.map(rows, (row) => (
-                <TableRow key={row.eventId}>
-                  <TableCell className="font-medium">
-                    <a href={`/events/${row.eventId}`} className="hover:underline">
-                      {row.title}
-                    </a>
-                    <p className="text-muted-foreground text-xs">
-                      {formatDate(new Date(row.startsAt), "weekdayDateTime")}
-                      {match(row.closed)
-                        .with(true, () => "" as const)
-                        .otherwise(() => " · still open" as const)}
-                    </p>
-                  </TableCell>
-                  <CountCells counts={row.counts} />
-                  <RateCell rate={row.attendanceRate} counts={row.counts} />
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableFrame>
+        <DataTable
+          label="Attendance by event"
+          columns={EVENT_COLUMNS}
+          rows={rows}
+          getKey={(row) => row.eventId}
+        />
       )}
     />
   );

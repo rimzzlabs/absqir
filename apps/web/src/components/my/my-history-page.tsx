@@ -1,8 +1,8 @@
 import { formatDate, formatRange } from "@absqir/core/date";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
+import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { A } from "@mobily/ts-belt";
 import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
@@ -47,6 +47,42 @@ function Summary(props: { rows: HistoryRow[] }) {
   );
 }
 
+const HISTORY_COLUMNS: DataColumn<HistoryRow>[] = [
+  {
+    key: "title",
+    header: "Event",
+    place: "primary",
+    cell: (row) => row.title,
+    cellClassName: "font-medium",
+  },
+  {
+    key: "when",
+    header: "When",
+    cell: (row) => formatRange(new Date(row.startsAt), new Date(row.endsAt)),
+    cellClassName: "text-muted-foreground",
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <AttendanceStatusBadge status={row.status} />,
+  },
+  {
+    key: "checkedIn",
+    header: "Checked in",
+    cell: (row) => (
+      <>
+        {match(row.checkedInAt)
+          .with(P.string.minLength(1), (checkedInAt) => formatDate(new Date(checkedInAt), "time"))
+          .otherwise(() => "—" as const)}
+        {match(row.note)
+          .with(P.string.minLength(1), (note) => ` · ${note}`)
+          .otherwise(() => "" as const)}
+      </>
+    ),
+    cellClassName: "text-muted-foreground tabular-nums",
+  },
+];
+
 function HistoryBody() {
   const history = useMyHistory();
 
@@ -76,41 +112,12 @@ function HistoryBody() {
             .otherwise(() => (
               <>
                 <Summary rows={rows} />
-                <div className="border-border overflow-x-auto rounded-xl border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Event</TableHead>
-                        <TableHead>When</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Checked in</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {A.map(rows, (row) => (
-                        <TableRow key={row.eventId}>
-                          <TableCell className="font-medium">{row.title}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
-                          </TableCell>
-                          <TableCell>
-                            <AttendanceStatusBadge status={row.status} />
-                          </TableCell>
-                          <TableCell className="text-muted-foreground tabular-nums">
-                            {match(row.checkedInAt)
-                              .with(P.string.minLength(1), (checkedInAt) =>
-                                formatDate(new Date(checkedInAt), "time"),
-                              )
-                              .otherwise(() => "—" as const)}
-                            {match(row.note)
-                              .with(P.string.minLength(1), (note) => ` · ${note}`)
-                              .otherwise(() => "" as const)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <DataTable
+                  label="Your record, event by event"
+                  columns={HISTORY_COLUMNS}
+                  rows={rows}
+                  getKey={(row) => row.eventId}
+                />
               </>
             )),
         )

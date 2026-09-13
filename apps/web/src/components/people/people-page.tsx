@@ -1,9 +1,9 @@
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
+import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { A } from "@mobily/ts-belt";
 import {
   IdentificationCardIcon,
@@ -37,6 +37,67 @@ function StatusBadge(props: { person: Person }) {
   return <Badge variant="outline">No email</Badge>;
 }
 
+function GroupsCell(props: { person: Person }) {
+  return (
+    <div className="flex flex-wrap justify-end gap-1 md:justify-start">
+      {match(props.person.groups.length)
+        .with(0, () => <span className="text-muted-foreground">—</span>)
+        .otherwise(() =>
+          A.map(props.person.groups, (group) => (
+            <Badge key={group.id} variant="outline">
+              {group.name}
+            </Badge>
+          )),
+        )}
+    </div>
+  );
+}
+
+const ACTIONS_COLUMN: DataColumn<Person> = {
+  key: "actions",
+  place: "action",
+  headClassName: "w-12",
+  cell: (person) => <PersonRowActions person={person} />,
+};
+
+function peopleColumns(canManage: boolean): DataColumn<Person>[] {
+  const base: DataColumn<Person>[] = [
+    {
+      key: "name",
+      header: "Name",
+      place: "primary",
+      cell: (person) => person.name,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (person) => person.email ?? "—",
+      cellClassName: "text-muted-foreground",
+    },
+    {
+      key: "identifier",
+      header: "Identifier",
+      cell: (person) => person.identifier ?? "—",
+      cellClassName: "font-mono text-xs",
+    },
+    {
+      key: "groups",
+      header: "Groups",
+      cell: (person) => <GroupsCell person={person} />,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (person) => <StatusBadge person={person} />,
+    },
+  ];
+
+  return match(canManage)
+    .with(true, () => [...base, ACTIONS_COLUMN])
+    .otherwise(() => base);
+}
+
 function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
   if (props.rows.length === 0) {
     return (
@@ -55,54 +116,12 @@ function PeopleTable(props: { rows: readonly Person[]; canManage: boolean }) {
   }
 
   return (
-    <div className="border-border overflow-x-auto rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Identifier</TableHead>
-            <TableHead>Groups</TableHead>
-            <TableHead>Status</TableHead>
-            {match(props.canManage)
-              .with(true, () => <TableHead className="w-12" />)
-              .otherwise(() => null)}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {A.map(props.rows, (person) => (
-            <TableRow key={person.id}>
-              <TableCell className="font-medium">{person.name}</TableCell>
-              <TableCell className="text-muted-foreground">{person.email ?? "—"}</TableCell>
-              <TableCell className="font-mono text-xs">{person.identifier ?? "—"}</TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {match(person.groups.length)
-                    .with(0, () => <span className="text-muted-foreground">—</span>)
-                    .otherwise(() =>
-                      A.map(person.groups, (group) => (
-                        <Badge key={group.id} variant="outline">
-                          {group.name}
-                        </Badge>
-                      )),
-                    )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <StatusBadge person={person} />
-              </TableCell>
-              {match(props.canManage)
-                .with(true, () => (
-                  <TableCell>
-                    <PersonRowActions person={person} />
-                  </TableCell>
-                ))
-                .otherwise(() => null)}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      label="People in the directory"
+      columns={peopleColumns(props.canManage)}
+      rows={props.rows}
+      getKey={(person) => person.id}
+    />
   );
 }
 
