@@ -1,0 +1,52 @@
+{
+  "name": "@absqir/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "development": "./src/react.tsx",
+      "default": "./dist/react.js"
+    },
+    "./locales": {
+      "development": "./src/locales.ts",
+      "default": "./dist/locales.js"
+    }
+  },
+  "imports": {
+    "#src/*": "./src/*.ts",
+    "#src/react": "./src/react.tsx"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@mobily/ts-belt": "4.0.0-rc.5",
+    "i18next": "^25.6.3",
+    "react-i18next": "^16.3.1",
+    "ts-pattern": "^5.9.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@absqir/config": "workspace:^",
+    "@types/react": "^19.2.18",
+    "react": "^19.2.8",
+    "tsdown": "^0.23.0",
+    "vitest": "^5.0.0"
+  }
+}

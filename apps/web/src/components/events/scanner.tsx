@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
@@ -16,6 +17,8 @@ import { type ScanResult, useScan } from "@/mutations/use-scan";
 import { useEvent } from "@/queries/use-events";
 
 export interface ScannerProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
 }
 
@@ -171,7 +174,7 @@ function ScannerBody(props: ScannerProps) {
 
 export function Scanner(props: ScannerProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <ScannerBody {...props} />
     </Providers>
   );

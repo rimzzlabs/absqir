@@ -10,5 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Schedules">
-  <SchedulesPage client:load role={role} />
+  <SchedulesPage client:load locale={Astro.locals.locale} role={role} />
 </DashboardLayout>

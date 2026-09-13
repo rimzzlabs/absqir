@@ -11,5 +11,5 @@ if (role !== "member") {
 ---
 
 <DashboardLayout title="Check in">
-  <MemberCheckInPage client:load />
+  <MemberCheckInPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

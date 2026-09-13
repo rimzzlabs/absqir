@@ -3,6 +3,7 @@ import { createRequestContext } from "@absqir/api";
 import { isRoleName } from "@absqir/auth";
 import { schema } from "@absqir/db";
 import { isOnboardingStep } from "@absqir/db/schema";
+import { DEFAULT_LOCALE, isLocale, localeFromHeader } from "@absqir/i18n";
 import { getRuntime } from "@app-runtime";
 import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
@@ -67,8 +68,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.request.headers.get("origin"),
   );
 
+  // The browser's own preference, until a signed-in account names another.
+  const askedLocale =
+    localeFromHeader(context.request.headers.get("accept-language")) ?? DEFAULT_LOCALE;
+
   context.locals.user = null;
   context.locals.session = null;
+  context.locals.locale = askedLocale;
   context.locals.onboardingStep = null;
   context.locals.memberships = [];
   context.locals.activeMembership = null;
@@ -117,6 +123,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     context.locals.user = user;
     context.locals.session = session;
+    context.locals.locale = match(user.locale)
+      .with(P.when(isLocale), (locale) => locale)
+      .otherwise(() => askedLocale);
     context.locals.onboardingStep = onboardingStep;
     context.locals.memberships = memberships;
     context.locals.activeMembership = activeMembership;

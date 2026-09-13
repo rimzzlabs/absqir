@@ -10,5 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Groups">
-  <GroupsPage client:load role={role} />
+  <GroupsPage client:load locale={Astro.locals.locale} role={role} />
 </DashboardLayout>

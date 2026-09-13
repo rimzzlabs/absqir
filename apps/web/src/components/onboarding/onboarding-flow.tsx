@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { useEffect } from "react";
 import { match, P } from "ts-pattern";
 import { OnboardingAvatarStep } from "@/components/onboarding/onboarding-avatar-step";
@@ -9,6 +10,8 @@ import { FormError } from "@/components/shared/form-error";
 import { useOnboarding } from "@/queries/use-onboarding";
 
 export interface OnboardingFlowProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   /** From the invitation link, so step 3 can offer that organization first. */
   invitationId: string | null;
   /** From a public event page, so step 3 registers for it. */
@@ -30,7 +33,7 @@ function OnboardingBody(props: OnboardingFlowProps) {
       <div className="space-y-8">
         <OnboardingSteps current={data.step} />
         {match(data.step)
-          .with("profile", () => <OnboardingProfileStep status={data} />)
+          .with("profile", () => <OnboardingProfileStep status={data} locale={props.locale} />)
           .with("avatar", () => <OnboardingAvatarStep status={data} />)
           .with("organization", () => (
             <OnboardingOrganizationStep
@@ -48,7 +51,7 @@ function OnboardingBody(props: OnboardingFlowProps) {
 
 export function OnboardingFlow(props: OnboardingFlowProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <OnboardingBody {...props} />
     </Providers>
   );

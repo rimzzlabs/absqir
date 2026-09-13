@@ -1,4 +1,5 @@
 import { parseCheckInLink } from "@absqir/core/check-in-link";
+import type { Locale } from "@absqir/i18n";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
@@ -238,9 +239,14 @@ function MemberCheckInBody() {
 }
 
 /** The member's way in: scan the room screen, or show a pass at the door. */
-export function MemberCheckInPage() {
+export interface MemberCheckInPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MemberCheckInPage(props: MemberCheckInPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MemberCheckInBody />
     </Providers>
   );

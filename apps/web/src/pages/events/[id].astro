@@ -14,9 +14,9 @@ if (!id) {
 <DashboardLayout title="Event">
   {
     role === "member" ? (
-      <MyEventPage client:load eventId={id} />
+      <MyEventPage client:load locale={Astro.locals.locale} eventId={id} />
     ) : (
-      <EventDetail client:load eventId={id} role={role} />
+      <EventDetail client:load locale={Astro.locals.locale} eventId={id} role={role} />
     )
   }
 </DashboardLayout>

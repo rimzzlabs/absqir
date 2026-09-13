@@ -1,4 +1,5 @@
 import { formatDate, formatRange, isSameDay, relativeToNow } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Avatar, AvatarFallback } from "@absqir/ui/avatar";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
@@ -32,6 +33,8 @@ import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
 import { type MyEventDetail, useMyEvent } from "@/queries/use-my";
 
 export interface MyEventPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
 }
 
@@ -490,7 +493,7 @@ function MyEventBody(props: MyEventPageProps) {
 /** One event, as the member who is expected at it reads it. */
 export function MyEventPage(props: MyEventPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MyEventBody {...props} />
     </Providers>
   );

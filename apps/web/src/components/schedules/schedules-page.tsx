@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ import { useRemoveSchedule } from "@/mutations/use-remove-schedule";
 import { type Schedule, useSchedules } from "@/queries/use-schedules";
 
 export interface SchedulesPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   role: RoleName;
 }
 
@@ -175,7 +178,7 @@ function SchedulesBody(props: SchedulesPageProps) {
 
 export function SchedulesPage(props: SchedulesPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <SchedulesBody {...props} />
     </Providers>
   );

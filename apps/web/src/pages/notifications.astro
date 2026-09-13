@@ -4,5 +4,5 @@ import DashboardLayout from "@/layouts/dashboard-layout.astro";
 ---
 
 <DashboardLayout title="Notifications">
-  <NotificationsPage client:load />
+  <NotificationsPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

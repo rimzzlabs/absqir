@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
 import { Reveal } from "@absqir/ui/reveal";
@@ -19,6 +20,8 @@ import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useCheckIn } from "@/mutations/use-check-in";
 
 export interface CheckInPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
   /** From the scanned URL. Null when the page was opened by hand. */
   token: string | null;
@@ -175,7 +178,7 @@ function CheckInBody(props: CheckInPageProps) {
 
 export function CheckInPage(props: CheckInPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <CheckInBody {...props} />
     </Providers>
   );

@@ -1,4 +1,5 @@
 import { endOfDay, formatDate, startOfDay } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { buttonVariants } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
@@ -165,9 +166,14 @@ function ReportsBody() {
   );
 }
 
-export function ReportsPage() {
+export interface ReportsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function ReportsPage(props: ReportsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <ReportsBody />
     </Providers>
   );

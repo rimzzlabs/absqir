@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Separator } from "@absqir/ui/separator";
@@ -162,9 +163,14 @@ function MyLeaveBody() {
   );
 }
 
-export function MyLeavePage() {
+export interface MyLeavePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MyLeavePage(props: MyLeavePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MyLeaveBody />
     </Providers>
   );

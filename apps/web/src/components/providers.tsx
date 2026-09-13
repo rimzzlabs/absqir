@@ -1,5 +1,7 @@
 // Installs the display zone before any island formats a date.
 import "@/lib/timezone";
+import type { Locale } from "@absqir/i18n";
+import { I18nProvider } from "@absqir/i18n/react";
 import { MotionProvider } from "@absqir/ui/motion-provider";
 import { TooltipProvider } from "@absqir/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,6 +12,12 @@ import { getQueryClient } from "@/lib/query-client";
 import { useMotionPreference } from "@/lib/use-preferences";
 
 export interface ProvidersProps {
+  /**
+   * The language this reader gets. It arrives as a prop, not from the
+   * markup: the server renders every island too, and a language read off
+   * `document` there would disagree with the one the browser hydrates with.
+   */
+  locale: Locale;
   children: ReactNode;
 }
 
@@ -27,13 +35,15 @@ export function Providers(props: ProvidersProps) {
 
   return (
     <NuqsAdapter>
-      <QueryClientProvider client={getQueryClient()}>
-        <MotionProvider reducedMotion={REDUCED_MOTION[motion]}>
-          <TooltipProvider>
-            <IslandBoundary>{props.children}</IslandBoundary>
-          </TooltipProvider>
-        </MotionProvider>
-      </QueryClientProvider>
+      <I18nProvider locale={props.locale}>
+        <QueryClientProvider client={getQueryClient()}>
+          <MotionProvider reducedMotion={REDUCED_MOTION[motion]}>
+            <TooltipProvider>
+              <IslandBoundary>{props.children}</IslandBoundary>
+            </TooltipProvider>
+          </MotionProvider>
+        </QueryClientProvider>
+      </I18nProvider>
     </NuqsAdapter>
   );
 }

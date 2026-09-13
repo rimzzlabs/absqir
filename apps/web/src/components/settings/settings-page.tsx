@@ -1,4 +1,5 @@
 import type { NotificationChannel } from "@absqir/core/notification-channel";
+import type { Locale } from "@absqir/i18n";
 import { Reveal } from "@absqir/ui/reveal";
 import {
   BellIcon,
@@ -32,6 +33,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import type { RoleName } from "@/components/shared/role-badge";
 
 export interface SettingsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
   currentUserId: string;
@@ -184,6 +187,7 @@ function SettingsBody(props: SettingsPageProps) {
         image={props.user.image}
         createdAt={props.user.createdAt}
         role={role}
+        locale={props.locale}
         timezone={props.user.timezone}
         organization={organization}
       />
@@ -215,7 +219,7 @@ function SettingsBody(props: SettingsPageProps) {
 
 export function SettingsPage(props: SettingsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <SettingsBody {...props} />
     </Providers>
   );

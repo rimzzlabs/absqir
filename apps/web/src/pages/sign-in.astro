@@ -41,6 +41,7 @@ const callbackError = readCallbackError({
 <AuthLayout title="Sign in — absqir">
   <AuthFlow
     client:load
+    locale={Astro.locals.locale}
     next={safeNext}
     initialEmail={email}
     eventId={eventId}

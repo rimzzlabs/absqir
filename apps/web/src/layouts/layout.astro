@@ -9,10 +9,13 @@ interface Props {
 }
 
 const { title, timezone } = Astro.props;
+// The account's language, or the one the browser asked for. src/middleware.ts
+// settles which of the two this request gets.
+const { locale } = Astro.locals;
 ---
 
 <!doctype html>
-<html lang="en" data-timezone={timezone ?? undefined}>
+<html lang={locale} data-timezone={timezone ?? undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

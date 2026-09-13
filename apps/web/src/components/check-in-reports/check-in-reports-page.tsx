@@ -1,6 +1,7 @@
 import { formatDate } from "@absqir/core/date";
 import { formatDistance } from "@absqir/core/geo";
 import { isRiskReason, RISK_REASON_TEXT } from "@absqir/core/location-risk";
+import type { Locale } from "@absqir/i18n";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent } from "@absqir/ui/card";
@@ -330,9 +331,14 @@ function CheckInReportsBody() {
 }
 
 /** The organizer's queue of members the place check turned away. */
-export function CheckInReportsPage() {
+export interface CheckInReportsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function CheckInReportsPage(props: CheckInReportsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <CheckInReportsBody />
     </Providers>
   );

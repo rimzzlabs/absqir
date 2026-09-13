@@ -4,5 +4,5 @@ import DashboardLayout from "@/layouts/dashboard-layout.astro";
 ---
 
 <DashboardLayout title="History">
-  <MyHistoryPage client:load />
+  <MyHistoryPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

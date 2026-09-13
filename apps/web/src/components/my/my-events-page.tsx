@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -117,9 +118,14 @@ function MyEventsBody() {
   );
 }
 
-export function MyEventsPage() {
+export interface MyEventsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MyEventsPage(props: MyEventsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MyEventsBody />
     </Providers>
   );

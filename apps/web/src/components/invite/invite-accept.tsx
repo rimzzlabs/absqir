@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
@@ -8,6 +9,8 @@ import { useOnboardingAccept } from "@/mutations/use-onboarding-accept";
 import { useInvitation } from "@/queries/use-members";
 
 export interface InviteAcceptProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   invitationId: string;
   /** Null when the reader is signed out. */
   userEmail: string | null;
@@ -80,7 +83,7 @@ function SignedIn(props: InviteAcceptProps) {
 
 export function InviteAccept(props: InviteAcceptProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       {match(props.userEmail)
         .with(P.string.minLength(1), () => <SignedIn {...props} />)
         .otherwise(() => (

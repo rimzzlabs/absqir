@@ -4,5 +4,5 @@ import DashboardLayout from "@/layouts/dashboard-layout.astro";
 ---
 
 <DashboardLayout title="My events">
-  <MyEventsPage client:load />
+  <MyEventsPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

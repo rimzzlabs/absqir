@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n/locales";
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -108,6 +109,8 @@ export {
   type RiskReason,
 } from "@absqir/core/location-risk";
 
+export { isLocale, LOCALES, type Locale } from "@absqir/i18n/locales";
+
 // Tables required by Better Auth. Keep the property names in sync with the
 // Better Auth field names: the Drizzle adapter looks columns up by property.
 export const user = pgTable("user", {
@@ -131,6 +134,11 @@ export const user = pgTable("user", {
     .default("all"),
   /** IANA zone the account reads times in. Null follows the device. */
   timezone: text("timezone"),
+  /**
+   * The language the account reads the app and its email in. Null means
+   * nobody has chosen yet, so the browser's own language decides.
+   */
+  locale: text("locale").$type<Locale>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

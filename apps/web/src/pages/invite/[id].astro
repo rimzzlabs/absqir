@@ -16,5 +16,10 @@ if (Astro.locals.user && Astro.locals.onboardingStep !== "done") {
 ---
 
 <AuthLayout title="Invitation — absqir">
-  <InviteAccept client:load invitationId={id} userEmail={Astro.locals.user?.email ?? null} />
+  <InviteAccept
+    client:load
+    locale={Astro.locals.locale}
+    invitationId={id}
+    userEmail={Astro.locals.user?.email ?? null}
+  />
 </AuthLayout>

@@ -15,5 +15,5 @@ if (role === "member") {
 ---
 
 <Layout title="Room screen — absqir">
-  <QrDisplay client:load eventId={id} />
+  <QrDisplay client:load locale={Astro.locals.locale} eventId={id} />
 </Layout>

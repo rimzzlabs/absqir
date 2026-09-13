@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
@@ -15,6 +16,8 @@ import type { RoleName } from "@/components/shared/role-badge";
 import { type Group, useGroups } from "@/queries/use-groups";
 
 export interface GroupsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   role: RoleName;
 }
 
@@ -108,7 +111,7 @@ function GroupsBody(props: GroupsPageProps) {
 
 export function GroupsPage(props: GroupsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <GroupsBody {...props} />
     </Providers>
   );

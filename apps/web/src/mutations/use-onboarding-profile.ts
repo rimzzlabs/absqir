@@ -1,10 +1,13 @@
 import { authMutationKeys, meKeys, onboardingKeys } from "@absqir/core/query-keys";
+import type { Locale } from "@absqir/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiError } from "@/lib/api";
 
 export interface OnboardingProfileInput {
   name: string;
   password?: string;
+  /** The language this account reads absqir in from here on. */
+  locale: Locale;
 }
 
 export function useOnboardingProfile() {

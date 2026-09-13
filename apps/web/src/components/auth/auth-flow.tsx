@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { useState } from "react";
 import { match } from "ts-pattern";
 import { AuthClosed } from "@/components/auth/auth-closed";
@@ -9,6 +10,8 @@ import { Providers } from "@/components/providers";
 import type { AuthProviderId, CallbackError } from "@/lib/auth-providers";
 
 export interface AuthFlowProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   /** Where to land after a successful sign in. */
   next: string;
   /** Prefilled when the reader arrived from an invitation. */
@@ -103,7 +106,7 @@ function AuthSteps(props: AuthFlowProps) {
 
 export function AuthFlow(props: AuthFlowProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <AuthSteps {...props} />
     </Providers>
   );

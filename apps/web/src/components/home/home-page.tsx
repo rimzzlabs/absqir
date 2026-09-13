@@ -1,5 +1,6 @@
 import { formatRange } from "@absqir/core/date";
 import { claimableDomainOfEmail } from "@absqir/core/email-domain";
+import type { Locale } from "@absqir/i18n";
 import { buttonVariants } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -24,6 +25,8 @@ import {
 } from "@/queries/use-reports";
 
 export interface HomePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
   /** The reader's own address. It decides whether a domain is theirs to claim. */
   userEmail: string;
@@ -364,7 +367,7 @@ function HomeBody(props: HomePageProps) {
 
 export function HomePage(props: HomePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <HomeBody {...props} />
     </Providers>
   );

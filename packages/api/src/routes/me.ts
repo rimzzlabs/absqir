@@ -2,6 +2,7 @@ import { isRoleName } from "@absqir/auth";
 import { isTimezone } from "@absqir/core/timezone";
 import { schema } from "@absqir/db";
 import { isNotificationChannel, isOnboardingStep, NOTIFICATION_CHANNELS } from "@absqir/db/schema";
+import { isLocale, LOCALES } from "@absqir/i18n/locales";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, O, pipe } from "@mobily/ts-belt";
 import { and, desc, eq, gt, lt, or, sql } from "drizzle-orm";
@@ -33,6 +34,8 @@ const meSchema = z.object({
   notificationChannel: z.enum(NOTIFICATION_CHANNELS),
   /** IANA zone, or null to follow the device. */
   timezone: z.string().nullable(),
+  /** The language this account reads absqir in. Null follows the browser. */
+  locale: z.enum(LOCALES).nullable(),
   activeOrganizationId: z.string().nullable(),
   memberships: z.array(membershipSchema),
 });
@@ -49,6 +52,8 @@ const channelSchema = z.object({ channel: z.enum(NOTIFICATION_CHANNELS) });
 
 /** Null means "follow the device". */
 const timezoneSchema = z.object({ timezone: z.string().max(64).nullable() });
+
+const localeSchema = z.object({ locale: z.enum(LOCALES) });
 
 const DEVICE_PAGE_SIZE = 8;
 const MAX_DEVICE_PAGE_SIZE = 50;
@@ -132,6 +137,26 @@ const timezoneRoute = createRoute({
     400: {
       description: "Not a zone this server knows",
       content: { "application/json": { schema: errorSchema } },
+    },
+    401: {
+      description: "No active session",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const localeRoute = createRoute({
+  method: "patch",
+  path: "/me/locale",
+  tags: ["auth"],
+  summary: "Choose the language I read absqir in",
+  description:
+    "Every page, every notification and every email for this account reads in this language from now on. The browser's own language decides the first time only.",
+  request: { body: { content: { "application/json": { schema: localeSchema } } } },
+  responses: {
+    200: {
+      description: "What is stored now",
+      content: { "application/json": { schema: localeSchema } },
     },
     401: {
       description: "No active session",
@@ -358,6 +383,27 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
 
     return c.json({ timezone }, 200);
   })
+  .openapi(localeRoute, async (c) => {
+    const current = c.get("user");
+    if (!current) return c.json({ error: "Unauthorized" }, 401);
+
+    const { locale } = c.req.valid("json");
+
+    await c.var.db
+      .update(user)
+      .set({ locale, updatedAt: new Date() })
+      .where(eq(user.id, current.id));
+
+    // The cookie cache still carries the old language; see the channel route.
+    const refreshed = await c.var.auth.api.getSession({
+      headers: c.req.raw.headers,
+      query: { disableCookieCache: true },
+      returnHeaders: true,
+    });
+    forwardCookies(c, refreshed.headers);
+
+    return c.json({ locale }, 200);
+  })
   .openapi(updateRoute, async (c) => {
     const current = c.get("user");
     if (!current) return c.json({ error: "Unauthorized" }, 401);
@@ -468,6 +514,9 @@ export const meRoutes = new OpenAPIHono<AppEnv>()
           .otherwise(() => "all" as const),
         timezone: match(user.timezone)
           .with(P.when(isTimezone), (timezone) => timezone)
+          .otherwise(() => null),
+        locale: match(user.locale)
+          .with(P.when(isLocale), (locale) => locale)
           .otherwise(() => null),
         activeOrganizationId: session.activeOrganizationId ?? null,
         memberships: [...memberships],

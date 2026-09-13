@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -17,6 +18,8 @@ import type { RoleName } from "@/components/shared/role-badge";
 import { type Event, type EventScope, useEvents } from "@/queries/use-events";
 
 export interface EventsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   role: RoleName;
 }
 
@@ -151,7 +154,7 @@ function EventsBody(props: EventsPageProps) {
 
 export function EventsPage(props: EventsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <EventsBody {...props} />
     </Providers>
   );

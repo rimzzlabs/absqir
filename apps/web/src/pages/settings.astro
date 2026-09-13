@@ -37,6 +37,7 @@ const shellUser = {
 <DashboardLayout title="Settings">
   <SettingsPage
     client:load
+    locale={Astro.locals.locale}
     role={activeMembership?.role ?? null}
     organization={organization}
     currentUserId={user.id}

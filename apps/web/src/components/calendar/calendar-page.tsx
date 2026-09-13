@@ -12,6 +12,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { IconAction } from "@absqir/ui/icon-action";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -192,9 +193,14 @@ function CalendarBody() {
   );
 }
 
-export function CalendarPage() {
+export interface CalendarPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function CalendarPage(props: CalendarPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <CalendarBody />
     </Providers>
   );

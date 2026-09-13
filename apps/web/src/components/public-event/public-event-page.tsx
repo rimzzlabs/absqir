@@ -1,4 +1,5 @@
 import { formatRange } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Reveal } from "@absqir/ui/reveal";
 import { CheckCircleIcon } from "@phosphor-icons/react";
@@ -11,6 +12,8 @@ import { useWithdrawEvent } from "@/mutations/use-withdraw-event";
 import { type PublicEvent, usePublicEvent } from "@/queries/use-public-event";
 
 export interface PublicEventPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
   signedIn: boolean;
 }
@@ -159,7 +162,7 @@ function PublicEventBody(props: PublicEventPageProps) {
 
 export function PublicEventPage(props: PublicEventPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <PublicEventBody {...props} />
     </Providers>
   );

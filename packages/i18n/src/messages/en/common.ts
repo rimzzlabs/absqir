@@ -1,0 +1,146 @@
+/** Words every screen uses: buttons, states, and the frames around them. */
+export const common = {
+  actions: {
+    save: "Save",
+    saving: "Saving…",
+    cancel: "Cancel",
+    close: "Close",
+    tryAgain: "Try again",
+    notNow: "Not now",
+    goBack: "Go back",
+    keepIt: "Keep it",
+    working: "Working…",
+    loading: "Loading…",
+    creating: "Creating…",
+    copy: "Copy",
+    copied: "Copied",
+    edit: "Edit",
+    remove: "Remove",
+    delete: "Delete",
+    done: "Done",
+    back: "Back",
+    skip: "Skip",
+    stay: "Stay",
+    leave: "Leave",
+    leaving: "Leaving…",
+  },
+  people_one: "{{count}} person",
+  people_other: "{{count}} people",
+  island: {
+    title: "This part could not load",
+    description: "The rest of the page still works. Try again, or reload the page.",
+  },
+  dangerZone: {
+    label: "Danger zone",
+    title: "Danger zone",
+    description: "Nothing here can be undone.",
+  },
+  confirmPhrase: {
+    typeBefore: "Type",
+    typeAfter: "to confirm",
+    inputLabel: "Type the {{label}} to confirm",
+  },
+  groupPicker: {
+    empty: "No groups yet. Create one on the Groups page, then come back.",
+  },
+  camera: {
+    title: "The camera is turned off for this site",
+    description: "Your browser holds the switch, so we cannot turn it on from here.",
+    lastStep: "Come back here and select Try again.",
+    note: "If the camera stays off, reload the page. You can always paste the code by hand instead.",
+    chromium: {
+      findBefore: "Click the",
+      findAfter: "button on the left of the address bar above.",
+      allow: "Set Camera to Allow.",
+    },
+    firefox: {
+      findBefore: "Click the",
+      findAfter: "padlock on the left of the address bar above.",
+      allow: "Open Connection settings, then clear the blocked camera.",
+    },
+    safari: {
+      find: "Open the Safari menu, then Settings for This Website.",
+      allow: "Set Camera to Allow.",
+    },
+    iphone: {
+      findBefore: "Tap the",
+      findAfter: "button in the address bar below.",
+      allow: "Open Website Settings, then set Camera to Allow.",
+    },
+  },
+  roles: {
+    owner: "Owner",
+    admin: "Admin",
+    organizer: "Organizer",
+    member: "Member",
+  },
+  roleSelect: {
+    label: "Role",
+    hints: {
+      owner: "Everything, including deleting the org.",
+      admin: "Manages people, groups, and settings.",
+      organizer: "Runs events and scans at the door.",
+      member: "Sees their own events and history.",
+    },
+  },
+  eventStatus: {
+    scheduled: "Scheduled",
+    running: "Running",
+    done: "Done",
+  },
+  attendance: {
+    present: "Present",
+    late: "Late",
+    excused: "Excused",
+    absent: "Absent",
+    notYet: "Not yet",
+  },
+  leaveStatus: {
+    pending: "Pending",
+    approved: "Approved",
+    declined: "Declined",
+  },
+  placePicker: {
+    label: "Place",
+    placeholder: "No place",
+    groupLabel: "Where people check in",
+    none: "No place",
+    noneHint: "Anyone with the code checks in, wherever they are.",
+    within: "within {{radius}} m",
+    savePlaceLink: "Save a place first",
+    savePlaceRest: "to check where people are.",
+    require: "Refuse a check-in made outside this place",
+    experimental: "Experimental",
+    requireHint:
+      "Each member's browser asks for their location. A reading outside the circle is refused, and one that looks made up is accepted and flagged for you. The code on the room screen is still what proves they were there. A flag is a reason to look, not a verdict.",
+  },
+  mapPicker: {
+    label: "Pick the place on the map",
+    markerTitle: "The place. Drag to move it.",
+    useMyLocation: "Use my location",
+    hint: "Tap the map, or drag the pin. The circle is how far from it a check-in still counts.",
+  },
+  organizationForm: {
+    name: "Organization name",
+    slug: "Slug",
+    slugHint: "Lowercase letters, digits, and hyphens. It shows up in links.",
+  },
+  leaveOrganization: {
+    rowTitle: "Leave {{name}}",
+    soleOwner:
+      "You hold the only owner seat. Make somebody else an owner first, or delete the organization.",
+    description:
+      "You lose every screen behind this organization. Your directory entry stays, without an account behind it.",
+    confirmTitle: "Leave {{name}}?",
+    confirmDescription:
+      "You need a new invitation to come back. Your account and your history stay.",
+  },
+  validation: {
+    nameRequired: "Enter a name.",
+    nameTooLong: "That name is too long.",
+    descriptionTooLong: "Keep it under 500 characters.",
+    emailInvalid: "Enter a valid email address.",
+    slugTooShort: "Use at least 2 characters.",
+    slugTooLong: "Use at most 40 characters.",
+  },
+} as const;

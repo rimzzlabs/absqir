@@ -10,5 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Events">
-  <EventsPage client:load role={role} />
+  <EventsPage client:load locale={Astro.locals.locale} role={role} />
 </DashboardLayout>

@@ -1,4 +1,5 @@
 import { relativeToNow } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { cn } from "@absqir/ui/lib/utils";
@@ -159,9 +160,14 @@ function NotificationsBody() {
   );
 }
 
-export function NotificationsPage() {
+export interface NotificationsPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function NotificationsPage(props: NotificationsPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <NotificationsBody />
     </Providers>
   );

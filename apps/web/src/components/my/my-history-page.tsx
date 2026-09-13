@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
@@ -126,9 +127,14 @@ function HistoryBody() {
   );
 }
 
-export function MyHistoryPage() {
+export interface MyHistoryPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
+}
+
+export function MyHistoryPage(props: MyHistoryPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <HistoryBody />
     </Providers>
   );

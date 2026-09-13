@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Progress } from "@absqir/ui/progress";
 import { Skeleton } from "@absqir/ui/skeleton";
@@ -28,6 +29,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { type OnboardingStatus, useOnboarding } from "@/queries/use-onboarding";
 
 export interface GettingStartedPageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
 }
 
@@ -289,7 +292,7 @@ function Aside() {
  */
 export function GettingStartedPage(props: GettingStartedPageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <GettingStartedBody {...props} />
     </Providers>
   );

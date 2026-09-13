@@ -7,5 +7,10 @@ const eventId = Astro.url.searchParams.get("event");
 ---
 
 <AuthLayout title="Welcome — absqir">
-  <OnboardingFlow client:load invitationId={invitationId} eventId={eventId} />
+  <OnboardingFlow
+    client:load
+    locale={Astro.locals.locale}
+    invitationId={invitationId}
+    eventId={eventId}
+  />
 </AuthLayout>

@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { Input } from "@absqir/ui/input";
@@ -10,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { AccountDangerZone } from "@/components/account/account-danger-zone";
 import { EmailChange } from "@/components/account/email-change";
+import { LanguageRow } from "@/components/account/language-row";
 import { TimezoneRow } from "@/components/account/timezone-row";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
@@ -27,6 +29,8 @@ export interface ProfilePanelProps {
   role: RoleName | null;
   /** The stored zone. Null follows the device. */
   timezone: string | null;
+  /** The language this account reads absqir in. */
+  locale: Locale;
   /** Null alongside a null role. The danger zone offers to leave it. */
   organization: { id: string; name: string; slug: string } | null;
 }
@@ -200,6 +204,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
         <div className="border-border border-t">
           <NameRow name={props.name} />
           <EmailRow email={props.email} />
+          <LanguageRow locale={props.locale} />
           <TimezoneRow timezone={props.timezone} />
         </div>
       </SettingsSection>

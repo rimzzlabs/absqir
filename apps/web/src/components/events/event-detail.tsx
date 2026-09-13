@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,8 @@ import { useRemoveEvent } from "@/mutations/use-remove-event";
 import { type Event, useEvent } from "@/queries/use-events";
 
 export interface EventDetailProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
   role: RoleName;
 }
@@ -236,7 +239,7 @@ function EventDetailBody(props: EventDetailProps) {
 
 export function EventDetail(props: EventDetailProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <EventDetailBody {...props} />
     </Providers>
   );

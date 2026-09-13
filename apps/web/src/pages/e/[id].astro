@@ -15,5 +15,10 @@ setEventCookie(Astro.cookies, id);
 ---
 
 <AuthLayout title="Register — absqir">
-  <PublicEventPage client:load eventId={id} signedIn={Astro.locals.user !== null} />
+  <PublicEventPage
+    client:load
+    locale={Astro.locals.locale}
+    eventId={id}
+    signedIn={Astro.locals.user !== null}
+  />
 </AuthLayout>

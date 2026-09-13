@@ -10,5 +10,5 @@ if (role === "member") {
 ---
 
 <DashboardLayout title="Calendar">
-  <CalendarPage client:load />
+  <CalendarPage client:load locale={Astro.locals.locale} />
 </DashboardLayout>

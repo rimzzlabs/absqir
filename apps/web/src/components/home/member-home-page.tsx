@@ -1,4 +1,5 @@
 import { describeTimezone } from "@absqir/core/timezone";
+import type { Locale } from "@absqir/i18n";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -25,6 +26,8 @@ import { useMyLeave } from "@/queries/use-leave";
 import { useMyEvents, useMyHistory } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   userName: string;
   organizationName: string;
   /** The account's zone. Null follows the device. */
@@ -143,7 +146,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
 /** A member's front page: what runs now, the days ahead, and how it has gone. */
 export function MemberHomePage(props: MemberHomePageProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <MemberHomeBody {...props} />
     </Providers>
   );

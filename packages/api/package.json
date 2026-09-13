@@ -23,6 +23,7 @@
     "@absqir/auth": "workspace:^",
     "@absqir/core": "workspace:^",
     "@absqir/db": "workspace:^",
+    "@absqir/i18n": "workspace:^",
     "@absqir/transactional": "workspace:^",
     "@date-fns/tz": "^1.5.0",
     "@hono/zod-openapi": "^1.6.3",

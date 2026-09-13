@@ -1,5 +1,8 @@
+import type { Locale } from "@absqir/i18n";
+import { useTranslation } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@absqir/ui/collapsible";
+import { Field, FieldDescription, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { FormError } from "@/components/shared/form-error";
+import { LanguageField } from "@/components/shared/language-field";
 import { isAuthProvider, providerLabel } from "@/lib/auth-providers";
 import {
   MIN_PASSWORD_LENGTH,
@@ -22,6 +26,11 @@ import type { OnboardingStatus } from "@/queries/use-onboarding";
 
 export interface OnboardingProfileStepProps {
   status: OnboardingStatus;
+  /**
+   * What this page already reads in: the account's choice when it has one,
+   * the browser's own language when it does not. The picker opens on it.
+   */
+  locale: Locale;
 }
 
 /** "GitHub", or "Your provider" for one this build does not name. */
@@ -35,6 +44,11 @@ function firstProviderLabel(providers: string[]): string {
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
   const { status } = props;
+  const { t } = useTranslation(["onboarding", "common"]);
+
+  // Everybody meets this picker once: the owner who starts an organization,
+  // and the member who arrives from an invitation. Both land here first.
+  const [locale, setLocale] = useState<Locale>(status.locale ?? props.locale);
 
   // A linked provider is a credential too. Asking for a password right after
   // the reader chose the provider button takes back what the button offered,
@@ -72,7 +86,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       <form
         onSubmit={form.handleSubmit((values) =>
           // An empty field means no password. The route refuses an empty one.
-          save.mutate({ name: values.name, password: values.password || undefined }),
+          save.mutate({ name: values.name, password: values.password || undefined, locale }),
         )}
         className="space-y-5"
         noValidate
@@ -90,6 +104,12 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
           label="Full name"
           render={(field) => <Input {...field} id="name" autoComplete="name" autoFocus />}
         />
+
+        <Field>
+          <FieldLabel htmlFor="onboarding-language">{t("language.label")}</FieldLabel>
+          <LanguageField id="onboarding-language" value={locale} onChange={setLocale} />
+          <FieldDescription>{t("language.hint")}</FieldDescription>
+        </Field>
 
         {match(mustSetPassword)
           .with(true, () => passwordField)

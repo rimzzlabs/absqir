@@ -1,4 +1,5 @@
 import { formatRange } from "@absqir/core/date";
+import type { Locale } from "@absqir/i18n";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
@@ -8,6 +9,8 @@ import { useEvent } from "@/queries/use-events";
 import { useQrToken } from "@/queries/use-qr-token";
 
 export interface QrDisplayProps {
+  /** The language this reader gets, for every island under it. */
+  locale: Locale;
   eventId: string;
 }
 
@@ -84,7 +87,7 @@ function QrScreen(props: QrDisplayProps) {
 
 export function QrDisplay(props: QrDisplayProps) {
   return (
-    <Providers>
+    <Providers locale={props.locale}>
       <QrScreen {...props} />
     </Providers>
   );

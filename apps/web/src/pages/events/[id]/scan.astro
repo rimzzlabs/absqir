@@ -15,5 +15,5 @@ if (role === "member") {
 ---
 
 <Layout title="Scanner — absqir">
-  <Scanner client:load eventId={id} />
+  <Scanner client:load locale={Astro.locals.locale} eventId={id} />
 </Layout>
