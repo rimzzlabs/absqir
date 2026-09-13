@@ -1,6 +1,6 @@
 import { eventKeys, eventMutationKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 import { cachedLocationClaim, type LocationClaim } from "@/lib/location-claim";
 
@@ -34,17 +34,18 @@ export function useScan() {
 
       // Only a missing reading is worth retrying. "outside" and "coarse"
       // describe where this scanner is, and asking it again changes nothing.
-      const wantsLocation = await match(first.status)
-        .with(409, async () => {
-          const body: unknown = await first.clone().json();
+      const body: unknown = await first.json().catch(() => null);
+      const wantsLocation =
+        first.status === 409 &&
+        match(body)
+          .with({ location: { verdict: "missing" } }, () => true)
+          .otherwise(() => false);
 
-          return match(body)
-            .with({ location: { verdict: "missing" } }, () => true)
-            .otherwise(() => false);
-        })
-        .otherwise(() => Promise.resolve(false));
-
-      if (!wantsLocation) throw await apiError(first, "Could not read that pass.");
+      if (!wantsLocation) {
+        throw match(body)
+          .with({ error: P.string.minLength(1) }, (found) => new Error(found.error))
+          .otherwise(() => new Error("Could not read that pass."));
+      }
 
       const location = await cachedLocationClaim();
 

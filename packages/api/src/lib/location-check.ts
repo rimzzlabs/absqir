@@ -295,12 +295,13 @@ export interface RecordAttemptParams {
  * place, and thirty across a term, each a little nearer the fence, is
  * somebody finding the line.
  */
-export async function recordAttempt(params: RecordAttemptParams): Promise<void> {
+export async function recordAttempt(params: RecordAttemptParams): Promise<string> {
   const network = params.network ?? UNKNOWN_NETWORK;
   const { columns } = params.decision;
+  const id = crypto.randomUUID();
 
   await params.db.insert(checkInAttempt).values({
-    id: crypto.randomUUID(),
+    id,
     organizationId: params.organizationId,
     eventId: params.eventId,
     personId: params.personId,
@@ -320,4 +321,8 @@ export async function recordAttempt(params: RecordAttemptParams): Promise<void> 
     networkOrganization: network.organization,
     userAgent: params.userAgent,
   });
+
+  // The id goes back to the member on a refusal, so a report can name the
+  // attempt it is about rather than guessing at the latest one.
+  return id;
 }

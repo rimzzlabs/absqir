@@ -2,7 +2,7 @@ import { eventKeys, eventMutationKeys, myKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { api, apiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { collectLocationClaim, type LocationClaim } from "@/lib/location-claim";
 
 export interface CheckInInput {
@@ -13,7 +13,12 @@ export interface CheckInInput {
 /** What the reader is waiting on. The location step is the slow one. */
 export type CheckInStage = "idle" | "checking" | "locating";
 
-type CheckInBody = { token: string; location?: LocationClaim };
+/** The fence's half of a refusal, when that is what turned the member away. */
+export interface LocationRefusal {
+  verdict: "outside" | "coarse" | "missing";
+  /** The attempt a report should name. */
+  attemptId: string | null;
+}
 
 /**
  * A refusal from the server, with the status kept. The page needs it: an
@@ -22,11 +27,13 @@ type CheckInBody = { token: string; location?: LocationClaim };
  */
 export class CheckInFailed extends Error {
   readonly status: number;
+  readonly location: LocationRefusal | null;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, location: LocationRefusal | null) {
     super(message);
     this.name = "CheckInFailed";
     this.status = status;
+    this.location = location;
   }
 }
 
@@ -36,15 +43,49 @@ interface StatusResponse {
   json(): Promise<unknown>;
 }
 
-async function failure(response: StatusResponse, fallback: string): Promise<CheckInFailed> {
-  const error = await apiError(response, fallback);
-
-  return new CheckInFailed(error.message, response.status);
+/** A body that is not JSON is not a failure to report; the fallback covers it. */
+async function readBody(response: StatusResponse): Promise<unknown> {
+  return await response.json().catch(() => null);
 }
+
+/**
+ * Only these three verdicts mean "your device let you down". A refusal for
+ * any other reason has a fix the member should take instead, so no report
+ * button is offered for it.
+ */
+function refusalOf(body: unknown): LocationRefusal | null {
+  const verdict = match(body)
+    .with({ location: { verdict: "outside" } }, () => "outside" as const)
+    .with({ location: { verdict: "coarse" } }, () => "coarse" as const)
+    .with({ location: { verdict: "missing" } }, () => "missing" as const)
+    .otherwise(() => null);
+
+  if (!verdict) return null;
+
+  // Read separately: narrowing on the verdict alone loses the rest of the shape.
+  return {
+    verdict,
+    attemptId: match(body)
+      .with({ location: { attemptId: P.string } }, (found) => found.location.attemptId)
+      .otherwise(() => null),
+  };
+}
+
+function failureFrom(body: unknown, status: number, fallback: string): CheckInFailed {
+  const message = match(body)
+    .with({ error: P.string.minLength(1) }, (found) => found.error)
+    .otherwise(() => fallback);
+
+  return new CheckInFailed(message, status, refusalOf(body));
+}
+
+type CheckInBody = { token: string; location?: LocationClaim };
 
 async function post(eventId: string, body: CheckInBody) {
   return api.events[":id"]["check-in"].$post({ param: { id: eventId }, json: body });
 }
+
+const FALLBACK = "Could not check you in.";
 
 /**
  * The member's own check-in, from the link the room screen carries.
@@ -66,27 +107,21 @@ export function useCheckIn() {
       const first = await post(eventId, { token });
       if (first.ok) return await first.json();
 
+      const body = await readBody(first);
+
       // 409 means the fence spoke. Only a missing reading is worth retrying:
       // "outside" and "coarse" describe where the person is, and asking the
       // same device again in the same spot gives the same answer.
-      const wantsLocation = await match(first.status)
-        .with(409, async () => {
-          const body: unknown = await first.clone().json();
+      const wantsLocation = first.status === 409 && refusalOf(body)?.verdict === "missing";
 
-          return match(body)
-            .with({ location: { verdict: "missing" } }, () => true)
-            .otherwise(() => false);
-        })
-        .otherwise(() => Promise.resolve(false));
-
-      if (!wantsLocation) throw await failure(first, "Could not check you in.");
+      if (!wantsLocation) throw failureFrom(body, first.status, FALLBACK);
 
       setStage("locating");
       const location = await collectLocationClaim();
 
       setStage("checking");
       const second = await post(eventId, { token, location });
-      if (!second.ok) throw await failure(second, "Could not check you in.");
+      if (!second.ok) throw failureFrom(await readBody(second), second.status, FALLBACK);
 
       return await second.json();
     },
@@ -107,6 +142,10 @@ export function useCheckIn() {
     tokenExpired: match(mutation.error)
       .with(P.instanceOf(CheckInFailed), (error) => error.status === 401)
       .otherwise(() => false),
+    /** Set when the place check turned the member away, so a report is offered. */
+    locationRefusal: match(mutation.error)
+      .with(P.instanceOf(CheckInFailed), (error) => error.location)
+      .otherwise(() => null),
   };
 }
 

@@ -130,6 +130,8 @@ const locationResult = z.object({
   distanceMeters: z.number().nullable(),
   /** True when the organizer will see this record flagged. */
   flagged: z.boolean(),
+  /** The refused attempt, for a member who wants to report it. Null on success. */
+  attemptId: z.string().nullable(),
 });
 
 const checkInResult = z.object({
@@ -956,7 +958,7 @@ export const eventRoutes = app
     };
 
     if (!decision.accepted) {
-      await recordAttempt({ ...attempt, outcome: "refused" });
+      const attemptId = await recordAttempt({ ...attempt, outcome: "refused" });
 
       return c.json(
         {
@@ -965,6 +967,7 @@ export const eventRoutes = app
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
+            attemptId,
           },
         },
         409,
@@ -996,6 +999,7 @@ export const eventRoutes = app
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
             flagged: false,
+            attemptId: null,
           }))
           .otherwise(() => null),
       },
@@ -1105,7 +1109,7 @@ export const eventRoutes = app
     };
 
     if (!decision.accepted) {
-      await recordAttempt({ ...attempt, outcome: "refused" });
+      const attemptId = await recordAttempt({ ...attempt, outcome: "refused" });
 
       return c.json(
         {
@@ -1114,6 +1118,7 @@ export const eventRoutes = app
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
+            attemptId,
           },
         },
         409,
@@ -1143,6 +1148,7 @@ export const eventRoutes = app
             verdict: decision.verdict,
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
+            attemptId: null,
           }))
           .otherwise(() => null),
       },

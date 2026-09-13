@@ -121,6 +121,12 @@ person gaming it, and the cheat can try again while the honest member
 cannot. Flagged records show in the event's **Where** column with the
 reasons, and the organizer clears the flag or marks the person absent.
 
+A refused member can push back. **I am here, tell the organizer** opens a
+short form, and the report lands in **Check-in problems** with the evidence
+already attached, including whether they held a live code from the room
+screen. Approving writes the attendance record timed at the refused scan,
+not at the decision, so nobody is marked late for how long a report waited.
+
 Every attempt, accepted or refused, is written to `check_in_attempt`. The
 refused rows are the point: one is a member in the wrong place, and thirty
 across a term, each a little nearer the fence, is somebody finding the line.

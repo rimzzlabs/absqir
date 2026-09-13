@@ -3,6 +3,7 @@ import {
   CalendarBlankIcon,
   ChartBarIcon,
   ClockCounterClockwiseIcon,
+  FlagIcon,
   GearIcon,
   HouseIcon,
   type Icon,
@@ -58,6 +59,12 @@ export const MANAGER_NAV: NavGroup[] = [
     label: "Requests and insight",
     items: [
       { href: "/leave", label: "Leave requests", icon: NotePencilIcon, minimum: "organizer" },
+      {
+        href: "/check-in-problems",
+        label: "Check-in problems",
+        icon: FlagIcon,
+        minimum: "organizer",
+      },
       { href: "/reports", label: "Reports", icon: ChartBarIcon, minimum: "organizer" },
     ],
   },

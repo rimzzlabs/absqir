@@ -22,9 +22,10 @@ import { whenAny } from "#src/lib/query";
 import { buildRoster } from "#src/lib/roster";
 import type { AppEnv } from "#src/types";
 
-const { event: eventTable, attendanceRecord, leaveRequest, person } = schema;
+const { event: eventTable, attendanceRecord, leaveRequest, person, checkInReport } = schema;
 
 type LeaveRow = typeof leaveRequest.$inferSelect;
+type ReportRow = typeof checkInReport.$inferSelect;
 
 const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
@@ -75,6 +76,17 @@ const myEventSchema = z.object({
       decisionNote: z.string().nullable(),
     })
     .nullable(),
+  /**
+   * My report that the place check was wrong, if I sent one. A member who
+   * reported needs to see it was received and what came of it.
+   */
+  report: z
+    .object({
+      status: z.enum(["pending", "approved", "declined"]),
+      message: z.string(),
+      decisionNote: z.string().nullable(),
+    })
+    .nullable(),
 });
 
 type MyEventJson = z.infer<typeof myEventSchema>;
@@ -87,6 +99,7 @@ function toMyEvent(
   row: EventJson,
   record: RecordRow | undefined,
   leave: LeaveRow | undefined,
+  report: ReportRow | undefined,
 ): MyEventJson {
   return {
     id: row.id,
@@ -117,6 +130,15 @@ function toMyEvent(
         status: asked.status,
         reason: asked.reason,
         decisionNote: asked.decisionNote ?? null,
+      })),
+      O.toNullable,
+    ),
+    report: pipe(
+      O.fromNullable(report),
+      O.map((sent) => ({
+        status: sent.status,
+        message: sent.message,
+        decisionNote: sent.decisionNote ?? null,
       })),
       O.toNullable,
     ),
@@ -295,13 +317,23 @@ export const myRoutes = app
     );
     const leaveById = new Map(A.map(leaves, (row) => [row.eventId, row]));
 
+    const sent = await whenAny(ids, (some) =>
+      c.var.db
+        .select()
+        .from(checkInReport)
+        .where(and(eq(checkInReport.personId, me.id), inArray(checkInReport.eventId, [...some]))),
+    );
+    const reportById = new Map(A.map(sent, (row) => [row.eventId, row]));
+
     const json = await toEventJson(c.var.db, page.items, now);
 
     return c.json(
       {
         items: pipe(
           json,
-          A.map((row) => toMyEvent(row, byId.get(row.id), leaveById.get(row.id))),
+          A.map((row) =>
+            toMyEvent(row, byId.get(row.id), leaveById.get(row.id), reportById.get(row.id)),
+          ),
           F.toMutable,
         ),
         nextCursor: page.nextCursor,
@@ -329,7 +361,7 @@ export const myRoutes = app
     const expected = await isExpected(c.var.db, id, me.id);
     if (!expected) return c.json({ error: "Not found" }, 404);
 
-    const [json, expectedIds, records, leaves] = await Promise.all([
+    const [json, expectedIds, records, leaves, reports] = await Promise.all([
       toEventJson(c.var.db, [found], now),
       expectedPersonIds(c.var.db, id),
       c.var.db
@@ -340,6 +372,11 @@ export const myRoutes = app
         .select()
         .from(leaveRequest)
         .where(and(eq(leaveRequest.eventId, id), eq(leaveRequest.personId, me.id)))
+        .limit(1),
+      c.var.db
+        .select()
+        .from(checkInReport)
+        .where(and(eq(checkInReport.eventId, id), eq(checkInReport.personId, me.id)))
         .limit(1),
     ]);
 
@@ -365,7 +402,7 @@ export const myRoutes = app
     });
     const mine = A.find(records, ({ row }) => row.personId === me.id)?.row;
 
-    return c.json({ ...toMyEvent(event, mine, leaves[0]), ...roster }, 200);
+    return c.json({ ...toMyEvent(event, mine, leaves[0], reports[0]), ...roster }, 200);
   })
   .openapi(passRoute, async (c) => {
     const organizationId = organizationIdOf(c);

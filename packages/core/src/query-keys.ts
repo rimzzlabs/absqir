@@ -190,6 +190,17 @@ export const leaveMutationKeys = {
   decide: () => [...leaveMutationKeys.all, "decide"] as const,
 };
 
+export const checkInReportKeys = {
+  all: ["check-in-reports"] as const,
+  queue: (scope: string) => [...checkInReportKeys.all, "queue", scope] as const,
+};
+
+export const checkInReportMutationKeys = {
+  all: ["check-in-report-mutations"] as const,
+  create: () => [...checkInReportMutationKeys.all, "create"] as const,
+  decide: () => [...checkInReportMutationKeys.all, "decide"] as const,
+};
+
 export const reportKeys = {
   all: ["reports"] as const,
   summary: (range: string) => [...reportKeys.all, "summary", range] as const,

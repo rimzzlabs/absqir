@@ -51,6 +51,10 @@ export {
 export const LEAVE_STATUSES = ["pending", "approved", "declined"] as const;
 export type LeaveStatus = (typeof LEAVE_STATUSES)[number];
 
+/** A member's report that the fence refused them unfairly. */
+export const REPORT_STATUSES = ["pending", "approved", "declined"] as const;
+export type ReportStatus = (typeof REPORT_STATUSES)[number];
+
 export const SCHEDULE_FREQUENCIES = ["daily", "weekly"] as const;
 export type ScheduleFrequency = (typeof SCHEDULE_FREQUENCIES)[number];
 
@@ -655,6 +659,53 @@ export const checkInAttempt = pgTable(
     index("check_in_attempt_event_idx").on(table.eventId, table.createdAt),
     index("check_in_attempt_person_idx").on(table.personId, table.createdAt),
     index("check_in_attempt_organization_idx").on(table.organizationId, table.createdAt),
+  ],
+);
+
+/**
+ * A member says the place check was wrong about them.
+ *
+ * This is not a bug tracker. It is an appeal, and it ends in an attendance
+ * record the same way a leave request does. A phone with a poor fix, a
+ * basement meeting room, a receiver that will not settle: the member did
+ * everything right and the fence still refused them, and without a way back
+ * they are marked absent for it.
+ *
+ * The row points at the refused attempt, which already holds the evidence:
+ * how far the reading was, how vague, and what the signals said. The
+ * strongest fact is not stored here at all. A refusal only happens after the
+ * room screen's code has been checked, so anyone who reaches this point held
+ * a live token and stood in front of the screen.
+ */
+export const checkInReport = pgTable(
+  "check_in_report",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    personId: text("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    /** The refused attempt being appealed. Null once that row is cleaned up. */
+    attemptId: text("attempt_id").references(() => checkInAttempt.id, { onDelete: "set null" }),
+    /** The member's own words. */
+    message: text("message").notNull(),
+    status: text("status").$type<ReportStatus>().notNull().default("pending"),
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decisionNote: text("decision_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // One report per person per event, the same rule a leave request follows.
+    uniqueIndex("check_in_report_event_person_idx").on(table.eventId, table.personId),
+    index("check_in_report_organization_status_idx").on(table.organizationId, table.status),
+    index("check_in_report_person_idx").on(table.personId),
   ],
 );
 

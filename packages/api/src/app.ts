@@ -7,6 +7,7 @@ import { currentSession, requestContext } from "#src/middleware/session";
 import { authRoutes } from "#src/routes/auth";
 import { authFlowRoutes } from "#src/routes/auth-flow";
 import { calendarRoutes } from "#src/routes/calendar";
+import { checkInReportRoutes } from "#src/routes/check-in-reports";
 import { mountDocs } from "#src/routes/docs";
 import { domainRoutes } from "#src/routes/domains";
 import { eventRoutes } from "#src/routes/events";
@@ -60,6 +61,7 @@ const routes = app
   .route("/", myRoutes)
   .route("/", publicEventRoutes)
   .route("/", leaveRoutes)
+  .route("/", checkInReportRoutes)
   .route("/", reportRoutes)
   .route("/", calendarRoutes)
   .route("/", notificationRoutes)

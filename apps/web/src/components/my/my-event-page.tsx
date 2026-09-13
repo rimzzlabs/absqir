@@ -289,6 +289,32 @@ function MySide(props: {
             </div>
           ))}
 
+        {/* A member who reported a problem has to be able to see it landed,
+            and what came of it. Otherwise they report again. */}
+        {match(event.report)
+          .with(P.nullish, () => null)
+          .otherwise((report) => (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">Check-in problem</span>
+                {match(report.status)
+                  .with("approved", () => <Badge variant="secondary">Accepted</Badge>)
+                  .with("declined", () => <Badge variant="outline">Not accepted</Badge>)
+                  .otherwise(() => (
+                    <Badge>Waiting</Badge>
+                  ))}
+              </div>
+              <p className="text-sm">{report.message}</p>
+              {match(report.decisionNote)
+                .with(P.string.minLength(1), (decisionNote) => (
+                  <p className="text-muted-foreground border-border border-l-2 pl-3 text-sm">
+                    {decisionNote}
+                  </p>
+                ))
+                .otherwise(() => null)}
+            </div>
+          ))}
+
         {match(!event.record && !event.leave && !running)
           .with(true, () => (
             <p className="text-muted-foreground text-sm">
