@@ -14,6 +14,7 @@ import { groupRoutes } from "#src/routes/groups";
 import { healthRoutes } from "#src/routes/health";
 import { joinRequestRoutes } from "#src/routes/join-requests";
 import { leaveRoutes } from "#src/routes/leave";
+import { locationRoutes } from "#src/routes/locations";
 import { meRoutes } from "#src/routes/me";
 import { myRoutes } from "#src/routes/my";
 import { notificationRoutes } from "#src/routes/notifications";
@@ -53,6 +54,7 @@ const routes = app
   .route("/", organizationRoutes)
   .route("/", peopleRoutes)
   .route("/", groupRoutes)
+  .route("/", locationRoutes)
   .route("/", eventRoutes)
   .route("/", scheduleRoutes)
   .route("/", myRoutes)

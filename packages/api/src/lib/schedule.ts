@@ -6,12 +6,58 @@ import { addDays, addMinutes, isAfter, isBefore, startOfDay } from "date-fns";
 import { and, eq, gte, inArray } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 
-const { schedule, scheduleGroup, event: eventTable, eventGroup } = schema;
+const { schedule, scheduleGroup, event: eventTable, eventGroup, location } = schema;
 
 /** How far ahead a schedule spawns events. */
 export const HORIZON_DAYS = 14;
 
 type ScheduleRow = typeof schedule.$inferSelect;
+
+type PlaceRow = typeof location.$inferSelect;
+
+/** Every saved place the active rules point at, in one read. */
+async function placesFor(
+  db: Database,
+  rules: readonly ScheduleRow[],
+): Promise<Map<string, PlaceRow>> {
+  const ids = pipe(
+    A.filterMap(rules, (rule) => rule.locationId ?? undefined),
+    A.uniq,
+    F.toMutable,
+  );
+  if (ids.length === 0) return new Map();
+
+  const rows = await db.select().from(location).where(inArray(location.id, ids));
+
+  return new Map(A.map(rows, (row) => [row.id, row] as const));
+}
+
+/**
+ * The fence columns for one spawned event. A rule that asks for a fence but
+ * whose place was deleted since spawns the event without one, rather than
+ * with a fence nobody can satisfy.
+ */
+function fenceFor(rule: ScheduleRow, places: Map<string, PlaceRow>) {
+  const place = match(rule.locationId)
+    .with(P.string, (id) => places.get(id) ?? null)
+    .otherwise(() => null);
+
+  return match([rule.requireLocation, place] as const)
+    .with([true, P.nonNullable], ([, found]) => ({
+      locationId: found.id,
+      requireLocation: true,
+      latitude: found.latitude,
+      longitude: found.longitude,
+      radiusMeters: found.radiusMeters,
+    }))
+    .otherwise(() => ({
+      locationId: place?.id ?? null,
+      requireLocation: false,
+      latitude: null,
+      longitude: null,
+      radiusMeters: null,
+    }));
+}
 
 function parseClock(value: string): { hours: number; minutes: number } {
   const [h, m] = A.map(value.split(":"), Number);
@@ -92,7 +138,7 @@ export async function materializeSchedules(
   const until = addDays(now, HORIZON_DAYS);
   const ruleIds = A.map(rules, (rule) => rule.id);
 
-  const [existing, groups] = await Promise.all([
+  const [existing, groups, places] = await Promise.all([
     db
       .select({ scheduleId: eventTable.scheduleId, startsAt: eventTable.startsAt })
       .from(eventTable)
@@ -101,6 +147,7 @@ export async function materializeSchedules(
       .select({ scheduleId: scheduleGroup.scheduleId, groupId: scheduleGroup.groupId })
       .from(scheduleGroup)
       .where(inArray(scheduleGroup.scheduleId, ruleIds)),
+    placesFor(db, rules),
   ]);
 
   const seen = new Set(A.map(existing, (row) => `${row.scheduleId}:${row.startsAt.getTime()}`));
@@ -132,6 +179,9 @@ export async function materializeSchedules(
             lateAfterMinutes: rule.lateAfterMinutes,
             opensBeforeMinutes: rule.opensBeforeMinutes,
             allowWalkIns: rule.allowWalkIns,
+            // The fence is copied, never referenced. An event spawned today
+            // keeps today's circle even after somebody moves the place.
+            ...fenceFor(rule, places),
             secret: randomSecret(),
           })
           .onConflictDoNothing();

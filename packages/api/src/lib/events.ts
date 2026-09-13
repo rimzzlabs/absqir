@@ -1,7 +1,8 @@
+import { isRiskReason, type RiskReason, SUSPECT_AT } from "@absqir/core/location-risk";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
-import type { AttendanceStatus } from "@absqir/db/schema";
-import { A, O, pipe } from "@mobily/ts-belt";
+import type { AttendanceStatus, LocationVerdict } from "@absqir/db/schema";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import {
   and,
   asc,
@@ -33,6 +34,7 @@ const {
   groupMember,
   person,
   attendanceRecord,
+  location,
 } = schema;
 
 export type RecordRow = typeof attendanceRecord.$inferSelect;
@@ -64,6 +66,19 @@ export interface EventJson {
   closedAt: string | null;
   scheduleId: string | null;
   status: EventStatus;
+  /** The organizer opted this event in to the fence. */
+  requireLocation: boolean;
+  /**
+   * The fence as this event holds it. `name` comes from the saved place and
+   * is null once that place is deleted, because the copy outlives it.
+   */
+  fence: {
+    locationId: string | null;
+    name: string | null;
+    latitude: number;
+    longitude: number;
+    radiusMeters: number;
+  } | null;
   groups: { id: string; name: string }[];
   counts: EventCounts;
 }
@@ -248,7 +263,11 @@ export async function toEventJson(
   now: Date = new Date(),
 ): Promise<readonly EventJson[]> {
   const ids = A.map(rows, (row) => row.id);
-  const [groups, counts] = await Promise.all([groupsByEvent(db, ids), countsByEvent(db, ids)]);
+  const [groups, counts, places] = await Promise.all([
+    groupsByEvent(db, ids),
+    countsByEvent(db, ids),
+    placeNames(db, rows),
+  ]);
 
   return A.map(rows, (row) => ({
     id: row.id,
@@ -266,9 +285,41 @@ export async function toEventJson(
     closedAt: row.closedAt?.toISOString() ?? null,
     scheduleId: row.scheduleId ?? null,
     status: statusOf(row, now),
+    requireLocation: row.requireLocation,
+    fence: fenceJson(row, places),
     groups: groups.get(row.id) ?? [],
     counts: counts.get(row.id) ?? { ...EMPTY_COUNTS },
   }));
+}
+
+/** Saved-place names for the events that still point at one. */
+async function placeNames(db: Database, rows: readonly EventRow[]): Promise<Map<string, string>> {
+  const ids = pipe(
+    A.filterMap(rows, (row) => row.locationId ?? undefined),
+    A.uniq,
+  );
+  if (ids.length === 0) return new Map();
+
+  const found = await db
+    .select({ id: location.id, name: location.name })
+    .from(location)
+    .where(inArray(location.id, F.toMutable(ids)));
+
+  return new Map(A.map(found, (row) => [row.id, row.name] as const));
+}
+
+function fenceJson(row: EventRow, places: Map<string, string>): EventJson["fence"] {
+  return match([row.latitude, row.longitude, row.radiusMeters])
+    .with([P.number, P.number, P.number], ([latitude, longitude, radiusMeters]) => ({
+      locationId: row.locationId ?? null,
+      name: match(row.locationId)
+        .with(P.string, (id) => places.get(id) ?? null)
+        .otherwise(() => null),
+      latitude,
+      longitude,
+      radiusMeters,
+    }))
+    .otherwise(() => null);
 }
 
 export type EventScope = "upcoming" | "past" | "all";
@@ -403,6 +454,17 @@ export interface RecordJson {
   method: string | null;
   checkedInAt: string | null;
   note: string | null;
+  /** Null when the event never asked where the person was. */
+  location: {
+    verdict: LocationVerdict;
+    distanceMeters: number | null;
+    accuracyMeters: number | null;
+    riskScore: number;
+    riskReasons: RiskReason[];
+    /** Worth a look, and nobody has looked yet. */
+    flagged: boolean;
+    reviewedAt: string | null;
+  } | null;
 }
 
 /** Everyone expected, plus anyone with a record, with what the record says. */
@@ -445,8 +507,38 @@ export async function eventRecords(db: Database, eventId: string): Promise<reado
       method: record?.method ?? null,
       checkedInAt: record?.checkedInAt?.toISOString() ?? null,
       note: record?.note ?? null,
+      location: locationJson(record),
     };
   });
+}
+
+/**
+ * The fence part of one record, for the organizer's table. Null on every
+ * record from an event that never asked where anyone was.
+ */
+function locationJson(record: RecordRow | undefined): RecordJson["location"] {
+  if (!record?.locationVerdict) return null;
+
+  return {
+    verdict: record.locationVerdict,
+    distanceMeters: record.distanceMeters ?? null,
+    accuracyMeters: record.accuracyMeters ?? null,
+    riskScore: record.riskScore ?? 0,
+    riskReasons: pipe(record.riskReasons, A.filter(isRiskReason), F.toMutable),
+    flagged: (record.riskScore ?? 0) >= SUSPECT_AT && record.reviewedAt === null,
+    reviewedAt: record.reviewedAt?.toISOString() ?? null,
+  };
+}
+
+/** What the fence found, when the event asked. See @absqir/api lib/location-check. */
+export interface RecordLocation {
+  latitude: number | null;
+  longitude: number | null;
+  accuracyMeters: number | null;
+  distanceMeters: number | null;
+  locationVerdict: LocationVerdict | null;
+  riskScore: number | null;
+  riskReasons: string[];
 }
 
 export interface UpsertRecordParams {
@@ -457,6 +549,12 @@ export interface UpsertRecordParams {
   checkedInAt: Date | null;
   note?: string | null;
   markedBy?: string | null;
+  /**
+   * Absent on a manual mark and on an event with no fence. Absent leaves any
+   * reading already on the row alone, rather than blanking what an earlier
+   * check-in recorded.
+   */
+  location?: RecordLocation;
 }
 
 /** One row per person per event; a later write replaces the earlier one. */
@@ -472,6 +570,7 @@ export async function upsertRecord(db: Database, params: UpsertRecordParams): Pr
       checkedInAt: params.checkedInAt,
       note: params.note ?? null,
       markedBy: params.markedBy ?? null,
+      ...(params.location ?? {}),
     })
     .onConflictDoUpdate({
       target: [attendanceRecord.eventId, attendanceRecord.personId],
@@ -481,6 +580,7 @@ export async function upsertRecord(db: Database, params: UpsertRecordParams): Pr
         checkedInAt: params.checkedInAt,
         note: params.note ?? null,
         markedBy: params.markedBy ?? null,
+        ...(params.location ?? {}),
         updatedAt: new Date(),
       },
     })
