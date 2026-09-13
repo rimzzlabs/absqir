@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.4.0](https://github.com/rimzzlabs/absqir/compare/v0.3.2...v0.4.0) (2026-09-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename the attendance session to the event ([#29](https://github.com/rimzzlabs/absqir/issues/29))
+
+### Features
+
+* make the back button, the member event page, and every table read on a phone ([#34](https://github.com/rimzzlabs/absqir/issues/34)) ([508d24e](https://github.com/rimzzlabs/absqir/commit/508d24e7998aef5b87d0e5617b94a0e55396ca32))
+* **web:** fill out the organization tab and add danger zones ([#25](https://github.com/rimzzlabs/absqir/issues/25)) ([0703bd5](https://github.com/rimzzlabs/absqir/commit/0703bd59753b78aa00ff0fdf600f07dffaef18ac))
+* **web:** give a member an event page ([#31](https://github.com/rimzzlabs/absqir/issues/31)) ([6a47d2e](https://github.com/rimzzlabs/absqir/commit/6a47d2ec51197a0cd374d733295ebaf3b404f0f5))
+* **web:** make the dashboard say something ([#32](https://github.com/rimzzlabs/absqir/issues/32)) ([2c43327](https://github.com/rimzzlabs/absqir/commit/2c43327d05e81bf710b2f19ad484d825c41cee3d))
+* **web:** move the directory into settings and drop the people page ([#36](https://github.com/rimzzlabs/absqir/issues/36)) ([ef36c1c](https://github.com/rimzzlabs/absqir/commit/ef36c1c58f6751a301aa6bfcc57828517852cee9))
+
+
+### Bug fixes
+
+* **ui:** keep a tall dialog scrollable ([#30](https://github.com/rimzzlabs/absqir/issues/30)) ([cc1663a](https://github.com/rimzzlabs/absqir/commit/cc1663a487fd4a0f20d9f804d4cdcff55b0fd51e))
+* **web:** give the identity blocks one type scale ([#35](https://github.com/rimzzlabs/absqir/issues/35)) ([25f439d](https://github.com/rimzzlabs/absqir/commit/25f439d60045092c0cc5b53e9019f2e0d86b5a66))
+* **web:** keep the check-in scanner usable when the camera is off ([#27](https://github.com/rimzzlabs/absqir/issues/27)) ([7c2cdf9](https://github.com/rimzzlabs/absqir/commit/7c2cdf9bf035d9ee4a4401e3471533b7442bba67))
+
+
+### Refactors
+
+* drop every ternary for ts-pattern and ts-belt ([#33](https://github.com/rimzzlabs/absqir/issues/33)) ([597480d](https://github.com/rimzzlabs/absqir/commit/597480d43c9206b61a24fcd0046a65f5200770d4))
+* rename the attendance session to the event ([#29](https://github.com/rimzzlabs/absqir/issues/29)) ([4f32eed](https://github.com/rimzzlabs/absqir/commit/4f32eedcbd4d5cda2a772d467b8bd1abd87aee61))
+
+
+### Documentation
+
+* add the Cloudflare and Neon path ([#28](https://github.com/rimzzlabs/absqir/issues/28)) ([868f5c3](https://github.com/rimzzlabs/absqir/commit/868f5c388ca1153e1df5718eb26f62a7e275ae56))
+
 ## [0.3.2](https://github.com/rimzzlabs/absqir/compare/v0.3.1...v0.3.2) (2026-09-10)
 
 

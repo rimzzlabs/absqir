@@ -57,7 +57,7 @@
     }
   },
   "license": "MIT",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "dependencies": {
     "@mobily/ts-belt": "4.0.0-rc.5",
     "ts-pattern": "^5.9.0"
