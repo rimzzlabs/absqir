@@ -1,0 +1,144 @@
+# Voice
+
+<div role="doc-subtitle">How absqir talks to the people it keeps a record of</div>
+
+absqir keeps a register. It writes down who arrived, who arrived late, and who
+never came. It refuses people at a door. A person who reads the screen is often
+reading a fact about themselves that somebody else will act on.
+
+That is why the voice matters more here than in most software. The app is not
+selling anything. It is telling you something about your own day, and it has to
+be worth reading, careful with the hard parts, and exact about the record.
+
+Three words hold the voice together: **engaging, mindful, professional**. They do
+not fight, because each one owns a different job.
+
+## Engaging is concrete, never peppy
+
+Interest comes from naming the real thing. It never comes from enthusiasm.
+
+```txt
+Yes  A QR code on screen, a scanner at the door, and the register writes itself.
+No   Streamline attendance tracking for your whole organization!
+```
+
+The first line has a screen, a door, and a register in it. You can picture all
+three. The second line could belong to any product ever built.
+
+So: no exclamation marks, no "Oops", no "Awesome", no emoji, no jokes. The
+energy budget goes into picking the right noun.
+
+## Mindful is how you handle consequence
+
+Every screen that judges somebody carries three parts, in this order: **what
+happened, why, and what you can do now.** A verdict on its own is the one thing
+the app must never print.
+
+```txt
+No   You are not expected at this event.
+Yes  You are not on the list for this event. If you think you should be,
+     ask an organizer to add you, or check in as a walk-in if they allow it.
+```
+
+Two more rules follow from this.
+
+**Say what the app cannot know.** When absqir flags a check-in, it is guessing
+from a phone, and phones are wrong indoors. The copy admits that:
+
+```txt
+Yes  The check-in was accepted, because none of this is proof on its own.
+```
+
+**Never rank people.** Attendance is a number about a day, not a grade about a
+person. Sort by it if that helps an organizer, but do not name the sort with a
+judgement.
+
+```txt
+No   The last 30 days, worst first.
+Yes  The last 30 days, lowest attendance first.
+```
+
+## Professional is exactness about the record
+
+State the time, the status, and who decided. Then stop. No hedging, no padding,
+no apology theatre.
+
+```txt
+Yes  The record keeps the time you scanned, not the time an organizer decided.
+```
+
+This is also where accuracy beats warmth. Never round a fact to make it sound
+kinder, and never soften a status into something it is not.
+
+## The rules
+
+1. **Talk to the person.** Prefer "you" and "your". A fragment with no subject
+   reads cold, so give it one.
+
+   ```txt
+   No   Nothing expects you right now.
+   Yes  You have nothing coming up right now.
+   ```
+
+2. **An error names a cause and a way out.** "Could not save the profile" tells a
+   person nothing they can act on.
+
+   ```txt
+   No   Could not save the profile.
+   Yes  Your profile did not save. Check your connection, then try again.
+   ```
+
+3. **No developer words.** A person checking into a Monday standup does not know
+   what a slug, a payload, a DNS lookup, or an ISO instant is. Name the thing by
+   what it does.
+
+   ```txt
+   No   That slug is taken. Try another.
+   Yes  That short name is already in use. Pick another one.
+   ```
+
+4. **One name per thing, everywhere.** An event is an event, never a session or a
+   meeting. A check-in is a check-in, never a scan-in. The list of people an
+   event expects is the list.
+
+5. **Short sentences, whole sentences.** Aim for fifteen words. Do not chain
+   three fragments in a row for drama.
+
+6. **Buttons say the action.** "Send report" and "Set password and sign in", not
+   "Submit" or "Continue", whenever the action has a real name.
+
+7. **No time-wasting words.** Cut "please", "simply", "just", "in order to", and
+   "it is important to note that".
+
+8. **Write the number as a person would read it.** "About 40 m away", not
+   "distance: 40.2".
+
+9. **The same voice in both languages.** Bahasa Indonesia carries the tone, not a
+   word-for-word copy of the English. Indonesian addresses a person as "Anda",
+   because absqir is a record an employer reads, and "kamu" is too familiar for
+   that. Warmth comes from the shape of the sentence instead. If an English line
+   only works through an English idiom, write a new Indonesian line that does the
+   same job.
+
+## Words
+
+| Do not write | Write |
+| --- | --- |
+| slug | short name |
+| workspace | organization |
+| payload, request, endpoint | nothing, describe what failed |
+| the API did not answer | absqir is not responding |
+| internal server error | something went wrong on our side |
+| unauthorized | you are not signed in |
+| validation failed | check the highlighted fields |
+| QR token | the code on the screen |
+| turned up | arrived |
+| judged, over everyone judged | counted, of everyone counted |
+| failed to, unable to | did not, cannot |
+
+## Before you ship a string
+
+- Read it aloud. If nobody would say it, rewrite it.
+- If it delivers bad news, check that it says what to do next.
+- If it names a person's status, check that it also names the time.
+- Check both languages say the same thing, not the same words.

@@ -52,6 +52,7 @@ export default defineConfig({
         { text: "CLI", link: "/cli" },
         { text: "Architecture", link: "/architecture" },
         { text: "Brand", link: "/brand" },
+        { text: "Voice", link: "/voice" },
       ],
     },
   ],
