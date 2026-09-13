@@ -26,6 +26,14 @@ export const common = {
   },
   people_one: "{{count}} person",
   people_other: "{{count}} people",
+  fields: {
+    pickDate: "Pick a date",
+    pickDateTime: "Pick a date and time",
+    pickDayFirst: "Pick a day first",
+    time: "Time",
+    toggleSidebar: "Toggle the sidebar",
+    loading: "Loading",
+  },
   island: {
     title: "This part could not load",
     description: "The rest of the page still works. Try again, or reload the page.",

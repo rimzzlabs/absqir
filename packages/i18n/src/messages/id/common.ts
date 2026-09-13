@@ -26,6 +26,14 @@ export const common = {
   },
   people_one: "{{count}} orang",
   people_other: "{{count}} orang",
+  fields: {
+    pickDate: "Pilih tanggal",
+    pickDateTime: "Pilih tanggal dan jam",
+    pickDayFirst: "Pilih harinya dulu",
+    time: "Jam",
+    toggleSidebar: "Buka atau tutup bilah samping",
+    loading: "Memuat",
+  },
   island: {
     title: "Bagian ini gagal dimuat",
     description: "Bagian lain halaman ini tetap jalan. Coba lagi, atau muat ulang halaman.",
