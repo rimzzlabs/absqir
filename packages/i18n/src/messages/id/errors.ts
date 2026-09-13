@@ -170,7 +170,7 @@ export const errors = {
   couldNotSignDeviceOut: "Perangkat itu belum dikeluarkan. Coba lagi.",
   couldNotSwitchOrganizations: "absqir belum berpindah organisasi. Coba lagi.",
   couldNotSwitchToNewOrganization:
-    "Organisasinya sudah dibuat, tetapi absqir belum berpindah ke sana. Buka lewat pemilih organisasi.",
+    "absqir belum berpindah ke organisasi baru itu. Buka lewat pemilih organisasi.",
   couldNotDeleteOrganization: "Organisasi belum terhapus. Coba lagi.",
   couldNotLeaveOrganization: "Anda belum keluar dari organisasi. Coba lagi.",
   couldNotRemoveMember: "Anggota belum dikeluarkan. Coba lagi.",

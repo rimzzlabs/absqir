@@ -159,7 +159,7 @@ export const errors = {
   couldNotSignDeviceOut: "That device was not signed out. Try again.",
   couldNotSwitchOrganizations: "absqir did not switch organizations. Try again.",
   couldNotSwitchToNewOrganization:
-    "The organization was created, but absqir did not switch to it. Open it from the switcher.",
+    "absqir did not switch to the new organization. Open it from the switcher.",
   couldNotDeleteOrganization: "The organization was not deleted. Try again.",
   couldNotLeaveOrganization: "You did not leave the organization. Try again.",
   couldNotRemoveMember: "The member was not removed. Try again.",
