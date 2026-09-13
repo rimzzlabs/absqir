@@ -1,4 +1,5 @@
 import { type Locale, translatorFor } from "@absqir/i18n";
+import { match, P } from "ts-pattern";
 import {
   EmailButton,
   EmailFallbackLink,
@@ -13,15 +14,26 @@ export interface InvitationEmailProps {
   locale: Locale;
   organizationName: string;
   inviterName: string;
+  /** The role name as the organization plugin stores it, such as "member". */
   role: string;
   acceptUrl: string;
   /** The instance origin, for the brand mark. The mailer fills it in. */
   appUrl?: string;
 }
 
+/** The four roles absqir names. Anything else is shown as it was stored. */
+const ROLES = ["owner", "admin", "organizer", "member"] as const;
+
+function isRole(value: string): value is (typeof ROLES)[number] {
+  return ROLES.includes(value as (typeof ROLES)[number]);
+}
+
 export function InvitationEmail(props: InvitationEmailProps) {
   const { organizationName, inviterName, role, acceptUrl, appUrl, locale } = props;
   const t = translatorFor(locale);
+  const roleName = match(role)
+    .with(P.string.and(P.when(isRole)), (role) => t(`common:roles.${role}`).toLowerCase())
+    .otherwise(() => role);
 
   return (
     <EmailLayout
@@ -40,7 +52,7 @@ export function InvitationEmail(props: InvitationEmailProps) {
         {t("email:invitation.body", {
           inviter: inviterName,
           organization: organizationName,
-          role,
+          role: roleName,
         })}
       </EmailText>
       <EmailButton href={acceptUrl}>{t("email:invitation.accept")}</EmailButton>

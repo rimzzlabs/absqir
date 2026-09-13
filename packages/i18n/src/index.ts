@@ -77,6 +77,9 @@ export function i18nFor(locale: Locale): I18nInstance {
     // React escapes what it renders, so a second pass would show &#39; to the
     // reader instead of an apostrophe.
     interpolation: { escapeValue: false },
+    // i18next greets the console on the first init. A self-host reading its
+    // own Worker log has not asked for an advertisement.
+    showSupportNotice: false,
     returnNull: false,
   });
 
