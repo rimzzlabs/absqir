@@ -24,6 +24,8 @@ const personSchema = z.object({
   identifier: z.string().nullable(),
   /** Set once the person has an account in this organization. */
   userId: z.string().nullable(),
+  /** The membership behind the account. Needed to change the role or revoke access. */
+  memberId: z.string().nullable(),
   role: roleSchema.nullable(),
   /** A pending invitation waits for this email. */
   invited: z.boolean(),
@@ -39,6 +41,7 @@ const personInput = z.object({
 
 const errorSchema = z.object({ error: z.string() });
 const FORBIDDEN_MESSAGE = "This needs the admin role or higher";
+const OWN_ROW_MESSAGE = "Change your own name and email in settings.";
 const idParam = z.object({ id: z.string() });
 
 const unauthorized = {
@@ -227,7 +230,8 @@ function isUniqueViolation(error: unknown) {
 }
 
 interface Decorations {
-  roles: Map<string, string>;
+  /** By user id: the membership row that carries the role. */
+  members: Map<string, { id: string; role: string }>;
   invited: Set<string>;
   groups: Map<string, { id: string; name: string }[]>;
 }
@@ -253,7 +257,7 @@ async function decorate(
     match(userIds.length > 0)
       .with(true, () =>
         db
-          .select({ userId: member.userId, role: member.role })
+          .select({ id: member.id, userId: member.userId, role: member.role })
           .from(member)
           .where(and(eq(member.organizationId, organizationId), inArray(member.userId, userIds))),
       )
@@ -293,17 +297,17 @@ async function decorate(
   }
 
   return {
-    roles: new Map(A.map(members, (row) => [row.userId, row.role])),
+    members: new Map(A.map(members, (row) => [row.userId, { id: row.id, role: row.role }])),
     invited: new Set(A.map(invitations, (row) => row.email)),
     groups,
   };
 }
 
 function toJson(row: PersonRow, extra: Decorations) {
-  const rawRole = match(row.userId)
-    .with(P.string.minLength(1), (userId) => extra.roles.get(userId))
+  const membership = match(row.userId)
+    .with(P.string.minLength(1), (userId) => extra.members.get(userId))
     .otherwise(() => undefined);
-  const role = match(rawRole)
+  const role = match(membership?.role)
     .with(P.when(isRoleName), (name) => name)
     .otherwise(() => null);
 
@@ -313,6 +317,7 @@ function toJson(row: PersonRow, extra: Decorations) {
     email: row.email ?? null,
     identifier: row.identifier ?? null,
     userId: row.userId ?? null,
+    memberId: membership?.id ?? null,
     role,
     invited: match(row.email)
       .with(P.string.minLength(1), (email) => extra.invited.has(email))
@@ -320,6 +325,15 @@ function toJson(row: PersonRow, extra: Decorations) {
     groups: extra.groups.get(row.id) ?? [],
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+/**
+ * True when the row belongs to the caller's own account. Their name and email
+ * come from the account, so settings owns them, not the directory.
+ */
+function isCaller(c: Context<AppEnv>, row: PersonRow) {
+  // A row with no account has a null userId, which never equals an id.
+  return row.userId === c.get("user")?.id;
 }
 
 async function findPerson(db: Database, organizationId: string, id: string) {
@@ -434,6 +448,11 @@ export const peopleRoutes = app
     const found = await findPerson(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
 
+    // The account owns its name and its email, so settings changes those. The
+    // identifier belongs to the directory, and the reader may set their own.
+    const accountFields = body.name !== undefined || body.email !== undefined;
+    if (accountFields && isCaller(c, found)) return c.json({ error: OWN_ROW_MESSAGE }, 403);
+
     try {
       const [updated] = await c.var.db
         .update(person)
@@ -470,6 +489,13 @@ export const peopleRoutes = app
 
     const found = await findPerson(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
+
+    if (isCaller(c, found)) {
+      return c.json(
+        { error: "You cannot remove yourself. Leave the organization in settings." },
+        409,
+      );
+    }
 
     if (found.userId) {
       const memberships = await c.var.db

@@ -47,7 +47,10 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-closed:overflow-hidden",
+            // A menu sizes to its labels, the way the select popup does. An
+            // icon button anchor is 32px wide, and matching it wrapped every
+            // item onto two lines.
+            "z-50 max-h-(--available-height) w-max max-w-[min(24rem,var(--available-width))] min-w-[max(8rem,var(--anchor-width))] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-closed:overflow-hidden",
             className,
           )}
           {...props}

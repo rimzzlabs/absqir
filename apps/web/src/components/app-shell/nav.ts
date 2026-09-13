@@ -6,7 +6,6 @@ import {
   GearIcon,
   HouseIcon,
   type Icon,
-  IdentificationCardIcon,
   NotePencilIcon,
   QrCodeIcon,
   RepeatIcon,
@@ -53,10 +52,7 @@ export const MANAGER_NAV: NavGroup[] = [
   },
   {
     label: "Directory",
-    items: [
-      { href: "/people", label: "People", icon: IdentificationCardIcon, minimum: "organizer" },
-      { href: "/groups", label: "Groups", icon: UsersThreeIcon, minimum: "organizer" },
-    ],
+    items: [{ href: "/groups", label: "Groups", icon: UsersThreeIcon, minimum: "organizer" }],
   },
   {
     label: "Requests and insight",

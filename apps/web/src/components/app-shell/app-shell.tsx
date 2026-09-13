@@ -1,5 +1,4 @@
 import { SidebarInset, SidebarProvider } from "@absqir/ui/sidebar";
-import { TooltipProvider } from "@absqir/ui/tooltip";
 import type { ReactNode } from "react";
 import { AppHeader } from "@/components/app-shell/app-header";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
@@ -47,24 +46,22 @@ const PAGE =
 export function AppShell(props: AppShellProps) {
   return (
     <Providers>
-      <TooltipProvider>
-        <SidebarProvider defaultOpen={props.sidebarOpen ?? true}>
-          <AppSidebar
-            memberships={props.memberships}
-            active={props.active}
-            currentPath={props.currentPath}
-            canCreateOrganizations={props.user.canCreateOrganizations}
+      <SidebarProvider defaultOpen={props.sidebarOpen ?? true}>
+        <AppSidebar
+          memberships={props.memberships}
+          active={props.active}
+          currentPath={props.currentPath}
+          canCreateOrganizations={props.user.canCreateOrganizations}
+        />
+        <SidebarInset>
+          <AppHeader
+            title={props.title}
+            user={props.user}
+            hasOrganization={props.active !== null}
           />
-          <SidebarInset>
-            <AppHeader
-              title={props.title}
-              user={props.user}
-              hasOrganization={props.active !== null}
-            />
-            <div className={PAGE}>{props.children}</div>
-          </SidebarInset>
-        </SidebarProvider>
-      </TooltipProvider>
+          <div className={PAGE}>{props.children}</div>
+        </SidebarInset>
+      </SidebarProvider>
     </Providers>
   );
 }

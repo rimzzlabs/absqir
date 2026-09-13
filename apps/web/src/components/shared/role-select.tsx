@@ -17,7 +17,7 @@ export interface RoleSelectProps {
   value: InvitableRole;
   onChange: (value: InvitableRole) => void;
   disabled?: boolean;
-  /** Owner can only be granted by an owner, and only from the members table. */
+  /** Only an owner grants the owner role. See canGrantOwner in core. */
   includeOwner?: boolean;
 }
 

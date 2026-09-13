@@ -1,14 +1,8 @@
+import { ROLE_LABELS, type RoleName } from "@absqir/core/member-access";
 import { Badge } from "@absqir/ui/badge";
 import { match } from "ts-pattern";
 
-export type RoleName = "owner" | "admin" | "organizer" | "member";
-
-const LABELS: Record<RoleName, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  organizer: "Organizer",
-  member: "Member",
-};
+export type { RoleName };
 
 export interface RoleBadgeProps {
   role: RoleName;
@@ -19,9 +13,9 @@ export function RoleBadge(props: RoleBadgeProps) {
     .with("member", () => "outline" as const)
     .otherwise(() => "secondary" as const);
 
-  return <Badge variant={variant}>{LABELS[props.role]}</Badge>;
+  return <Badge variant={variant}>{ROLE_LABELS[props.role]}</Badge>;
 }
 
 export function roleLabel(role: RoleName): string {
-  return LABELS[role];
+  return ROLE_LABELS[role];
 }

@@ -32,11 +32,11 @@ import type { RoleName } from "@/components/shared/role-badge";
 export interface SettingsPageProps {
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
+  currentUserId: string;
   /** The `tab` in the address, read on the server so the first paint is right. */
   requestedTab: string | null;
   /** Null alongside a null role. */
   organization: { id: string; name: string; slug: string } | null;
-  currentUserId: string;
   user: {
     name: string;
     email: string;

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absq
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
+import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -82,9 +83,46 @@ function InviteForm() {
   );
 }
 
+/**
+ * Send again, or drop it. `useInviteMember` already asks for a resend, so the
+ * same call refreshes the link instead of refusing a duplicate. Each row owns
+ * its mutations, so one pending request does not grey out the whole list.
+ */
+function InvitationActions(props: { invitation: Invitation }) {
+  const { invitation } = props;
+  const resend = useInviteMember();
+  const cancel = useCancelInvitation();
+  const busy = resend.isPending || cancel.isPending;
+
+  const role = match(asRole(invitation.role))
+    .with("admin", "organizer", "member", (role) => role)
+    .otherwise(() => "member" as const);
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <IconAction
+        variant="ghost"
+        label={`Send again to ${invitation.email}`}
+        disabled={busy}
+        onClick={() => resend.mutate({ email: invitation.email, role })}
+      >
+        <PaperPlaneTiltIcon />
+      </IconAction>
+      <IconAction
+        variant="ghost"
+        label={`Cancel the invitation for ${invitation.email}`}
+        disabled={busy}
+        onClick={() => cancel.mutate(invitation.id)}
+      >
+        <XIcon />
+      </IconAction>
+      <FormError error={resend.error ?? cancel.error} />
+    </div>
+  );
+}
+
 function PendingList() {
   const invitations = useInvitations();
-  const cancel = useCancelInvitation();
 
   const columns: DataColumn<Invitation>[] = [
     {
@@ -106,21 +144,11 @@ function PendingList() {
       cellClassName: "text-muted-foreground",
     },
     {
-      key: "cancel",
+      key: "actions",
       place: "action",
-      headClassName: "w-16",
+      headClassName: "w-20",
       cellClassName: "text-right",
-      cell: (row) => (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Cancel the invitation for ${row.email}`}
-          disabled={cancel.isPending}
-          onClick={() => cancel.mutate(row.id)}
-        >
-          <XIcon />
-        </Button>
-      ),
+      cell: (row) => <InvitationActions invitation={row} />,
     },
   ];
 
@@ -131,15 +159,12 @@ function PendingList() {
       match(rows.length)
         .with(0, () => <p className="text-muted-foreground text-sm">No invitation is waiting.</p>)
         .otherwise(() => (
-          <div className="space-y-2">
-            <DataTable
-              label="Invitations waiting"
-              columns={columns}
-              rows={rows}
-              getKey={(row) => row.id}
-            />
-            <FormError error={cancel.error} />
-          </div>
+          <DataTable
+            label="Invitations waiting"
+            columns={columns}
+            rows={rows}
+            getKey={(row) => row.id}
+          />
         )),
     )
     .otherwise(() => null);

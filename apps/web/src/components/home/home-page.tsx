@@ -48,12 +48,6 @@ interface Step {
 function CountLinks(props: { counts: Organization["counts"] }) {
   const links = [
     {
-      label: match(props.counts.people)
-        .with(1, () => "1 person" as const)
-        .otherwise((people) => `${people} people`),
-      href: "/people",
-    },
-    {
       label: match(props.counts.groups)
         .with(1, () => "1 group" as const)
         .otherwise((groups) => `${groups} groups`),
@@ -182,12 +176,6 @@ function stepsOf(organization: Organization): Step[] {
 
   return [
     {
-      done: counts.people > 1,
-      label: "Add the people you expect to see",
-      hint: "Type them in, or import a CSV from your spreadsheet.",
-      href: "/people",
-    },
-    {
       done: counts.groups > 0,
       label: "Put them in groups",
       hint: "Teams, divisions, cohorts. An event will invite a whole group at once.",
@@ -197,7 +185,7 @@ function stepsOf(organization: Organization): Step[] {
       done: counts.members > 1 || counts.pendingInvitations > 0,
       label: "Invite an organizer or two",
       hint: "They run events and scan at the door. Admins also manage people.",
-      href: "/settings?tab=members",
+      href: "/settings?tab=invitations",
     },
   ];
 }

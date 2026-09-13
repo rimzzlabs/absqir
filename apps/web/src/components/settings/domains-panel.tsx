@@ -2,6 +2,7 @@ import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
+import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
 import {
   Select,
@@ -83,15 +84,14 @@ function DomainRow(props: { row: OrganizationDomain }) {
                   .otherwise(() => "Check now" as const)}
               </Button>
             ))}
-          <Button
-            size="icon-sm"
+          <IconAction
             variant="ghost"
-            aria-label={`Release ${row.domain}`}
+            label={`Release ${row.domain}`}
             disabled={release.isPending}
             onClick={() => release.mutate(row.id)}
           >
             <TrashIcon />
-          </Button>
+          </IconAction>
         </div>
       </div>
 

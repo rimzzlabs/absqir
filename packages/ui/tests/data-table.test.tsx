@@ -1,6 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { cardPartsOf, type DataColumn, DataTable, placeOf } from "#src/components/ui/data-table";
+import {
+  cardCellOf,
+  cardPartsOf,
+  type DataColumn,
+  DataTable,
+  placeOf,
+} from "#src/components/ui/data-table";
 
 interface Row {
   id: string;
@@ -63,6 +69,24 @@ describe("cardPartsOf", () => {
   });
 });
 
+describe("cardCellOf", () => {
+  it("falls back to the table cell", () => {
+    const column: DataColumn<Row> = { key: "name", cell: (row) => row.name };
+
+    expect(cardCellOf(column, ROWS[0] as Row)).toBe("Ada Lovelace");
+  });
+
+  it("prefers the card body when the column has one", () => {
+    const column: DataColumn<Row> = {
+      key: "name",
+      cell: (row) => row.name,
+      card: (row) => row.email,
+    };
+
+    expect(cardCellOf(column, ROWS[0] as Row)).toBe("ada@example.com");
+  });
+});
+
 describe("DataTable", () => {
   it("draws every column in the table", () => {
     render(<DataTable label="People" columns={COLUMNS} rows={ROWS} getKey={(row) => row.id} />);
@@ -102,6 +126,28 @@ describe("DataTable", () => {
       within(card as HTMLElement).getByRole("button", { name: "Remove Ada Lovelace" }),
     ).toBeDefined();
     expect(within(card as HTMLElement).getByRole("button", { name: "Approve" })).toBeDefined();
+  });
+
+  it("gives the card its own body when a column asks for one", () => {
+    const columns: DataColumn<Row>[] = [
+      { key: "name", header: "Name", place: "primary", cell: (row) => row.name },
+      {
+        key: "actions",
+        place: "action",
+        cell: () => <button type="button">Wide control</button>,
+        card: () => <button type="button">Folded away</button>,
+      },
+    ];
+
+    render(<DataTable label="People" columns={columns} rows={ROWS} getKey={(row) => row.id} />);
+
+    const table = screen.getByRole("table");
+    const list = screen.getByRole("list", { name: "People" });
+
+    expect(within(table).getAllByRole("button", { name: "Wide control" })).toHaveLength(2);
+    expect(within(table).queryByRole("button", { name: "Folded away" })).toBeNull();
+    expect(within(list).getAllByRole("button", { name: "Folded away" })).toHaveLength(2);
+    expect(within(list).queryByRole("button", { name: "Wide control" })).toBeNull();
   });
 
   it("draws nothing but the headings for an empty row set", () => {
