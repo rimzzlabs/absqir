@@ -60,19 +60,19 @@ function Identity(props: ProfilePanelProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
-      <Avatar size="lg" className="size-24">
+      <Avatar className="size-16">
         {match(props.image)
           .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
           .otherwise(() => null)}
-        <AvatarFallback name={props.name} className="text-2xl font-medium tracking-wide">
+        <AvatarFallback name={props.name} className="text-xl font-medium tracking-wide">
           {initialsOf(props.name)}
         </AvatarFallback>
       </Avatar>
 
       <div className="min-w-0 flex-1 basis-56">
-        <p className="font-heading truncate text-xl font-semibold tracking-tight">{props.name}</p>
+        <p className="font-heading truncate text-base font-semibold tracking-tight">{props.name}</p>
         <p className="text-muted-foreground truncate text-sm">{props.email}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {match(props.role)
             .with(P.string.minLength(1), (role) => <RoleBadge role={role} />)
             .otherwise(() => null)}
