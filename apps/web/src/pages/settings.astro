@@ -12,12 +12,6 @@ if (!user) {
   return Astro.redirect("/sign-in", 302);
 }
 
-// The members tab folded into the directory. Old links land where the roles
-// now live.
-if (Astro.url.searchParams.get("tab") === "members") {
-  return Astro.redirect("/people", 302);
-}
-
 // An account with no organization still owns a profile, preferences, and a
 // list of its devices. Only the organization tabs need one.
 const organization = match(activeMembership)
@@ -45,6 +39,7 @@ const shellUser = {
     client:load
     role={activeMembership?.role ?? null}
     organization={organization}
+    currentUserId={user.id}
     user={shellUser}
     requestedTab={Astro.url.searchParams.get("tab")}
   />

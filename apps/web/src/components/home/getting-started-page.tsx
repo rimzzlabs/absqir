@@ -127,8 +127,8 @@ function stepsFor(status: OnboardingStatus): Step[] {
     },
     {
       state: "locked",
-      label: "Add the people you expect to see",
-      hint: "Type them in one by one, or import a CSV from your spreadsheet.",
+      label: "Invite the people you expect to see",
+      hint: "Send each one an email invitation. They sign in and the directory fills itself.",
       icon: IdentificationCardIcon,
     },
     {

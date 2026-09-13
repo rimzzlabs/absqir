@@ -35,13 +35,3 @@ export function canManageAccess(viewer: RoleName, subject: AccessSubject): boole
 export function canGrantOwner(viewer: RoleName): boolean {
   return viewer === "owner";
 }
-
-/**
- * Deleting the directory row also ends the membership, so the owner is out of
- * reach until ownership moves. The viewer never deletes their own row.
- */
-export function canDeleteFromDirectory(viewer: RoleName, subject: AccessSubject): boolean {
-  if (subject.isSelf || subject.role === "owner") return false;
-
-  return viewer === "owner" || viewer === "admin";
-}

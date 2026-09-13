@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   SlidersHorizontalIcon,
   UserCircleIcon,
+  UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ import { Providers } from "@/components/providers";
 import { DomainsPanel } from "@/components/settings/domains-panel";
 import { InvitationsPanel } from "@/components/settings/invitations-panel";
 import { JoinRequestsPanel } from "@/components/settings/join-requests-panel";
+import { MembersTable } from "@/components/settings/members-table";
 import { OrganizationPanel } from "@/components/settings/organization-panel";
 import { PreferencesPanel } from "@/components/settings/preferences-panel";
 import { SettingsNav, type SettingsNavGroup } from "@/components/settings/settings-nav";
@@ -30,6 +32,7 @@ import type { RoleName } from "@/components/shared/role-badge";
 export interface SettingsPageProps {
   /** Null while the account belongs to no organization. */
   role: RoleName | null;
+  currentUserId: string;
   /** The `tab` in the address, read on the server so the first paint is right. */
   requestedTab: string | null;
   /** Null alongside a null role. */
@@ -46,7 +49,13 @@ export interface SettingsPageProps {
   };
 }
 
-const ORGANIZATION_TABS = ["invitations", "requests", "domains", "organization"] as const;
+const ORGANIZATION_TABS = [
+  "members",
+  "invitations",
+  "requests",
+  "domains",
+  "organization",
+] as const;
 const PERSONAL_TABS = ["profile", "preferences", "notifications", "security"] as const;
 type SettingsTab = (typeof ORGANIZATION_TABS)[number] | (typeof PERSONAL_TABS)[number];
 
@@ -56,6 +65,7 @@ const ALIASES: Record<string, SettingsTab> = { account: "profile" };
 const ORGANIZATION_GROUP: SettingsNavGroup<SettingsTab> = {
   label: "Organization",
   items: [
+    { value: "members", label: "Members", icon: UsersThreeIcon },
     { value: "invitations", label: "Invitations", icon: EnvelopeSimpleIcon },
     { value: "requests", label: "Requests", icon: HandWavingIcon },
     { value: "domains", label: "Domains", icon: GlobeHemisphereWestIcon },
@@ -106,6 +116,18 @@ function SettingsBody(props: SettingsPageProps) {
   const { role, organization } = props;
 
   const content = {
+    members: match(role)
+      .with(P.string.minLength(1), (role) => (
+        <SettingsSection
+          title="Members"
+          description="Everyone with an account in the organization, and what each one can do."
+        >
+          <div className="pt-6">
+            <MembersTable role={role} currentUserId={props.currentUserId} />
+          </div>
+        </SettingsSection>
+      ))
+      .otherwise(() => null),
     invitations: (
       <SettingsSection
         title="Invitations"

@@ -48,12 +48,6 @@ interface Step {
 function CountLinks(props: { counts: Organization["counts"] }) {
   const links = [
     {
-      label: match(props.counts.people)
-        .with(1, () => "1 person" as const)
-        .otherwise((people) => `${people} people`),
-      href: "/people",
-    },
-    {
       label: match(props.counts.groups)
         .with(1, () => "1 group" as const)
         .otherwise((groups) => `${groups} groups`),
@@ -63,7 +57,7 @@ function CountLinks(props: { counts: Organization["counts"] }) {
       label: match(props.counts.members)
         .with(1, () => "1 account" as const)
         .otherwise((members) => `${members} accounts`),
-      href: "/people",
+      href: "/settings?tab=members",
     },
   ];
 
@@ -181,12 +175,6 @@ function stepsOf(organization: Organization): Step[] {
   const { counts } = organization;
 
   return [
-    {
-      done: counts.people > 1,
-      label: "Add the people you expect to see",
-      hint: "Type them in, or import a CSV from your spreadsheet.",
-      href: "/people",
-    },
     {
       done: counts.groups > 0,
       label: "Put them in groups",

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  canDeleteFromDirectory,
-  canGrantOwner,
-  canManageAccess,
-  type RoleName,
-} from "../src/member-access";
+import { canGrantOwner, canManageAccess, type RoleName } from "../src/member-access";
 
 const other = (role: RoleName | null) => ({ role, isSelf: false });
 const self = (role: RoleName | null) => ({ role, isSelf: true });
@@ -43,25 +38,5 @@ describe("canGrantOwner", () => {
     expect(canGrantOwner("admin")).toBe(false);
     expect(canGrantOwner("organizer")).toBe(false);
     expect(canGrantOwner("member")).toBe(false);
-  });
-});
-
-describe("canDeleteFromDirectory", () => {
-  it("lets an owner and an admin delete a person with no account", () => {
-    expect(canDeleteFromDirectory("owner", other(null))).toBe(true);
-    expect(canDeleteFromDirectory("admin", other(null))).toBe(true);
-  });
-
-  it("keeps the owner row out of reach, even from another owner", () => {
-    expect(canDeleteFromDirectory("owner", other("owner"))).toBe(false);
-    expect(canDeleteFromDirectory("admin", other("owner"))).toBe(false);
-  });
-
-  it("refuses an organizer", () => {
-    expect(canDeleteFromDirectory("organizer", other("member"))).toBe(false);
-  });
-
-  it("never deletes the viewer's own row", () => {
-    expect(canDeleteFromDirectory("owner", self("admin"))).toBe(false);
   });
 });
