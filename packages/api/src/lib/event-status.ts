@@ -1,4 +1,3 @@
-import type { AttendanceStatus } from "@absqir/db/schema";
 import { match } from "ts-pattern";
 
 export type EventStatus = "scheduled" | "running" | "done";
@@ -42,8 +41,14 @@ export function acceptsCheckIns(event: EventTimes, now: Date = new Date()): bool
   return statusOf(event, now) === "running";
 }
 
-/** Present or late, judged by the clock, never by who scanned. */
-export function statusForCheckIn(event: EventTimes, at: Date): AttendanceStatus {
+/**
+ * Present or late, judged by the clock, never by who scanned.
+ *
+ * Narrower than AttendanceStatus on purpose: a
+ * check-in can only ever land on one of these two, and callers that offer an
+ * organizer a choice need to know the difference.
+ */
+export function statusForCheckIn(event: EventTimes, at: Date): "present" | "late" {
   return match(at <= lateAt(event))
     .with(true, () => "present" as const)
     .otherwise(() => "late" as const);

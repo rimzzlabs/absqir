@@ -167,10 +167,17 @@ checked before the place is.
 Sending a report notifies every organizer, admin, and owner, and the
 decision notifies the member, so neither side has to watch a queue.
 
-Approving marks them present or late **by the clock at the refused scan**,
-never at the moment of the decision, so nobody is marked late for how long a
-report waited. Declining leaves the record as it is. Either way the member
-sees the outcome on their own event page.
+Approving records **the time of the refused scan**, never the moment of the
+decision, so nobody is marked late for how long a report waited.
+
+The status is the organizer's to choose: present, late, or excused. The
+clock's own answer is preselected and labelled, and an organizer who watched
+the member walk in on time can overrule it. That is the common case: someone
+arrives at 08:55, fights their phone until 09:12, and the clock alone would
+call them late.
+
+Declining leaves the record as it is. Either way the member sees the outcome
+on their own event page and gets a notification.
 
 One report per person per event. A member who already reported sees what
 became of it instead of the button, so nobody writes out a second report

@@ -5,9 +5,11 @@ import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent } from "@absqir/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
+import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
 import { CheckCircleIcon, FlagIcon, WarningIcon, XCircleIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -16,6 +18,7 @@ import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { attendanceLabel } from "@/components/shared/status-badge";
 import { useDecideCheckInReport } from "@/mutations/use-check-in-report";
 import {
   type CheckInReport,
@@ -24,6 +27,10 @@ import {
 } from "@/queries/use-check-in-reports";
 
 const SCOPES = ["pending", "decided", "all"] as const;
+
+/** What an approval can write. Absent is what a decline already leaves. */
+const RECORD_AS = ["present", "late", "excused"] as const;
+type RecordAs = (typeof RECORD_AS)[number];
 
 function StatusBadge(props: { status: CheckInReport["status"] }) {
   return match(props.status)
@@ -123,6 +130,7 @@ function ReportCard(props: { report: CheckInReport }) {
   const { report } = props;
   const decide = useDecideCheckInReport();
   const [note, setNote] = useState("");
+  const [status, setStatus] = useState<RecordAs>(report.clockSays ?? "present");
   const pending = report.status === "pending";
 
   return (
@@ -167,7 +175,37 @@ function ReportCard(props: { report: CheckInReport }) {
 
         {match(pending)
           .with(true, () => (
-            <div className="flex flex-col gap-2 border-t pt-4">
+            <div className="flex flex-col gap-3 border-t pt-4">
+              {/* The clock is a default, not an answer. An organizer who
+                  watched the member walk in on time can say so. */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor={`${report.id}-status`}>Record them as</Label>
+                <ToggleGroup
+                  id={`${report.id}-status`}
+                  value={[status]}
+                  onValueChange={(next) =>
+                    match(next[0])
+                      .with(P.string, (picked) => setStatus(picked as RecordAs))
+                      .otherwise(() => {})
+                  }
+                >
+                  {A.map(RECORD_AS, (option) => (
+                    <ToggleGroupItem key={option} value={option}>
+                      {attendanceLabel(option)}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+                <p className="text-muted-foreground text-xs">
+                  {match(report.clockSays)
+                    .with(
+                      P.string,
+                      (says) =>
+                        `The clock says ${attendanceLabel(says).toLowerCase()}, from the time they scanned.`,
+                    )
+                    .otherwise(() => "No scan survives to time, so pick what happened.")}
+                </p>
+              </div>
+
               <Textarea
                 aria-label={`Note for ${report.person.name}`}
                 value={note}
@@ -176,16 +214,23 @@ function ReportCard(props: { report: CheckInReport }) {
                 maxLength={500}
                 placeholder="Optional. The member reads this with the decision."
               />
+
               <FormError error={decide.error} />
+
               <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={decide.isPending}
                   onClick={() =>
-                    decide.mutate({ id: report.id, approve: true, note: note.trim() || null })
+                    decide.mutate({
+                      id: report.id,
+                      approve: true,
+                      note: note.trim() || null,
+                      status,
+                    })
                   }
                 >
                   <CheckCircleIcon />
-                  Mark them in
+                  Record as {attendanceLabel(status).toLowerCase()}
                 </Button>
                 <Button
                   variant="outline"
@@ -198,9 +243,10 @@ function ReportCard(props: { report: CheckInReport }) {
                   Decline
                 </Button>
               </div>
+
               <p className="text-muted-foreground text-xs">
-                Marking them in records the time they scanned, not the time you decided. Either way
-                they get a notification, and the event cannot be reported again.
+                The record keeps the time they scanned, not the time you decided. Either way they
+                get a notification, and the event cannot be reported again.
               </p>
             </div>
           ))

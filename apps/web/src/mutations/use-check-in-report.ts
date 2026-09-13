@@ -40,6 +40,8 @@ export interface DecideReportInput {
   id: string;
   approve: boolean;
   note: string | null;
+  /** What to record. Absent follows the clock at the refused scan. */
+  status?: "present" | "late" | "excused";
 }
 
 /**
@@ -51,10 +53,10 @@ export function useDecideCheckInReport() {
 
   return useMutation({
     mutationKey: checkInReportMutationKeys.decide(),
-    mutationFn: async ({ id, approve, note }: DecideReportInput) => {
+    mutationFn: async ({ id, approve, note, status }: DecideReportInput) => {
       const response = await api["check-in-reports"][":id"].decide.$post({
         param: { id },
-        json: { approve, note },
+        json: { approve, note, status },
       });
 
       if (!response.ok) throw await apiError(response, "Could not save the decision.");

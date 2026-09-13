@@ -37,6 +37,12 @@ const reportSchema = z.object({
   decisionNote: z.string().nullable(),
   decidedAt: z.string().nullable(),
   event: z.object({ id: z.string(), title: z.string(), startsAt: z.string() }),
+  /**
+   * What the clock makes of the refused scan. The page preselects it and
+   * says so, because an organizer who was standing there may know better.
+   * Null when no attempt survives to time.
+   */
+  clockSays: z.enum(["present", "late"]).nullable(),
   person: z.object({ id: z.string(), name: z.string(), email: z.string().nullable() }),
   /**
    * What the refused attempt recorded. Null when the attempt has since been
@@ -137,7 +143,7 @@ const decideRoute = createRoute({
   tags: ["check-in reports"],
   summary: "Approve or decline. An approval writes the attendance record",
   description:
-    "An approval marks the person present or late by the clock at the refused scan, never at the moment of the decision.",
+    "An approval records the time of the refused scan, never the moment of the decision. The status follows the clock unless the organizer names one.",
   request: {
     params: z.object({ id: z.string() }),
     body: {
@@ -146,6 +152,12 @@ const decideRoute = createRoute({
           schema: z.object({
             approve: z.boolean(),
             note: z.string().trim().max(500).nullable().optional(),
+            /**
+             * What to write. Absent follows the clock at the refused scan.
+             * An organizer who watched the person walk in on time can say
+             * so, whatever the scan says.
+             */
+            status: z.enum(["present", "late", "excused"]).optional(),
           }),
         },
       },
@@ -170,7 +182,7 @@ function rows(c: Context) {
   return c.var.db
     .select({
       report: checkInReport,
-      event: { id: eventTable.id, title: eventTable.title, startsAt: eventTable.startsAt },
+      event: eventTable,
       person: { id: person.id, name: person.name, email: person.email },
       attempt: checkInAttempt,
     })
@@ -196,6 +208,9 @@ function toJson(row: Row, priorReports: number) {
       title: row.event.title,
       startsAt: row.event.startsAt.toISOString(),
     },
+    clockSays: match(row.attempt)
+      .with(P.nullish, () => null)
+      .otherwise((attempt) => statusForCheckIn(row.event, attempt.createdAt)),
     person: { id: row.person.id, name: row.person.name, email: row.person.email ?? null },
     attempt: match(row.attempt)
       .with(P.nullish, () => null)
@@ -334,7 +349,7 @@ export const checkInReportRoutes = app
     const organizationId = organizationIdOf(c);
     const user = c.get("user");
     const { id } = c.req.valid("param");
-    const { approve, note } = c.req.valid("json");
+    const { approve, note, status } = c.req.valid("json");
     const now = new Date();
 
     const [found] = await rows(c)
@@ -370,7 +385,8 @@ export const checkInReportRoutes = app
       await upsertRecord(tx, {
         eventId: found.event.id,
         personId: found.person.id,
-        status: statusForCheckIn(event, scannedAt),
+        // The organizer's word beats the clock. They were there.
+        status: status ?? statusForCheckIn(event, scannedAt),
         method: "manual",
         checkedInAt: scannedAt,
         note: note?.trim() || "Approved from a check-in report.",
