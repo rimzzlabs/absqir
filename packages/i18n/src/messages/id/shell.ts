@@ -64,7 +64,7 @@ export const shell = {
     serverCode: "500",
     serverTitle: "Ada yang salah",
     serverBody:
-      "Server tidak bisa menyelesaikan permintaan Anda. Masalahnya ada di sisi kami. Coba lagi sebentar.",
+      "absqir tidak bisa menyelesaikan permintaan Anda. Masalahnya ada di sisi kami. Coba lagi sebentar.",
     tryAgain: "Coba lagi",
   },
   brandHome: "beranda absqir",

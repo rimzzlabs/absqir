@@ -8,7 +8,8 @@ export const my = {
     past: "Sudah lewat",
     loadMore: "Muat lagi",
     emptyPast: "Belum ada yang terjadi",
-    emptyPastHint: "Acara tertutup mendarat di sini bersama catatan Anda pada masing-masing.",
+    emptyPastHint:
+      "Acara yang sudah ditutup muncul di sini bersama catatan Anda di masing-masing acara.",
     emptyUpcoming: "Belum ada acara untuk Anda",
     emptyUpcomingHint: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     to: "{{start}} sampai {{end}}",
@@ -31,7 +32,7 @@ export const my = {
     over: "Acara ini sudah selesai.",
     next: "{{moment}} {{when}}.",
     moments: {
-      opens: "Pintu dibuka",
+      opens: "Check-in dibuka",
       starts: "Mulai",
       late: "Terlambat setelah",
       ends: "Selesai",
@@ -48,7 +49,7 @@ export const my = {
     notAccepted: "Tidak diterima",
     waiting: "Menunggu",
     noRecord: "Anda belum punya catatan untuk acara ini.",
-    checkInWhenOpen: "Check-in begitu pintunya dibuka.",
+    checkInWhenOpen: "Check-in begitu waktunya dibuka.",
     checkIn: "Check-in",
     myPass: "Pas saya",
     askLeave: "Ajukan izin",
@@ -59,7 +60,7 @@ export const my = {
     nobodyElse: "Tidak ada orang lain di daftar.",
     andMore: "dan {{count, number}} lagi",
     headCountOnly:
-      "Hanya jumlahnya yang dibagikan. Siapa yang check-in tetap urusan dia dan penyelenggara.",
+      "Hanya jumlahnya yang dibagikan. Siapa saja yang check-in hanya diketahui dia dan penyelenggara.",
   },
   history: {
     title: "Riwayat",
@@ -69,7 +70,7 @@ export const my = {
     events: "Acara",
     late: "Terlambat",
     emptyTitle: "Belum ada catatan",
-    emptyDescription: "Acara tertutup pertama Anda muncul di sini.",
+    emptyDescription: "Acara pertama Anda yang sudah ditutup akan muncul di sini.",
     tableLabel: "Catatan Anda, acara demi acara",
     event: "Acara",
     when: "Kapan",
@@ -87,7 +88,7 @@ export const my = {
     decided: "Sudah diputuskan",
     decidedEmptyTitle: "Belum ada yang diputuskan",
     decidedEmptyDescription:
-      "Pengajuan yang disetujui dan ditolak mendarat di sini, beserta catatan penyelenggara.",
+      "Pengajuan yang disetujui dan ditolak muncul di sini, beserta catatan penyelenggara.",
     loadMore: "Muat lagi",
     asked: "Diajukan {{date}}",
     decidedOn: "Diputuskan {{date}}",

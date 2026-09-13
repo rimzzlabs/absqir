@@ -11,6 +11,5 @@ export const notifications = {
   emptyUnreadTitle: "Tidak ada yang menunggu",
   emptyUnreadDescription: "Anda sudah membaca semuanya.",
   emptyTitle: "Belum ada apa-apa",
-  emptyDescription:
-    "Pengingat sebelum acara, pengajuan izin, dan penutupan acara mendarat di sini.",
+  emptyDescription: "Pengingat sebelum acara, pengajuan izin, dan penutupan acara muncul di sini.",
 } as const;

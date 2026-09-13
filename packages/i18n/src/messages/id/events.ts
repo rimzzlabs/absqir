@@ -16,7 +16,7 @@ export const events = {
     nothingPlanned: "Belum ada rencana",
     nothingPlannedHint: "Buat satu acara, atau siapkan jadwal yang membuatnya untuk Anda.",
     nothingPast: "Belum ada yang terjadi",
-    nothingPastHint: "Acara yang sudah ditutup mendarat di sini bersama catatannya.",
+    nothingPastHint: "Acara yang sudah ditutup muncul di sini bersama catatannya.",
     noMatch: "Tidak ada yang cocok",
     noMatchHint: "Coba judul lain, atau pilih semua grup.",
   },

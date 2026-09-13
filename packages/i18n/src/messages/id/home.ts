@@ -66,9 +66,9 @@ export const home = {
     allMyEvents: "Semua acara saya",
     today: "Hari ini",
     standing: "Catatan Anda",
-    standingEmpty: "Belum ada acara tertutup yang memuat nama Anda di dalamnya.",
-    closedEvents_one: "Satu acara tertutup.",
-    closedEvents_other: "{{count, number}} acara tertutup.",
+    standingEmpty: "Nama Anda belum muncul di acara mana pun yang sudah ditutup.",
+    closedEvents_one: "Satu acara sudah ditutup.",
+    closedEvents_other: "{{count, number}} acara sudah ditutup.",
     history: "Riwayat",
     rateHint: "Hadir atau terlambat, dari acara yang ikut dihitung.",
     leave: "Izin",
@@ -92,8 +92,7 @@ export const home = {
     inviteHint:
       "Kirimi masing-masing undangan lewat email. Mereka masuk dan direktorinya terisi sendiri.",
     firstEvent: "Jalankan acara pertama Anda",
-    firstEventHint:
-      "Kode QR di layar, pemindai di pintu, dan daftar hadirnya menulis dirinya sendiri.",
+    firstEventHint: "Kode QR di layar, pemindai di pintu, dan daftar hadirnya terisi sendiri.",
     joinHintRequest:
       "{{name}} yang memutuskan, dan absqir memberi tahu Anda begitu mereka memutuskan.",
     joinHintInvited: "Ada undangan menunggu Anda. Terima saja dan Anda masuk.",

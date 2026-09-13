@@ -63,7 +63,7 @@ export const checkin = {
     description: "Dua jalan masuk. Keduanya menulis catatan yang sama.",
     one: "Arahkan ke layar ruangan",
     oneHint:
-      "Penyelenggara menaruh kode di layar atau di cetakan. Tahan kode itu di dalam bingkai.",
+      "Penyelenggara menampilkan kode di layar atau di lembar cetak. Tahan kode itu di dalam bingkai.",
     two: "Atau tunjukkan pas Anda",
     twoHint: "Tidak ada layar di ruangan? Buka pas Anda dan biarkan penyelenggara memindainya.",
     three: "Catatan Anda ditulis",
@@ -74,7 +74,7 @@ export const checkin = {
     description: "Terbaru dulu.",
     history: "Riwayat",
     empty:
-      "Belum ada acara tertutup yang memuat nama Anda. Check-in pertama Anda akan muncul di sini.",
+      "Nama Anda belum muncul di acara mana pun yang sudah ditutup. Check-in pertama Anda akan muncul di sini.",
     inAt: " · masuk pukul {{time}}",
   },
   report: {
@@ -95,7 +95,8 @@ export const checkin = {
       "Tidak ada lagi yang perlu Anda lakukan. Anda bisa menutup halaman ini dan memeriksa catatan Anda nanti di",
     doneLink: "Acara saya",
     message: "Apa yang terjadi?",
-    messagePlaceholder: "Saya ada di aula, tetapi ponsel saya terus menaruh saya di jalan sebelah.",
+    messagePlaceholder:
+      "Saya ada di aula, tetapi ponsel saya terus menempatkan saya di jalan sebelah.",
     messageHint: "Satu laporan untuk satu acara. Sebutkan Anda sebenarnya ada di mana.",
     sending: "Mengirim…",
     send: "Kirim laporan",
@@ -123,7 +124,7 @@ export const checkin = {
   reports: {
     title: "Masalah check-in",
     description:
-      "Anggota yang bilang pemeriksaan tempat menolak mereka padahal mereka ada di acara.",
+      "Anggota yang menyatakan bahwa pemeriksaan tempat menolak mereka padahal mereka berada di acara.",
     waiting: "Menunggu",
     decided: "Sudah diputuskan",
     all: "Semua",
@@ -139,7 +140,7 @@ export const checkin = {
     noAttempt: "Check-in yang ditolak sudah tidak tercatat, jadi hanya kata-katanya yang tersisa.",
     recorded: "Apa yang tercatat",
     scanned: "Dipindai",
-    scannedRoomCode: "Kode hidup dari layar ruangan",
+    scannedRoomCode: "Kode yang berganti otomatis di layar ruangan",
     scannedPass: "Pas, dibaca oleh pemindai penyelenggara",
     distance: "Jarak",
     distanceFrom: "{{distance}} dari tempatnya",
@@ -150,11 +151,12 @@ export const checkin = {
     accuracyAbout: "Sekitar {{meters, number}} m",
     scannedAt: "Dipindai pada",
     conflict:
-      "Dua hal ini tidak cocok. Kode hidup berarti ada orang di depan layar, dan bacaan sejauh ini berarti dia tidak di sana. Entah ponselnya salah menaruh posisi, yang sering terjadi di dalam ruangan, atau kodenya sampai ke orang lain.",
+      "Dua fakta ini saling bertentangan. Kode yang dia pindai hanya bisa dibaca orang yang berdiri di depan layar ruangan, tetapi ponselnya menempatkan dia jauh dari lokasi acara. Bisa jadi ponselnya salah membaca posisi, yang sering terjadi di dalam ruangan, atau ada orang lain yang meneruskan kodenya kepada dia.",
     signals: "Sinyal",
     recordThemAs: "Catat sebagai",
     clockSays: "Menurut jam, {{status}}, dihitung dari waktu dia memindai.",
-    noClock: "Tidak ada pindaian yang tersisa untuk dijadikan waktu, jadi pilih apa yang terjadi.",
+    noClock:
+      "Tidak ada pindaian yang tersisa untuk diambil waktunya, jadi pilih sendiri apa yang terjadi.",
     noteLabel: "Catatan untuk {{name}}",
     notePlaceholder: "Tidak wajib. Anggota membaca ini bersama keputusannya.",
     recordAs: "Catat sebagai {{status}}",
@@ -166,17 +168,18 @@ export const checkin = {
   },
   risk: {
     "patched-api": "Ada yang mengganti bagian peramban yang melaporkan lokasi.",
-    "automated-browser": "Peramban melaporkan bahwa sebuah skrip yang mengendalikannya.",
-    "frozen-track": "Setiap bacaan menyebut titik yang sama sampai setengah meter.",
-    teleport: "Terlalu jauh dari check-in sebelumnya untuk ditempuh dalam waktu itu.",
+    "automated-browser": "Peramban melaporkan bahwa dirinya dijalankan skrip, bukan oleh orang.",
+    "frozen-track":
+      "Semua pembacaan lokasi menunjuk titik yang sama persis, sampai setengah meter.",
+    teleport: "Terlalu jauh dari check-in sebelumnya untuk ditempuh dalam waktu sesingkat itu.",
     "shared-coordinates": "Orang lain mengirim koordinat yang persis sama.",
-    "network-far": "Alamat jaringannya mengarah jauh dari titik yang diklaim.",
+    "network-far": "Alamat jaringannya berada jauh dari titik yang dia sebutkan.",
     "network-relay": "Alamat jaringannya milik VPN atau penyedia hosting.",
-    "perfect-accuracy": "Bacaannya mengklaim akurasi yang tidak pernah dilaporkan ponsel.",
-    "constant-accuracy": "Setiap bacaan mengklaim akurasi bulat yang sama.",
+    "perfect-accuracy": "Akurasi yang dilaporkan terlalu sempurna untuk sebuah ponsel.",
+    "constant-accuracy": "Setiap pembacaan melaporkan angka akurasi bulat yang sama.",
     "no-altitude":
-      "Tidak ada bacaan yang membawa ketinggian, jadi tidak ada yang datang dari satelit.",
-    "timezone-mismatch": "Jam perangkatnya milik belahan dunia lain.",
-    "single-fix": "Hanya satu bacaan yang datang, jadi pergerakan tidak bisa diperiksa.",
+      "Tidak ada pembacaan yang menyertakan ketinggian, jadi tidak ada yang berasal dari satelit.",
+    "timezone-mismatch": "Jam di perangkatnya disetel ke belahan dunia yang lain.",
+    "single-fix": "Hanya satu pembacaan yang masuk, jadi pergerakannya tidak bisa diperiksa.",
   },
 } as const;

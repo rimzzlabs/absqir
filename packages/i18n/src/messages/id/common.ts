@@ -121,7 +121,7 @@ export const common = {
     require: "Tolak check-in yang dibuat di luar tempat ini",
     experimental: "Percobaan",
     requireHint:
-      "Peramban setiap anggota meminta lokasinya. Bacaan di luar lingkaran ditolak, dan bacaan yang tampak dibuat-buat tetap diterima lalu ditandai untuk Anda. Kode di layar ruangan tetap menjadi bukti kehadiran. Tanda itu alasan untuk memeriksa, bukan vonis.",
+      "Peramban setiap anggota meminta lokasinya. Pembacaan lokasi di luar lingkaran ditolak, dan pembacaan yang tampak dibuat-buat tetap diterima lalu ditandai untuk Anda. Kode di layar ruangan tetap menjadi bukti kehadiran. Tanda itu alasan untuk memeriksa, bukan vonis.",
   },
   mapPicker: {
     label: "Pilih tempat di peta",
