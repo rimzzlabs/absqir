@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.0](https://github.com/rimzzlabs/absqir/compare/v0.4.0...v0.5.0) (2026-09-13)
+
+
+### Features
+
+* fence check-ins to a place, and let a refused member report it ([#37](https://github.com/rimzzlabs/absqir/issues/37)) ([e038ad5](https://github.com/rimzzlabs/absqir/commit/e038ad584f57f57b8fdaa1fa1f633e32cabcca5d))
+* give absqir one voice, in both languages ([#40](https://github.com/rimzzlabs/absqir/issues/40)) ([3e14959](https://github.com/rimzzlabs/absqir/commit/3e1495980850cb1ff60912ab998e101892e31429))
+* read absqir in English or Bahasa Indonesia ([#39](https://github.com/rimzzlabs/absqir/issues/39)) ([5d63ca7](https://github.com/rimzzlabs/absqir/commit/5d63ca7efe1dc1d45baa46a3b0ae40ecea297860))
+
 ## [0.4.0](https://github.com/rimzzlabs/absqir/compare/v0.3.2...v0.4.0) (2026-09-13)
 
 
