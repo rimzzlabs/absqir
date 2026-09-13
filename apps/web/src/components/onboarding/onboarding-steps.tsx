@@ -14,7 +14,7 @@ export interface OnboardingStepsProps {
 
 export function OnboardingSteps(props: OnboardingStepsProps) {
   const t = useTranslate();
-  const currentIndex = STEPS.findIndex((step) => step === props.current);
+  const currentIndex = STEPS.indexOf(props.current as (typeof STEPS)[number]);
   const position = match(currentIndex === -1)
     .with(true, () => STEPS.length)
     .otherwise(() => currentIndex);
