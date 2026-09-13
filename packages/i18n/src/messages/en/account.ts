@@ -6,8 +6,8 @@ export const account = {
     joined: "Joined {{date}}",
     changePicture: "Change picture",
     addPicture: "Add a picture",
-    formats: "PNG, JPEG or WebP. Shrunk to 128px.",
-    unreadable: "Could not read that picture.",
+    formats: "PNG, JPEG or WebP. absqir shrinks it for you.",
+    unreadable: "absqir could not read that picture. Try another one.",
     name: "Name",
     nameHint: "What organizers and other members see.",
     email: "Email",
@@ -105,7 +105,7 @@ export const account = {
       noInApp: "no in the app",
       noEmail: "no email",
       footnote:
-        "Email needs the instance to have a mail provider. Without one, only the app receives.",
+        "Email needs this absqir to have a mail provider set up. Without one, only the app receives.",
     },
     kinds: {
       reminder: "Event reminder",

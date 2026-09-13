@@ -2,7 +2,7 @@
 export const schedules = {
   title: "Schedules",
   description:
-    "Rules that create events on their own. Each spawns two weeks ahead and keeps going.",
+    "Rules that create events on their own. Each one creates events two weeks ahead, and keeps going.",
   new: "New schedule",
   paused: "Paused",
   emptyTitle: "No schedule yet",

@@ -1,7 +1,7 @@
 /** Kisi kalender, dan lembar di balik satu hari. */
 export const calendar = {
   title: "Kalender",
-  description: "Semua acara dalam satu kisi, termasuk yang masih dijanjikan jadwal Anda.",
+  description: "Semua acara dalam satu kisi, termasuk yang masih akan dibuat jadwal Anda.",
   newEvent: "Acara baru",
   previous: "Sebelumnya",
   next: "Berikutnya",

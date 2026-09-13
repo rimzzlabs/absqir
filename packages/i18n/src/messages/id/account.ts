@@ -6,8 +6,8 @@ export const account = {
     joined: "Bergabung {{date}}",
     changePicture: "Ganti foto",
     addPicture: "Tambah foto",
-    formats: "PNG, JPEG, atau WebP. Dikecilkan ke 128px.",
-    unreadable: "Foto itu tidak bisa dibaca.",
+    formats: "PNG, JPEG, atau WebP. absqir mengecilkannya untuk Anda.",
+    unreadable: "absqir tidak bisa membaca foto itu. Coba foto lain.",
     name: "Nama",
     nameHint: "Yang dilihat penyelenggara dan anggota lain.",
     email: "Email",
@@ -105,7 +105,7 @@ export const account = {
       noInApp: "tidak di aplikasi",
       noEmail: "tidak lewat email",
       footnote:
-        "Email butuh penyedia surat di instance ini. Tanpa itu, hanya aplikasi yang menerima.",
+        "Email butuh penyedia surat yang sudah disiapkan di absqir ini. Tanpa itu, hanya aplikasi yang menerima.",
     },
     kinds: {
       reminder: "Pengingat acara",

@@ -36,7 +36,7 @@ export const home = {
     organizers: "Invite an organizer or two",
     organizersHint: "They run events and scan at the door. Admins also manage people.",
     claim: "Claim {{domain}}",
-    claimHint: "A new account at that domain then finds this workspace on its own.",
+    claimHint: "A new account at that domain then finds this organization on its own.",
   },
   upcoming: {
     title: "Next events",

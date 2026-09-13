@@ -20,7 +20,7 @@ export const shell = {
     overview: "Ringkasan",
     attendance: "Kehadiran",
     directory: "Direktori",
-    requests: "Permintaan dan wawasan",
+    requests: "Permintaan dan laporan",
     other: "Lainnya",
     me: "Saya",
     you: "Anda",
@@ -28,8 +28,8 @@ export const shell = {
   github: "Beri bintang di GitHub",
   health: {
     up: "Semua berjalan",
-    down: "API tidak menjawab",
-    checking: "Memeriksa API…",
+    down: "absqir tidak merespons",
+    checking: "Memeriksa absqir…",
   },
   user: {
     menu: "Menu akun",

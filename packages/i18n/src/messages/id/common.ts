@@ -131,8 +131,8 @@ export const common = {
   },
   organizationForm: {
     name: "Nama organisasi",
-    slug: "Slug",
-    slugHint: "Huruf kecil, angka, dan tanda hubung. Slug ini muncul di tautan.",
+    slug: "Nama pendek",
+    slugHint: "Huruf kecil, angka, dan tanda hubung. Nama ini muncul di tautan.",
   },
   leaveOrganization: {
     rowTitle: "Keluar dari {{name}}",

@@ -36,7 +36,7 @@ export const common = {
   },
   dateRange: "{{from}} to {{to}}",
   island: {
-    title: "This part could not load",
+    title: "This part did not load",
     description: "The rest of the page still works. Try again, or reload the page.",
   },
   dangerZone: {
@@ -86,7 +86,7 @@ export const common = {
   roleSelect: {
     label: "Role",
     hints: {
-      owner: "Everything, including deleting the org.",
+      owner: "Everything, including deleting the organization.",
       admin: "Manages people, groups, and settings.",
       organizer: "Runs events and scans at the door.",
       member: "Sees their own events and history.",
@@ -131,7 +131,7 @@ export const common = {
   },
   organizationForm: {
     name: "Organization name",
-    slug: "Slug",
+    slug: "Short name",
     slugHint: "Lowercase letters, digits, and hyphens. It shows up in links.",
   },
   leaveOrganization: {

@@ -1,7 +1,7 @@
 /** The calendar grid, and the sheet behind one day. */
 export const calendar = {
   title: "Calendar",
-  description: "Every event on one grid, with the ones your schedules still owe.",
+  description: "Every event on one grid, including the ones your schedules will still create.",
   newEvent: "New event",
   previous: "Previous",
   next: "Next",
@@ -29,7 +29,7 @@ export const calendar = {
     counts:
       "{{expected, number}} expected · {{present, number}} present · {{late, number}} late · {{absent, number}} absent",
     fromSchedule: "From a schedule",
-    projectedHint: "The schedule creates this event a fortnight ahead. Nothing to do now.",
+    projectedHint: "The schedule creates this event two weeks ahead. There is nothing to do now.",
     newEvent: "New event on this day",
   },
 } as const;

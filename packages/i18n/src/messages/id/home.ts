@@ -37,7 +37,7 @@ export const home = {
     organizers: "Undang satu dua penyelenggara",
     organizersHint: "Mereka menjalankan acara dan memindai di pintu. Admin juga mengelola orang.",
     claim: "Klaim {{domain}}",
-    claimHint: "Akun baru dari domain itu lalu menemukan ruang kerja ini sendiri.",
+    claimHint: "Akun baru dari domain itu lalu menemukan organisasi ini sendiri.",
   },
   upcoming: {
     title: "Acara berikutnya",
