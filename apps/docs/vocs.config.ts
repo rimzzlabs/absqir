@@ -29,6 +29,7 @@ export default defineConfig({
       items: [
         { text: "Accounts and organizations", link: "/accounts" },
         { text: "Events and check-in", link: "/events" },
+        { text: "Checking where people are", link: "/location" },
         { text: "Reports and calendar", link: "/reports" },
         { text: "Notifications and reminders", link: "/notifications" },
       ],
