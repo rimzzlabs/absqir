@@ -213,32 +213,32 @@ export const joinRequestRoutes = app
     const { message } = c.req.valid("json");
     const db = c.var.db;
 
-    const match = await findOrganizationForEmail(db, current.email);
+    const found = await findOrganizationForEmail(db, current.email);
 
-    if (!match || match.joinPolicy === "closed") {
+    if (!found || found.joinPolicy === "closed") {
       return c.json({ error: "No workspace takes people from this email domain." }, 403);
     }
 
     const already = await db
       .select({ id: member.id })
       .from(member)
-      .where(and(eq(member.organizationId, match.organizationId), eq(member.userId, current.id)))
+      .where(and(eq(member.organizationId, found.organizationId), eq(member.userId, current.id)))
       .limit(1);
 
     if (already[0]) {
-      return c.json({ error: `You are already in ${match.name}.` }, 409);
+      return c.json({ error: `You are already in ${found.name}.` }, 409);
     }
 
-    if (match.joinPolicy === "auto") {
-      await joinAsMember(c, match.organizationId, current);
-      await activateOrganization(c, match.organizationId);
+    if (found.joinPolicy === "auto") {
+      await joinAsMember(c, found.organizationId, current);
+      await activateOrganization(c, found.organizationId);
       await setOnboardingStep(c, current.id, "done");
 
       return c.json(
         {
           status: "joined" as const,
-          organizationId: match.organizationId,
-          organizationName: match.name,
+          organizationId: found.organizationId,
+          organizationName: found.name,
           requestId: null,
         },
         200,
@@ -246,21 +246,21 @@ export const joinRequestRoutes = app
     }
 
     const open = await findPendingJoinRequest(db, {
-      organizationId: match.organizationId,
+      organizationId: found.organizationId,
       userId: current.id,
     });
 
     if (open) {
-      return c.json({ error: `${match.name} already has your request.` }, 409);
+      return c.json({ error: `${found.name} already has your request.` }, 409);
     }
 
     const id = crypto.randomUUID();
 
     await db.insert(joinRequest).values({
       id,
-      organizationId: match.organizationId,
+      organizationId: found.organizationId,
       userId: current.id,
-      domain: match.domain,
+      domain: found.domain,
       message: message && message.length > 0 ? message : null,
     });
 
@@ -271,7 +271,7 @@ export const joinRequestRoutes = app
     deliver(
       c,
       await notifyJoinRequested(db, {
-        organizationId: match.organizationId,
+        organizationId: found.organizationId,
         requestId: id,
         personName: current.name,
         email: current.email,
@@ -282,8 +282,8 @@ export const joinRequestRoutes = app
     return c.json(
       {
         status: "pending" as const,
-        organizationId: match.organizationId,
-        organizationName: match.name,
+        organizationId: found.organizationId,
+        organizationName: found.name,
         requestId: id,
       },
       200,

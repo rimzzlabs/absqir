@@ -37,8 +37,8 @@ function isOrgFreePath(path: string): boolean {
 
 /** The event id in a public event path, or null. */
 function eventIdOf(path: string): string | null {
-  const match = /^\/e\/([^/]+)$/.exec(path);
-  return match?.[1] ?? null;
+  const parts = /^\/e\/([^/]+)$/.exec(path);
+  return parts?.[1] ?? null;
 }
 
 function safeNext(url: URL): string {

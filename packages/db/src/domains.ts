@@ -61,8 +61,8 @@ export async function findOrganizationForEmail(
  * a closed instance still opens for the people of a claimed domain.
  */
 export async function domainOpensRegistration(db: Database, email: string): Promise<boolean> {
-  const match = await findOrganizationForEmail(db, email);
-  return match !== null && match.joinPolicy !== "closed";
+  const found = await findOrganizationForEmail(db, email);
+  return found !== null && found.joinPolicy !== "closed";
 }
 
 /** The open request this account has at this organization, if any. */

@@ -298,16 +298,16 @@ export const onboardingRoutes = app
     const row = rows[0];
     if (!row) return c.json({ error: "Unauthorized" }, 401);
 
-    const match = await findOrganizationForEmail(db, row.email);
+    const found = await findOrganizationForEmail(db, row.email);
     const workspace =
-      match && match.joinPolicy !== "closed"
+      found && found.joinPolicy !== "closed"
         ? {
-            organizationId: match.organizationId,
-            name: match.name,
-            slug: match.slug,
-            logo: match.logo,
-            joinPolicy: match.joinPolicy,
-            domain: match.domain,
+            organizationId: found.organizationId,
+            name: found.name,
+            slug: found.slug,
+            logo: found.logo,
+            joinPolicy: found.joinPolicy,
+            domain: found.domain,
           }
         : null;
 

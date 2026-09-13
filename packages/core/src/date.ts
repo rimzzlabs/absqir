@@ -67,12 +67,12 @@ const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Midnight of a "yyyy-MM-dd" day in the display zone, or null for anything else. */
 export function parseDisplayDay(value: string): Date | null {
-  const match = ISO_DAY.exec(value);
-  if (!match) return null;
+  const parts = ISO_DAY.exec(value);
+  if (!parts) return null;
 
-  const year = Number(match[1]);
-  const month = Number(match[2]) - 1;
-  const day = Number(match[3]);
+  const year = Number(parts[1]);
+  const month = Number(parts[2]) - 1;
+  const day = Number(parts[3]);
   const zone = resolveTimezone();
   const date = zone ? new TZDate(year, month, day, zone) : new Date(year, month, day);
 
