@@ -80,6 +80,10 @@ the member's phone and read by the organizer's scanner.
 
 ## Where the check-in happened
 
+> **Experimental.** The thresholds, the signals, and their weights can change
+> in a later release. Treat a flagged check-in as a prompt to look, never as
+> a verdict.
+
 An organizer can attach a **place** to an event, or to a schedule, and ask
 absqir to refuse a check-in made somewhere else. Places live under
 **Settings > Places**: a point, a radius, and a name. An event copies the

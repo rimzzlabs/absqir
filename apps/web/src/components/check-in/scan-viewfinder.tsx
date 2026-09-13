@@ -27,7 +27,7 @@ export function ScanViewfinder(props: ScanViewfinderProps) {
   const framed = props.active && !props.busy;
 
   return (
-    <div className="bg-muted ring-foreground/10 relative aspect-square w-full overflow-hidden rounded-2xl ring-1">
+    <div className="bg-muted ring-foreground/10 relative aspect-square w-full overflow-hidden rounded-xl ring-1">
       <video ref={props.video} muted playsInline className="size-full object-cover" />
 
       {match(props.active)

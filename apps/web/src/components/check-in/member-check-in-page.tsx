@@ -27,6 +27,14 @@ import { useMyEvents } from "@/queries/use-my";
 /** The same link seen again within this window is one scan, not two. */
 const REPEAT_MS = 4000;
 
+/**
+ * Every block stacked in the scanner card shares one edge. The card and the
+ * viewfinder draw theirs with a ring, and an Alert draws a border at a
+ * tighter radius, so an alert dropped under the viewfinder does not line up
+ * with it.
+ */
+const BLOCK_EDGE = "rounded-xl border-0 ring-1 ring-foreground/10";
+
 function Scanner() {
   const checkIn = useCheckIn();
   const [manual, setManual] = useState("");
@@ -101,7 +109,7 @@ function Scanner() {
             for it is written next to it. */}
         {match(checkIn.stage)
           .with("locating", () => (
-            <Alert>
+            <Alert className={BLOCK_EDGE}>
               <MapPinIcon />
               <AlertTitle>Finding where you are</AlertTitle>
               <AlertDescription>
@@ -114,7 +122,7 @@ function Scanner() {
 
         {match(Boolean(!checkIn.isSuccess && error))
           .with(true, () => (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className={BLOCK_EDGE}>
               <WarningCircleIcon />
               <AlertTitle>Not checked in</AlertTitle>
               <AlertDescription>{error}</AlertDescription>

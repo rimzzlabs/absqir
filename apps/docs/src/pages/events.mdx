@@ -44,11 +44,11 @@ before you save, and the organizers get no closed notification for it.
 
 ## Statuses per person
 
-| Status    | How it happens                                                               |
-| --------- | ---------------------------------------------------------------------------- |
-| `present` | Checked in no later than `late after` minutes past the start.                |
+| Status    | How it happens                                                             |
+| --------- | -------------------------------------------------------------------------- |
+| `present` | Checked in no later than `late after` minutes past the start.              |
 | `late`    | Checked in after that, while the event still runs.                         |
-| `excused` | Set by an organizer by hand, or written when a leave request is approved.    |
+| `excused` | Set by an organizer by hand, or written when a leave request is approved.  |
 | `absent`  | Written when the event closes, for everyone expected who never checked in. |
 
 An organizer can change any status by hand from the event page. The record
@@ -89,6 +89,83 @@ as text when the camera is not available.
 
 Either way, the clock decides present or late. A second scan of the same
 person changes nothing and says so.
+
+## Checking where people are
+
+:::warning[Experimental]
+Location is new and still being proven in the field. The thresholds, the
+signals, and the weights behind them can all change in a later release, so
+treat a flagged check-in as a prompt to look, never as a verdict. Do not
+make a payroll or a disciplinary decision on this alone.
+:::
+
+An organizer can attach a **place** to an event, or to a schedule, and have
+absqir refuse a check-in made somewhere else. Places live under
+**Settings > Places**: a point on a map, a radius, and a name. An event
+copies the circle when it is created, so moving or deleting a place later
+never changes what a past check-in was judged against.
+
+Tick **Refuse a check-in made outside this place** on the event or the
+schedule to switch the check on. Without a place the tick does nothing,
+because there is no circle to be outside of. A member's browser is asked for
+its location only when an event asks, so an event with no place raises no
+permission prompt.
+
+### What it can and cannot do
+
+A web page cannot tell a real satellite fix from a made-up one. A fake-GPS
+app on Android writes the system mock-location provider, and the browser
+hands the page an ordinary looking reading with no mark on it. An override
+made through the developer tools sits below the page entirely.
+
+So the place is not what proves attendance. The rotating code on the room
+screen is: to hold a valid token you had to see the live screen, and no
+amount of faked location produces one. The place closes the one gap that
+code leaves, which is the member who photographs the screen and sends it to
+a friend across town.
+
+### What the server checks
+
+Only the distance refuses a check-in. Every other signal accepts it and
+flags the record for the organizer:
+
+| Signal              | What it means                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| Distance            | Outside the circle, with the device's own margin of error allowed for. This is the only one that refuses. |
+| A frozen reading    | Several readings named the same spot to the half metre. A real receiver wanders.                          |
+| No altitude         | No reading carried one, so none came from satellites.                                                     |
+| A round accuracy    | Every reading claimed the same whole number of metres.                                                    |
+| The device clock    | It belongs to a different part of the world from the place.                                               |
+| The network address | It resolves far from the claimed spot, or to a VPN or hosting provider.                                   |
+| A jump              | Too far from that person's last check-in to have travelled in the time.                                   |
+| A copied position   | Another person sent the very same coordinates.                                                            |
+
+Each one is weak alone and cheap to defeat alone. Together, and repeated
+across every event a person attends, they leave a pattern that is tiring to
+fake.
+
+Flagging rather than refusing is deliberate. A soft signal that locks a door
+falls on the member indoors with an old phone far more often than on the one
+person gaming it, and the cheat can try again while the honest member
+cannot.
+
+### Reviewing a flag
+
+A flagged check-in shows in the event's **Where** column. Open it to read
+the reasons, then either clear the flag, which records that somebody looked
+and let it stand, or mark the person absent from the row menu. The signals
+are never erased.
+
+Every attempt, accepted or refused, is kept. One refusal is a member in the
+wrong place. Thirty across a term, each a little nearer the circle, is
+somebody finding the line.
+
+:::note
+The map needs tiles. Out of the box it uses OpenStreetMap, which asks for no
+account and no key. Set `PUBLIC_MAP_TILE_URL` and
+`PUBLIC_MAP_TILE_ATTRIBUTION` to your own tile server before you put real
+traffic through it.
+:::
 
 ## Schedules
 

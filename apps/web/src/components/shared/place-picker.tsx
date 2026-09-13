@@ -1,3 +1,4 @@
+import { Badge } from "@absqir/ui/badge";
 import { Checkbox } from "@absqir/ui/checkbox";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
 import { Label } from "@absqir/ui/label";
@@ -119,10 +120,11 @@ export function PlacePicker(props: PlacePickerProps) {
               />
               <Label
                 htmlFor={`${props.idPrefix}-require-location`}
-                className="flex items-center gap-1.5"
+                className="flex flex-wrap items-center gap-1.5"
               >
                 <MapPinIcon className="size-4" />
                 Refuse a check-in made outside this place
+                <Badge variant="outline">Experimental</Badge>
               </Label>
             </div>
 
@@ -131,7 +133,8 @@ export function PlacePicker(props: PlacePickerProps) {
                 <p className="text-muted-foreground pl-6 text-xs">
                   Each member's browser asks for their location. A reading outside the circle is
                   refused, and one that looks made up is accepted and flagged for you. The code on
-                  the room screen is still what proves they were there.
+                  the room screen is still what proves they were there. A flag is a reason to look,
+                  not a verdict.
                 </p>
               ))
               .otherwise(() => null)}
