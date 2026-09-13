@@ -17,7 +17,7 @@ export const email = {
     footer:
       "absqir sends a code only when someone asks for one. No one from absqir will ever ask you to forward it.",
     expiry:
-      "The code expires in {{count}} minutes. If you did not ask for it, ignore this email. Nothing changes until the code is used.",
+      "The code expires in {{count, number}} minutes. If you did not ask for it, ignore this email. Nothing changes until the code is used.",
   },
   invitation: {
     preview: "{{inviter}} invited you to {{organization}} on absqir",
@@ -50,7 +50,8 @@ export const email = {
     reminderDay: "{{event}} is coming up",
     when: "{{start}} to {{end}} ({{timezone}}).",
     eventClosed: "{{event}} closed",
-    eventClosedBody: "{{present}} present, {{late}} late, {{excused}} excused, {{absent}} absent.",
+    eventClosedBody:
+      "{{present, number}} present, {{late, number}} late, {{excused, number}} excused, {{absent, number}} absent.",
     leaveRequested: "{{name}} asks to miss {{event}}",
     leaveApproved: "Your leave for {{event}} was approved",
     leaveDeclined: "Your leave for {{event}} was declined",

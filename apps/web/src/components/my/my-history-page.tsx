@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import { formatNumber, formatPercent } from "@absqir/core/numbers";
 import type { Locale, Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
@@ -23,27 +24,27 @@ function Summary(props: { rows: HistoryRow[] }) {
   ).length;
   const late = A.filter(props.rows, (row) => row.status === "late").length;
   const rate = match(total)
-    .with(0, () => 0 as const)
-    .otherwise((total) => Math.round((on / total) * 100));
+    .with(0, () => 0)
+    .otherwise((total) => on / total);
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <Card size="sm">
         <CardHeader>
           <CardDescription>{t("my:history.attendance")}</CardDescription>
-          <CardTitle className="text-2xl tabular-nums">{rate}%</CardTitle>
+          <CardTitle className="text-2xl tabular-nums">{formatPercent(rate)}</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm">
         <CardHeader>
           <CardDescription>{t("my:history.events")}</CardDescription>
-          <CardTitle className="text-2xl tabular-nums">{total}</CardTitle>
+          <CardTitle className="text-2xl tabular-nums">{formatNumber(total)}</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm">
         <CardHeader>
           <CardDescription>{t("my:history.late")}</CardDescription>
-          <CardTitle className="text-2xl tabular-nums">{late}</CardTitle>
+          <CardTitle className="text-2xl tabular-nums">{formatNumber(late)}</CardTitle>
         </CardHeader>
       </Card>
     </div>

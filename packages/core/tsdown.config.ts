@@ -4,6 +4,7 @@ export default defineConfig((options) => ({
   entry: [
     "src/index.ts",
     "src/money.ts",
+    "src/numbers.ts",
     "src/date.ts",
     "src/query-keys.ts",
     "src/user-agent.ts",

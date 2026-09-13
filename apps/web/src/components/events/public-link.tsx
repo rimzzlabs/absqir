@@ -37,7 +37,7 @@ export function PublicLink(props: PublicLinkProps) {
     .otherwise((registrationLimit) =>
       t("events:publicLink.seats", {
         count: event.registrationCount,
-        limit: String(registrationLimit),
+        limit: registrationLimit,
       }),
     );
 

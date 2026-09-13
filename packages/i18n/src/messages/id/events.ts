@@ -21,15 +21,16 @@ export const events = {
     noMatchHint: "Coba judul lain, atau pilih semua grup.",
   },
   card: {
-    expected: "{{count}} diharapkan",
-    checkedIn: "{{checkedIn}}/{{expected}} hadir",
-    late: " · {{count}} terlambat",
-    absent: " · {{count}} tidak hadir",
+    expected: "{{count, number}} diharapkan",
+    checkedIn: "{{checkedIn, number}}/{{expected, number}} hadir",
+    late: " · {{count, number}} terlambat",
+    absent: " · {{count, number}} tidak hadir",
     to: "{{start}} sampai {{end}}",
     noGroup: "Tanpa grup",
   },
   detail: {
-    times: "{{range}} · terlambat setelah {{late}} menit · buka {{opens}} menit lebih awal",
+    times:
+      "{{range}} · terlambat setelah {{late, number}} menit · buka {{opens, number}} menit lebih awal",
     walkIns: "Tamu tanpa daftar diterima",
     roomScreen: "Layar ruangan",
     scanner: "Pemindai",
@@ -51,14 +52,14 @@ export const events = {
   },
   publicLink: {
     title: "Pendaftaran terbuka",
-    registered: "{{count}} terdaftar",
-    seats: "{{count}} dari {{limit}} kursi terisi",
+    registered: "{{count, number}} terdaftar",
+    seats: "{{count, number}} dari {{limit, number}} kursi terisi",
     hint: "Siapa pun yang punya tautan ini bisa mendaftar. Orang baru membuat akun dan masuk sebagai anggota.",
   },
   display: {
-    checkedIn: "{{checkedIn}}/{{expected}} sudah check-in",
+    checkedIn: "{{checkedIn, number}}/{{expected, number}} sudah check-in",
     opensSoon:
-      "Check-in dibuka {{count}} menit sebelum acara mulai. Kode di bawah hanya berlaku selama acara berlangsung.",
+      "Check-in dibuka {{count, number}} menit sebelum acara mulai. Kode di bawah hanya berlaku selama acara berlangsung.",
     closed: "Acara ini sudah ditutup.",
     preparing: "Menyiapkan kode…",
     qrAlt: "Kode QR untuk check-in",
@@ -116,7 +117,7 @@ export const events = {
       auto: "ditutup tanpa check-in",
     },
     flagged_one: "Satu check-in perlu diperiksa",
-    flagged_other: "{{count}} check-in perlu diperiksa",
+    flagged_other: "{{count, number}} check-in perlu diperiksa",
     flaggedHint:
       "Bacaan lokasinya tidak seperti ponsel yang berdiri di tempat itu. Buka kolom Di mana untuk membaca alasannya.",
   },
@@ -135,7 +136,7 @@ export const events = {
     titleTooLong: "Judul itu terlalu panjang.",
     notesTooLong: "Tulis kurang dari 1000 karakter.",
     wholeMinutes: "Menit bulat saja.",
-    atMostMinutes: "Maksimal {{count}} menit.",
+    atMostMinutes: "Maksimal {{count, number}} menit.",
     pickStart: "Pilih waktu mulai.",
     pickEnd: "Pilih waktu selesai.",
     endAfterStart: "Waktu selesai harus setelah waktu mulai.",

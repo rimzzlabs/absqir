@@ -50,7 +50,7 @@ export const account = {
     signInDescription: "Apa yang membuktikan ini Anda.",
     password: "Kata sandi",
     passwordHint:
-      "Minimal {{count}} karakter. Lupa? Keluar dulu, lalu pilih kode lewat email di halaman masuk.",
+      "Minimal {{count, number}} karakter. Lupa? Keluar dulu, lalu pilih kode lewat email di halaman masuk.",
     currentPassword: "Kata sandi saat ini",
     newPassword: "Kata sandi baru",
     signOutOthers: "Keluarkan perangkat saya yang lain",
@@ -59,7 +59,7 @@ export const account = {
     changed: "Kata sandi diganti.",
     noPasswordHint:
       "Akun ini belum punya kata sandi. Kode lewat email tetap bisa memasukkan Anda, jadi kata sandi tidak wajib.",
-    minLength: "Minimal {{count}} karakter.",
+    minLength: "Minimal {{count, number}} karakter.",
     setPassword: "Buat kata sandi",
   },
   devices: {

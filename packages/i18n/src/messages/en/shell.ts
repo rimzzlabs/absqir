@@ -49,7 +49,7 @@ export const shell = {
   },
   notifications: {
     label: "Notifications",
-    labelWithCount: "Notifications, {{count}} unread",
+    labelWithCount: "Notifications, {{count, number}} unread",
     title: "Notifications",
     markAllRead: "Mark all read",
     unread: "Unread",

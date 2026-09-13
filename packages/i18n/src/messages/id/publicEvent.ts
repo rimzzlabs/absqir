@@ -1,7 +1,7 @@
 /** Halaman di balik tautan publik sebuah acara terbuka. */
 export const publicEvent = {
-  registered: "{{count}} terdaftar",
-  seats: "{{registered}} dari {{limit}} kursi terisi",
+  registered: "{{count, number}} terdaftar",
+  seats: "{{registered, number}} dari {{limit, number}} kursi terisi",
   full: " · penuh",
   youAreRegistered: "Anda sudah terdaftar",
   youAreRegisteredHint:

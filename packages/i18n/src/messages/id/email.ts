@@ -18,7 +18,7 @@ export const email = {
     footer:
       "absqir mengirim kode hanya ketika ada yang memintanya. Tidak ada orang absqir yang akan meminta Anda meneruskan kode ini.",
     expiry:
-      "Kode ini kedaluwarsa dalam {{count}} menit. Kalau Anda tidak memintanya, abaikan email ini. Tidak ada yang berubah sampai kodenya dipakai.",
+      "Kode ini kedaluwarsa dalam {{count, number}} menit. Kalau Anda tidak memintanya, abaikan email ini. Tidak ada yang berubah sampai kodenya dipakai.",
   },
   invitation: {
     preview: "{{inviter}} mengundang Anda ke {{organization}} di absqir",
@@ -52,7 +52,7 @@ export const email = {
     when: "{{start}} sampai {{end}} ({{timezone}}).",
     eventClosed: "{{event}} ditutup",
     eventClosedBody:
-      "{{present}} hadir, {{late}} terlambat, {{excused}} izin, {{absent}} tidak hadir.",
+      "{{present, number}} hadir, {{late, number}} terlambat, {{excused, number}} izin, {{absent, number}} tidak hadir.",
     leaveRequested: "{{name}} mengajukan izin untuk {{event}}",
     leaveApproved: "Izin Anda untuk {{event}} disetujui",
     leaveDeclined: "Izin Anda untuk {{event}} ditolak",

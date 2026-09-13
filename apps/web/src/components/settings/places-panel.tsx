@@ -51,7 +51,7 @@ function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => voi
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-medium">{place.name}</p>
           <Badge variant="outline" className="tabular-nums">
-            {place.radiusMeters} m
+            {t("settings:places.radius", { radius: place.radiusMeters })}
           </Badge>
         </div>
 

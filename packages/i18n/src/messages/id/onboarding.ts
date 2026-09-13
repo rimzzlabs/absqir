@@ -18,7 +18,7 @@ export const onboarding = {
     fullName: "Nama lengkap",
     password: "Kata sandi",
     passwordHint:
-      "Minimal {{count}} karakter. Anda juga bisa masuk lewat kode yang dikirim ke email.",
+      "Minimal {{count, number}} karakter. Anda juga bisa masuk lewat kode yang dikirim ke email.",
     addPassword: "Tambahkan kata sandi",
     addPasswordHint:
       "{{provider}} sudah bisa memasukkan Anda. Kata sandi adalah jalan masuk tambahan, untuk perangkat yang tidak punya akun itu.",

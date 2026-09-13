@@ -21,13 +21,13 @@ export const calendar = {
   projectedTitle: "Sebuah jadwal akan membuat acara ini",
   whatHappens: "Apa yang terjadi pada {{date}}",
   newEventOn: "Acara baru pada {{date}}",
-  more: "{{count}} lagi",
+  more: "{{count, number}} lagi",
   sheet: {
     empty: "Belum ada rencana pada hari ini.",
-    count: "{{count}} di kalender.",
+    count: "{{count, number}} di kalender.",
     range: "{{from}} sampai {{to}}",
     counts:
-      "{{expected}} diharapkan · {{present}} hadir · {{late}} terlambat · {{absent}} tidak hadir",
+      "{{expected, number}} diharapkan · {{present, number}} hadir · {{late, number}} terlambat · {{absent, number}} tidak hadir",
     fromSchedule: "Dari sebuah jadwal",
     projectedHint:
       "Jadwalnya membuat acara ini dua minggu sebelumnya. Belum ada yang perlu dilakukan.",

@@ -1,3 +1,4 @@
+import { formatNumber } from "@absqir/core/numbers";
 import { useTranslate } from "@absqir/i18n/react";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
@@ -46,7 +47,7 @@ export function OrganizationCounts() {
               {t(`settings:organization.counts.${tile.key}`)}
             </dt>
             <dd className="font-heading mt-1 text-2xl font-semibold tabular-nums">
-              {tile.read(organization.counts)}
+              {formatNumber(tile.read(organization.counts))}
             </dd>
             <p className="text-muted-foreground mt-0.5 text-xs">
               {t(`settings:organization.counts.${tile.key}Hint`)}

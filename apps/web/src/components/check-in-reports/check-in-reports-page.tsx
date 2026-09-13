@@ -100,7 +100,7 @@ function Evidence(props: { attempt: NonNullable<CheckInReport["attempt"]> }) {
         <Fact label={t("checkin:reports.accuracy")}>
           {match(attempt.accuracyMeters)
             .with(P.number, (meters) =>
-              t("checkin:reports.accuracyAbout", { meters: String(Math.round(meters)) }),
+              t("checkin:reports.accuracyAbout", { meters: Math.round(meters) }),
             )
             .otherwise(() => t("checkin:reports.notRecorded"))}
         </Fact>

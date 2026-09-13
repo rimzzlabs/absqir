@@ -80,16 +80,17 @@ export const settings = {
       "Nobody is waiting. A request lands here when someone at a verified domain asks to come in.",
   },
   places: {
+    radius: "{{radius, number}} m",
     new: "New place",
     emptyTitle: "No places yet",
     emptyDescription:
       "Save the office, the hall, or the site. Then an event can refuse a check-in made somewhere else.",
     editLabel: "Edit {{name}}",
     deleteLabel: "Delete {{name}}",
-    events_one: "{{count}} event",
-    events_other: "{{count}} events",
-    schedules_one: "{{count}} schedule",
-    schedules_other: "{{count}} schedules",
+    events_one: "{{count, number}} event",
+    events_other: "{{count, number}} events",
+    schedules_one: "{{count, number}} schedule",
+    schedules_other: "{{count, number}} schedules",
     deleteTitle: "Delete {{name}}?",
     deleteUnused: "Nothing points at it yet.",
     deleteUsed:
@@ -109,7 +110,7 @@ export const settings = {
       radiusLabel: "Radius in metres",
       metres: "m",
       radiusHint:
-        "A phone is accurate to about ten metres outdoors, and far less indoors. Under {{count}} m the circle is smaller than the error, so it is the floor.",
+        "A phone is accurate to about ten metres outdoors, and far less indoors. Under {{count, number}} m the circle is smaller than the error, so it is the floor.",
       placeHintBefore: "Tap the map to put the pin down, or press",
       placeHintButton: "Use my location",
       create: "Create",

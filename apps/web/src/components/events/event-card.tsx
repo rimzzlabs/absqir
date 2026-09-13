@@ -23,8 +23,8 @@ function Counts(props: { event: Event }) {
   return (
     <span className="text-muted-foreground text-xs tabular-nums">
       {t("events:card.checkedIn", {
-        checkedIn: String(checkedIn),
-        expected: String(counts.expected),
+        checkedIn,
+        expected: counts.expected,
       })}
       {match(counts.late > 0)
         .with(true, () => t("events:card.late", { count: counts.late }))

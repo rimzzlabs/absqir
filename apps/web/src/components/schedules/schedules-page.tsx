@@ -49,7 +49,7 @@ function describe(t: Translate, schedule: Schedule): string {
   return t("schedules:summary", {
     when,
     time: schedule.startTime,
-    minutes: String(schedule.durationMinutes),
+    minutes: schedule.durationMinutes,
     start: schedule.startsOn,
     end,
     timezone: schedule.timezone,

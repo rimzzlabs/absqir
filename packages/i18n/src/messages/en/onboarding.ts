@@ -16,7 +16,8 @@ export const onboarding = {
     descriptionWithPassword: "The name your organizers see, and a password for next time.",
     fullName: "Full name",
     password: "Password",
-    passwordHint: "At least {{count}} characters. You can also sign in with an emailed code later.",
+    passwordHint:
+      "At least {{count, number}} characters. You can also sign in with an emailed code later.",
     addPassword: "Add a password",
     addPasswordHint:
       "{{provider}} already signs you in. A password is one more way back, for a device where that account is not set up.",

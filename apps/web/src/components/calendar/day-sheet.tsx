@@ -69,10 +69,10 @@ export function DaySheet(props: DaySheetProps) {
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {t("calendar:sheet.counts", {
-                      expected: String(entry.event.counts.expected),
-                      present: String(entry.event.counts.present),
-                      late: String(entry.event.counts.late),
-                      absent: String(entry.event.counts.absent),
+                      expected: entry.event.counts.expected,
+                      present: entry.event.counts.present,
+                      late: entry.event.counts.late,
+                      absent: entry.event.counts.absent,
                     })}
                   </p>
                   {match(entry.event.groups.length > 0)

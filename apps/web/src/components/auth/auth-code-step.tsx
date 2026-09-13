@@ -38,7 +38,7 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
     .otherwise(() => t("auth:code.signIn"));
   const resendLabel = match(cooldown.ready)
     .with(true, () => t("auth:code.sendNewCode"))
-    .otherwise(() => t("auth:code.newCodeIn", { seconds: String(cooldown.remaining) }));
+    .otherwise(() => t("auth:code.newCodeIn", { seconds: cooldown.remaining }));
 
   return (
     <Form {...form}>

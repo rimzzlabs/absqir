@@ -49,7 +49,7 @@ export const shell = {
   },
   notifications: {
     label: "Notifikasi",
-    labelWithCount: "Notifikasi, {{count}} belum dibaca",
+    labelWithCount: "Notifikasi, {{count, number}} belum dibaca",
     title: "Notifikasi",
     markAllRead: "Tandai semua terbaca",
     unread: "Belum dibaca",

@@ -1,7 +1,7 @@
 /** The page behind an open event's public link. */
 export const publicEvent = {
-  registered: "{{count}} registered",
-  seats: "{{registered}} of {{limit}} seats taken",
+  registered: "{{count, number}} registered",
+  seats: "{{registered, number}} of {{limit, number}} seats taken",
   full: " · full",
   youAreRegistered: "You are registered",
   youAreRegisteredHint:

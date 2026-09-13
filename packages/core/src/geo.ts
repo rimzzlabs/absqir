@@ -1,5 +1,6 @@
 import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
+import { formatNumber } from "#src/numbers";
 
 /**
  * Circle geometry for the check-in fence. Everything here is pure, so the
@@ -198,11 +199,12 @@ export function formatDistance(meters: number): string {
   return match(safe)
     .when(
       (value) => value < 1000,
-      (value) => `${value} m`,
+      (value) => `${formatNumber(value)} m`,
     )
     .when(
       (value) => value < 100_000,
-      (value) => `${(value / 1000).toFixed(1)} km`,
+      (value) =>
+        `${formatNumber(value / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`,
     )
-    .otherwise((value) => `${Math.round(value / 1000)} km`);
+    .otherwise((value) => `${formatNumber(Math.round(value / 1000))} km`);
 }

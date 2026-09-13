@@ -1,16 +1,12 @@
+import { formatNumber, formatPercent } from "@absqir/core/numbers";
 import { useTranslate } from "@absqir/i18n/react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
-import { match } from "ts-pattern";
 import type { ReportSummary } from "@/queries/use-reports";
 
 /** A rate reads as a whole percent, and an em dash when nothing was judged. */
-export function ratePercent(rate: number | null): string {
-  return match(rate)
-    .with(null, () => "—")
-    .otherwise((rate) => `${Math.round(rate * 100)}%`);
-}
+export { formatPercent as ratePercent } from "@absqir/core/numbers";
 
 interface StatusBarSegment {
   key: keyof ReportSummary["counts"];
@@ -77,22 +73,22 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label={t("reports:summary.events")}
-          value={String(summary.events)}
+          value={formatNumber(summary.events)}
           hint={t("reports:summary.eventsHint", { count: summary.closedEvents })}
         />
         <Stat
           label={t("reports:summary.people")}
-          value={String(summary.people)}
+          value={formatNumber(summary.people)}
           hint={t("reports:summary.peopleHint", { count: records })}
         />
         <Stat
           label={t("reports:summary.attendance")}
-          value={ratePercent(summary.attendanceRate)}
+          value={formatPercent(summary.attendanceRate)}
           hint={t("reports:summary.attendanceHint")}
         />
         <Stat
           label={t("reports:summary.onTime")}
-          value={ratePercent(summary.punctualityRate)}
+          value={formatPercent(summary.punctualityRate)}
           hint={t("reports:summary.onTimeHint")}
         />
       </div>
@@ -104,7 +100,7 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
             <li key={bar.key} className="flex items-center gap-2">
               <span aria-hidden className={cn("size-2 rounded-full", bar.className)} />
               <span className="text-muted-foreground">{t(`common:attendance.${bar.key}`)}</span>
-              <span className="tabular-nums">{summary.counts[bar.key]}</span>
+              <span className="tabular-nums">{formatNumber(summary.counts[bar.key])}</span>
             </li>
           ))}
         </ul>

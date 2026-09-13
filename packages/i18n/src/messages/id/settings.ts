@@ -81,16 +81,17 @@ export const settings = {
       "Tidak ada yang menunggu. Permintaan muncul di sini saat seseorang dari domain terverifikasi minta bergabung.",
   },
   places: {
+    radius: "{{radius, number}} m",
     new: "Tempat baru",
     emptyTitle: "Belum ada tempat",
     emptyDescription:
       "Simpan kantor, aula, atau lokasi kerja. Setelah itu sebuah acara bisa menolak check-in dari tempat lain.",
     editLabel: "Ubah {{name}}",
     deleteLabel: "Hapus {{name}}",
-    events_one: "{{count}} acara",
-    events_other: "{{count}} acara",
-    schedules_one: "{{count}} jadwal",
-    schedules_other: "{{count}} jadwal",
+    events_one: "{{count, number}} acara",
+    events_other: "{{count, number}} acara",
+    schedules_one: "{{count, number}} jadwal",
+    schedules_other: "{{count, number}} jadwal",
     deleteTitle: "Hapus {{name}}?",
     deleteUnused: "Belum ada yang memakainya.",
     deleteUsed:
@@ -110,7 +111,7 @@ export const settings = {
       radiusLabel: "Jari-jari dalam meter",
       metres: "m",
       radiusHint:
-        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count}} m lingkarannya lebih kecil dari galat itu, jadi itulah batas bawahnya.",
+        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count, number}} m lingkarannya lebih kecil dari galat itu, jadi itulah batas bawahnya.",
       placeHintBefore: "Ketuk peta untuk meletakkan penanda, atau tekan",
       placeHintButton: "Pakai lokasi saya",
       create: "Buat",

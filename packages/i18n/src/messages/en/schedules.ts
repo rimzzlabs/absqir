@@ -14,7 +14,7 @@ export const schedules = {
   keep: "Keep",
   deleting: "Deleting…",
   everyDay: "Every day",
-  summary: "{{when}} at {{time}}, {{minutes}} min, from {{start}}{{end}} ({{timezone}})",
+  summary: "{{when}} at {{time}}, {{minutes, number}} min, from {{start}}{{end}} ({{timezone}})",
   until: " until {{date}}",
   days: {
     "0": "Sun",

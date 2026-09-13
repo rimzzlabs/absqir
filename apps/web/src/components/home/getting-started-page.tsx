@@ -183,15 +183,15 @@ function GettingStartedBody(props: GettingStartedPageProps) {
                   <CardTitle>{t("home:gettingStarted.title")}</CardTitle>
                   <CardDescription>
                     {t("home:gettingStarted.step", {
-                      done: String(done + 1),
-                      total: String(steps.length),
+                      done: done + 1,
+                      total: steps.length,
                     })}
                   </CardDescription>
                   <Progress
                     value={(done / steps.length) * 100}
                     aria-label={t("home:gettingStarted.progressLabel", {
-                      done: String(done),
-                      total: String(steps.length),
+                      done,
+                      total: steps.length,
                     })}
                     className="mt-3"
                   />

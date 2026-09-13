@@ -82,7 +82,7 @@ export function PlacePicker(props: PlacePickerProps) {
                         {match(place.address)
                           .with(P.string.minLength(1), (address) => `${address} · `)
                           .otherwise(() => "")}
-                        {t("common:placePicker.within", { radius: String(place.radiusMeters) })}
+                        {t("common:placePicker.within", { radius: place.radiusMeters })}
                       </SelectItemDescription>
                     </span>
                   </SelectItem>

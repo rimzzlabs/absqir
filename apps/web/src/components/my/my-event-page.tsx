@@ -105,7 +105,7 @@ function Header(props: { event: MyEventDetail }) {
               <span>
                 {fence.name ?? t("my:event.somePlace")}
                 {match(event.requireLocation)
-                  .with(true, () => t("my:event.within", { radius: String(fence.radiusMeters) }))
+                  .with(true, () => t("my:event.within", { radius: fence.radiusMeters }))
                   .otherwise(() => "")}
               </span>
             </p>
@@ -397,8 +397,8 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
             .with("scheduled", () => t("my:event.expected", { count: event.expectedTotal }))
             .otherwise(() =>
               t("my:event.checkedIn", {
-                checkedIn: String(event.checkedInCount),
-                expected: String(event.expectedTotal),
+                checkedIn: event.checkedInCount,
+                expected: event.expectedTotal,
               }),
             )}
         </CardDescription>

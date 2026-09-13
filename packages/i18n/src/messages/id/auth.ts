@@ -24,7 +24,7 @@ export const auth = {
     signIn: "Masuk",
     useAnotherEmail: "Pakai email lain",
     sendNewCode: "Kirim kode baru",
-    newCodeIn: "Kode baru dalam {{seconds}} detik",
+    newCodeIn: "Kode baru dalam {{seconds, number}} detik",
     sending: "Mengirim…",
   },
   password: {
@@ -41,7 +41,7 @@ export const auth = {
     description:
       "Kami mengirim kode 6 digit ke {{email}}. Pakai kode itu untuk memilih kata sandi baru.",
     newPassword: "Kata sandi baru",
-    minLength: "Minimal {{count}} karakter.",
+    minLength: "Minimal {{count, number}} karakter.",
     submit: "Simpan kata sandi lalu masuk",
     backToPassword: "Kembali ke kata sandi",
   },
@@ -65,9 +65,9 @@ export const auth = {
   },
   validation: {
     passwordRequired: "Masukkan kata sandi Anda.",
-    passwordShort: "Pakai minimal {{count}} karakter.",
+    passwordShort: "Pakai minimal {{count, number}} karakter.",
     passwordLong: "Kata sandi itu terlalu panjang.",
-    codeLength: "Masukkan kode {{count}} digit.",
+    codeLength: "Masukkan kode {{count, number}} digit.",
     digitsOnly: "Angka saja.",
     nameRequired: "Isi nama Anda.",
   },

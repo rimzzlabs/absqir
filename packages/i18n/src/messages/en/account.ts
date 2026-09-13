@@ -50,7 +50,7 @@ export const account = {
     signInDescription: "What proves it is you.",
     password: "Password",
     passwordHint:
-      "At least {{count}} characters. Forgot it? Sign out, then choose the emailed code on the sign-in page.",
+      "At least {{count, number}} characters. Forgot it? Sign out, then choose the emailed code on the sign-in page.",
     currentPassword: "Current password",
     newPassword: "New password",
     signOutOthers: "Sign out my other devices",
@@ -59,7 +59,7 @@ export const account = {
     changed: "Password changed.",
     noPasswordHint:
       "This account has none. An emailed code signs you in either way, so a password is optional.",
-    minLength: "At least {{count}} characters.",
+    minLength: "At least {{count, number}} characters.",
     setPassword: "Set a password",
   },
   devices: {

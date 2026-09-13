@@ -130,7 +130,7 @@ export const errors = {
   organizationHasYourRequest: "{{name}} sudah menerima permintaan Anda.",
   mailboxProviderDomain:
     "{{domain}} milik penyedia kotak surat, jadi tidak ada ruang kerja yang bisa mengklaimnya.",
-  domainLimit: "Satu organisasi bisa mengklaim maksimal {{count}} domain.",
+  domainLimit: "Satu organisasi bisa mengklaim maksimal {{count, number}} domain.",
   cannotResizePictures: "Peramban ini tidak bisa mengubah ukuran gambar.",
   couldNotReadPicture: "Gambar itu tidak bisa dibaca.",
   locationNeedsHttps: "Lokasi butuh alamat https.",

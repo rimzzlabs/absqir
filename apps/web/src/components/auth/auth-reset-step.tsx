@@ -33,7 +33,7 @@ export function AuthResetStep(props: AuthResetStepProps) {
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
   const resendLabel = match(cooldown.ready)
     .with(true, () => t("auth:code.sendNewCode"))
-    .otherwise(() => t("auth:code.newCodeIn", { seconds: String(cooldown.remaining) }));
+    .otherwise(() => t("auth:code.newCodeIn", { seconds: cooldown.remaining }));
 
   return (
     <Form {...form}>

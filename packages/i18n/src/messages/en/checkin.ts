@@ -130,8 +130,8 @@ export const checkin = {
     emptyDescription:
       "Nobody has reported a problem with the place check. A member who is refused while standing at the event can send one from the check-in page.",
     started: "{{event}} · started {{when}}",
-    earlier_one: "{{count}} earlier report",
-    earlier_other: "{{count}} earlier reports",
+    earlier_one: "{{count, number}} earlier report",
+    earlier_other: "{{count, number}} earlier reports",
     theySaid: "They said",
     noAttempt: "The refused check-in is no longer on record, so their own words are all there is.",
     recorded: "What was recorded",
@@ -144,7 +144,7 @@ export const checkin = {
     coarse: "Too vague to place them",
     notRecorded: "Not recorded",
     accuracy: "Accuracy",
-    accuracyAbout: "About {{meters}} m",
+    accuracyAbout: "About {{meters, number}} m",
     scannedAt: "Scanned at",
     conflict:
       "These two do not fit. A live code means somebody was at the screen, and a reading this far away means they were not. Either the phone placed them badly, which happens indoors, or the code reached somebody else.",

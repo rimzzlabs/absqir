@@ -15,7 +15,8 @@ export const schedules = {
   keep: "Biarkan",
   deleting: "Menghapus…",
   everyDay: "Setiap hari",
-  summary: "{{when}} pukul {{time}}, {{minutes}} menit, mulai {{start}}{{end}} ({{timezone}})",
+  summary:
+    "{{when}} pukul {{time}}, {{minutes, number}} menit, mulai {{start}}{{end}} ({{timezone}})",
   until: " sampai {{date}}",
   days: {
     "0": "Min",

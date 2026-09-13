@@ -133,8 +133,8 @@ export const checkin = {
     emptyDescription:
       "Belum ada yang melaporkan masalah dengan pemeriksaan tempat. Anggota yang ditolak padahal sedang berdiri di acara bisa mengirimnya dari halaman check-in.",
     started: "{{event}} · mulai {{when}}",
-    earlier_one: "{{count}} laporan sebelumnya",
-    earlier_other: "{{count}} laporan sebelumnya",
+    earlier_one: "{{count, number}} laporan sebelumnya",
+    earlier_other: "{{count, number}} laporan sebelumnya",
     theySaid: "Katanya",
     noAttempt: "Check-in yang ditolak sudah tidak tercatat, jadi hanya kata-katanya yang tersisa.",
     recorded: "Apa yang tercatat",
@@ -147,7 +147,7 @@ export const checkin = {
     coarse: "Terlalu kabur untuk menentukan posisinya",
     notRecorded: "Tidak tercatat",
     accuracy: "Akurasi",
-    accuracyAbout: "Sekitar {{meters}} m",
+    accuracyAbout: "Sekitar {{meters, number}} m",
     scannedAt: "Dipindai pada",
     conflict:
       "Dua hal ini tidak cocok. Kode hidup berarti ada orang di depan layar, dan bacaan sejauh ini berarti dia tidak di sana. Entah ponselnya salah menaruh posisi, yang sering terjadi di dalam ruangan, atau kodenya sampai ke orang lain.",

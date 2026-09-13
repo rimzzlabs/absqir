@@ -34,8 +34,8 @@ function Seats(props: { event: PublicEvent }) {
   return (
     <p className="text-muted-foreground text-sm tabular-nums">
       {t("publicEvent:seats", {
-        registered: String(event.registered),
-        limit: String(event.limit),
+        registered: event.registered,
+        limit: event.limit,
       })}
       {match(event.seatsLeft)
         .with(0, () => t("publicEvent:full"))

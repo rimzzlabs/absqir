@@ -22,14 +22,14 @@ export const reports = {
   groupsLabel: "Groups",
   summary: {
     events: "Events",
-    eventsHint: "{{count}} closed, so their absent rows are written",
+    eventsHint: "{{count, number}} closed, so their absent rows are written",
     people: "People seen",
-    peopleHint: "{{count}} records",
+    peopleHint: "{{count, number}} records",
     attendance: "Attendance",
     attendanceHint: "Present or late, over everyone judged. Excused is left out.",
     onTime: "On time",
     onTimeHint: "Of the people who turned up, how many beat the late mark.",
-    barTitle: "{{status}}: {{count}}",
+    barTitle: "{{status}}: {{count, number}}",
   },
   tables: {
     person: "Person",

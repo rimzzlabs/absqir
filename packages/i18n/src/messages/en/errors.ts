@@ -129,7 +129,7 @@ export const errors = {
   alreadyInOrganization: "You are already in {{name}}.",
   organizationHasYourRequest: "{{name}} already has your request.",
   mailboxProviderDomain: "{{domain}} belongs to a mailbox provider, so no workspace can claim it.",
-  domainLimit: "An organization can claim {{count}} domains at most.",
+  domainLimit: "An organization can claim {{count, number}} domains at most.",
   cannotResizePictures: "This browser cannot resize pictures.",
   couldNotReadPicture: "Could not read that picture.",
   locationNeedsHttps: "Location needs an https address.",

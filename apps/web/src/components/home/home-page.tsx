@@ -1,5 +1,6 @@
 import { formatRange } from "@absqir/core/date";
 import { claimableDomainOfEmail } from "@absqir/core/email-domain";
+import { formatNumber } from "@absqir/core/numbers";
 import type { Locale, Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
@@ -131,12 +132,12 @@ function ThirtyDayStats() {
     <div className={STAT_GRID}>
       <Stat
         label={t("home:stats.events")}
-        value={String(data.events)}
+        value={formatNumber(data.events)}
         hint={t("home:stats.eventsHint", { count: data.closedEvents })}
       />
       <Stat
         label={t("home:stats.people")}
-        value={String(data.people)}
+        value={formatNumber(data.people)}
         hint={t("home:stats.peopleHint")}
       />
       <Stat

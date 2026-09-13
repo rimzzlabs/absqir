@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import { formatNumber } from "@absqir/core/numbers";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import {
@@ -52,7 +53,7 @@ function Stat(props: { label: string; value: number }) {
     <Card size="sm">
       <CardHeader>
         <CardDescription>{props.label}</CardDescription>
-        <CardTitle className="text-2xl tabular-nums">{props.value}</CardTitle>
+        <CardTitle className="text-2xl tabular-nums">{formatNumber(props.value)}</CardTitle>
       </CardHeader>
     </Card>
   );
@@ -81,8 +82,8 @@ function Header(props: { event: Event; role: RoleName }) {
           <p className="text-muted-foreground mt-1 text-sm">
             {t("events:detail.times", {
               range: formatRange(new Date(event.startsAt), new Date(event.endsAt)),
-              late: String(event.lateAfterMinutes),
-              opens: String(event.opensBeforeMinutes),
+              late: event.lateAfterMinutes,
+              opens: event.opensBeforeMinutes,
             })}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">

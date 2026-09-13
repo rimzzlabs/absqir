@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { formatNumber, formatPercent } from "@absqir/core/numbers";
 import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
@@ -45,7 +46,7 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const judged = total - counts.excused;
   const rate = match(judged)
     .with(0, () => null)
-    .otherwise((judged) => Math.round(((counts.present + counts.late) / judged) * 100));
+    .otherwise((judged) => (counts.present + counts.late) / judged);
   const recent = props.history.slice(0, RECENT);
 
   return (
@@ -70,9 +71,7 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
       <CardContent className="flex flex-col gap-4">
         <div>
           <p className="font-heading text-4xl font-semibold tracking-tight tabular-nums">
-            {match(rate)
-              .with(null, () => "—" as const)
-              .otherwise((rate) => `${rate}%`)}
+            {formatPercent(rate)}
           </p>
           <p className="text-muted-foreground text-sm">{t("home:member.rateHint")}</p>
         </div>
@@ -109,7 +108,7 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
               <dt className="text-muted-foreground flex-1">
                 {t(`common:attendance.${segment.status}`)}
               </dt>
-              <dd className="font-medium tabular-nums">{counts[segment.status]}</dd>
+              <dd className="font-medium tabular-nums">{formatNumber(counts[segment.status])}</dd>
             </div>
           ))}
         </dl>

@@ -8,6 +8,10 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./numbers": {
+      "development": "./src/numbers.ts",
+      "default": "./dist/numbers.js"
+    },
     "./money": {
       "development": "./src/money.ts",
       "default": "./dist/money.js"

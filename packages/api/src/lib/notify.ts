@@ -139,12 +139,24 @@ export async function notifyDueReminders(
           .with("hour", () => t("email:notify.reminderHour", { event: event.title }))
           .otherwise(() => t("email:notify.reminderDay", { event: event.title }));
 
+        const zone = zones.get(userId) ?? timezone;
+
         rows.push({
           organizationId,
           userId,
           type: "event-reminder",
           title,
-          body: whenLine(locale, t, event, zones.get(userId) ?? timezone),
+          body: whenLine(locale, t, event, zone),
+          titleKey: match(kind)
+            .with("hour", () => "email:notify.reminderHour" as const)
+            .otherwise(() => "email:notify.reminderDay" as const),
+          titleParams: { event: event.title },
+          bodyKey: "email:notify.when",
+          bodyParams: {
+            startsAt: event.startsAt.toISOString(),
+            endsAt: event.endsAt.toISOString(),
+            timezone: zone,
+          },
           href: `/events/${event.id}`,
           dedupeKey: `event-reminder:${event.id}:${kind}`,
         });
@@ -184,11 +196,15 @@ export async function notifyEventClosed(
         type: "event-closed" as const,
         title: t("email:notify.eventClosed", { event: event.title }),
         body: t("email:notify.eventClosedBody", {
-          present: String(counts.present),
-          late: String(counts.late),
-          excused: String(counts.excused),
-          absent: String(counts.absent),
+          present: counts.present,
+          late: counts.late,
+          excused: counts.excused,
+          absent: counts.absent,
         }),
+        titleKey: "email:notify.eventClosed" as const,
+        titleParams: { event: event.title },
+        bodyKey: "email:notify.eventClosedBody" as const,
+        bodyParams: { ...counts },
         href: `/events/${event.id}`,
         dedupeKey: `event-closed:${event.id}`,
       };
@@ -225,6 +241,8 @@ export async function notifyLeaveRequested(
         event: params.eventTitle,
       }),
       body: params.reason,
+      titleKey: "email:notify.leaveRequested" as const,
+      titleParams: { name: params.personName, event: params.eventTitle },
       href: "/leave",
       dedupeKey: `leave-requested:${params.requestId}:${userId}`,
     })),
@@ -264,6 +282,18 @@ export async function notifyLeaveDecided(
         match(approved)
           .with(true, () => t("email:notify.leaveApprovedBody"))
           .otherwise(() => t("email:notify.leaveDeclinedBody")),
+      titleKey: match(approved)
+        .with(true, () => "email:notify.leaveApproved" as const)
+        .otherwise(() => "email:notify.leaveDeclined" as const),
+      titleParams: { event: params.eventTitle },
+      // The organizer's own note stays as they wrote it.
+      bodyKey: match(params.note)
+        .with(P.string, () => null)
+        .otherwise(() =>
+          match(approved)
+            .with(true, () => "email:notify.leaveApprovedBody" as const)
+            .otherwise(() => "email:notify.leaveDeclinedBody" as const),
+        ),
       href: "/my/leave",
       dedupeKey: `leave-decided:${params.requestId}`,
     },
@@ -298,6 +328,8 @@ export async function notifyJoinRequested(
       title: translatorFrom(locales, userId)("email:notify.joinRequested", {
         name: params.personName,
       }),
+      titleKey: "email:notify.joinRequested" as const,
+      titleParams: { name: params.personName },
       body: params.message ?? params.email,
       href: "/settings?tab=requests",
       dedupeKey: `join-requested:${params.requestId}:${userId}`,
@@ -374,6 +406,8 @@ export async function notifyCheckInReported(
         name: params.personName,
         event: params.eventTitle,
       }),
+      titleKey: "email:notify.checkInReported" as const,
+      titleParams: { name: params.personName, event: params.eventTitle },
       body: params.message,
       href: "/check-in-problems",
       dedupeKey: `check-in-reported:${params.reportId}:${userId}`,

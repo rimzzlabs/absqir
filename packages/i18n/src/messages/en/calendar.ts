@@ -21,12 +21,13 @@ export const calendar = {
   projectedTitle: "A schedule will create this one",
   whatHappens: "What happens on {{date}}",
   newEventOn: "New event on {{date}}",
-  more: "{{count}} more",
+  more: "{{count, number}} more",
   sheet: {
     empty: "Nothing is planned on this day yet.",
-    count: "{{count}} on the calendar.",
+    count: "{{count, number}} on the calendar.",
     range: "{{from}} to {{to}}",
-    counts: "{{expected}} expected · {{present}} present · {{late}} late · {{absent}} absent",
+    counts:
+      "{{expected, number}} expected · {{present, number}} present · {{late, number}} late · {{absent, number}} absent",
     fromSchedule: "From a schedule",
     projectedHint: "The schedule creates this event a fortnight ahead. Nothing to do now.",
     newEvent: "New event on this day",

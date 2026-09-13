@@ -43,8 +43,8 @@ function QrScreen(props: QrDisplayProps) {
               <EventStatusBadge status={data.status} />
               <span className="text-muted-foreground text-sm tabular-nums">
                 {t("events:display.checkedIn", {
-                  checkedIn: String(checkedIn),
-                  expected: String(data.counts.expected),
+                  checkedIn,
+                  expected: data.counts.expected,
                 })}
               </span>
             </div>

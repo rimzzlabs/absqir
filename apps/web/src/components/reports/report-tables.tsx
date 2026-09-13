@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { formatNumber } from "@absqir/core/numbers";
 import type { Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
@@ -51,7 +52,7 @@ function countColumns<T extends { counts: Counts }>(t: Translate): readonly Data
   return A.map(TALLIES, (tally) => ({
     key: tally,
     header: t(`common:attendance.${tally}`),
-    cell: (row: T) => row.counts[tally],
+    cell: (row: T) => formatNumber(row.counts[tally]),
     cellClassName: "tabular-nums",
   }));
 }
@@ -154,7 +155,7 @@ function groupColumns(t: Translate): DataColumn<GroupReportRow>[] {
     {
       key: "people",
       header: t("reports:tables.people"),
-      cell: (row) => row.people,
+      cell: (row) => formatNumber(row.people),
       cellClassName: "tabular-nums",
     },
     ...countColumns<GroupReportRow>(t),
