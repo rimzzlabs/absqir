@@ -1,13 +1,12 @@
 import { formatDate } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
+import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
 import { PaperPlaneTiltIcon, XIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
@@ -17,7 +16,7 @@ import { RoleSelect } from "@/components/shared/role-select";
 import { type InviteValues, inviteSchema } from "@/lib/directory-schemas";
 import { useCancelInvitation } from "@/mutations/use-cancel-invitation";
 import { useInviteMember } from "@/mutations/use-invite-member";
-import { useInvitations } from "@/queries/use-members";
+import { type Invitation, useInvitations } from "@/queries/use-members";
 
 function asRole(role: string) {
   return match(role)
@@ -87,6 +86,44 @@ function PendingList() {
   const invitations = useInvitations();
   const cancel = useCancelInvitation();
 
+  const columns: DataColumn<Invitation>[] = [
+    {
+      key: "email",
+      header: "Email",
+      place: "primary",
+      cell: (row) => row.email,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "role",
+      header: "Role",
+      cell: (row) => <RoleBadge role={asRole(row.role)} />,
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      cell: (row) => formatDate(new Date(row.expiresAt), "date"),
+      cellClassName: "text-muted-foreground",
+    },
+    {
+      key: "cancel",
+      place: "action",
+      headClassName: "w-16",
+      cellClassName: "text-right",
+      cell: (row) => (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Cancel the invitation for ${row.email}`}
+          disabled={cancel.isPending}
+          onClick={() => cancel.mutate(row.id)}
+        >
+          <XIcon />
+        </Button>
+      ),
+    },
+  ];
+
   return match(invitations)
     .with({ isPending: true }, () => <Skeleton className="h-32 rounded-xl" />)
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
@@ -94,41 +131,13 @@ function PendingList() {
       match(rows.length)
         .with(0, () => <p className="text-muted-foreground text-sm">No invitation is waiting.</p>)
         .otherwise(() => (
-          <div className="border-border overflow-x-auto rounded-xl border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="w-16" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {A.map(rows, (row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">{row.email}</TableCell>
-                    <TableCell>
-                      <RoleBadge role={asRole(row.role)} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(new Date(row.expiresAt), "date")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Cancel the invitation for ${row.email}`}
-                        disabled={cancel.isPending}
-                        onClick={() => cancel.mutate(row.id)}
-                      >
-                        <XIcon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="space-y-2">
+            <DataTable
+              label="Invitations waiting"
+              columns={columns}
+              rows={rows}
+              getKey={(row) => row.id}
+            />
             <FormError error={cancel.error} />
           </div>
         )),

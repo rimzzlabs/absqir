@@ -1,5 +1,6 @@
 import { formatDate, formatRange } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
+import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Form, FormField } from "@absqir/ui/form";
 import {
@@ -12,11 +13,9 @@ import {
   ResponsiveDialogTitle,
 } from "@absqir/ui/responsive-dialog";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@absqir/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A } from "@mobily/ts-belt";
 import { NotePencilIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
@@ -127,6 +126,85 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   );
 }
 
+function leaveColumns(onDecide: (d: Decision) => void): DataColumn<LeaveRequest>[] {
+  return [
+    {
+      key: "person",
+      header: "Person",
+      place: "primary",
+      cell: (row) => row.personName,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "event",
+      header: "Event",
+      cell: (row) => (
+        <>
+          <a href={`/events/${row.eventId}`} className="hover:underline">
+            {row.eventTitle}
+          </a>
+          <p className="text-muted-foreground text-xs">
+            {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
+          </p>
+        </>
+      ),
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      cell: (row) => (
+        <>
+          {row.reason}
+          {match(row.decisionNote)
+            .with(P.string.minLength(1), (decisionNote) => (
+              <p className="text-muted-foreground text-xs">Note: {decisionNote}</p>
+            ))
+            .otherwise(() => null)}
+        </>
+      ),
+      cellClassName: "max-w-xs whitespace-normal",
+    },
+    {
+      key: "asked",
+      header: "Asked",
+      cell: (row) => formatDate(new Date(row.createdAt), "date"),
+      cellClassName: "text-muted-foreground tabular-nums",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => <LeaveStatusBadge status={row.status} />,
+    },
+    {
+      key: "decide",
+      place: "footer",
+      headClassName: "w-44",
+      cell: (row) =>
+        match(row.status)
+          .with("pending", () => (
+            <div className="flex gap-2 md:justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 md:flex-none"
+                onClick={() => onDecide({ request: row, decision: "declined" })}
+              >
+                Decline
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 md:flex-none"
+                onClick={() => onDecide({ request: row, decision: "approved" })}
+              >
+                Approve
+              </Button>
+            </div>
+          ))
+          .otherwise(() => null),
+    },
+  ];
+}
+
 function Queue(props: {
   rows: readonly LeaveRequest[];
   scope: LeaveScope;
@@ -159,70 +237,12 @@ function Queue(props: {
   }
 
   return (
-    <div className="border-border overflow-x-auto rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Person</TableHead>
-            <TableHead>Event</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead>Asked</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-44" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {A.map(props.rows, (row) => (
-            <TableRow key={row.id}>
-              <TableCell className="font-medium">{row.personName}</TableCell>
-              <TableCell>
-                <a href={`/events/${row.eventId}`} className="hover:underline">
-                  {row.eventTitle}
-                </a>
-                <p className="text-muted-foreground text-xs">
-                  {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
-                </p>
-              </TableCell>
-              <TableCell className="max-w-xs whitespace-normal">
-                {row.reason}
-                {match(row.decisionNote)
-                  .with(P.string.minLength(1), (decisionNote) => (
-                    <p className="text-muted-foreground text-xs">Note: {decisionNote}</p>
-                  ))
-                  .otherwise(() => null)}
-              </TableCell>
-              <TableCell className="text-muted-foreground tabular-nums">
-                {formatDate(new Date(row.createdAt), "date")}
-              </TableCell>
-              <TableCell>
-                <LeaveStatusBadge status={row.status} />
-              </TableCell>
-              <TableCell>
-                {match(row.status)
-                  .with("pending", () => (
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => props.onDecide({ request: row, decision: "declined" })}
-                      >
-                        Decline
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => props.onDecide({ request: row, decision: "approved" })}
-                      >
-                        Approve
-                      </Button>
-                    </div>
-                  ))
-                  .otherwise(() => null)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      label="Leave requests"
+      columns={leaveColumns(props.onDecide)}
+      rows={props.rows}
+      getKey={(row) => row.id}
+    />
   );
 }
 

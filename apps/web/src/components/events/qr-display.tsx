@@ -1,7 +1,7 @@
 import { formatRange } from "@absqir/core/date";
-import { buttonVariants } from "@absqir/ui/button";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
+import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { useEvent } from "@/queries/use-events";
@@ -22,16 +22,9 @@ function QrScreen(props: QrDisplayProps) {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-10 text-center">
-      <a
-        href={`/events/${props.eventId}`}
-        className={buttonVariants({
-          variant: "ghost",
-          size: "sm",
-          className: "absolute top-4 left-4",
-        })}
-      >
-        ← Back
-      </a>
+      <BackLink href={`/events/${props.eventId}`} className="absolute top-4 left-4">
+        Back
+      </BackLink>
 
       {match(data)
         .with(P.nullish, () => null)

@@ -29,6 +29,7 @@ import { EventDialog } from "@/components/events/event-dialog";
 import { EventRecords } from "@/components/events/event-records";
 import { PublicLink } from "@/components/events/public-link";
 import { Providers } from "@/components/providers";
+import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { EventStatusBadge } from "@/components/shared/status-badge";
@@ -64,9 +65,7 @@ function Header(props: { event: Event; role: RoleName }) {
 
   return (
     <header className="space-y-4">
-      <a href="/events" className="text-muted-foreground hover:text-foreground text-sm">
-        ← Events
-      </a>
+      <BackLink href="/events">Events</BackLink>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
