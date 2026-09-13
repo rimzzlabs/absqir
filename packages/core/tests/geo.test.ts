@@ -4,6 +4,7 @@ import {
   type Coordinates,
   distanceMeters,
   type Fix,
+  formatDistance,
   impliedSpeedKph,
   isRadius,
   readFence,
@@ -154,5 +155,27 @@ describe("readTrack", () => {
     expect(readTrack([fix({ accuracy: 10.4 }), fix({ accuracy: 12.1 })])?.constantAccuracy).toBe(
       false,
     );
+  });
+});
+
+describe("formatDistance", () => {
+  it("keeps metres under a kilometre", () => {
+    expect(formatDistance(0)).toBe("0 m");
+    expect(formatDistance(340)).toBe("340 m");
+    expect(formatDistance(999)).toBe("999 m");
+  });
+
+  it("turns a long way into kilometres", () => {
+    expect(formatDistance(1000)).toBe("1.0 km");
+    expect(formatDistance(53_800)).toBe("53.8 km");
+  });
+
+  it("drops the decimal once it stops meaning anything", () => {
+    expect(formatDistance(100_000)).toBe("100 km");
+    expect(formatDistance(11_719_000)).toBe("11719 km");
+  });
+
+  it("never reports a negative distance", () => {
+    expect(formatDistance(-5)).toBe("0 m");
   });
 });

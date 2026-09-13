@@ -1,3 +1,4 @@
+import { formatDistance } from "@absqir/core/geo";
 import { isRiskReason, RISK_REASON_TEXT } from "@absqir/core/location-risk";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
@@ -12,11 +13,7 @@ type RecordLocation = NonNullable<EventRecord["location"]>;
 
 function distanceText(location: RecordLocation): string {
   return match(location.distanceMeters)
-    .with(P.number, (meters) =>
-      match(meters < 1000)
-        .with(true, () => `${meters} m`)
-        .otherwise(() => `${(meters / 1000).toFixed(1)} km`),
-    )
+    .with(P.number, (meters) => formatDistance(meters))
     .otherwise(() => "—");
 }
 

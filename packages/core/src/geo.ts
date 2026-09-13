@@ -186,3 +186,23 @@ export function readTrack(fixes: readonly Fix[]): TrackReport | null {
       A.every(usable, (fix) => fix.accuracy === best.accuracy && Number.isInteger(fix.accuracy)),
   };
 }
+
+/**
+ * A distance as a person reads it. Metres up to a kilometre, then kilometres
+ * with one decimal, then whole kilometres once the decimal stops meaning
+ * anything. "53800 m away" is technically true and unreadable.
+ */
+export function formatDistance(meters: number): string {
+  const safe = Math.max(0, Math.round(meters));
+
+  return match(safe)
+    .when(
+      (value) => value < 1000,
+      (value) => `${value} m`,
+    )
+    .when(
+      (value) => value < 100_000,
+      (value) => `${(value / 1000).toFixed(1)} km`,
+    )
+    .otherwise((value) => `${Math.round(value / 1000)} km`);
+}

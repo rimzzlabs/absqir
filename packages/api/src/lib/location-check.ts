@@ -1,4 +1,11 @@
-import { type Circle, type Fix, MAX_ACCURACY_METERS, readFence, readTrack } from "@absqir/core/geo";
+import {
+  type Circle,
+  type Fix,
+  formatDistance,
+  MAX_ACCURACY_METERS,
+  readFence,
+  readTrack,
+} from "@absqir/core/geo";
 import { type RiskReason, SUSPECT_AT, scoreRisk } from "@absqir/core/location-risk";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
@@ -249,7 +256,7 @@ export async function checkLocation(params: CheckLocationParams): Promise<Locati
     return {
       required: true,
       accepted: false,
-      message: `You are about ${reading.distanceMeters} m away. Move closer, then scan again.`,
+      message: `You are about ${formatDistance(reading.distanceMeters)} away. Move closer, then scan again.`,
       verdict: reading.verdict,
       score: risk.score,
       reasons: risk.reasons,
