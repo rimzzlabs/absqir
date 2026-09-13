@@ -1,5 +1,6 @@
 import { formatDate, formatRange, isSameDay, relativeToNow } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback } from "@absqir/ui/avatar";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
@@ -63,10 +64,11 @@ function useNow(everyMs = 30_000): Date {
 
 function Header(props: { event: MyEventDetail }) {
   const { event } = props;
+  const t = useTranslate();
 
   return (
     <header className="space-y-4">
-      <BackLink href="/my/events">My events</BackLink>
+      <BackLink href="/my/events">{t("my:event.back")}</BackLink>
 
       <div>
         <div className="flex flex-wrap items-center gap-3">
@@ -90,7 +92,7 @@ function Header(props: { event: MyEventDetail }) {
           .otherwise(() => (
             <p className="text-muted-foreground mt-2 flex items-center gap-1 text-sm">
               <UsersThreeIcon aria-hidden />
-              You registered for this one.
+              {t("my:event.registeredNote")}
             </p>
           ))}
 
@@ -101,9 +103,9 @@ function Header(props: { event: MyEventDetail }) {
             <p className="text-muted-foreground mt-2 flex items-start gap-1.5 text-sm">
               <MapPinIcon aria-hidden className="mt-0.5 shrink-0" />
               <span>
-                {fence.name ?? "A set place"}
+                {fence.name ?? t("my:event.somePlace")}
                 {match(event.requireLocation)
-                  .with(true, () => ` · check in within ${fence.radiusMeters} m of it`)
+                  .with(true, () => t("my:event.within", { radius: String(fence.radiusMeters) }))
                   .otherwise(() => "")}
               </span>
             </p>
@@ -121,8 +123,8 @@ function Header(props: { event: MyEventDetail }) {
 }
 
 interface Moment {
-  key: string;
-  label: string;
+  /** The key under `my:event.moments` that names it. */
+  key: "opens" | "starts" | "late" | "ends";
   at: Date;
 }
 
@@ -131,14 +133,10 @@ function momentsOf(event: MyEventDetail): Moment[] {
   const startsAt = new Date(event.startsAt);
 
   return [
-    { key: "opens", label: "Door opens", at: opensAtOf(event) },
-    { key: "starts", label: "Starts", at: startsAt },
-    {
-      key: "late",
-      label: "Late after",
-      at: new Date(startsAt.getTime() + event.lateAfterMinutes * 60_000),
-    },
-    { key: "ends", label: "Ends", at: new Date(event.endsAt) },
+    { key: "opens", at: opensAtOf(event) },
+    { key: "starts", at: startsAt },
+    { key: "late", at: new Date(startsAt.getTime() + event.lateAfterMinutes * 60_000) },
+    { key: "ends", at: new Date(event.endsAt) },
   ];
 }
 
@@ -147,6 +145,7 @@ function momentsOf(event: MyEventDetail): Moment[] {
  * The old page squeezed the same facts into one grey line under the title.
  */
 function Schedule(props: { event: MyEventDetail; className?: string }) {
+  const t = useTranslate();
   const now = useNow();
   const startsAt = new Date(props.event.startsAt);
   const moments = momentsOf(props.event);
@@ -157,12 +156,17 @@ function Schedule(props: { event: MyEventDetail; className?: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarBlankIcon />
-          Timeline
+          {t("my:event.timeline")}
         </CardTitle>
         <CardDescription>
           {match(next)
-            .with(P.nullish, () => "This event is over.")
-            .otherwise((moment) => `${moment.label} ${relativeToNow(moment.at)}.`)}
+            .with(P.nullish, () => t("my:event.over"))
+            .otherwise((moment) =>
+              t("my:event.next", {
+                moment: t(`my:event.moments.${moment.key}`),
+                when: relativeToNow(moment.at),
+              }),
+            )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -198,7 +202,7 @@ function Schedule(props: { event: MyEventDetail; className?: string }) {
                         .otherwise(() => "text-foreground font-medium"),
                     )}
                   >
-                    {moment.label}
+                    {t(`my:event.moments.${moment.key}`)}
                   </span>
                   <span className="text-sm tabular-nums">{timeNear(moment.at, startsAt)}</span>
                 </div>
@@ -219,6 +223,7 @@ function MySide(props: {
   className?: string;
 }) {
   const { event } = props;
+  const t = useTranslate();
   const withdraw = useWithdrawLeave();
   const running = event.status === "running";
   const canAsk = event.status !== "done" && !event.record && !event.leave;
@@ -226,11 +231,11 @@ function MySide(props: {
   return (
     <Card className={props.className}>
       <CardHeader>
-        <CardTitle>You</CardTitle>
+        <CardTitle>{t("my:event.you")}</CardTitle>
         <CardDescription>
           {match(event.record)
-            .with(P.nullish, () => "Nothing on the register yet." as const)
-            .otherwise(() => "Your record for this event.")}
+            .with(P.nullish, () => t("my:event.nothingYet"))
+            .otherwise(() => t("my:event.yourRecord"))}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -243,7 +248,7 @@ function MySide(props: {
                 {match(record.checkedInAt)
                   .with(P.string.minLength(1), (checkedInAt) => (
                     <span className="text-muted-foreground text-sm tabular-nums">
-                      at {formatDate(new Date(checkedInAt), "time")}
+                      {t("my:event.at", { time: formatDate(new Date(checkedInAt), "time") })}
                     </span>
                   ))
                   .otherwise(() => null)}
@@ -263,7 +268,7 @@ function MySide(props: {
           .otherwise((leave) => (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">Leave</span>
+                <span className="text-muted-foreground text-sm">{t("my:event.leave")}</span>
                 <LeaveStatusBadge status={leave.status} />
               </div>
               <p className="text-sm">{leave.reason}</p>
@@ -283,8 +288,8 @@ function MySide(props: {
                     onClick={() => leave && withdraw.mutate(leave.id)}
                   >
                     {match(withdraw.isPending)
-                      .with(true, () => "Withdrawing…" as const)
-                      .otherwise(() => "Withdraw" as const)}
+                      .with(true, () => t("my:event.withdrawing"))
+                      .otherwise(() => t("my:event.withdraw"))}
                   </Button>
                 ))
                 .otherwise(() => null)}
@@ -299,12 +304,16 @@ function MySide(props: {
           .otherwise((report) => (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">Check-in problem</span>
+                <span className="text-muted-foreground text-sm">{t("my:event.problem")}</span>
                 {match(report.status)
-                  .with("approved", () => <Badge variant="secondary">Accepted</Badge>)
-                  .with("declined", () => <Badge variant="outline">Not accepted</Badge>)
+                  .with("approved", () => (
+                    <Badge variant="secondary">{t("my:event.accepted")}</Badge>
+                  ))
+                  .with("declined", () => (
+                    <Badge variant="outline">{t("my:event.notAccepted")}</Badge>
+                  ))
                   .otherwise(() => (
-                    <Badge>Waiting</Badge>
+                    <Badge>{t("my:event.waiting")}</Badge>
                   ))}
               </div>
               <p className="text-sm">{report.message}</p>
@@ -322,8 +331,8 @@ function MySide(props: {
           .with(true, () => (
             <p className="text-muted-foreground text-sm">
               {match(event.status)
-                .with("done", () => "No record for you." as const)
-                .otherwise(() => "Check in when the door opens." as const)}
+                .with("done", () => t("my:event.noRecord"))
+                .otherwise(() => t("my:event.checkInWhenOpen"))}
             </p>
           ))
           .otherwise(() => null)}
@@ -336,11 +345,11 @@ function MySide(props: {
                   <>
                     <a href="/check-in" className={buttonVariants({ size: "lg" })}>
                       <ScanIcon />
-                      Check in
+                      {t("my:event.checkIn")}
                     </a>
                     <Button size="lg" variant="outline" onClick={props.onPass}>
                       <TicketIcon />
-                      My pass
+                      {t("my:event.myPass")}
                     </Button>
                   </>
                 ))
@@ -355,7 +364,7 @@ function MySide(props: {
                     onClick={props.onAskLeave}
                   >
                     <NotePencilIcon />
-                    Ask for leave
+                    {t("my:event.askLeave")}
                   </Button>
                 ))
                 .otherwise(() => null)}
@@ -370,6 +379,7 @@ function MySide(props: {
 /** Who else is expected. Names and one head count, nothing per person. */
 function Roster(props: { event: MyEventDetail; className?: string }) {
   const { event } = props;
+  const t = useTranslate();
   const hidden = event.expectedTotal - event.attendees.length;
   const checkedIn = match(event.expectedTotal)
     .with(0, () => 0 as const)
@@ -380,12 +390,17 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UsersThreeIcon />
-          Who is expected
+          {t("my:event.roster")}
         </CardTitle>
         <CardDescription>
           {match(event.status)
-            .with("scheduled", () => `${event.expectedTotal} expected`)
-            .otherwise(() => `${event.checkedInCount} of ${event.expectedTotal} checked in`)}
+            .with("scheduled", () => t("my:event.expected", { count: event.expectedTotal }))
+            .otherwise(() =>
+              t("my:event.checkedIn", {
+                checkedIn: String(event.checkedInCount),
+                expected: String(event.expectedTotal),
+              }),
+            )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -394,7 +409,7 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
           .otherwise(() => (
             <div
               role="progressbar"
-              aria-label="Checked in so far"
+              aria-label={t("my:event.progressLabel")}
               aria-valuenow={event.checkedInCount}
               aria-valuemin={0}
               aria-valuemax={event.expectedTotal}
@@ -409,7 +424,7 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
 
         {match(event.attendees.length)
           .with(0, () => (
-            <p className="text-muted-foreground text-sm">Nobody else is on the list.</p>
+            <p className="text-muted-foreground text-sm">{t("my:event.nobodyElse")}</p>
           ))
           .otherwise(() => (
             <ul className="space-y-2">
@@ -425,18 +440,21 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
           ))}
 
         {match(hidden > 0)
-          .with(true, () => <p className="text-muted-foreground text-sm">and {hidden} more</p>)
+          .with(true, () => (
+            <p className="text-muted-foreground text-sm">
+              {t("my:event.andMore", { count: hidden })}
+            </p>
+          ))
           .otherwise(() => null)}
 
-        <p className="text-muted-foreground border-t pt-3 text-xs">
-          Only the head count is shared. Who checked in stays between them and the organizer.
-        </p>
+        <p className="text-muted-foreground border-t pt-3 text-xs">{t("my:event.headCountOnly")}</p>
       </CardContent>
     </Card>
   );
 }
 
 function MyEventBody(props: MyEventPageProps) {
+  const t = useTranslate();
   const event = useMyEvent(props.eventId);
   const [showPass, setShowPass] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -454,11 +472,9 @@ function MyEventBody(props: MyEventPageProps) {
     ))
     .with({ isError: true, error: P.select() }, (error) => (
       <div className="space-y-4">
-        <BackLink href="/my/events">My events</BackLink>
+        <BackLink href="/my/events">{t("my:event.back")}</BackLink>
         <FormError error={error} />
-        <p className="text-muted-foreground text-sm">
-          An event you are not expected at does not show up here.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("my:event.notExpected")}</p>
       </div>
     ))
     .with({ data: P.select(P.nonNullable) }, (data) => (

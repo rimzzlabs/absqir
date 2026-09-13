@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import {
   Dialog,
   DialogContent,
@@ -18,16 +19,15 @@ export interface PassDialogProps {
 
 /** The member's own QR code for one event, to show at the door. */
 export function PassDialog(props: PassDialogProps) {
+  const t = useTranslate();
   const pass = useMyPass(props.eventId);
 
   return (
     <Dialog open={props.eventId !== null} onOpenChange={(open) => !open && props.onClose()}>
       <DialogContent className="text-center">
         <DialogHeader>
-          <DialogTitle>{pass.data?.eventTitle ?? "Your pass"}</DialogTitle>
-          <DialogDescription>
-            Show this to the organizer at the door. It is yours alone.
-          </DialogDescription>
+          <DialogTitle>{pass.data?.eventTitle ?? t("my:pass.fallbackTitle")}</DialogTitle>
+          <DialogDescription>{t("my:pass.description")}</DialogDescription>
         </DialogHeader>
         {match(pass)
           .with({ isPending: true }, () => <Skeleton className="mx-auto size-64 rounded-xl" />)
@@ -36,7 +36,7 @@ export function PassDialog(props: PassDialogProps) {
             <>
               <img
                 src={data.qrDataUrl}
-                alt="Your pass as a QR code"
+                alt={t("my:pass.alt")}
                 className="border-border mx-auto w-64 rounded-xl border bg-white p-3"
               />
               <p className="text-sm font-medium">{data.personName}</p>

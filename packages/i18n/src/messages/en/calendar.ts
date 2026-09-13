@@ -1,2 +1,34 @@
-/** Placeholder while this area moves to the message catalog. */
-export const calendar = {} as const;
+/** The calendar grid, and the sheet behind one day. */
+export const calendar = {
+  title: "Calendar",
+  description: "Every event on one grid, with the ones your schedules still owe.",
+  newEvent: "New event",
+  previous: "Previous",
+  next: "Next",
+  today: "Today",
+  month: "Month",
+  week: "Week",
+  weekRange: "{{from}} to {{to}}",
+  days: {
+    mon: "Mon",
+    tue: "Tue",
+    wed: "Wed",
+    thu: "Thu",
+    fri: "Fri",
+    sat: "Sat",
+    sun: "Sun",
+  },
+  projectedTitle: "A schedule will create this one",
+  whatHappens: "What happens on {{date}}",
+  newEventOn: "New event on {{date}}",
+  more: "{{count}} more",
+  sheet: {
+    empty: "Nothing is planned on this day yet.",
+    count: "{{count}} on the calendar.",
+    range: "{{from}} to {{to}}",
+    counts: "{{expected}} expected · {{present}} present · {{late}} late · {{absent}} absent",
+    fromSchedule: "From a schedule",
+    projectedHint: "The schedule creates this event a fortnight ahead. Nothing to do now.",
+    newEvent: "New event on this day",
+  },
+} as const;

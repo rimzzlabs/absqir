@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
@@ -18,6 +19,7 @@ export interface MyEventCardProps {
 /** What the card ends with: my record, my pass, or when the door opens. */
 function Outcome(props: MyEventCardProps) {
   const { event } = props;
+  const t = useTranslate();
 
   if (event.record) {
     return (
@@ -38,7 +40,7 @@ function Outcome(props: MyEventCardProps) {
     return (
       <Button size="sm" onClick={() => props.onPass(event.id)}>
         <TicketIcon />
-        My pass
+        {t("my:events.myPass")}
       </Button>
     );
   }
@@ -47,7 +49,7 @@ function Outcome(props: MyEventCardProps) {
     return (
       <span className="text-muted-foreground flex items-center gap-1 text-xs">
         <ClockIcon aria-hidden />
-        Opens {formatDate(opensAtOf(event), "weekdayDateTime")}
+        {t("my:events.opens", { when: formatDate(opensAtOf(event), "weekdayDateTime") })}
       </span>
     );
   }
@@ -58,6 +60,7 @@ function Outcome(props: MyEventCardProps) {
 /** One event that expects me, as a card in the grid. A click opens the event. */
 export function MyEventCard(props: MyEventCardProps) {
   const { event } = props;
+  const t = useTranslate();
   const startsAt = new Date(event.startsAt);
   const endsAt = new Date(event.endsAt);
   const sameDay = formatDate(startsAt, "iso") === formatDate(endsAt, "iso");
@@ -75,10 +78,12 @@ export function MyEventCard(props: MyEventCardProps) {
       <div className="flex items-center justify-between gap-3">
         <EventStatusBadge status={event.status} />
         <span className="text-muted-foreground text-xs tabular-nums">
-          {formatDate(startsAt, "time")} to{" "}
-          {match(sameDay)
-            .with(true, () => formatDate(endsAt, "time"))
-            .otherwise(() => formatDate(endsAt, "weekdayDateTime"))}
+          {t("my:events.to", {
+            start: formatDate(startsAt, "time"),
+            end: match(sameDay)
+              .with(true, () => formatDate(endsAt, "time"))
+              .otherwise(() => formatDate(endsAt, "weekdayDateTime")),
+          })}
         </span>
       </div>
 
@@ -107,7 +112,7 @@ export function MyEventCard(props: MyEventCardProps) {
         .otherwise(() => (
           <p className="text-muted-foreground flex items-center gap-1 text-xs">
             <UsersThreeIcon aria-hidden />
-            Registered
+            {t("my:events.registered")}
           </p>
         ))}
 

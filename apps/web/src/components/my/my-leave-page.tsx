@@ -1,4 +1,5 @@
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Separator } from "@absqir/ui/separator";
@@ -30,6 +31,8 @@ function LabeledDivider(props: { children: ReactNode }) {
 }
 
 function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
+  const t = useTranslate();
+
   if (!props.query.hasNextPage) return null;
 
   return (
@@ -40,8 +43,8 @@ function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
         onClick={() => void props.query.fetchNextPage()}
       >
         {match(props.query.isFetchingNextPage)
-          .with(true, () => "Loading…" as const)
-          .otherwise(() => "Load more" as const)}
+          .with(true, () => t("common:actions.loading"))
+          .otherwise(() => t("my:leave.loadMore"))}
       </Button>
     </div>
   );
@@ -59,13 +62,14 @@ function Grid(props: { rows: readonly LeaveRequest[] }) {
 
 /** The requests an organizer still has to answer. */
 function Waiting() {
+  const t = useTranslate();
   const pending = useMyLeave({ scope: "pending" });
   const rows = A.flatMap(pending.data?.pages ?? [], (page) => page.items);
 
   return (
     <section aria-labelledby="leave-waiting" className="space-y-4">
       <h2 id="leave-waiting" className="font-heading text-lg font-semibold tracking-tight">
-        Waiting for a decision
+        {t("my:leave.waiting")}
       </h2>
 
       {match(pending)
@@ -79,9 +83,7 @@ function Waiting() {
         .with({ data: P.nonNullable }, () =>
           match(rows.length)
             .with(0, () => (
-              <p className="text-muted-foreground text-sm">
-                Nothing waits. Cannot make an event? Ask before it starts, with a reason.
-              </p>
+              <p className="text-muted-foreground text-sm">{t("my:leave.waitingEmpty")}</p>
             ))
             .otherwise(() => (
               <>
@@ -97,11 +99,12 @@ function Waiting() {
 
 /** The requests with an answer, newest first. */
 function Decided() {
+  const t = useTranslate();
   const decided = useMyLeave({ scope: "decided" });
   const rows = A.flatMap(decided.data?.pages ?? [], (page) => page.items);
 
   return (
-    <section aria-label="Decided" className="space-y-4">
+    <section aria-label={t("my:leave.decided")} className="space-y-4">
       {match(decided)
         .with({ isPending: true }, () => (
           <div className={GRID} aria-busy>
@@ -119,10 +122,8 @@ function Decided() {
                   <EmptyMedia variant="icon">
                     <NotePencilIcon />
                   </EmptyMedia>
-                  <EmptyTitle>Nothing decided yet</EmptyTitle>
-                  <EmptyDescription>
-                    Approved and declined requests land here, with the organizer's note.
-                  </EmptyDescription>
+                  <EmptyTitle>{t("my:leave.decidedEmptyTitle")}</EmptyTitle>
+                  <EmptyDescription>{t("my:leave.decidedEmptyDescription")}</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ))
@@ -139,23 +140,24 @@ function Decided() {
 }
 
 function MyLeaveBody() {
+  const t = useTranslate();
   const [asking, setAsking] = useState(false);
 
   return (
     <>
       <PageHeader
-        title="My leave"
-        description="Ask to be excused before an event happens, and see what was decided."
+        title={t("my:leave.title")}
+        description={t("my:leave.description")}
         actions={
           <Button onClick={() => setAsking(true)}>
             <PlusIcon />
-            Ask for leave
+            {t("my:leave.ask")}
           </Button>
         }
       />
 
       <Waiting />
-      <LabeledDivider>Decided</LabeledDivider>
+      <LabeledDivider>{t("my:leave.decided")}</LabeledDivider>
       <Decided />
 
       <AskLeaveDialog open={asking} onOpenChange={setAsking} />

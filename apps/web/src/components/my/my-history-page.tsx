@@ -1,5 +1,6 @@
 import { formatDate, formatRange } from "@absqir/core/date";
-import type { Locale } from "@absqir/i18n";
+import type { Locale, Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
@@ -14,6 +15,7 @@ import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { type HistoryRow, useMyHistory } from "@/queries/use-my";
 
 function Summary(props: { rows: HistoryRow[] }) {
+  const t = useTranslate();
   const total = props.rows.length;
   const on = A.filter(
     props.rows,
@@ -28,19 +30,19 @@ function Summary(props: { rows: HistoryRow[] }) {
     <div className="grid gap-3 sm:grid-cols-3">
       <Card size="sm">
         <CardHeader>
-          <CardDescription>Attendance</CardDescription>
+          <CardDescription>{t("my:history.attendance")}</CardDescription>
           <CardTitle className="text-2xl tabular-nums">{rate}%</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm">
         <CardHeader>
-          <CardDescription>Events</CardDescription>
+          <CardDescription>{t("my:history.events")}</CardDescription>
           <CardTitle className="text-2xl tabular-nums">{total}</CardTitle>
         </CardHeader>
       </Card>
       <Card size="sm">
         <CardHeader>
-          <CardDescription>Late</CardDescription>
+          <CardDescription>{t("my:history.late")}</CardDescription>
           <CardTitle className="text-2xl tabular-nums">{late}</CardTitle>
         </CardHeader>
       </Card>
@@ -48,51 +50,51 @@ function Summary(props: { rows: HistoryRow[] }) {
   );
 }
 
-const HISTORY_COLUMNS: DataColumn<HistoryRow>[] = [
-  {
-    key: "title",
-    header: "Event",
-    place: "primary",
-    cell: (row) => row.title,
-    cellClassName: "font-medium",
-  },
-  {
-    key: "when",
-    header: "When",
-    cell: (row) => formatRange(new Date(row.startsAt), new Date(row.endsAt)),
-    cellClassName: "text-muted-foreground",
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => <AttendanceStatusBadge status={row.status} />,
-  },
-  {
-    key: "checkedIn",
-    header: "Checked in",
-    cell: (row) => (
-      <>
-        {match(row.checkedInAt)
-          .with(P.string.minLength(1), (checkedInAt) => formatDate(new Date(checkedInAt), "time"))
-          .otherwise(() => "—" as const)}
-        {match(row.note)
-          .with(P.string.minLength(1), (note) => ` · ${note}`)
-          .otherwise(() => "" as const)}
-      </>
-    ),
-    cellClassName: "text-muted-foreground tabular-nums",
-  },
-];
+function historyColumns(t: Translate): DataColumn<HistoryRow>[] {
+  return [
+    {
+      key: "title",
+      header: t("my:history.event"),
+      place: "primary",
+      cell: (row) => row.title,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "when",
+      header: t("my:history.when"),
+      cell: (row) => formatRange(new Date(row.startsAt), new Date(row.endsAt)),
+      cellClassName: "text-muted-foreground",
+    },
+    {
+      key: "status",
+      header: t("my:history.status"),
+      cell: (row) => <AttendanceStatusBadge status={row.status} />,
+    },
+    {
+      key: "checkedIn",
+      header: t("my:history.checkedIn"),
+      cell: (row) => (
+        <>
+          {match(row.checkedInAt)
+            .with(P.string.minLength(1), (checkedInAt) => formatDate(new Date(checkedInAt), "time"))
+            .otherwise(() => t("my:history.none"))}
+          {match(row.note)
+            .with(P.string.minLength(1), (note) => ` · ${note}`)
+            .otherwise(() => "" as const)}
+        </>
+      ),
+      cellClassName: "text-muted-foreground tabular-nums",
+    },
+  ];
+}
 
 function HistoryBody() {
+  const t = useTranslate();
   const history = useMyHistory();
 
   return (
     <>
-      <PageHeader
-        title="History"
-        description="Your own record, event by event. Nobody else in the organization sees this page."
-      />
+      <PageHeader title={t("my:history.title")} description={t("my:history.description")} />
 
       {match(history)
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
@@ -105,8 +107,8 @@ function HistoryBody() {
                   <EmptyMedia variant="icon">
                     <ClockCounterClockwiseIcon />
                   </EmptyMedia>
-                  <EmptyTitle>No record yet</EmptyTitle>
-                  <EmptyDescription>Your first closed event shows up here.</EmptyDescription>
+                  <EmptyTitle>{t("my:history.emptyTitle")}</EmptyTitle>
+                  <EmptyDescription>{t("my:history.emptyDescription")}</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ))
@@ -114,8 +116,8 @@ function HistoryBody() {
               <>
                 <Summary rows={rows} />
                 <DataTable
-                  label="Your record, event by event"
-                  columns={HISTORY_COLUMNS}
+                  label={t("my:history.tableLabel")}
+                  columns={historyColumns(t)}
                   rows={rows}
                   getKey={(row) => row.eventId}
                 />

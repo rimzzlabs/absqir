@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -13,11 +14,12 @@ export interface MyLeaveCardProps {
 /** One of my leave requests, as a card in the grid. */
 export function MyLeaveCard(props: MyLeaveCardProps) {
   const { request } = props;
+  const t = useTranslate();
   const withdraw = useWithdrawLeave();
   const decidedNote = match(request.decidedAt)
     .with(P.string.minLength(1), (decidedAt) => (
       <span className="text-muted-foreground text-xs tabular-nums">
-        Decided {formatDate(new Date(decidedAt), "date")}
+        {t("my:leave.decidedOn", { date: formatDate(new Date(decidedAt), "date") })}
       </span>
     ))
     .otherwise(() => null);
@@ -27,7 +29,7 @@ export function MyLeaveCard(props: MyLeaveCardProps) {
       <div className="flex items-center justify-between gap-3">
         <LeaveStatusBadge status={request.status} />
         <span className="text-muted-foreground text-xs tabular-nums">
-          Asked {formatDate(new Date(request.createdAt), "date")}
+          {t("my:leave.asked", { date: formatDate(new Date(request.createdAt), "date") })}
         </span>
       </div>
 
@@ -58,8 +60,8 @@ export function MyLeaveCard(props: MyLeaveCardProps) {
               onClick={() => withdraw.mutate(request.id)}
             >
               {match(withdraw.isPending)
-                .with(true, () => "Withdrawing…" as const)
-                .otherwise(() => "Withdraw" as const)}
+                .with(true, () => t("my:leave.withdrawing"))
+                .otherwise(() => t("my:leave.withdraw"))}
             </Button>
           ))
           .otherwise(() => decidedNote)}

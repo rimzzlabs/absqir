@@ -1,4 +1,5 @@
 import { addDays, endOfDay, startOfDay } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { DatePicker } from "@absqir/ui/date-picker";
 import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import {
@@ -20,12 +21,7 @@ import type { ReportRange } from "@/queries/use-reports";
 export type { RangePreset };
 export { presetRange };
 
-const PRESETS: { value: RangePreset; label: string }[] = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "month", label: "This month" },
-  { value: "custom", label: "Custom" },
-];
+const PRESETS: RangePreset[] = ["7d", "30d", "month", "custom"];
 
 const ALL_GROUPS = "all";
 
@@ -42,6 +38,7 @@ export interface ReportRangeControlsProps {
  * custom, so the buttons never claim a range they no longer describe.
  */
 export function ReportRangeControls(props: ReportRangeControlsProps) {
+  const t = useTranslate();
   const setFrom = (value: Date | null) => {
     if (!value) return;
 
@@ -74,15 +71,15 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
           className="flex-wrap"
         >
           {A.map(PRESETS, (preset) => (
-            <ToggleGroupItem key={preset.value} value={preset.value}>
-              {preset.label}
+            <ToggleGroupItem key={preset} value={preset}>
+              {t(`reports:presets.${preset}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
       </div>
 
       <Field>
-        <FieldLabel htmlFor="report-from">From</FieldLabel>
+        <FieldLabel htmlFor="report-from">{t("reports:from")}</FieldLabel>
         <FieldContent>
           <DatePicker
             id="report-from"
@@ -94,7 +91,7 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="report-to">To</FieldLabel>
+        <FieldLabel htmlFor="report-to">{t("reports:to")}</FieldLabel>
         <FieldContent>
           <DatePicker
             id="report-to"
@@ -107,11 +104,11 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
       </Field>
 
       <Field className="lg:col-span-2">
-        <FieldLabel htmlFor="report-group">Group</FieldLabel>
+        <FieldLabel htmlFor="report-group">{t("reports:group")}</FieldLabel>
         <FieldContent>
           <Select
             items={[
-              { value: ALL_GROUPS, label: "Every event" },
+              { value: ALL_GROUPS, label: t("reports:everyEvent") },
               ...A.map(props.groups, (group) => ({ value: group.id, label: group.name })),
             ]}
             value={props.range.groupId ?? ALL_GROUPS}
@@ -131,12 +128,12 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value={ALL_GROUPS}>Every event</SelectItem>
+                <SelectItem value={ALL_GROUPS}>{t("reports:everyEvent")}</SelectItem>
               </SelectGroup>
               {match(props.groups.length > 0)
                 .with(true, () => (
                   <SelectGroup>
-                    <SelectLabel>Groups</SelectLabel>
+                    <SelectLabel>{t("reports:groupsLabel")}</SelectLabel>
                     {A.map(props.groups, (group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}

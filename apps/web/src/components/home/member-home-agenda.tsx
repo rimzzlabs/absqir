@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -65,10 +66,11 @@ function AgendaRow(props: { event: MyEvent }) {
 
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
+  const t = useTranslate();
   const rows = A.filter(props.events, (row) => row.status !== "done").slice(0, PREVIEW);
   const agendaHint = match(rows.length)
-    .with(0, () => "Nothing is planned for you." as const)
-    .otherwise(() => "Soonest first, in your time zone." as const);
+    .with(0, () => t("home:member.agendaEmpty"))
+    .otherwise(() => t("home:member.agendaHint"));
   const days = byDay(rows);
   const today = formatDate(new Date(), "iso");
 
@@ -77,16 +79,16 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarBlankIcon />
-          Coming up
+          {t("home:member.agenda")}
         </CardTitle>
         <CardDescription>
           {match(props.pending)
-            .with(true, () => "Loading your days…" as const)
+            .with(true, () => t("home:member.agendaLoading"))
             .otherwise(() => agendaHint)}
         </CardDescription>
         <CardAction>
           <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            All my events
+            {t("home:member.allMyEvents")}
             <CaretRightIcon />
           </a>
         </CardAction>
@@ -107,7 +109,7 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
                   <div className="w-12 shrink-0 text-center">
                     <span className="text-muted-foreground block text-[11px] font-medium tracking-wider uppercase">
                       {match(day.iso === today)
-                        .with(true, () => "Today" as const)
+                        .with(true, () => t("home:member.today"))
                         .otherwise(() => formatDate(day.at, "weekday"))}
                     </span>
                     <span

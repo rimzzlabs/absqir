@@ -1,5 +1,6 @@
 import { formatRange } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { Reveal } from "@absqir/ui/reveal";
 import { CheckCircleIcon } from "@phosphor-icons/react";
@@ -20,18 +21,24 @@ export interface PublicEventPageProps {
 
 function Seats(props: { event: PublicEvent }) {
   const { event } = props;
+  const t = useTranslate();
 
   if (event.limit === null) {
     return (
-      <p className="text-muted-foreground text-sm tabular-nums">{event.registered} registered</p>
+      <p className="text-muted-foreground text-sm tabular-nums">
+        {t("publicEvent:registered", { count: event.registered })}
+      </p>
     );
   }
 
   return (
     <p className="text-muted-foreground text-sm tabular-nums">
-      {event.registered} of {event.limit} seats taken
+      {t("publicEvent:seats", {
+        registered: String(event.registered),
+        limit: String(event.limit),
+      })}
       {match(event.seatsLeft)
-        .with(0, () => " · full" as const)
+        .with(0, () => t("publicEvent:full"))
         .otherwise(() => "" as const)}
     </p>
   );
@@ -39,6 +46,7 @@ function Seats(props: { event: PublicEvent }) {
 
 function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
   const { event } = props;
+  const t = useTranslate();
   const register = useRegisterEvent();
   const withdraw = useWithdrawEvent();
 
@@ -47,13 +55,11 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
       <Reveal className="space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <CheckCircleIcon weight="fill" className="size-5 text-emerald-500" />
-          You are registered
+          {t("publicEvent:youAreRegistered")}
         </div>
-        <p className="text-muted-foreground text-sm">
-          When the event runs, scan the screen in the room, or show your pass at the door.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("publicEvent:youAreRegisteredHint")}</p>
         <a href="/my/events" className={buttonVariants({ className: "w-full" })}>
-          My events
+          {t("publicEvent:myEvents")}
         </a>
         {match(event.status)
           .with("scheduled", () => (
@@ -65,8 +71,8 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
               onClick={() => withdraw.mutate(event.id)}
             >
               {match(withdraw.isPending)
-                .with(true, () => "Withdrawing…" as const)
-                .otherwise(() => "Withdraw my registration" as const)}
+                .with(true, () => t("publicEvent:withdrawing"))
+                .otherwise(() => t("publicEvent:withdraw"))}
             </Button>
           ))
           .otherwise(() => null)}
@@ -79,14 +85,14 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
     return (
       <p className="text-muted-foreground text-sm">
         {match(event.status)
-          .with("done", () => "This event is over." as const)
-          .otherwise(() => "Registration is closed." as const)}
+          .with("done", () => t("publicEvent:over"))
+          .otherwise(() => t("publicEvent:closed"))}
       </p>
     );
   }
 
   if (event.seatsLeft === 0) {
-    return <p className="text-muted-foreground text-sm">Every seat is taken.</p>;
+    return <p className="text-muted-foreground text-sm">{t("publicEvent:soldOut")}</p>;
   }
 
   if (!props.signedIn) {
@@ -96,11 +102,9 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
     return (
       <div className="space-y-3">
         <a href={`/sign-in?${query}`} className={buttonVariants({ className: "w-full" })}>
-          Sign in to register
+          {t("publicEvent:signIn")}
         </a>
-        <p className="text-muted-foreground text-sm">
-          No account yet? The same door creates one with a code sent to your email.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("publicEvent:signInHint")}</p>
       </div>
     );
   }
@@ -114,11 +118,11 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
         onClick={() => register.mutate(event.id)}
       >
         {match(register.isPending)
-          .with(true, () => "Registering…" as const)
-          .otherwise(() => "Register" as const)}
+          .with(true, () => t("publicEvent:registering"))
+          .otherwise(() => t("publicEvent:register"))}
       </Button>
       <p className="text-muted-foreground text-sm">
-        You join {event.organizationName} as a member, and this event expects you.
+        {t("publicEvent:joinNote", { organization: event.organizationName })}
       </p>
       <FormError error={register.error} />
     </div>
@@ -126,15 +130,18 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
 }
 
 function PublicEventBody(props: PublicEventPageProps) {
+  const t = useTranslate();
   const event = usePublicEvent(props.eventId);
 
   return match(event)
-    .with({ isPending: true }, () => <p className="text-muted-foreground text-sm">Loading…</p>)
+    .with({ isPending: true }, () => (
+      <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
+    ))
     .with({ isError: true, error: P.select() }, (error) => (
       <div className="space-y-5">
         <AuthHeading
-          title="Nothing to register for"
-          description="This link does not point to an open event. Ask the organizer for a fresh one."
+          title={t("publicEvent:brokenTitle")}
+          description={t("publicEvent:brokenDescription")}
         />
         <FormError error={error} />
       </div>

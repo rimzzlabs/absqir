@@ -1,11 +1,13 @@
 import { formatDate, isSameMonth, isToday } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { type CalendarEntry, dayKey, entryTitle } from "@/components/calendar/calendar-entries";
 
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Monday first, as the rest of the app reads a week. */
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 /** How many entries a month cell shows before it says how many are left. */
 const MONTH_CELL_LIMIT = 3;
@@ -18,6 +20,7 @@ const STATUS_DOT: Record<string, string> = {
 
 function EntryLine(props: { entry: CalendarEntry; onOpen: (entry: CalendarEntry) => void }) {
   const { entry } = props;
+  const t = useTranslate();
   const projected = entry.kind === "projected";
 
   return (
@@ -25,7 +28,7 @@ function EntryLine(props: { entry: CalendarEntry; onOpen: (entry: CalendarEntry)
       type="button"
       onClick={() => props.onOpen(entry)}
       title={match(projected)
-        .with(true, () => "A schedule will create this one")
+        .with(true, () => t("calendar:projectedTitle"))
         .otherwise(() => undefined)}
       className={cn(
         "hover:bg-muted flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left text-xs",
@@ -65,6 +68,7 @@ export interface CalendarGridProps {
  * how many entries it hid; the week view has the height to show them all.
  */
 export function CalendarGrid(props: CalendarGridProps) {
+  const t = useTranslate();
   const limit = match(props.view)
     .with("month", () => MONTH_CELL_LIMIT)
     .otherwise(() => Number.POSITIVE_INFINITY);
@@ -72,9 +76,9 @@ export function CalendarGrid(props: CalendarGridProps) {
   return (
     <div className="border-border overflow-x-auto rounded-xl border">
       <div className="bg-muted/40 text-muted-foreground border-border grid min-w-160 grid-cols-7 border-b text-xs font-medium">
-        {A.map(WEEKDAY_LABELS, (label) => (
-          <div key={label} className="px-2 py-2 text-center">
-            {label}
+        {A.map(WEEKDAYS, (day) => (
+          <div key={day} className="px-2 py-2 text-center">
+            {t(`calendar:days.${day}`)}
           </div>
         ))}
       </div>
@@ -100,7 +104,7 @@ export function CalendarGrid(props: CalendarGridProps) {
                 <button
                   type="button"
                   onClick={() => props.onOpenDay(day)}
-                  aria-label={`What happens on ${formatDate(day, "date")}`}
+                  aria-label={t("calendar:whatHappens", { date: formatDate(day, "date") })}
                   className={cn(
                     "flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
                     match(isToday(day))
@@ -115,7 +119,7 @@ export function CalendarGrid(props: CalendarGridProps) {
                 <button
                   type="button"
                   onClick={() => props.onNewEvent(day)}
-                  aria-label={`New event on ${formatDate(day, "date")}`}
+                  aria-label={t("calendar:newEventOn", { date: formatDate(day, "date") })}
                   className="text-muted-foreground hover:bg-muted rounded p-0.5 opacity-0 group-hover/day:opacity-100 focus-visible:opacity-100"
                 >
                   <PlusIcon className="size-3.5" />
@@ -133,7 +137,7 @@ export function CalendarGrid(props: CalendarGridProps) {
                       onClick={() => props.onOpenDay(day)}
                       className="text-muted-foreground hover:text-foreground px-1 text-left text-xs"
                     >
-                      {list.length - shown.length} more
+                      {t("calendar:more", { count: list.length - shown.length })}
                     </button>
                   ))
                   .otherwise(() => null)}

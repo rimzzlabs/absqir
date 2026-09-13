@@ -4,6 +4,8 @@ import {
   type GroupRateRow,
   groupRateSeries,
 } from "@absqir/core/attendance-series";
+import type { Translate } from "@absqir/i18n";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -30,15 +32,15 @@ export interface HomeChartsProps {
   groups: readonly GroupRateRow[];
 }
 
-/** Both charts read the same measure, so one colour says so. */
-const CHART_CONFIG = {
-  percent: { label: "Attendance", color: "var(--color-primary)" },
-} satisfies ChartConfig;
-
 /** A percent axis always runs the whole way, so a dip is not a cliff. */
 const PERCENT_DOMAIN: [number, number] = [0, 100];
 
-const EMPTY_NOTE = "No event in the last 30 days has closed yet. A rate appears at the close.";
+/** Both charts read the same measure, so one colour says so. */
+function chartConfig(t: Translate) {
+  return {
+    percent: { label: t("home:charts.measure"), color: "var(--color-primary)" },
+  } satisfies ChartConfig;
+}
 
 function ChartCard(props: {
   title: string;
@@ -46,6 +48,8 @@ function ChartCard(props: {
   empty: boolean;
   children: React.ReactNode;
 }) {
+  const t = useTranslate();
+
   return (
     <Card>
       <CardHeader>
@@ -53,7 +57,7 @@ function ChartCard(props: {
         <CardDescription>{props.description}</CardDescription>
         <CardAction>
           <a href="/reports" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            Reports
+            {t("home:charts.reports")}
             <CaretRightIcon />
           </a>
         </CardAction>
@@ -61,7 +65,9 @@ function ChartCard(props: {
       <CardContent>
         {match(props.empty)
           .with(true, () => (
-            <p className="text-muted-foreground py-8 text-center text-sm">{EMPTY_NOTE}</p>
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              {t("home:charts.empty")}
+            </p>
           ))
           .otherwise(() => props.children)}
       </CardContent>
@@ -71,15 +77,16 @@ function ChartCard(props: {
 
 /** Attendance per event over the last 30 days, oldest first. */
 function ByEvent(props: { rows: readonly EventRateRow[] }) {
+  const t = useTranslate();
   const points = eventRateSeries(props.rows);
 
   return (
     <ChartCard
-      title="Attendance per event"
-      description="The last 30 days, oldest first."
+      title={t("home:charts.byEvent")}
+      description={t("home:charts.byEventHint")}
       empty={points.length === 0}
     >
-      <ChartContainer config={CHART_CONFIG} className="h-56 w-full">
+      <ChartContainer config={chartConfig(t)} className="h-56 w-full">
         <LineChart data={points} margin={{ left: 4, right: 12, top: 8 }} accessibilityLayer>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" hide />
@@ -109,15 +116,16 @@ function ByEvent(props: { rows: readonly EventRateRow[] }) {
 
 /** Attendance by group over the same 30 days, worst first. */
 function ByGroup(props: { rows: readonly GroupRateRow[] }) {
+  const t = useTranslate();
   const points = groupRateSeries(props.rows);
 
   return (
     <ChartCard
-      title="Attendance by group"
-      description="The last 30 days, worst first."
+      title={t("home:charts.byGroup")}
+      description={t("home:charts.byGroupHint")}
       empty={points.length === 0}
     >
-      <ChartContainer config={CHART_CONFIG} className="h-56 w-full">
+      <ChartContainer config={chartConfig(t)} className="h-56 w-full">
         <BarChart
           data={points}
           layout="vertical"

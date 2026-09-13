@@ -1,4 +1,5 @@
 import { formatDate, formatRange } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
 import { cn } from "@absqir/ui/lib/utils";
@@ -25,6 +26,7 @@ export function pickNow(events: readonly MyEvent[]): MyEvent | null {
 
 function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
   const { event } = props;
+  const t = useTranslate();
 
   if (event.record) {
     return (
@@ -33,7 +35,7 @@ function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
         {match(event.record.checkedInAt)
           .with(P.string.minLength(1), (checkedInAt) => (
             <span className="text-muted-foreground text-sm tabular-nums">
-              at {formatDate(new Date(checkedInAt), "time")}
+              {t("home:member.at", { time: formatDate(new Date(checkedInAt), "time") })}
             </span>
           ))
           .otherwise(() => null)}
@@ -46,11 +48,11 @@ function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
       <div className="flex flex-wrap gap-2">
         <a href="/check-in" className={buttonVariants({ size: "lg" })}>
           <ScanIcon />
-          Check in
+          {t("home:member.checkIn")}
         </a>
         <Button size="lg" variant="outline" onClick={() => props.onPass(event.id)}>
           <TicketIcon />
-          My pass
+          {t("home:member.myPass")}
         </Button>
       </div>
     );
@@ -59,18 +61,19 @@ function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
   return (
     <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
       <ClockIcon aria-hidden />
-      Check-in opens {formatDate(opensAtOf(event), "weekdayDateTime")}
+      {t("home:member.opens", { when: formatDate(opensAtOf(event), "weekdayDateTime") })}
     </p>
   );
 }
 
 /** The panel at the top of a member's home: what runs now, or what comes next. */
 export function MemberHomeNow(props: MemberHomeNowProps) {
+  const t = useTranslate();
   const next = pickNow(props.events);
   const running = next?.status === "running";
   const idleLabel = match(next)
-    .with(P.nullish, () => "Nothing planned" as const)
-    .otherwise(() => "Up next" as const);
+    .with(P.nullish, () => t("home:member.nothingPlanned"))
+    .otherwise(() => t("home:member.upNext"));
 
   return (
     <section
@@ -107,7 +110,7 @@ export function MemberHomeNow(props: MemberHomeNowProps) {
               ))
               .otherwise(() => null)}
             {match(running)
-              .with(true, () => "Running now" as const)
+              .with(true, () => t("home:member.runningNow"))
               .otherwise(() => idleLabel)}
           </p>
           <h2
@@ -115,16 +118,12 @@ export function MemberHomeNow(props: MemberHomeNowProps) {
             className="font-heading mt-2 text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
           >
             {match(next)
-              .with(P.nullish, () => "Nothing expects you right now" as const)
+              .with(P.nullish, () => t("home:member.nothingExpects"))
               .otherwise((next) => next.title)}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
             {match(next)
-              .with(
-                P.nullish,
-                () =>
-                  "Events appear here once an organizer plans one for a group you belong to." as const,
-              )
+              .with(P.nullish, () => t("home:member.nothingExpectsHint"))
               .otherwise((next) => formatRange(new Date(next.startsAt), new Date(next.endsAt)))}
           </p>
           {match(next)

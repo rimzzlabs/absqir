@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { useTranslate } from "@absqir/i18n/react";
 import { buttonVariants } from "@absqir/ui/button";
 import {
   Card,
@@ -20,21 +21,20 @@ export interface MemberHomeStandingProps {
 }
 
 /** The same hues as the status badges, so the bar reads like the labels. */
-const SEGMENTS: { status: AttendanceStatus; label: string; className: string }[] = [
-  { status: "present", label: "Present", className: "bg-emerald-500" },
-  { status: "late", label: "Late", className: "bg-amber-500" },
-  { status: "excused", label: "Excused", className: "bg-sky-500" },
-  { status: "absent", label: "Absent", className: "bg-destructive" },
+const SEGMENTS: { status: AttendanceStatus; className: string }[] = [
+  { status: "present", className: "bg-emerald-500" },
+  { status: "late", className: "bg-amber-500" },
+  { status: "excused", className: "bg-sky-500" },
+  { status: "absent", className: "bg-destructive" },
 ];
 
 const RECENT = 5;
 
 /** How it has gone: the rate, the split, and the last few records. */
 export function MemberHomeStanding(props: MemberHomeStandingProps) {
+  const t = useTranslate();
   const total = props.history.length;
-  const countNote = match(total)
-    .with(1, () => "One closed event." as const)
-    .otherwise((total) => `${total} closed events.`);
+  const countNote = t("home:member.closedEvents", { count: total });
   const counts = Object.fromEntries(
     A.map(SEGMENTS, (segment) => [
       segment.status,
@@ -53,16 +53,16 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ChartBarIcon />
-          Your standing
+          {t("home:member.standing")}
         </CardTitle>
         <CardDescription>
           {match(total)
-            .with(0, () => "No closed event has your name yet." as const)
+            .with(0, () => t("home:member.standingEmpty"))
             .otherwise(() => countNote)}
         </CardDescription>
         <CardAction>
           <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            History
+            {t("home:member.history")}
             <CaretRightIcon />
           </a>
         </CardAction>
@@ -74,16 +74,14 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
               .with(null, () => "—" as const)
               .otherwise((rate) => `${rate}%`)}
           </p>
-          <p className="text-muted-foreground text-sm">
-            Present or late, of the events that count.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("home:member.rateHint")}</p>
         </div>
 
         <div
           role="img"
           aria-label={A.map(
             SEGMENTS,
-            (segment) => `${counts[segment.status]} ${segment.label}`,
+            (segment) => `${counts[segment.status]} ${t(`common:attendance.${segment.status}`)}`,
           ).join(", ")}
           className="bg-muted flex h-2 w-full overflow-hidden rounded-full"
         >
@@ -108,7 +106,9 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
           {A.map(SEGMENTS, (segment) => (
             <div key={segment.status} className="flex items-center gap-2">
               <span aria-hidden className={cn("size-2 shrink-0 rounded-full", segment.className)} />
-              <dt className="text-muted-foreground flex-1">{segment.label}</dt>
+              <dt className="text-muted-foreground flex-1">
+                {t(`common:attendance.${segment.status}`)}
+              </dt>
               <dd className="font-medium tabular-nums">{counts[segment.status]}</dd>
             </div>
           ))}

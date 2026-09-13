@@ -1,3 +1,4 @@
+import { useTranslate } from "@absqir/i18n/react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
@@ -13,18 +14,18 @@ export function ratePercent(rate: number | null): string {
 
 interface StatusBarSegment {
   key: keyof ReportSummary["counts"];
-  label: string;
   className: string;
 }
 
 const BARS: StatusBarSegment[] = [
-  { key: "present", label: "Present", className: "bg-emerald-500" },
-  { key: "late", label: "Late", className: "bg-amber-500" },
-  { key: "excused", label: "Excused", className: "bg-sky-500" },
-  { key: "absent", label: "Absent", className: "bg-destructive" },
+  { key: "present", className: "bg-emerald-500" },
+  { key: "late", className: "bg-amber-500" },
+  { key: "excused", className: "bg-sky-500" },
+  { key: "absent", className: "bg-destructive" },
 ];
 
 export function StatusBar(props: { counts: ReportSummary["counts"]; className?: string }) {
+  const t = useTranslate();
   const total = A.reduce(BARS, 0, (sum, bar) => sum + props.counts[bar.key]);
 
   if (total === 0) {
@@ -42,7 +43,10 @@ export function StatusBar(props: { counts: ReportSummary["counts"]; className?: 
             key={bar.key}
             className={bar.className}
             style={{ width: `${(value / total) * 100}%` }}
-            title={`${bar.label}: ${value}`}
+            title={t("reports:summary.barTitle", {
+              status: String(t(`common:attendance.${bar.key}`)),
+              count: value,
+            })}
           />
         );
       })}
@@ -64,6 +68,7 @@ function Stat(props: { label: string; value: string; hint: string }) {
 
 export function ReportSummaryCards(props: { summary: ReportSummary }) {
   const { summary } = props;
+  const t = useTranslate();
   const records =
     summary.counts.present + summary.counts.late + summary.counts.excused + summary.counts.absent;
 
@@ -71,20 +76,24 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Events"
+          label={t("reports:summary.events")}
           value={String(summary.events)}
-          hint={`${summary.closedEvents} closed, so their absent rows are written`}
+          hint={t("reports:summary.eventsHint", { count: summary.closedEvents })}
         />
-        <Stat label="People seen" value={String(summary.people)} hint={`${records} records`} />
         <Stat
-          label="Attendance"
+          label={t("reports:summary.people")}
+          value={String(summary.people)}
+          hint={t("reports:summary.peopleHint", { count: records })}
+        />
+        <Stat
+          label={t("reports:summary.attendance")}
           value={ratePercent(summary.attendanceRate)}
-          hint="Present or late, over everyone judged. Excused is left out."
+          hint={t("reports:summary.attendanceHint")}
         />
         <Stat
-          label="On time"
+          label={t("reports:summary.onTime")}
           value={ratePercent(summary.punctualityRate)}
-          hint="Of the people who turned up, how many beat the late mark."
+          hint={t("reports:summary.onTimeHint")}
         />
       </div>
 
@@ -94,7 +103,7 @@ export function ReportSummaryCards(props: { summary: ReportSummary }) {
           {A.map(BARS, (bar) => (
             <li key={bar.key} className="flex items-center gap-2">
               <span aria-hidden className={cn("size-2 rounded-full", bar.className)} />
-              <span className="text-muted-foreground">{bar.label}</span>
+              <span className="text-muted-foreground">{t(`common:attendance.${bar.key}`)}</span>
               <span className="tabular-nums">{summary.counts[bar.key]}</span>
             </li>
           ))}
