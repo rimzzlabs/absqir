@@ -78,7 +78,7 @@ export const home = {
   },
   gettingStarted: {
     welcome: "Welcome, {{name}}",
-    description: "Four steps to your first register. You are on the second.",
+    description: "Four steps to your first event. You are on the second.",
     title: "Getting started",
     step: "Step {{done, number}} of {{total, number}}",
     progressLabel: "{{done, number}} of {{total, number}} steps done",

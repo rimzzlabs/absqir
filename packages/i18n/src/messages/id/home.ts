@@ -80,7 +80,7 @@ export const home = {
   },
   gettingStarted: {
     welcome: "Selamat datang, {{name}}",
-    description: "Empat langkah menuju daftar hadir pertama Anda. Sekarang Anda di langkah kedua.",
+    description: "Empat langkah menuju acara pertama Anda. Sekarang Anda di langkah kedua.",
     title: "Langkah awal",
     step: "Langkah {{done, number}} dari {{total, number}}",
     progressLabel: "{{done, number}} dari {{total, number}} langkah selesai",

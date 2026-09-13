@@ -2,7 +2,7 @@
 export const notifications = {
   title: "Notifikasi",
   description:
-    "Semua yang terjadi dan menyangkut Anda. Lewat email juga, kalau instance ini mengirimnya.",
+    "Semua yang terjadi dan menyangkut Anda. Lewat email juga, kalau absqir ini disiapkan untuk mengirimnya.",
   markAllRead: "Tandai semua terbaca",
   markRead: "Tandai terbaca",
   unread: "Belum dibaca",

@@ -30,8 +30,8 @@ export const onboarding = {
       "Tidak wajib. Foto membantu penyelenggara mengenali Anda di daftar. Boleh dilewati.",
     choose: "Pilih foto",
     chooseAnother: "Pilih foto lain",
-    formats: "PNG, JPEG, atau WebP. Dikecilkan ke 128px.",
-    unreadable: "Foto itu tidak bisa dibaca.",
+    formats: "PNG, JPEG, atau WebP. absqir mengecilkannya untuk Anda.",
+    unreadable: "absqir tidak bisa membaca foto itu. Coba foto lain.",
     saveAndContinue: "Simpan lalu lanjut",
   },
   organization: {
@@ -40,7 +40,7 @@ export const onboarding = {
   },
   event: {
     soldOut: "Semua kursi sudah terisi.",
-    closed: "Acara ini tidak menerima orang lagi.",
+    closed: "Acara ini sudah tidak menerima pendaftaran.",
     register: "Daftar",
     registering: "Mendaftar…",
   },

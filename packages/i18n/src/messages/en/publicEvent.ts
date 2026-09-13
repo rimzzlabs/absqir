@@ -13,7 +13,7 @@ export const publicEvent = {
   closed: "Registration is closed.",
   soldOut: "Every seat is taken.",
   signIn: "Sign in to register",
-  signInHint: "No account yet? The same door creates one with a code sent to your email.",
+  signInHint: "No account yet? Enter your email, and absqir creates one with a code it sends you.",
   registering: "Registering…",
   register: "Register",
   joinNote: "You join {{organization}} as a member, and this event expects you.",

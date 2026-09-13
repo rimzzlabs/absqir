@@ -14,7 +14,7 @@ export const publicEvent = {
   soldOut: "Semua kursi sudah terisi.",
   signIn: "Masuk untuk mendaftar",
   signInHint:
-    "Belum punya akun? Pintu yang sama membuatkannya lewat kode yang dikirim ke email Anda.",
+    "Belum punya akun? Masukkan email Anda, dan absqir membuatkannya lewat kode yang dikirim ke sana.",
   registering: "Mendaftar…",
   register: "Daftar",
   joinNote: "Anda bergabung ke {{organization}} sebagai anggota, dan acara ini mengharapkan Anda.",

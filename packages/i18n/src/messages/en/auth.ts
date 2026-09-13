@@ -56,7 +56,7 @@ export const auth = {
     accessDenied: "The {{provider}} sign-in was cancelled.",
     emailMismatch: "That {{provider}} account uses a different address than this account.",
     alreadyLinked: "That {{provider}} account already belongs to someone else here.",
-    unableToLink: "absqir could not link that {{provider}} account.",
+    unableToLink: "absqir could not connect that {{provider}} account. Try again.",
     emailNotFound: "{{provider}} shared no address. Add one there, then try again.",
     emailNotVerified: "{{provider}} has not verified that address yet.",
     unknown: "The {{provider}} sign-in did not finish. Try again, or use your email.",
