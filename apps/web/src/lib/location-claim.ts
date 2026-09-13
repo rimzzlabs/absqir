@@ -1,4 +1,5 @@
 import type { Fix } from "@absqir/core/geo";
+import type { Translate } from "@absqir/i18n";
 import { match, P } from "ts-pattern";
 
 /**
@@ -113,12 +114,12 @@ export class LocationRefused extends Error {
  * the burst is long enough, and rejects with a LocationRefused when the
  * device gives nothing at all.
  */
-export function collectLocationClaim(): Promise<LocationClaim> {
+export function collectLocationClaim(t: Translate): Promise<LocationClaim> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
     return Promise.reject(
       new LocationRefused({
         kind: "unsupported",
-        message: "This browser cannot report where it is. Ask the organizer to check you in.",
+        message: t("errors:cannotReportLocation"),
       }),
     );
   }
@@ -127,7 +128,7 @@ export function collectLocationClaim(): Promise<LocationClaim> {
     return Promise.reject(
       new LocationRefused({
         kind: "insecure",
-        message: "Location needs an https address.",
+        message: t("errors:locationNeedsHttps"),
       }),
     );
   }
@@ -201,11 +202,11 @@ let cached: { at: number; claim: LocationClaim } | null = null;
  * scanned at one spot. The server knows this reading came from a scanner and
  * switches off the checks that compare people to each other.
  */
-export async function cachedLocationClaim(): Promise<LocationClaim> {
+export async function cachedLocationClaim(t: Translate): Promise<LocationClaim> {
   const now = Date.now();
   if (cached && now - cached.at < CACHE_MS) return cached.claim;
 
-  const claim = await collectLocationClaim();
+  const claim = await collectLocationClaim(t);
   cached = { at: now, claim };
 
   return claim;

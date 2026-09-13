@@ -1,4 +1,5 @@
 import { meKeys, organizationKeys, organizationMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -9,6 +10,7 @@ export interface CreateOrganizationInput {
 
 /** For an account that finished onboarding and creates another organization. */
 export function useCreateOrganization() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -17,13 +19,13 @@ export function useCreateOrganization() {
       const { data, error } = await authClient.organization.create({ name, slug });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Could not create the organization.");
+        throw new Error(error?.message ?? t("errors:couldNotCreateOrganization"));
       }
 
       const setActive = await authClient.organization.setActive({ organizationId: data.id });
 
       if (setActive.error) {
-        throw new Error(setActive.error.message ?? "Could not switch to the new organization.");
+        throw new Error(setActive.error.message ?? t("errors:couldNotSwitchToNewOrganization"));
       }
 
       return data;

@@ -3,7 +3,7 @@ export const invite = {
   accept: {
     signedOutTitle: "You have an invitation",
     signedOutDescription:
-      "Sign in, or create your account, and the invitation opens again on the other side.",
+      "Sign in, or create your account. The invitation opens again once you are through.",
     continue: "Continue",
     brokenTitle: "This invitation cannot be opened",
     brokenDescription: "It expired, it was cancelled, or it was sent to another email address.",

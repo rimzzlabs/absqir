@@ -1,7 +1,7 @@
-/** Check-in: pemindai, pas, hasilnya, dan jalan kembali. */
+/** Check-in: pemindai, QR anggota, hasilnya, dan jalan kembali. */
 export const checkin = {
   title: "Check-in",
-  description: "Arahkan kamera ke layar di ruangan. Atau tunjukkan pas Anda ke penyelenggara.",
+  description: "Arahkan kamera ke layar di ruangan. Atau tunjukkan QR Anda ke penyelenggara.",
   scanner: {
     title: "Pindai layar ruangan",
     description:
@@ -14,7 +14,7 @@ export const checkin = {
     locatingTitle: "Mencari posisi Anda",
     locatingHint:
       "Acara ini memeriksa apakah Anda ada di tempatnya. Izinkan lokasi, lalu diam sebentar.",
-    refusedTitle: "Belum tercatat hadir",
+    refusedTitle: "Anda belum tercatat hadir",
     manualLabel: "Tidak bisa memindai? Tempel tautannya",
     manualSubmit: "Check-in",
     manualHint: "Layar ruangan mencetak tautannya di bawah kode.",
@@ -46,26 +46,26 @@ export const checkin = {
     locatingTitle: "Mencari posisi Anda…",
   },
   pass: {
-    title: "Tunjukkan pas saya",
+    title: "Tunjukkan QR saya",
     description:
-      "Kalau penyelenggara yang memindai, bukan layar ruangan, tunjukkan ini. Satu pas untuk satu acara.",
+      "Kalau penyelenggara yang memindai, bukan layar ruangan, tunjukkan ini. Satu QR untuk satu acara.",
     myEvents: "Acara saya",
     runsUntil: "Berlangsung sampai {{time}}",
-    myPass: "Pas saya",
+    myPass: "QR saya",
     upNext: "Berikutnya",
     opens: "Check-in dibuka {{when}}",
-    emptyTitle: "Belum ada yang menunggu Anda",
+    emptyTitle: "Belum ada acara untuk Anda",
     emptyDescription: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
-    nothingRuns: "Tidak ada acara yang berlangsung sekarang, jadi belum ada pas yang berlaku.",
+    nothingRuns: "Tidak ada acara yang berlangsung sekarang, jadi belum ada QR yang berlaku.",
   },
   steps: {
     title: "Cara kerjanya",
     description: "Dua jalan masuk. Keduanya menulis catatan yang sama.",
     one: "Arahkan ke layar ruangan",
     oneHint:
-      "Penyelenggara menaruh kode di layar atau di cetakan. Tahan kode itu di dalam bingkai.",
-    two: "Atau tunjukkan pas Anda",
-    twoHint: "Tidak ada layar di ruangan? Buka pas Anda dan biarkan penyelenggara memindainya.",
+      "Penyelenggara menampilkan kode di layar atau di lembar cetak. Tahan kode itu di dalam bingkai.",
+    two: "Atau tunjukkan QR Anda",
+    twoHint: "Tidak ada layar di ruangan? Buka QR Anda dan biarkan penyelenggara memindainya.",
     three: "Catatan Anda ditulis",
     threeHint: "Anda langsung melihat jam dan statusnya. Catatan itu masuk ke riwayat Anda juga.",
   },
@@ -74,7 +74,7 @@ export const checkin = {
     description: "Terbaru dulu.",
     history: "Riwayat",
     empty:
-      "Belum ada acara tertutup yang memuat nama Anda. Pindaian pertama Anda mendarat di sini.",
+      "Nama Anda belum muncul di acara mana pun yang sudah ditutup. Check-in pertama Anda akan muncul di sini.",
     inAt: " · masuk pukul {{time}}",
   },
   report: {
@@ -95,7 +95,8 @@ export const checkin = {
       "Tidak ada lagi yang perlu Anda lakukan. Anda bisa menutup halaman ini dan memeriksa catatan Anda nanti di",
     doneLink: "Acara saya",
     message: "Apa yang terjadi?",
-    messagePlaceholder: "Saya ada di aula, tetapi ponsel saya terus menaruh saya di jalan sebelah.",
+    messagePlaceholder:
+      "Saya ada di aula, tetapi ponsel saya terus menempatkan saya di jalan sebelah.",
     messageHint: "Satu laporan untuk satu acara. Sebutkan Anda sebenarnya ada di mana.",
     sending: "Mengirim…",
     send: "Kirim laporan",
@@ -110,12 +111,12 @@ export const checkin = {
   },
   scannerPage: {
     fallbackTitle: "Pemindai",
-    description: "Arahkan kamera ke pas di ponsel anggota. Setiap pas dihitung sekali.",
-    fallback: "Minta kode pas di bawah QR anggota, lalu ketik di bawah ini.",
+    description: "Arahkan kamera ke QR di ponsel anggota. Setiap QR dihitung sekali.",
+    fallback: "Minta kode di bawah QR anggota, lalu ketik di bawah ini.",
     opening: "Membuka kamera…",
     notAvailable: "Kamera tidak tersedia",
-    manualPlaceholder: "Atau tempel pas di sini",
-    manualLabel: "Kode pas",
+    manualPlaceholder: "Atau tempel kodenya di sini",
+    manualLabel: "Kode QR",
     checkIn: "Check-in",
     alreadyIn: "Sudah hadir sejak {{time}}",
     checkedIn: "Tercatat hadir pukul {{time}}",
@@ -123,7 +124,7 @@ export const checkin = {
   reports: {
     title: "Masalah check-in",
     description:
-      "Anggota yang bilang pemeriksaan tempat menolak mereka padahal mereka ada di acara.",
+      "Anggota yang menyatakan bahwa pemeriksaan tempat menolak mereka padahal mereka berada di acara.",
     waiting: "Menunggu",
     decided: "Sudah diputuskan",
     all: "Semua",
@@ -139,8 +140,8 @@ export const checkin = {
     noAttempt: "Check-in yang ditolak sudah tidak tercatat, jadi hanya kata-katanya yang tersisa.",
     recorded: "Apa yang tercatat",
     scanned: "Dipindai",
-    scannedRoomCode: "Kode hidup dari layar ruangan",
-    scannedPass: "Pas, dibaca oleh pemindai penyelenggara",
+    scannedRoomCode: "Kode yang berganti otomatis di layar ruangan",
+    scannedPass: "QR anggota, dibaca oleh pemindai penyelenggara",
     distance: "Jarak",
     distanceFrom: "{{distance}} dari tempatnya",
     noLocation: "Perangkat tidak mengirim lokasi",
@@ -150,11 +151,12 @@ export const checkin = {
     accuracyAbout: "Sekitar {{meters, number}} m",
     scannedAt: "Dipindai pada",
     conflict:
-      "Dua hal ini tidak cocok. Kode hidup berarti ada orang di depan layar, dan bacaan sejauh ini berarti dia tidak di sana. Entah ponselnya salah menaruh posisi, yang sering terjadi di dalam ruangan, atau kodenya sampai ke orang lain.",
+      "Dua fakta ini saling bertentangan. Kode yang dia pindai hanya bisa dibaca orang yang berdiri di depan layar ruangan, tetapi ponselnya menempatkan dia jauh dari lokasi acara. Bisa jadi ponselnya salah membaca posisi, yang sering terjadi di dalam ruangan, atau ada orang lain yang meneruskan kodenya kepada dia.",
     signals: "Sinyal",
     recordThemAs: "Catat sebagai",
     clockSays: "Menurut jam, {{status}}, dihitung dari waktu dia memindai.",
-    noClock: "Tidak ada pindaian yang tersisa untuk dijadikan waktu, jadi pilih apa yang terjadi.",
+    noClock:
+      "Tidak ada pindaian yang tersisa untuk diambil waktunya, jadi pilih sendiri apa yang terjadi.",
     noteLabel: "Catatan untuk {{name}}",
     notePlaceholder: "Tidak wajib. Anggota membaca ini bersama keputusannya.",
     recordAs: "Catat sebagai {{status}}",
@@ -165,18 +167,19 @@ export const checkin = {
     wasDeclined: "Ditolak",
   },
   risk: {
-    "patched-api": "Ada yang mengganti API lokasi di peramban.",
-    "automated-browser": "Peramban melaporkan bahwa sebuah skrip yang mengendalikannya.",
-    "frozen-track": "Setiap bacaan menyebut titik yang sama sampai setengah meter.",
-    teleport: "Terlalu jauh dari check-in sebelumnya untuk ditempuh dalam waktu itu.",
+    "patched-api": "Ada yang mengganti bagian peramban yang melaporkan lokasi.",
+    "automated-browser": "Peramban melaporkan bahwa dirinya dijalankan skrip, bukan oleh orang.",
+    "frozen-track":
+      "Semua pembacaan lokasi menunjuk titik yang sama persis, sampai setengah meter.",
+    teleport: "Terlalu jauh dari check-in sebelumnya untuk ditempuh dalam waktu sesingkat itu.",
     "shared-coordinates": "Orang lain mengirim koordinat yang persis sama.",
-    "network-far": "Alamat jaringannya mengarah jauh dari titik yang diklaim.",
+    "network-far": "Alamat jaringannya berada jauh dari titik yang dia sebutkan.",
     "network-relay": "Alamat jaringannya milik VPN atau penyedia hosting.",
-    "perfect-accuracy": "Bacaannya mengklaim akurasi yang tidak pernah dilaporkan ponsel.",
-    "constant-accuracy": "Setiap bacaan mengklaim akurasi bulat yang sama.",
+    "perfect-accuracy": "Akurasi yang dilaporkan terlalu sempurna untuk sebuah ponsel.",
+    "constant-accuracy": "Setiap pembacaan melaporkan angka akurasi bulat yang sama.",
     "no-altitude":
-      "Tidak ada bacaan yang membawa ketinggian, jadi tidak ada yang datang dari satelit.",
-    "timezone-mismatch": "Jam perangkatnya milik belahan dunia lain.",
-    "single-fix": "Hanya satu bacaan yang datang, jadi pergerakan tidak bisa diperiksa.",
+      "Tidak ada pembacaan yang menyertakan ketinggian, jadi tidak ada yang berasal dari satelit.",
+    "timezone-mismatch": "Jam di perangkatnya disetel ke belahan dunia yang lain.",
+    "single-fix": "Hanya satu pembacaan yang masuk, jadi pergerakannya tidak bisa diperiksa.",
   },
 } as const;

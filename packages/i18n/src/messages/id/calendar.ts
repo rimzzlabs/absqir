@@ -1,7 +1,7 @@
 /** Kisi kalender, dan lembar di balik satu hari. */
 export const calendar = {
   title: "Kalender",
-  description: "Semua acara dalam satu kisi, termasuk yang masih dijanjikan jadwal Anda.",
+  description: "Semua acara dalam satu kalender, termasuk yang masih akan dibuat jadwal Anda.",
   newEvent: "Acara baru",
   previous: "Sebelumnya",
   next: "Berikutnya",
@@ -30,7 +30,7 @@ export const calendar = {
       "{{expected, number}} diharapkan · {{present, number}} hadir · {{late, number}} terlambat · {{absent, number}} tidak hadir",
     fromSchedule: "Dari sebuah jadwal",
     projectedHint:
-      "Jadwalnya membuat acara ini dua minggu sebelumnya. Belum ada yang perlu dilakukan.",
-    newEvent: "Acara baru pada hari ini",
+      "Jadwalnya membuat acara ini dua minggu sebelum harinya. Belum ada yang perlu dilakukan.",
+    newEvent: "Acara baru pada tanggal ini",
   },
 } as const;

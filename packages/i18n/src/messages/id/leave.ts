@@ -18,7 +18,7 @@ export const leave = {
   emptyPendingDescription:
     "Anggota yang tidak bisa hadir mengajukan di sini. Anda menyetujui atau menolak.",
   emptyDecidedTitle: "Belum ada yang diputuskan",
-  emptyDecidedDescription: "Pengajuan yang disetujui dan ditolak mendarat di sini.",
+  emptyDecidedDescription: "Pengajuan yang disetujui dan ditolak muncul di sini.",
   dialog: {
     title: "{{decision}} {{name}}",
     approveDescription: "Catatan untuk acara ini menjadi izin, bukan tidak hadir.",

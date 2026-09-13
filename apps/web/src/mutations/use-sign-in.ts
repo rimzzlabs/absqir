@@ -1,4 +1,5 @@
 import { authMutationKeys, sessionKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -14,6 +15,7 @@ export interface UseSignInOptions {
 }
 
 export function useSignIn(options: UseSignInOptions = {}) {
+  const t = useTranslate();
   const queryClient = useQueryClient();
   const redirectTo = options.redirectTo ?? "/";
 
@@ -28,7 +30,7 @@ export function useSignIn(options: UseSignInOptions = {}) {
       });
 
       if (error) {
-        throw new Error(error.message ?? "That password did not match.");
+        throw new Error(error.message ?? t("errors:passwordDidNotMatch"));
       }
     },
     onSuccess: async () => {

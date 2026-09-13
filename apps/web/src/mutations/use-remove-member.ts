@@ -1,8 +1,10 @@
 import { organizationKeys, organizationMutationKeys, peopleKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
 export function useRemoveMember() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -11,7 +13,7 @@ export function useRemoveMember() {
       const { error } = await authClient.organization.removeMember({ memberIdOrEmail });
 
       if (error) {
-        throw new Error(error.message ?? "Could not remove the member.");
+        throw new Error(error.message ?? t("errors:couldNotRemoveMember"));
       }
     },
     onSuccess: () => {

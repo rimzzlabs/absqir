@@ -28,8 +28,8 @@ export const onboarding = {
     description: "Optional. It helps organizers spot you in a list. You can skip this.",
     choose: "Choose a picture",
     chooseAnother: "Choose another",
-    formats: "PNG, JPEG, or WebP. Shrunk to 128px.",
-    unreadable: "Could not read that picture.",
+    formats: "PNG, JPEG, or WebP. absqir shrinks it for you.",
+    unreadable: "absqir could not read that picture. Try another one.",
     saveAndContinue: "Save and continue",
   },
   organization: {
@@ -38,7 +38,7 @@ export const onboarding = {
   },
   event: {
     soldOut: "Every seat is taken.",
-    closed: "This event no longer takes people.",
+    closed: "This event is no longer taking registrations.",
     register: "Register",
     registering: "Registering…",
   },

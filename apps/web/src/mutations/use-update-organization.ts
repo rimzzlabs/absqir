@@ -1,4 +1,5 @@
 import { organizationKeys, organizationMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -11,6 +12,7 @@ export interface UpdateOrganizationInput {
 }
 
 export function useUpdateOrganization() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -23,7 +25,7 @@ export function useUpdateOrganization() {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Could not save the organization.");
+        throw new Error(error?.message ?? t("errors:couldNotSaveOrganization"));
       }
 
       return data;

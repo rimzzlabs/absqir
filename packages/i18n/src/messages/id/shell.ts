@@ -20,7 +20,7 @@ export const shell = {
     overview: "Ringkasan",
     attendance: "Kehadiran",
     directory: "Direktori",
-    requests: "Permintaan dan wawasan",
+    requests: "Permintaan dan laporan",
     other: "Lainnya",
     me: "Saya",
     you: "Anda",
@@ -28,8 +28,8 @@ export const shell = {
   github: "Beri bintang di GitHub",
   health: {
     up: "Semua berjalan",
-    down: "API tidak menjawab",
-    checking: "Memeriksa API…",
+    down: "absqir tidak merespons",
+    checking: "Memeriksa absqir…",
   },
   user: {
     menu: "Menu akun",
@@ -39,9 +39,9 @@ export const shell = {
   },
   organizations: {
     none: "Tanpa organisasi",
-    noneHint: "Bergabunglah ke satu untuk mulai",
+    noneHint: "Bergabunglah ke sebuah organisasi untuk mulai",
     label: "Organisasi",
-    inNone: "Anda belum ada di satu pun.",
+    inNone: "Anda belum tergabung di mana pun.",
     create: "Organisasi baru",
     createTitle: "Organisasi baru",
     createDescription: "Anda menjadi pemiliknya. Undang orang dari halaman pengaturan.",
@@ -59,12 +59,12 @@ export const shell = {
   errorPages: {
     notFoundCode: "404",
     notFoundTitle: "Halaman tidak ditemukan",
-    notFoundBody: "Halaman ini tidak ada. Alamatnya bisa salah, atau halamannya sudah pindah.",
+    notFoundBody: "Halaman ini tidak ada. Alamatnya salah, atau halamannya sudah pindah.",
     home: "Ke halaman beranda",
     serverCode: "500",
     serverTitle: "Ada yang salah",
     serverBody:
-      "Server tidak bisa menyelesaikan permintaan Anda. Masalahnya ada di sisi kami. Coba lagi sebentar.",
+      "absqir tidak bisa menyelesaikan permintaan Anda. Masalahnya ada di sisi kami. Coba lagi sebentar.",
     tryAgain: "Coba lagi",
   },
   brandHome: "beranda absqir",

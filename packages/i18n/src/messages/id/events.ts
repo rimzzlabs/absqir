@@ -16,7 +16,7 @@ export const events = {
     nothingPlanned: "Belum ada rencana",
     nothingPlannedHint: "Buat satu acara, atau siapkan jadwal yang membuatnya untuk Anda.",
     nothingPast: "Belum ada yang terjadi",
-    nothingPastHint: "Acara yang sudah ditutup mendarat di sini bersama catatannya.",
+    nothingPastHint: "Acara yang sudah ditutup muncul di sini bersama catatannya.",
     noMatch: "Tidak ada yang cocok",
     noMatchHint: "Coba judul lain, atau pilih semua grup.",
   },
@@ -31,7 +31,7 @@ export const events = {
   detail: {
     times:
       "{{range}} · terlambat setelah {{late, number}} menit · buka {{opens, number}} menit lebih awal",
-    walkIns: "Tamu tanpa daftar diterima",
+    walkIns: "Orang di luar daftar diterima",
     roomScreen: "Layar ruangan",
     scanner: "Pemindai",
     openNow: "Buka sekarang",
@@ -63,7 +63,7 @@ export const events = {
     closed: "Acara ini sudah ditutup.",
     preparing: "Menyiapkan kode…",
     qrAlt: "Kode QR untuk check-in",
-    hint: "Pindai dengan kamera ponsel Anda, lalu konfirmasi di halaman yang terbuka. Masuk dulu kalau ponsel meminta. Kodenya berganti setiap beberapa detik, jadi foto kode langsung tidak berlaku.",
+    hint: "Pindai dengan kamera ponsel Anda, lalu konfirmasi di halaman yang terbuka. Masuk dulu kalau ponsel meminta. Kodenya berganti setiap beberapa detik, jadi foto dari kode itu langsung tidak berlaku.",
   },
   dialog: {
     editTitle: "Ubah acara",
@@ -81,9 +81,9 @@ export const events = {
     backfillNew:
       "Acara ini langsung ditutup begitu Anda simpan. Semua yang diharapkan hadir tanpa catatan dicatat tidak hadir, dan tidak ada yang diberi tahu. Pakai ini untuk mencatat acara yang sudah terjadi.",
     lateAfter: "Terlambat setelah (menit)",
-    lateAfterHint: "Check-in yang lebih lambat dari ini setelah acara mulai dihitung terlambat.",
+    lateAfterHint: "Check-in yang lewat dari batas ini setelah acara mulai dihitung terlambat.",
     opensBefore: "Buka sebelum (menit)",
-    opensBeforeHint: "Check-in dibuka selama ini sebelum acara mulai.",
+    opensBeforeHint: "Jumlah menit sebelum acara mulai saat check-in dibuka.",
     expectedGroups: "Grup yang diharapkan",
     walkIns: "Izinkan anggota di luar grup ini ikut check-in",
     registration: "Buka halaman publik tempat siapa pun bisa mendaftar",
@@ -98,7 +98,7 @@ export const events = {
     heading: "Orang",
     tableLabel: "Orang yang diharapkan hadir di acara ini",
     empty:
-      "Belum ada yang diharapkan hadir. Centang satu grup di acara ini, atau izinkan tamu tanpa daftar.",
+      "Belum ada yang diharapkan hadir. Centang satu grup di acara ini, atau izinkan orang di luar daftar.",
     name: "Nama",
     identifier: "Nomor induk",
     status: "Status",
@@ -107,7 +107,7 @@ export const events = {
     where: "Di mana",
     none: "—",
     registered: "Terdaftar",
-    walkIn: "Tanpa daftar",
+    walkIn: "Di luar daftar",
     setStatus: "Tetapkan status untuk {{name}}",
     markAs: "Tandai sebagai",
     methods: {
@@ -119,14 +119,14 @@ export const events = {
     flagged_one: "Satu check-in perlu diperiksa",
     flagged_other: "{{count, number}} check-in perlu diperiksa",
     flaggedHint:
-      "Bacaan lokasinya tidak seperti ponsel yang berdiri di tempat itu. Buka kolom Di mana untuk membaca alasannya.",
+      "Pembacaan lokasinya tidak seperti ponsel yang benar-benar berada di tempat itu. Buka kolom Di mana untuk membaca alasannya.",
   },
   location: {
     reviewed: "Sudah diperiksa",
     worthALook: "Perlu diperiksa",
-    oddTitle: "Bacaan ini terlihat janggal",
+    oddTitle: "Pembacaan ini terlihat janggal",
     oddHint:
-      "{{distance}} dari tempatnya. Check-in tetap diterima, karena tidak satu pun dari ini menjadi bukti sendiri.",
+      "{{distance}} dari tempatnya. Check-in tetap diterima, karena tidak satu pun tanda ini menjadi bukti dengan sendirinya.",
     clearing: "Membersihkan…",
     clear: "Tampak wajar, bersihkan tandanya",
     reject: "Untuk menolaknya, tandai {{name}} tidak hadir lewat menu barisnya.",

@@ -36,7 +36,7 @@ export const settings = {
       "Where you check people in. An event set to a place refuses a check-in made somewhere else.",
     domains: "Domains",
     domainsDescription:
-      "Claim the email domain your people share, so a new account finds this workspace on its own.",
+      "Claim the email domain your people share, so a new account finds this organization on its own.",
   },
   members: {
     tableLabel: "Members of this organization",
@@ -60,7 +60,7 @@ export const settings = {
   invitations: {
     formTitle: "Invite someone",
     formDescription:
-      "They get an email with a link. On the other side they create an account, or sign in, and land here. The invitation lasts 7 days.",
+      "They get an email with a link. They open it to create an account or sign in, and land here. The invitation lasts 7 days.",
     email: "Email",
     role: "Role",
     send: "Send",
@@ -105,7 +105,7 @@ export const settings = {
       name: "Name",
       namePlaceholder: "Head office, Hall B, Site 3",
       address: "Address",
-      addressPlaceholder: "Optional. For the reader, nothing is looked up from it.",
+      addressPlaceholder: "Optional. People read it, and absqir never uses it to find the place.",
       radius: "How far from the pin a check-in still counts",
       radiusLabel: "Radius in metres",
       metres: "m",
@@ -119,7 +119,7 @@ export const settings = {
   domains: {
     claimTitle: "Claim a domain",
     claimDescription:
-      "A claim starts unverified. Add the TXT record it names, and this workspace owns the domain. A mailbox provider such as gmail.com can never be claimed.",
+      "A claim starts unverified. Add the TXT record it names, and this organization owns the domain. A public email provider such as gmail.com can never be claimed.",
     domain: "Domain",
     claim: "Claim",
     claiming: "Claiming…",
@@ -145,7 +145,7 @@ export const settings = {
       closedHint: "The domain opens nothing. Invitations still work.",
     },
     listTitle: "Domains",
-    empty: "No domain is claimed. Nobody finds this workspace by their email.",
+    empty: "No domain is claimed. Nobody finds this organization by their email.",
   },
   organization: {
     title: "Organization",
@@ -153,17 +153,19 @@ export const settings = {
       "The logo and the name people see, and the words that name it in links and on the command line.",
     changeLogo: "Change logo",
     addLogo: "Add a logo",
-    logoFormats: "PNG, JPEG or WebP. Shrunk to 128px. It shows in the workspace switcher.",
-    unreadable: "Could not read that picture.",
+    logoFormats:
+      "PNG, JPEG or WebP. absqir shrinks it for you. It shows in the organization switcher.",
+    unreadable: "absqir could not read that picture. Try another one.",
     started: "Started {{date}}",
-    nameRow: "Name and slug",
+    nameRow: "Name and short name",
     nameHintEditable:
       "The name people read, and the short word that names this organization everywhere else.",
     nameHintReadOnly: "Only owners and admins can change these.",
-    slug: "Slug",
-    slugHint: "The operator names this organization by its slug: absqir member add --org <slug>.",
+    slug: "Short name",
+    slugHint:
+      "The command line uses this to name the organization: absqir member add --org <slug>.",
     id: "Organization ID",
-    idHint: "What the API and the database call it. Quote it when you report a problem.",
+    idHint: "What absqir calls it internally. Quote it when you report a problem.",
     glance: "At a glance",
     glanceDescription: "How big this organization has become.",
     counts: {
@@ -180,18 +182,18 @@ export const settings = {
       title: "Delete this organization",
       ownerOnly: "Only an owner can delete the organization.",
       description:
-        "The directory, the groups, the events, and every attendance record go with it. Members keep their accounts and land in the waiting room.",
+        "The directory, the groups, the events, and every attendance record go with it. Members keep their accounts, but belong to no organization afterwards.",
       button: "Delete organization",
       confirmTitle: "Delete {{name}}?",
-      confirmDescription: "Copy the slug below to go on.",
-      phraseLabel: "organization slug",
+      confirmDescription: "Copy the short name below to go on.",
+      phraseLabel: "organization short name",
       continue: "Continue",
-      lastWord: "Last word",
+      lastWord: "Last step",
       lastWordDescription: "Press the button and {{name}} is gone. Nobody can bring it back.",
       deleteForever: "Delete forever",
       losing:
         "The directory, the groups, the events, and every attendance record are erased. No report of a past event survives.",
-      keeping: "The members keep their accounts, and land in the waiting room.",
+      keeping: "The members keep their accounts, but belong to no organization afterwards.",
     },
   },
   preferences: {

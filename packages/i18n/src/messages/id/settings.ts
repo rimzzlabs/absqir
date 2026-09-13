@@ -37,7 +37,7 @@ export const settings = {
       "Tempat Anda mencatat kehadiran. Acara yang diikat ke sebuah tempat menolak check-in dari tempat lain.",
     domains: "Domain",
     domainsDescription:
-      "Klaim domain email yang dipakai bersama, supaya akun baru menemukan ruang kerja ini sendiri.",
+      "Klaim domain email yang dipakai bersama, supaya akun baru menemukan organisasi ini sendiri.",
   },
   members: {
     tableLabel: "Anggota organisasi ini",
@@ -61,7 +61,7 @@ export const settings = {
   invitations: {
     formTitle: "Undang seseorang",
     formDescription:
-      "Dia menerima email berisi tautan. Di sisi sana dia membuat akun, atau masuk, lalu tiba di sini. Undangannya berlaku 7 hari.",
+      "Dia menerima email berisi tautan. Tautan itu dibuka untuk membuat akun atau masuk, lalu dia tiba di sini. Undangannya berlaku 7 hari.",
     email: "Email",
     role: "Peran",
     send: "Kirim",
@@ -95,7 +95,7 @@ export const settings = {
     deleteTitle: "Hapus {{name}}?",
     deleteUnused: "Belum ada yang memakainya.",
     deleteUsed:
-      "{{usage}} memakainya. Acara yang sudah dibuat menyimpan salinan lingkarannya sendiri, jadi check-in yang lalu tidak berubah arti. Acara berikutnya dari jadwal kehilangan pagarnya.",
+      "{{usage}} memakainya. Acara yang sudah dibuat menyimpan salinan lingkarannya sendiri, jadi check-in yang lalu tidak berubah arti. Acara berikutnya yang dibuat jadwal tidak lagi punya batas tempat.",
     deleting: "Menghapus…",
     deletePlace: "Hapus tempat",
     dialog: {
@@ -106,12 +106,13 @@ export const settings = {
       name: "Nama",
       namePlaceholder: "Kantor pusat, Aula B, Lokasi 3",
       address: "Alamat",
-      addressPlaceholder: "Tidak wajib. Hanya untuk dibaca, tidak dicari ke mana pun.",
-      radius: "Sejauh apa dari penanda check-in masih dihitung",
+      addressPlaceholder:
+        "Tidak wajib. Alamat ini hanya untuk dibaca, dan absqir tidak memakainya untuk mencari tempatnya.",
+      radius: "Sejauh apa dari penanda sebuah check-in masih dihitung",
       radiusLabel: "Jari-jari dalam meter",
       metres: "m",
       radiusHint:
-        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count, number}} m lingkarannya lebih kecil dari galat itu, jadi itulah batas bawahnya.",
+        "Ponsel akurat sekitar sepuluh meter di luar ruangan, dan jauh lebih buruk di dalam. Di bawah {{count, number}} m lingkarannya lebih kecil daripada tingkat kesalahan itu, jadi itulah batas terkecilnya.",
       placeHintBefore: "Ketuk peta untuk meletakkan penanda, atau tekan",
       placeHintButton: "Pakai lokasi saya",
       create: "Buat",
@@ -120,7 +121,7 @@ export const settings = {
   domains: {
     claimTitle: "Klaim sebuah domain",
     claimDescription:
-      "Klaim dimulai dalam keadaan belum terverifikasi. Tambahkan catatan TXT yang disebutkan, lalu ruang kerja ini memiliki domain itu. Penyedia kotak surat seperti gmail.com tidak pernah bisa diklaim.",
+      "Klaim dimulai dalam keadaan belum terverifikasi. Tambahkan catatan TXT yang disebutkan, lalu organisasi ini memiliki domain itu. Penyedia email umum seperti gmail.com tidak pernah bisa diklaim.",
     domain: "Domain",
     claim: "Klaim",
     claiming: "Mengklaim…",
@@ -147,8 +148,7 @@ export const settings = {
       closedHint: "Domain itu tidak membuka apa pun. Undangan tetap berlaku.",
     },
     listTitle: "Domain",
-    empty:
-      "Belum ada domain yang diklaim. Tidak ada yang menemukan ruang kerja ini lewat emailnya.",
+    empty: "Belum ada domain yang diklaim. Tidak ada yang menemukan organisasi ini lewat emailnya.",
   },
   organization: {
     title: "Organisasi",
@@ -157,18 +157,18 @@ export const settings = {
     changeLogo: "Ganti logo",
     addLogo: "Tambah logo",
     logoFormats:
-      "PNG, JPEG, atau WebP. Dikecilkan ke 128px. Logo ini muncul di pemilih ruang kerja.",
-    unreadable: "Gambar itu tidak bisa dibaca.",
+      "PNG, JPEG, atau WebP. absqir mengecilkannya untuk Anda. Logo ini muncul di pemilih organisasi.",
+    unreadable: "absqir tidak bisa membaca gambar itu. Coba gambar lain.",
     started: "Dimulai {{date}}",
-    nameRow: "Nama dan slug",
+    nameRow: "Nama dan nama pendek",
     nameHintEditable:
       "Nama yang dibaca orang, dan kata pendek yang menyebut organisasi ini di tempat lain.",
     nameHintReadOnly: "Hanya pemilik dan admin yang bisa mengubah ini.",
-    slug: "Slug",
-    slugHint: "Operator menyebut organisasi ini lewat slug: absqir member add --org <slug>.",
+    slug: "Nama pendek",
+    slugHint:
+      "Baris perintah memakai ini untuk menyebut organisasi: absqir member add --org <slug>.",
     id: "ID organisasi",
-    idHint:
-      "Sebutan API dan basis data untuk organisasi ini. Sertakan saat Anda melaporkan masalah.",
+    idHint: "Sebutan internal absqir untuk organisasi ini. Sertakan saat Anda melaporkan masalah.",
     glance: "Sekilas",
     glanceDescription: "Seberapa besar organisasi ini sekarang.",
     counts: {
@@ -185,19 +185,19 @@ export const settings = {
       title: "Hapus organisasi ini",
       ownerOnly: "Hanya pemilik yang bisa menghapus organisasi.",
       description:
-        "Direktori, grup, acara, dan setiap catatan kehadiran ikut hilang. Anggota tetap punya akun dan kembali ke ruang tunggu.",
+        "Direktori, grup, acara, dan setiap catatan kehadiran ikut hilang. Anggota tetap punya akun, tetapi tidak lagi tergabung di organisasi mana pun.",
       button: "Hapus organisasi",
       confirmTitle: "Hapus {{name}}?",
-      confirmDescription: "Salin slug di bawah untuk lanjut.",
-      phraseLabel: "slug organisasi",
+      confirmDescription: "Salin nama pendek di bawah untuk lanjut.",
+      phraseLabel: "nama pendek organisasi",
       continue: "Lanjut",
-      lastWord: "Kata terakhir",
+      lastWord: "Langkah terakhir",
       lastWordDescription:
         "Tekan tombolnya dan {{name}} hilang. Tidak ada yang bisa mengembalikannya.",
       deleteForever: "Hapus selamanya",
       losing:
         "Direktori, grup, acara, dan setiap catatan kehadiran dihapus. Tidak ada laporan acara lampau yang tersisa.",
-      keeping: "Anggota tetap punya akunnya, dan kembali ke ruang tunggu.",
+      keeping: "Anggota tetap punya akunnya, tetapi tidak lagi tergabung di organisasi mana pun.",
     },
   },
   preferences: {
@@ -215,7 +215,7 @@ export const settings = {
     },
     animation: "Animasi",
     animationHint:
-      "Mati menghentikan setiap transisi, popup, dan gerak halaman. Ikuti perangkat menghormati pengaturan kurangi gerak di sistem operasi.",
+      "Mati menghentikan setiap transisi, popup, dan gerak halaman. Ikuti perangkat akan mengikuti pengaturan kurangi gerak di sistem operasi Anda.",
     motions: {
       system: "Ikuti perangkat",
       on: "Nyala",

@@ -1,4 +1,5 @@
 import { organizationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { A } from "@mobily/ts-belt";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
@@ -10,6 +11,7 @@ export interface UseMembersOptions {
 
 /** The accounts in the active organization, with their roles. */
 export function useMembers(options?: UseMembersOptions) {
+  const t = useTranslate();
   return useQuery({
     queryKey: organizationKeys.members(),
     enabled: options?.enabled ?? true,
@@ -20,7 +22,7 @@ export function useMembers(options?: UseMembersOptions) {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Could not load the members.");
+        throw new Error(error?.message ?? t("errors:couldNotLoadMembers"));
       }
 
       return data.members;
@@ -32,6 +34,7 @@ export type Member = NonNullable<ReturnType<typeof useMembers>["data"]>[number];
 
 /** Pending invitations of the active organization. */
 export function useInvitations() {
+  const t = useTranslate();
   return useQuery({
     queryKey: organizationKeys.invitations(),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -40,7 +43,7 @@ export function useInvitations() {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Could not load the invitations.");
+        throw new Error(error?.message ?? t("errors:couldNotLoadInvitations"));
       }
 
       const now = Date.now();
@@ -57,6 +60,7 @@ export type Invitation = NonNullable<ReturnType<typeof useInvitations>["data"]>[
 
 /** One invitation by id, for the accept page. Works signed out. */
 export function useInvitation(id: string) {
+  const t = useTranslate();
   return useQuery({
     queryKey: organizationKeys.invitation(id),
     retry: false,
@@ -67,7 +71,7 @@ export function useInvitation(id: string) {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "This invitation does not exist, or it expired.");
+        throw new Error(error?.message ?? t("errors:invitationMissing"));
       }
 
       return data;

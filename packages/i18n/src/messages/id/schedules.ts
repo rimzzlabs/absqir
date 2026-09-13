@@ -1,8 +1,8 @@
-/** Jadwal: aturan yang membuat acara dengan sendirinya. */
+/** Jadwal: aturan yang membuat acara secara otomatis. */
 export const schedules = {
   title: "Jadwal",
   description:
-    "Aturan yang membuat acara sendiri. Tiap jadwal membuat acara dua minggu ke depan, terus-menerus.",
+    "Aturan yang membuat acara secara otomatis. Tiap jadwal membuat acara dua minggu ke depan, terus-menerus.",
   new: "Jadwal baru",
   paused: "Dijeda",
   emptyTitle: "Belum ada jadwal",
@@ -31,7 +31,7 @@ export const schedules = {
     editTitle: "Ubah jadwal",
     newTitle: "Jadwal baru",
     description:
-      "Aturan yang membuat acara sendiri, dua minggu ke depan. Waktunya memakai {{timezone}}.",
+      "Aturan yang membuat acara secara otomatis, dua minggu ke depan. Waktunya memakai {{timezone}}.",
     title: "Judul",
     titlePlaceholder: "Sif pagi",
     repeats: "Pengulangan",
@@ -48,7 +48,7 @@ export const schedules = {
     noEnd: "Tanpa akhir",
     expectedGroups: "Grup yang diharapkan",
     active: "Aktif",
-    walkIns: "Izinkan tamu tanpa daftar",
+    walkIns: "Izinkan orang di luar daftar",
     create: "Buat",
   },
 } as const;

@@ -1,7 +1,7 @@
 /** Halaman depan: satu untuk penyelenggara, satu untuk anggota, satu untuk yang belum punya organisasi. */
 export const home = {
   hello: "Halo, {{name}}",
-  fallbackDescription: "Keadaan organisasi hari ini.",
+  fallbackDescription: "Bagaimana keadaan organisasi Anda hari ini.",
   groups_one: "{{count, number}} grup",
   groups_other: "{{count, number}} grup",
   accounts_one: "{{count, number}} akun",
@@ -12,12 +12,12 @@ export const home = {
   stats: {
     events: "Acara",
     eventsHint: "{{count, number}} sudah ditutup",
-    people: "Orang yang terlihat",
+    people: "Orang yang terhitung",
     peopleHint: "Dalam 30 hari terakhir",
     attendance: "Kehadiran",
-    attendanceHint: "Hadir atau terlambat, dari semua yang dinilai",
+    attendanceHint: "Hadir atau terlambat, dari semua yang dihitung",
     onTime: "Tepat waktu",
-    onTimeHint: "Dari yang datang, siapa yang mengalahkan batas terlambat",
+    onTimeHint: "Dari orang yang datang, berapa yang tepat waktu",
   },
   charts: {
     measure: "Kehadiran",
@@ -25,9 +25,9 @@ export const home = {
     empty:
       "Belum ada acara dalam 30 hari terakhir yang ditutup. Angkanya muncul saat acara ditutup.",
     byEvent: "Kehadiran per acara",
-    byEventHint: "30 hari terakhir, paling lama dulu.",
+    byEventHint: "30 hari terakhir, mulai dari yang paling awal.",
     byGroup: "Kehadiran per grup",
-    byGroupHint: "30 hari terakhir, paling rendah dulu.",
+    byGroupHint: "30 hari terakhir, kehadiran terendah dulu.",
   },
   setup: {
     title: "Siapkan {{name}}",
@@ -37,28 +37,28 @@ export const home = {
     organizers: "Undang satu dua penyelenggara",
     organizersHint: "Mereka menjalankan acara dan memindai di pintu. Admin juga mengelola orang.",
     claim: "Klaim {{domain}}",
-    claimHint: "Akun baru dari domain itu lalu menemukan ruang kerja ini sendiri.",
+    claimHint: "Akun baru dari domain itu lalu menemukan organisasi ini sendiri.",
   },
   upcoming: {
     title: "Acara berikutnya",
     empty: "Belum ada rencana. Buat satu acara, atau jadwal yang membuatnya untuk Anda.",
-    hint: "Paling dekat dulu. Yang sedang berlangsung sudah menerima check-in.",
+    hint: "Paling dekat dulu. Yang sedang berlangsung sudah bisa menerima check-in.",
     allEvents: "Semua acara",
     schedules: "Jadwal",
   },
   member: {
-    readIn: "{{organization}}. Waktu dibaca dalam",
-    deviceClock: "jam perangkat ini",
+    readIn: "{{organization}}. Waktu ditampilkan menurut",
+    deviceClock: "jam di perangkat ini",
     checkIn: "Check-in",
     runningNow: "Sedang berlangsung",
     upNext: "Berikutnya",
     nothingPlanned: "Belum ada rencana",
-    nothingExpects: "Belum ada yang menunggu Anda sekarang",
+    nothingExpects: "Belum ada acara untuk Anda saat ini",
     nothingExpectsHint:
       "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     at: "pukul {{time}}",
     opens: "Check-in dibuka {{when}}",
-    myPass: "Pas saya",
+    myPass: "QR saya",
     agenda: "Akan datang",
     agendaLoading: "Memuat hari-hari Anda…",
     agendaEmpty: "Belum ada rencana untuk Anda.",
@@ -66,11 +66,11 @@ export const home = {
     allMyEvents: "Semua acara saya",
     today: "Hari ini",
     standing: "Catatan Anda",
-    standingEmpty: "Belum ada acara tertutup yang memuat nama Anda.",
-    closedEvents_one: "Satu acara tertutup.",
-    closedEvents_other: "{{count, number}} acara tertutup.",
+    standingEmpty: "Nama Anda belum muncul di acara mana pun yang sudah ditutup.",
+    closedEvents_one: "Satu acara sudah ditutup.",
+    closedEvents_other: "{{count, number}} acara sudah ditutup.",
     history: "Riwayat",
-    rateHint: "Hadir atau terlambat, dari acara yang dihitung.",
+    rateHint: "Hadir atau terlambat, dari acara yang ikut dihitung.",
     leave: "Izin",
     leaveWaiting_one: "Satu pengajuan menunggu keputusan.",
     leaveWaiting_other: "{{count, number}} pengajuan menunggu keputusan.",
@@ -80,7 +80,7 @@ export const home = {
   },
   gettingStarted: {
     welcome: "Selamat datang, {{name}}",
-    description: "Empat langkah menuju daftar hadir pertama Anda. Sekarang Anda di langkah kedua.",
+    description: "Empat langkah menuju acara pertama Anda. Sekarang Anda di langkah kedua.",
     title: "Langkah awal",
     step: "Langkah {{done, number}} dari {{total, number}}",
     progressLabel: "{{done, number}} dari {{total, number}} langkah selesai",
@@ -90,10 +90,9 @@ export const home = {
     join: "Bergabung atau mulai organisasi",
     invite: "Undang orang yang Anda harapkan hadir",
     inviteHint:
-      "Kirimi masing-masing undangan lewat email. Mereka masuk dan direktorinya terisi sendiri.",
+      "Kirim undangan lewat email ke masing-masing orang. Mereka masuk dan direktorinya terisi sendiri.",
     firstEvent: "Jalankan acara pertama Anda",
-    firstEventHint:
-      "Kode QR di layar, pemindai di pintu, dan daftar hadirnya menulis dirinya sendiri.",
+    firstEventHint: "Kode QR di layar, pemindai di pintu, dan daftar hadirnya terisi sendiri.",
     joinHintRequest:
       "{{name}} yang memutuskan, dan absqir memberi tahu Anda begitu mereka memutuskan.",
     joinHintInvited: "Ada undangan menunggu Anda. Terima saja dan Anda masuk.",
@@ -105,7 +104,7 @@ export const home = {
     featureQr: "Check-in lewat QR",
     featureQrHint:
       "Kode di layar yang berganti setiap beberapa detik, atau pemindai di pintu untuk antrean.",
-    featureSchedules: "Jadwal yang merencanakan dirinya sendiri",
+    featureSchedules: "Jadwal yang berjalan sendiri",
     featureSchedulesHint:
       "Satu aturan membuat setiap rapat pagi Senin, sekalian mengundang seluruh grupnya.",
     featureReports: "Laporan yang bisa Anda serahkan",
@@ -118,6 +117,6 @@ export const home = {
       "Setiap akun membaca absqir dalam bahasanya sendiri. Ubah bahasa Anda di Pengaturan, Profil.",
     tipDomain:
       "Organisasi bisa mengklaim domain emailnya, supaya rekan baru menemukannya tanpa perlu diajak.",
-    openSource: "absqir bersifat sumber terbuka. Baca kodenya di GitHub.",
+    openSource: "absqir adalah perangkat lunak sumber terbuka. Baca kodenya di GitHub.",
   },
 } as const;

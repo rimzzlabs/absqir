@@ -24,7 +24,7 @@ export const email = {
     preview: "{{inviter}} mengundang Anda ke {{organization}} di absqir",
     subject: "Bergabung ke {{organization}} di absqir",
     heading: "Bergabung ke {{organization}}",
-    body: "{{inviter}} mengundang Anda ke {{organization}} sebagai {{role}}. Buka tautannya untuk menerima. Kalau Anda belum punya akun, akunnya dibuat di jalan.",
+    body: "{{inviter}} mengundang Anda ke {{organization}} sebagai {{role}}. Buka tautannya untuk menerima. Kalau Anda belum punya akun, akunnya dibuat sekalian di sana.",
     accept: "Terima undangannya",
     expiry: "Undangan ini kedaluwarsa dalam 7 hari.",
     footer:

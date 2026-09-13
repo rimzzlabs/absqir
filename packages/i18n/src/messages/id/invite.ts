@@ -2,7 +2,8 @@
 export const invite = {
   accept: {
     signedOutTitle: "Anda punya undangan",
-    signedOutDescription: "Masuk, atau buat akun Anda, lalu undangannya terbuka lagi di sisi sana.",
+    signedOutDescription:
+      "Masuk, atau buat akun Anda. Undangannya terbuka lagi begitu Anda selesai.",
     continue: "Lanjut",
     brokenTitle: "Undangan ini tidak bisa dibuka",
     brokenDescription: "Undangannya kedaluwarsa, dibatalkan, atau dikirim ke alamat email lain.",

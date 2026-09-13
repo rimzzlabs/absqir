@@ -1,4 +1,4 @@
-/** Satu pintu: email dulu, lalu kata sandi, kode, atau tanda tertutup. */
+/** Satu pintu: email dulu, lalu kata sandi, kode, atau pintu yang tertutup. */
 export const auth = {
   door: {
     signInTitle: "Masuk",
@@ -30,7 +30,7 @@ export const auth = {
   password: {
     title: "Selamat datang kembali",
     label: "Kata sandi",
-    remember: "Biarkan saya tetap masuk",
+    remember: "Tetap masuk di perangkat ini",
     signingIn: "Masuk…",
     signIn: "Masuk",
     useAnotherEmail: "Pakai email lain",
@@ -58,7 +58,7 @@ export const auth = {
     accessDenied: "Proses masuk lewat {{provider}} dibatalkan.",
     emailMismatch: "Akun {{provider}} itu memakai alamat yang berbeda dari akun ini.",
     alreadyLinked: "Akun {{provider}} itu sudah dipakai orang lain di sini.",
-    unableToLink: "absqir tidak bisa menautkan akun {{provider}} itu.",
+    unableToLink: "absqir tidak bisa menautkan akun {{provider}} itu. Coba lagi.",
     emailNotFound: "{{provider}} tidak membagikan alamat. Tambahkan satu di sana, lalu coba lagi.",
     emailNotVerified: "{{provider}} belum memverifikasi alamat itu.",
     unknown: "Proses masuk lewat {{provider}} tidak selesai. Coba lagi, atau pakai email Anda.",

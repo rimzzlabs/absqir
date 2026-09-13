@@ -2,7 +2,7 @@
 export const notifications = {
   title: "Notifikasi",
   description:
-    "Semua yang terjadi dan menyangkut Anda. Lewat email juga, kalau instance ini mengirimnya.",
+    "Semua yang terjadi dan menyangkut Anda. Lewat email juga, kalau absqir ini disiapkan untuk mengirimnya.",
   markAllRead: "Tandai semua terbaca",
   markRead: "Tandai terbaca",
   unread: "Belum dibaca",
@@ -11,6 +11,5 @@ export const notifications = {
   emptyUnreadTitle: "Tidak ada yang menunggu",
   emptyUnreadDescription: "Anda sudah membaca semuanya.",
   emptyTitle: "Belum ada apa-apa",
-  emptyDescription:
-    "Pengingat sebelum acara, pengajuan izin, dan penutupan acara mendarat di sini.",
+  emptyDescription: "Pengingat sebelum acara, pengajuan izin, dan penutupan acara muncul di sini.",
 } as const;

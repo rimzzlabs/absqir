@@ -2,7 +2,7 @@
 export const notifications = {
   title: "Notifications",
   description:
-    "Everything that happened that concerns you. Email as well, when the instance sends it.",
+    "Everything that happened that concerns you. By email too, when this absqir is set up to send it.",
   markAllRead: "Mark all read",
   markRead: "Mark read",
   unread: "Unread",

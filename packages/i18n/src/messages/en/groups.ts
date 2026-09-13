@@ -1,7 +1,7 @@
 /** Groups: who an event expects. */
 export const groups = {
   title: "Groups",
-  description: "Who is expected where. Events in the next phase invite a whole group at once.",
+  description: "Who is expected where. An event invites a whole group at once.",
   new: "New group",
   emptyTitle: "No groups yet",
   emptyDescription:

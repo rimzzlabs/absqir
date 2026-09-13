@@ -1,4 +1,5 @@
 import { authMutationKeys, sessionKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -7,6 +8,7 @@ export interface UseSignOutOptions {
 }
 
 export function useSignOut(options: UseSignOutOptions = {}) {
+  const t = useTranslate();
   const queryClient = useQueryClient();
   const redirectTo = options.redirectTo ?? "/sign-in";
 
@@ -16,7 +18,7 @@ export function useSignOut(options: UseSignOutOptions = {}) {
       const { error } = await authClient.signOut();
 
       if (error) {
-        throw new Error(error.message ?? "Could not sign out.");
+        throw new Error(error.message ?? t("errors:couldNotSignOut"));
       }
     },
     onSuccess: () => {

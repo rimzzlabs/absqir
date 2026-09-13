@@ -1,15 +1,17 @@
 import { organizationMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
 export function useSetActiveOrganization() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: organizationMutationKeys.setActive(),
     mutationFn: async (organizationId: string) => {
       const { error } = await authClient.organization.setActive({ organizationId });
 
       if (error) {
-        throw new Error(error.message ?? "Could not switch organizations.");
+        throw new Error(error.message ?? t("errors:couldNotSwitchOrganizations"));
       }
     },
     onSuccess: () => {
