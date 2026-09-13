@@ -1,4 +1,5 @@
 import { authMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -11,13 +12,14 @@ export interface SendCodeInput {
 
 /** Emails a 6 digit code. Outside production the server prints it to its log. */
 export function useSendCode() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: authMutationKeys.sendCode(),
     mutationFn: async ({ email, purpose }: SendCodeInput) => {
       const { error } = await authClient.emailOtp.sendVerificationOtp({ email, type: purpose });
 
       if (error) {
-        throw new Error(error.message ?? "Could not send the code.");
+        throw new Error(error.message ?? t("errors:couldNotSendCode"));
       }
     },
   });

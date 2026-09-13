@@ -49,7 +49,7 @@ export function useScan() {
           .otherwise(() => new Error(t("errors:couldNotReadPass")));
       }
 
-      const location = await cachedLocationClaim();
+      const location = await cachedLocationClaim(t);
 
       const second = await post(eventId, { code, location });
       if (!second.ok) throw await apiError(second, t("errors:couldNotReadPass"));

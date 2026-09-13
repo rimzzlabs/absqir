@@ -150,8 +150,11 @@ export const errors = {
   domainLimit: "Satu organisasi bisa mengklaim maksimal {{count, number}} domain.",
   cannotResizePictures:
     "Peramban ini tidak bisa mengubah ukuran gambar. Coba berkas yang lebih kecil, atau peramban lain.",
-  couldNotReadPicture: "absqir tidak bisa membaca gambar itu. Coba gambar lain.",
   locationNeedsHttps: "Lokasi hanya bekerja di alamat aman, yang diawali https.",
+  cannotReportLocation:
+    "Peramban ini tidak bisa melaporkan posisinya. Minta penyelenggara mencatat kehadiran Anda.",
+  passwordSetNotSignedIn:
+    "Kata sandi baru Anda sudah tersimpan, tetapi absqir belum bisa memasukkan Anda. Masuk dengan kata sandi itu.",
   couldNotReadSession: "absqir tidak bisa membaca sesi Anda. Masuk lagi.",
   apiDidNotAnswer: "absqir tidak merespons. Periksa koneksi Anda, lalu coba lagi.",
   invitationMissing: "Undangan ini tidak ada, atau sudah kedaluwarsa.",

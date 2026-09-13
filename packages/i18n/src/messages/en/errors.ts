@@ -139,8 +139,11 @@ export const errors = {
   domainLimit: "An organization can claim {{count, number}} domains at most.",
   cannotResizePictures:
     "This browser cannot resize pictures. Try a smaller file, or another browser.",
-  couldNotReadPicture: "absqir could not read that picture. Try another one.",
   locationNeedsHttps: "Location only works on a secure address, one that starts with https.",
+  cannotReportLocation:
+    "This browser cannot report where it is. Ask the organizer to check you in.",
+  passwordSetNotSignedIn:
+    "Your new password is saved, but absqir could not sign you in. Sign in with it.",
   couldNotReadSession: "absqir could not read your sign-in. Sign in again.",
   apiDidNotAnswer: "absqir is not responding. Check your connection, then try again.",
   invitationMissing: "This invitation does not exist, or it has expired.",

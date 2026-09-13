@@ -1,4 +1,5 @@
 import { authMutationKeys, sessionKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -16,6 +17,7 @@ export interface UseVerifyCodeOptions {
  * account, which then lands on onboarding.
  */
 export function useVerifyCode(options: UseVerifyCodeOptions = {}) {
+  const t = useTranslate();
   const queryClient = useQueryClient();
   const redirectTo = options.redirectTo ?? "/";
 
@@ -25,7 +27,7 @@ export function useVerifyCode(options: UseVerifyCodeOptions = {}) {
       const { error } = await authClient.signIn.emailOtp({ email, otp: code });
 
       if (error) {
-        throw new Error(error.message ?? "That code did not match.");
+        throw new Error(error.message ?? t("errors:codeDidNotMatch"));
       }
     },
     onSuccess: async () => {

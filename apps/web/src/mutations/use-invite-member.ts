@@ -1,4 +1,5 @@
 import { organizationKeys, organizationMutationKeys, peopleKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -8,6 +9,7 @@ export interface InviteMemberInput {
 }
 
 export function useInviteMember() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -21,7 +23,7 @@ export function useInviteMember() {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? "Could not send the invitation.");
+        throw new Error(error?.message ?? t("errors:couldNotSendInvitation"));
       }
 
       return data;

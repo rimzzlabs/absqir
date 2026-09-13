@@ -43,7 +43,7 @@ export function useDeleteAccount() {
       }
 
       if (error) {
-        throw new Error(error.message ?? "Could not delete the account.");
+        throw new Error(error.message ?? t("errors:couldNotDeleteAccount"));
       }
     },
     onSuccess: () => {

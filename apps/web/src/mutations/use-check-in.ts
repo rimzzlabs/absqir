@@ -1,4 +1,5 @@
 import { eventKeys, eventMutationKeys, myKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -95,8 +96,6 @@ async function post(eventId: string, body: CheckInBody) {
   return api.events[":id"]["check-in"].$post({ param: { id: eventId }, json: body });
 }
 
-const FALLBACK = "Could not check you in.";
-
 /**
  * The member's own check-in, from the link the room screen carries.
  *
@@ -106,6 +105,7 @@ const FALLBACK = "Could not check you in.";
  * again. Nothing is collected that an event did not ask for.
  */
 export function useCheckIn() {
+  const t = useTranslate();
   const queryClient = useQueryClient();
   const [stage, setStage] = useState<CheckInStage>("idle");
 
@@ -124,14 +124,15 @@ export function useCheckIn() {
       // same device again in the same spot gives the same answer.
       const wantsLocation = first.status === 409 && refusalOf(body)?.verdict === "missing";
 
-      if (!wantsLocation) throw failureFrom(body, first.status, FALLBACK);
+      if (!wantsLocation) throw failureFrom(body, first.status, t("errors:couldNotCheckYouIn"));
 
       setStage("locating");
-      const location = await collectLocationClaim();
+      const location = await collectLocationClaim(t);
 
       setStage("checking");
       const second = await post(eventId, { token, location });
-      if (!second.ok) throw failureFrom(await readBody(second), second.status, FALLBACK);
+      if (!second.ok)
+        throw failureFrom(await readBody(second), second.status, t("errors:couldNotCheckYouIn"));
 
       return await second.json();
     },

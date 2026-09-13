@@ -1,4 +1,5 @@
 import { organizationMutationKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { useMutation } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -7,13 +8,14 @@ import { authClient } from "@/lib/auth-client";
  * waiting room, so the page is replaced rather than refreshed.
  */
 export function useLeaveOrganization() {
+  const t = useTranslate();
   return useMutation({
     mutationKey: organizationMutationKeys.leave(),
     mutationFn: async (organizationId: string) => {
       const { error } = await authClient.organization.leave({ organizationId });
 
       if (error) {
-        throw new Error(error.message ?? "Could not leave the organization.");
+        throw new Error(error.message ?? t("errors:couldNotLeaveOrganization"));
       }
     },
     onSuccess: () => {

@@ -1,4 +1,5 @@
 import { sessionKeys } from "@absqir/core/query-keys";
+import { useTranslate } from "@absqir/i18n/react";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 
@@ -10,6 +11,7 @@ const REFETCH_MS = 4 * 60 * 1000;
  * tab keeps the rolling session alive on its own.
  */
 export function useSession() {
+  const t = useTranslate();
   return useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async (ctx: QueryFunctionContext) => {
@@ -18,7 +20,7 @@ export function useSession() {
       });
 
       if (error) {
-        throw new Error(error.message ?? "Could not read the session.");
+        throw new Error(error.message ?? t("errors:couldNotReadSession"));
       }
 
       return data;
