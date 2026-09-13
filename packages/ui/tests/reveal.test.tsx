@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { match } from "ts-pattern";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Reveal } from "#src/components/reveal";
 
@@ -6,7 +7,9 @@ function setReducedMotion(reduced: boolean) {
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => ({
-      matches: query.includes("prefers-reduced-motion") ? reduced : false,
+      matches: match(query.includes("prefers-reduced-motion"))
+        .with(true, () => reduced)
+        .otherwise(() => false as const),
       media: query,
       onchange: null,
       addEventListener: vi.fn(),

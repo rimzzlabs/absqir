@@ -5,6 +5,7 @@ import { cn } from "cn";
 import * as React from "react";
 import type { TooltipValueType } from "recharts";
 import * as RechartsPrimitive from "recharts";
+import { match, P } from "ts-pattern";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -97,7 +98,9 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${A.map(colorConfig, ([key, itemConfig]) => {
   const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ?? itemConfig.color;
-  return color ? `  --color-${key}: ${color};` : null;
+  return match(color)
+    .with(P.string.minLength(1), (color) => `  --color-${key}: ${color};`)
+    .otherwise(() => null);
 }).join("\n")}
 }
 `,
@@ -145,8 +148,12 @@ function ChartTooltipContent({
     const [item] = payload;
     const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const value =
-      !labelKey && typeof label === "string" ? (config[label]?.label ?? label) : itemConfig?.label;
+    const value = match({ labelKey, label })
+      .with(
+        { labelKey: P.union(P.nullish, ""), label: P.string },
+        ({ label }) => config[label]?.label ?? label,
+      )
+      .otherwise(() => itemConfig?.label);
 
     if (labelFormatter) {
       return (
@@ -175,7 +182,9 @@ function ChartTooltipContent({
         className,
       )}
     >
-      {!nestLabel ? tooltipLabel : null}
+      {match(nestLabel)
+        .with(true, () => null)
+        .otherwise(() => tooltipLabel)}
       <div className="grid gap-1.5">
         {A.mapWithIndex(shown, (index, item) => {
           const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
@@ -190,56 +199,59 @@ function ChartTooltipContent({
                 indicator === "dot" && "items-center",
               )}
             >
-              {formatter && item?.value !== undefined && item.name ? (
-                formatter(item.value, item.name, item, index, item.payload)
-              ) : (
-                <>
-                  {itemConfig?.icon ? (
-                    <itemConfig.icon />
-                  ) : (
-                    !hideIndicator && (
-                      <div
-                        className={cn(
-                          "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                          {
-                            "h-2.5 w-2.5": indicator === "dot",
-                            "w-1": indicator === "line",
-                            "w-0 border-[1.5px] border-dashed bg-transparent":
-                              indicator === "dashed",
-                            "my-0.5": nestLabel && indicator === "dashed",
-                          },
-                        )}
-                        style={
-                          {
-                            "--color-bg": indicatorColor,
-                            "--color-border": indicatorColor,
-                          } as React.CSSProperties
-                        }
-                      />
-                    )
-                  )}
-                  <div
-                    className={cn(
-                      "flex flex-1 justify-between leading-none",
-                      nestLabel ? "items-end" : "items-center",
+              {match({ formatter, value: item?.value, name: item?.name })
+                .with(
+                  { formatter: P.nonNullable, value: P.nonNullable, name: P.nonNullable },
+                  ({ formatter, value, name }) => formatter(value, name, item, index, item.payload),
+                )
+                .otherwise(() => (
+                  <>
+                    {itemConfig?.icon ? (
+                      <itemConfig.icon />
+                    ) : (
+                      !hideIndicator && (
+                        <div
+                          className={cn(
+                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                            {
+                              "h-2.5 w-2.5": indicator === "dot",
+                              "w-1": indicator === "line",
+                              "w-0 border-[1.5px] border-dashed bg-transparent":
+                                indicator === "dashed",
+                              "my-0.5": nestLabel && indicator === "dashed",
+                            },
+                          )}
+                          style={
+                            {
+                              "--color-bg": indicatorColor,
+                              "--color-border": indicatorColor,
+                            } as React.CSSProperties
+                          }
+                        />
+                      )
                     )}
-                  >
-                    <div className="grid gap-1.5">
-                      {nestLabel ? tooltipLabel : null}
-                      <span className="text-muted-foreground">
-                        {itemConfig?.label ?? item.name}
-                      </span>
+                    <div
+                      className={cn(
+                        "flex flex-1 justify-between leading-none",
+                        nestLabel ? "items-end" : "items-center",
+                      )}
+                    >
+                      <div className="grid gap-1.5">
+                        {nestLabel ? tooltipLabel : null}
+                        <span className="text-muted-foreground">
+                          {itemConfig?.label ?? item.name}
+                        </span>
+                      </div>
+                      {item.value != null && (
+                        <span className="font-mono font-medium text-foreground tabular-nums">
+                          {typeof item.value === "number"
+                            ? item.value.toLocaleString()
+                            : String(item.value)}
+                        </span>
+                      )}
                     </div>
-                    {item.value != null && (
-                      <span className="font-mono font-medium text-foreground tabular-nums">
-                        {typeof item.value === "number"
-                          ? item.value.toLocaleString()
-                          : String(item.value)}
-                      </span>
-                    )}
-                  </div>
-                </>
-              )}
+                  </>
+                ))}
             </div>
           );
         })}
@@ -272,7 +284,9 @@ function ChartLegendContent({
     <div
       className={cn(
         "flex items-center justify-center gap-4",
-        verticalAlign === "top" ? "pb-3" : "pt-3",
+        match(verticalAlign)
+          .with("top", () => "pb-3" as const)
+          .otherwise(() => "pt-3" as const),
         className,
       )}
     >
@@ -287,16 +301,16 @@ function ChartLegendContent({
               "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
             )}
           >
-            {itemConfig?.icon && !hideIcon ? (
-              <itemConfig.icon />
-            ) : (
-              <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{
-                  backgroundColor: item.color,
-                }}
-              />
-            )}
+            {match({ icon: itemConfig?.icon, hideIcon })
+              .with({ icon: P.nonNullable, hideIcon: false }, ({ icon: Icon }) => <Icon />)
+              .otherwise(() => (
+                <div
+                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  style={{
+                    backgroundColor: item.color,
+                  }}
+                />
+              ))}
             {itemConfig?.label}
           </div>
         );
@@ -310,10 +324,13 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
     return undefined;
   }
 
-  const payloadPayload =
-    "payload" in payload && typeof payload.payload === "object" && payload.payload !== null
-      ? payload.payload
-      : undefined;
+  const payloadPayload = match(payload)
+    .when(
+      (it): it is { payload: object } =>
+        "payload" in it && typeof it.payload === "object" && it.payload !== null,
+      (it) => it.payload,
+    )
+    .otherwise(() => undefined);
 
   let configLabelKey: string = key;
 
@@ -327,7 +344,9 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
     configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key];
+  return match(configLabelKey in config)
+    .with(true, () => config[configLabelKey])
+    .otherwise(() => config[key]);
 }
 
 /**

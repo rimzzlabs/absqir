@@ -95,7 +95,10 @@ function narrowingOf(cond, src) {
 
   const litSide = isLiteralOperand(l) ? l : isLiteralOperand(r) ? r : null;
   const other = litSide === l ? r : l;
-  if (litSide && !ts.isTypeOfExpression(other)) {
+  // A loose comparison against a literal coerces, which a pattern does not.
+  const strict = cond.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ||
+    cond.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken;
+  if (litSide && strict && !ts.isTypeOfExpression(other)) {
     return { subject: other, pattern: litSide.getText(src), on };
   }
 
@@ -136,7 +139,8 @@ function rebind(branch, condText, bind, src) {
 /** Contextual literal unions widen inside an arrow, so literal branches keep `as const`. */
 function needsConst(node, checker) {
   const ctx = checker.getContextualType(node);
-  if (!ctx) return false;
+  // With no contextual type the branches widen, and a plain `const` loses the union.
+  if (!ctx) return true;
   const parts = ctx.isUnion() ? ctx.types : [ctx];
   return parts.some((t) => t.isLiteral() || t.flags & ts.TypeFlags.BooleanLiteral);
 }

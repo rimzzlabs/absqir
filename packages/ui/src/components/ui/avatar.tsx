@@ -2,6 +2,7 @@ import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { A } from "@mobily/ts-belt";
 import { cn } from "cn";
 import type * as React from "react";
+import { match, P } from "ts-pattern";
 
 function Avatar({
   className,
@@ -68,10 +69,17 @@ function AvatarFallback({
       data-slot="avatar-fallback"
       className={cn(
         "flex size-full items-center justify-center rounded-full text-sm font-medium group-data-[size=sm]/avatar:text-xs",
-        name ? TINTED : "bg-muted text-muted-foreground",
+        match(name)
+          .with(P.string.minLength(1), () => TINTED)
+          .otherwise(() => "bg-muted text-muted-foreground" as const),
         className,
       )}
-      style={name ? ({ ...style, "--avatar-hue": hueOf(name) } as React.CSSProperties) : style}
+      style={match(name)
+        .with(
+          P.string.minLength(1),
+          (name) => ({ ...style, "--avatar-hue": hueOf(name) }) as React.CSSProperties,
+        )
+        .otherwise(() => style)}
       {...props}
     />
   );

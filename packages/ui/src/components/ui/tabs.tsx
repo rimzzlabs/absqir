@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { LayoutGroup, motion } from "motion/react";
 import { createContext, useContext, useId } from "react";
+import { match, P } from "ts-pattern";
 
 /** Which list a trigger belongs to, so its pill slides only inside that list. */
 const TabsListContext = createContext<{ id: string; variant: "default" | "line" } | null>(null);
@@ -71,9 +72,16 @@ function ActiveMarker(props: { listId: string; variant: "default" | "line" }) {
       aria-hidden
       className={cn(
         "pointer-events-none absolute",
-        props.variant === "default"
-          ? "inset-0 rounded-md bg-background shadow-sm dark:border dark:border-input dark:bg-input/30"
-          : "bg-foreground group-data-horizontal/tabs:inset-x-0 group-data-horizontal/tabs:bottom-[-5px] group-data-horizontal/tabs:h-0.5 group-data-vertical/tabs:inset-y-0 group-data-vertical/tabs:-right-1 group-data-vertical/tabs:w-0.5",
+        match(props.variant)
+          .with(
+            "default",
+            () =>
+              "inset-0 rounded-md bg-background shadow-sm dark:border dark:border-input dark:bg-input/30" as const,
+          )
+          .otherwise(
+            () =>
+              "bg-foreground group-data-horizontal/tabs:inset-x-0 group-data-horizontal/tabs:bottom-[-5px] group-data-horizontal/tabs:h-0.5 group-data-vertical/tabs:inset-y-0 group-data-vertical/tabs:-right-1 group-data-vertical/tabs:w-0.5" as const,
+          ),
       )}
     />
   );
@@ -92,7 +100,11 @@ function TabsTrigger({ className, children, ...props }: TabsPrimitive.Tab.Props)
       {...props}
       render={(renderProps, state) => (
         <button {...renderProps}>
-          {state.active && list ? <ActiveMarker listId={list.id} variant={list.variant} /> : null}
+          {match({ active: state.active, list })
+            .with({ active: true, list: P.nonNullable }, ({ list }) => (
+              <ActiveMarker listId={list.id} variant={list.variant} />
+            ))
+            .otherwise(() => null)}
           <span className="relative z-10 inline-flex items-center gap-1.5">{children}</span>
         </button>
       )}
