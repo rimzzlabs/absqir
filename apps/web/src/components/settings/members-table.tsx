@@ -12,7 +12,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { type DataColumn, DataTable } from "@absqir/ui/data-table";
+import { Input } from "@absqir/ui/input";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { A } from "@mobily/ts-belt";
 import { TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -23,7 +25,9 @@ import { initialsOf } from "@/lib/avatar";
 import type { InvitableRole } from "@/lib/directory-schemas";
 import { useRemoveMember } from "@/mutations/use-remove-member";
 import { useUpdateMemberRole } from "@/mutations/use-update-member-role";
+import { useUpdatePerson } from "@/mutations/use-update-person";
 import { type Member, useMembers } from "@/queries/use-members";
+import { usePeople } from "@/queries/use-people";
 
 export interface MembersTableProps {
   role: RoleName;
@@ -56,6 +60,43 @@ function Identity(props: { member: Member; isSelf: boolean }) {
         </p>
         <p className="text-muted-foreground truncate text-xs">{member.user.email}</p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The employee or member number, from the directory row behind the account.
+ * The event register, the reports, and the group picker all read it, so an
+ * admin needs one place to set it. Saving happens on blur, and the refreshed
+ * value remounts the field through the key.
+ */
+function IdentifierField(props: { personId: string; value: string | null; name: string }) {
+  const [draft, setDraft] = useState(props.value ?? "");
+  const save = useUpdatePerson();
+
+  const commit = () => {
+    const next = draft.trim();
+    if (next === (props.value ?? "")) return;
+
+    save.mutate({ id: props.personId, identifier: next || null });
+  };
+
+  return (
+    <div className="w-36 max-w-full">
+      <Input
+        value={draft}
+        aria-label={`Identifier for ${props.name}`}
+        placeholder="—"
+        autoComplete="off"
+        className="font-mono text-xs"
+        disabled={save.isPending}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") event.currentTarget.blur();
+        }}
+      />
+      <FormError error={save.error} />
     </div>
   );
 }
@@ -131,7 +172,17 @@ function RemoveAction(props: { member: Member }) {
 
 export function MembersTable(props: MembersTableProps) {
   const members = useMembers();
+  const people = usePeople();
   const grantsOwner = canGrantOwner(props.role);
+
+  // Every member is also a person. The directory row carries the identifier.
+  const directory = new Map(
+    A.flatMap(people.data ?? [], (person) =>
+      match(person.userId)
+        .with(P.string, (userId) => [[userId, person] as const])
+        .otherwise(() => []),
+    ),
+  );
 
   const isSelf = (member: Member) => member.userId === props.currentUserId;
   const canChange = (member: Member) =>
@@ -143,6 +194,21 @@ export function MembersTable(props: MembersTableProps) {
       header: "Account",
       place: "primary",
       cell: (member) => <Identity member={member} isSelf={isSelf(member)} />,
+    },
+    {
+      key: "identifier",
+      header: "Identifier",
+      cell: (member) =>
+        match(directory.get(member.userId))
+          .with(P.nullish, () => <span className="text-muted-foreground">—</span>)
+          .otherwise((person) => (
+            <IdentifierField
+              key={person.identifier ?? ""}
+              personId={person.id}
+              value={person.identifier}
+              name={member.user.name}
+            />
+          )),
     },
     {
       key: "role",

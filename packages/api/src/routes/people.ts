@@ -447,7 +447,11 @@ export const peopleRoutes = app
 
     const found = await findPerson(c.var.db, organizationId, id);
     if (!found) return c.json({ error: "Not found" }, 404);
-    if (isCaller(c, found)) return c.json({ error: OWN_ROW_MESSAGE }, 403);
+
+    // The account owns its name and its email, so settings changes those. The
+    // identifier belongs to the directory, and the reader may set their own.
+    const accountFields = body.name !== undefined || body.email !== undefined;
+    if (accountFields && isCaller(c, found)) return c.json({ error: OWN_ROW_MESSAGE }, 403);
 
     try {
       const [updated] = await c.var.db
