@@ -43,6 +43,10 @@
     "./attendance-series": {
       "development": "./src/attendance-series.ts",
       "default": "./dist/attendance-series.js"
+    },
+    "./member-access": {
+      "development": "./src/member-access.ts",
+      "default": "./dist/member-access.js"
     }
   },
   "imports": {

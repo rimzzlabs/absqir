@@ -24,6 +24,8 @@ const personSchema = z.object({
   identifier: z.string().nullable(),
   /** Set once the person has an account in this organization. */
   userId: z.string().nullable(),
+  /** The membership behind the account. Needed to change the role or revoke access. */
+  memberId: z.string().nullable(),
   role: roleSchema.nullable(),
   /** A pending invitation waits for this email. */
   invited: z.boolean(),
@@ -228,7 +230,8 @@ function isUniqueViolation(error: unknown) {
 }
 
 interface Decorations {
-  roles: Map<string, string>;
+  /** By user id: the membership row that carries the role. */
+  members: Map<string, { id: string; role: string }>;
   invited: Set<string>;
   groups: Map<string, { id: string; name: string }[]>;
 }
@@ -254,7 +257,7 @@ async function decorate(
     match(userIds.length > 0)
       .with(true, () =>
         db
-          .select({ userId: member.userId, role: member.role })
+          .select({ id: member.id, userId: member.userId, role: member.role })
           .from(member)
           .where(and(eq(member.organizationId, organizationId), inArray(member.userId, userIds))),
       )
@@ -294,17 +297,17 @@ async function decorate(
   }
 
   return {
-    roles: new Map(A.map(members, (row) => [row.userId, row.role])),
+    members: new Map(A.map(members, (row) => [row.userId, { id: row.id, role: row.role }])),
     invited: new Set(A.map(invitations, (row) => row.email)),
     groups,
   };
 }
 
 function toJson(row: PersonRow, extra: Decorations) {
-  const rawRole = match(row.userId)
-    .with(P.string.minLength(1), (userId) => extra.roles.get(userId))
+  const membership = match(row.userId)
+    .with(P.string.minLength(1), (userId) => extra.members.get(userId))
     .otherwise(() => undefined);
-  const role = match(rawRole)
+  const role = match(membership?.role)
     .with(P.when(isRoleName), (name) => name)
     .otherwise(() => null);
 
@@ -314,6 +317,7 @@ function toJson(row: PersonRow, extra: Decorations) {
     email: row.email ?? null,
     identifier: row.identifier ?? null,
     userId: row.userId ?? null,
+    memberId: membership?.id ?? null,
     role,
     invited: match(row.email)
       .with(P.string.minLength(1), (email) => extra.invited.has(email))

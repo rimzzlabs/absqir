@@ -17,12 +17,13 @@ import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useDeferredValue, useState } from "react";
 import { match, P } from "ts-pattern";
 import { ImportDialog } from "@/components/people/import-dialog";
+import { PersonAccessCell } from "@/components/people/person-access-cell";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { PersonRowActions } from "@/components/people/person-row-actions";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
-import { RoleBadge, type RoleName } from "@/components/shared/role-badge";
+import type { RoleName } from "@/components/shared/role-badge";
 import { type Person, usePeople } from "@/queries/use-people";
 
 export interface PeoplePageProps {
@@ -38,16 +39,6 @@ export interface PeoplePageProps {
  */
 function isSelf(person: Person, currentUserId: string | null) {
   return currentUserId !== null && person.userId === currentUserId;
-}
-
-function StatusBadge(props: { person: Person }) {
-  const { person } = props;
-
-  if (person.role) return <RoleBadge role={person.role} />;
-  if (person.invited) return <Badge variant="secondary">Invited</Badge>;
-  if (person.email) return <Badge variant="outline">Not invited</Badge>;
-
-  return <Badge variant="outline">No email</Badge>;
 }
 
 function NameCell(props: { person: Person; self: boolean }) {
@@ -77,22 +68,33 @@ function GroupsCell(props: { person: Person }) {
   );
 }
 
-function actionsColumn(currentUserId: string | null): DataColumn<Person> {
+interface Viewer {
+  role: RoleName;
+  userId: string | null;
+}
+
+function actionsColumn(viewer: Viewer): DataColumn<Person> {
   return {
     key: "actions",
     place: "action",
     headClassName: "w-12",
-    cell: (person) => <PersonRowActions person={person} isSelf={isSelf(person, currentUserId)} />,
+    cell: (person) => (
+      <PersonRowActions
+        person={person}
+        viewerRole={viewer.role}
+        isSelf={isSelf(person, viewer.userId)}
+      />
+    ),
   };
 }
 
-function peopleColumns(canManage: boolean, currentUserId: string | null): DataColumn<Person>[] {
+function peopleColumns(viewer: Viewer, canManage: boolean): DataColumn<Person>[] {
   const base: DataColumn<Person>[] = [
     {
       key: "name",
       header: "Name",
       place: "primary",
-      cell: (person) => <NameCell person={person} self={isSelf(person, currentUserId)} />,
+      cell: (person) => <NameCell person={person} self={isSelf(person, viewer.userId)} />,
       cellClassName: "font-medium",
     },
     {
@@ -113,22 +115,24 @@ function peopleColumns(canManage: boolean, currentUserId: string | null): DataCo
       cell: (person) => <GroupsCell person={person} />,
     },
     {
-      key: "status",
-      header: "Status",
-      cell: (person) => <StatusBadge person={person} />,
+      key: "access",
+      header: "Access",
+      cell: (person) => (
+        <PersonAccessCell
+          person={person}
+          viewerRole={viewer.role}
+          isSelf={isSelf(person, viewer.userId)}
+        />
+      ),
     },
   ];
 
   return match(canManage)
-    .with(true, () => [...base, actionsColumn(currentUserId)])
+    .with(true, () => [...base, actionsColumn(viewer)])
     .otherwise(() => base);
 }
 
-function PeopleTable(props: {
-  rows: readonly Person[];
-  canManage: boolean;
-  currentUserId: string | null;
-}) {
+function PeopleTable(props: { rows: readonly Person[]; viewer: Viewer; canManage: boolean }) {
   if (props.rows.length === 0) {
     return (
       <Empty className="border-border rounded-xl border border-dashed py-16">
@@ -148,7 +152,7 @@ function PeopleTable(props: {
   return (
     <DataTable
       label="People in the directory"
-      columns={peopleColumns(props.canManage, props.currentUserId)}
+      columns={peopleColumns(props.viewer, props.canManage)}
       rows={props.rows}
       getKey={(person) => person.id}
     />
@@ -163,6 +167,7 @@ function PeopleBody(props: PeoplePageProps) {
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
   const canManage = props.role === "owner" || props.role === "admin";
+  const viewer: Viewer = { role: props.role, userId: props.currentUserId };
 
   const visible = (rows: readonly Person[]) =>
     match(showSelf)
@@ -173,7 +178,7 @@ function PeopleBody(props: PeoplePageProps) {
     <>
       <PageHeader
         title="People"
-        description="Everyone the organization expects to see. Members with an account can sign in and check in."
+        description="Everyone the organization expects to see, and what each one can do here."
         actions={match(canManage)
           .with(true, () => (
             <>
@@ -219,11 +224,7 @@ function PeopleBody(props: PeoplePageProps) {
         .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) => (
-          <PeopleTable
-            rows={visible(rows)}
-            canManage={canManage}
-            currentUserId={props.currentUserId}
-          />
+          <PeopleTable rows={visible(rows)} viewer={viewer} canManage={canManage} />
         ))
         .otherwise(() => null)}
 

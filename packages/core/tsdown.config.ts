@@ -12,6 +12,7 @@ export default defineConfig((options) => ({
     "src/timezone.ts",
     "src/email-domain.ts",
     "src/attendance-series.ts",
+    "src/member-access.ts",
   ],
   format: "esm",
   platform: "neutral",

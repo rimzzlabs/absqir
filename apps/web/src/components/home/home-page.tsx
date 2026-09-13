@@ -63,7 +63,7 @@ function CountLinks(props: { counts: Organization["counts"] }) {
       label: match(props.counts.members)
         .with(1, () => "1 account" as const)
         .otherwise((members) => `${members} accounts`),
-      href: "/settings?tab=members",
+      href: "/people",
     },
   ];
 
@@ -197,7 +197,7 @@ function stepsOf(organization: Organization): Step[] {
       done: counts.members > 1 || counts.pendingInvitations > 0,
       label: "Invite an organizer or two",
       hint: "They run events and scan at the door. Admins also manage people.",
-      href: "/settings?tab=members",
+      href: "/settings?tab=invitations",
     },
   ];
 }

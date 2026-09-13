@@ -1,3 +1,4 @@
+import { canDeleteFromDirectory, canManageAccess } from "@absqir/core/member-access";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,18 +22,22 @@ import {
   GearIcon,
   PaperPlaneTiltIcon,
   PencilSimpleIcon,
+  SignOutIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { match, P } from "ts-pattern";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { FormError } from "@/components/shared/form-error";
+import type { RoleName } from "@/components/shared/role-badge";
 import { useInvitePerson } from "@/mutations/use-invite-person";
+import { useRemoveMember } from "@/mutations/use-remove-member";
 import { useRemovePerson } from "@/mutations/use-remove-person";
 import type { Person } from "@/queries/use-people";
 
 export interface PersonRowActionsProps {
   person: Person;
+  viewerRole: RoleName;
   /** The row of the signed-in account. Settings owns its name and email. */
   isSelf: boolean;
 }
@@ -44,6 +49,44 @@ function Trigger(props: { name: string }) {
     >
       <DotsThreeIcon weight="bold" />
     </DropdownMenuTrigger>
+  );
+}
+
+interface ConfirmProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: ReactNode;
+  confirmLabel: string;
+  pendingLabel: string;
+  pending: boolean;
+  error: Error | null;
+  onConfirm: () => void;
+}
+
+function Confirm(props: ConfirmProps) {
+  return (
+    <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{props.title}</AlertDialogTitle>
+          <AlertDialogDescription>{props.description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <FormError error={props.error} />
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={props.pending}
+            onClick={props.onConfirm}
+          >
+            {match(props.pending)
+              .with(true, () => props.pendingLabel)
+              .otherwise(() => props.confirmLabel)}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -69,12 +112,16 @@ function SelfActions(props: { person: Person }) {
 export function PersonRowActions(props: PersonRowActionsProps) {
   const { person } = props;
   const [editing, setEditing] = useState(false);
-  const [removing, setRemoving] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const invite = useInvitePerson();
-  const remove = useRemovePerson();
+  const removeMember = useRemoveMember();
+  const removePerson = useRemovePerson();
 
+  const subject = { role: person.role, isSelf: props.isSelf };
   const canInvite = person.email !== null && person.role === null;
-  const isOwner = person.role === "owner";
+  const canRevoke = person.memberId !== null && canManageAccess(props.viewerRole, subject);
+  const canDelete = canDeleteFromDirectory(props.viewerRole, subject);
 
   if (props.isSelf) return <SelfActions person={person} />;
 
@@ -85,7 +132,7 @@ export function PersonRowActions(props: PersonRowActionsProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditing(true)}>
             <PencilSimpleIcon />
-            Edit
+            Edit details
           </DropdownMenuItem>
           {match(canInvite)
             .with(true, () => (
@@ -100,15 +147,28 @@ export function PersonRowActions(props: PersonRowActionsProps) {
               </DropdownMenuItem>
             ))
             .otherwise(() => null)}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            disabled={isOwner}
-            onClick={() => setRemoving(true)}
-          >
-            <TrashIcon />
-            Remove
-          </DropdownMenuItem>
+
+          {match(canRevoke || canDelete)
+            .with(true, () => <DropdownMenuSeparator />)
+            .otherwise(() => null)}
+
+          {match(canRevoke)
+            .with(true, () => (
+              <DropdownMenuItem variant="destructive" onClick={() => setRevoking(true)}>
+                <SignOutIcon />
+                Revoke access
+              </DropdownMenuItem>
+            ))
+            .otherwise(() => null)}
+
+          {match(canDelete)
+            .with(true, () => (
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+                <TrashIcon />
+                Delete from directory
+              </DropdownMenuItem>
+            ))
+            .otherwise(() => null)}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -116,37 +176,44 @@ export function PersonRowActions(props: PersonRowActionsProps) {
 
       <PersonDialog open={editing} onOpenChange={setEditing} person={person} />
 
-      <AlertDialog open={removing} onOpenChange={setRemoving}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove {person.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {match(person.role)
-                .with(
-                  P.string.minLength(1),
-                  () =>
-                    "This removes the directory entry and the account's membership in this organization. The account itself stays.",
-                )
-                .otherwise(
-                  () => "This removes the directory entry and any pending invitation." as const,
-                )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <FormError error={remove.error} />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={remove.isPending}
-              onClick={() => remove.mutate(person.id, { onSuccess: () => setRemoving(false) })}
-            >
-              {match(remove.isPending)
-                .with(true, () => "Removing…" as const)
-                .otherwise(() => "Remove" as const)}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Confirm
+        open={revoking}
+        onOpenChange={setRevoking}
+        title={`Revoke access for ${person.name}?`}
+        description="They can no longer sign in to this organization. They stay in the directory, so their groups and their attendance history stay with them."
+        confirmLabel="Revoke access"
+        pendingLabel="Revoking…"
+        pending={removeMember.isPending}
+        error={removeMember.error}
+        onConfirm={() =>
+          match(person.memberId)
+            .with(P.string, (memberId) =>
+              removeMember.mutate(memberId, { onSuccess: () => setRevoking(false) }),
+            )
+            .otherwise(() => setRevoking(false))
+        }
+      />
+
+      <Confirm
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={`Delete ${person.name} from the directory?`}
+        description={match(person.role)
+          .with(
+            P.nonNullable,
+            () =>
+              "This deletes the directory entry, the account's membership, and the attendance history behind the entry. The account itself stays.",
+          )
+          .otherwise(
+            () =>
+              "This deletes the directory entry, any pending invitation, and the attendance history behind the entry." as const,
+          )}
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        pending={removePerson.isPending}
+        error={removePerson.error}
+        onConfirm={() => removePerson.mutate(person.id, { onSuccess: () => setDeleting(false) })}
+      />
     </>
   );
 }
