@@ -1,4 +1,5 @@
 import { formatDate } from "@absqir/core/date";
+import { formatDistance } from "@absqir/core/geo";
 import { isRiskReason, RISK_REASON_TEXT } from "@absqir/core/location-risk";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
@@ -8,13 +9,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
 import { A } from "@mobily/ts-belt";
-import {
-  CheckCircleIcon,
-  FlagIcon,
-  MapPinIcon,
-  QrCodeIcon,
-  XCircleIcon,
-} from "@phosphor-icons/react";
+import { CheckCircleIcon, FlagIcon, WarningIcon, XCircleIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
@@ -37,58 +32,88 @@ function StatusBadge(props: { status: CheckInReport["status"] }) {
     .otherwise(() => <Badge>Waiting</Badge>);
 }
 
+/** One labelled fact. A bare number in a sentence is not readable. */
+function Fact(props: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2">
+      <dt className="text-muted-foreground">{props.label}</dt>
+      <dd>{props.children}</dd>
+    </div>
+  );
+}
+
+/** Beyond this a bad fix stops explaining the gap on its own. */
+const FAR_METERS = 1000;
+
 /**
- * What the refused attempt recorded.
+ * What the refused attempt recorded, as facts rather than prose.
  *
- * The room-screen line comes first because it settles most of these on its
- * own: the place check only runs after that code has been verified, so
- * anyone here held a live token and stood in front of the screen.
+ * The room code and the distance are both stated, and neither is dressed up
+ * as a conclusion. A live code proves the member saw the screen. A reading
+ * kilometres away says they were not there. Both cannot be true, and which
+ * one is wrong is the decision itself, so the page names the conflict and
+ * leaves it to the organizer.
  */
 function Evidence(props: { attempt: NonNullable<CheckInReport["attempt"]> }) {
   const { attempt } = props;
   const reasons = A.filter(attempt.riskReasons, isRiskReason);
+  const far = (attempt.distanceMeters ?? 0) >= FAR_METERS;
 
   return (
-    <div className="bg-muted/40 flex flex-col gap-2 rounded-lg p-3 text-sm">
-      <p className="flex items-start gap-2">
-        <QrCodeIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-        <span>
-          {match(attempt.heldRoomCode)
-            .with(true, () => (
-              <>
-                <b>Scanned the room screen.</b> The code is checked before the place is, so this
-                person was in front of the screen.
-              </>
-            ))
-            .otherwise(() => (
-              <>
-                <b>Checked in at the door.</b> The reading belongs to the organizer's scanner.
-              </>
-            ))}
-        </span>
-      </p>
+    <div className="bg-muted/40 flex flex-col gap-3 rounded-lg p-3">
+      <p className="text-muted-foreground text-xs font-medium uppercase">What was recorded</p>
 
-      <p className="text-muted-foreground flex items-start gap-2">
-        <MapPinIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-        <span>
-          {match(attempt.distance)
-            .with(P.string, (distance) => `${distance} from the place`)
-            .otherwise(() => "No usable reading")}
+      <dl className="flex flex-col gap-1.5 text-sm">
+        <Fact label="Scanned">
+          {match(attempt.heldRoomCode)
+            .with(true, () => "A live code from the room screen")
+            .otherwise(() => "A pass, read by the organizer's scanner")}
+        </Fact>
+
+        <Fact label="Distance">
+          {match(attempt.distanceMeters)
+            .with(P.number, (meters) => `${formatDistance(meters)} from the place`)
+            .otherwise(() =>
+              match(attempt.verdict)
+                .with("missing", () => "The device sent no location")
+                .with("coarse", () => "Too vague to place them")
+                .otherwise(() => "Not recorded"),
+            )}
+        </Fact>
+
+        <Fact label="Accuracy">
           {match(attempt.accuracyMeters)
-            .with(P.number, (meters) => `, accurate to about ${Math.round(meters)} m`)
-            .otherwise(() => "")}
-          {` · ${formatDate(new Date(attempt.at), "dateTime")}`}
-        </span>
-      </p>
+            .with(P.number, (meters) => `About ${Math.round(meters)} m`)
+            .otherwise(() => "Not recorded")}
+        </Fact>
+
+        <Fact label="Scanned at">{formatDate(new Date(attempt.at), "dateTime")}</Fact>
+      </dl>
+
+      {match(attempt.heldRoomCode && far)
+        .with(true, () => (
+          <p className="flex items-start gap-2 border-t pt-3 text-sm">
+            <WarningIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+            <span>
+              These two do not fit. A live code means somebody was at the screen, and a reading this
+              far away means they were not. Either the phone placed them badly, which happens
+              indoors, or the code reached somebody else.
+            </span>
+          </p>
+        ))
+        .otherwise(() => null)}
 
       {match(reasons.length)
         .with(0, () => null)
         .otherwise(() => (
-          <ul className="text-muted-foreground space-y-1 pl-6 text-xs">
-            {A.map(reasons, (reason) => (
-              <li key={reason}>{RISK_REASON_TEXT[reason]}</li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-1 border-t pt-3">
+            <p className="text-muted-foreground text-xs font-medium uppercase">Signals</p>
+            <ul className="text-muted-foreground space-y-1 text-xs">
+              {A.map(reasons, (reason) => (
+                <li key={reason}>{RISK_REASON_TEXT[reason]}</li>
+              ))}
+            </ul>
+          </div>
         ))}
     </div>
   );
@@ -102,16 +127,17 @@ function ReportCard(props: { report: CheckInReport }) {
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="font-medium">{report.person.name}</p>
+            {/* Three instants live on this card. Each one says which it is. */}
             <p className="text-muted-foreground text-sm">
-              {report.event.title} · {formatDate(new Date(report.event.startsAt), "dateTime")}
+              {report.event.title} · started{" "}
+              {formatDate(new Date(report.event.startsAt), "dateTime")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* A person who reports every event is worth noticing. */}
             {match(report.priorReports)
               .with(0, () => null)
               .otherwise((count) => (
@@ -126,22 +152,29 @@ function ReportCard(props: { report: CheckInReport }) {
           </div>
         </div>
 
-        <p className="text-sm">{report.message}</p>
+        <div className="flex flex-col gap-1">
+          <p className="text-muted-foreground text-xs font-medium uppercase">They said</p>
+          <p className="text-sm">{report.message}</p>
+        </div>
 
         {match(report.attempt)
           .with(P.nonNullable, (attempt) => <Evidence attempt={attempt} />)
-          .otherwise(() => null)}
+          .otherwise(() => (
+            <p className="text-muted-foreground text-sm">
+              The refused check-in is no longer on record, so their own words are all there is.
+            </p>
+          ))}
 
         {match(pending)
           .with(true, () => (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 border-t pt-4">
               <Textarea
                 aria-label={`Note for ${report.person.name}`}
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 rows={2}
                 maxLength={500}
-                placeholder="Optional note. The member does not see this."
+                placeholder="Optional. The member reads this with the decision."
               />
               <FormError error={decide.error} />
               <div className="flex flex-wrap gap-2">
@@ -166,19 +199,27 @@ function ReportCard(props: { report: CheckInReport }) {
                 </Button>
               </div>
               <p className="text-muted-foreground text-xs">
-                Marking them in records the time they scanned, not the time you decided.
+                Marking them in records the time they scanned, not the time you decided. Either way
+                they get a notification, and the event cannot be reported again.
               </p>
             </div>
           ))
           .otherwise(() => (
-            <p className="text-muted-foreground text-xs">
-              {match(report.decidedAt)
-                .with(P.string, (at) => `Decided ${formatDate(new Date(at), "dateTime")}`)
-                .otherwise(() => "Decided")}
+            <div className="text-muted-foreground flex flex-col gap-1 border-t pt-4 text-sm">
+              <p>
+                {match(report.status)
+                  .with("approved", () => "Marked in")
+                  .otherwise(() => "Declined")}
+                {match(report.decidedAt)
+                  .with(P.string, (at) => ` · ${formatDate(new Date(at), "dateTime")}`)
+                  .otherwise(() => "")}
+              </p>
               {match(report.decisionNote)
-                .with(P.string.minLength(1), (decisionNote) => ` · ${decisionNote}`)
-                .otherwise(() => "")}
-            </p>
+                .with(P.string.minLength(1), (decisionNote) => (
+                  <p className="border-border border-l-2 pl-3">{decisionNote}</p>
+                ))
+                .otherwise(() => null)}
+            </div>
           ))}
       </CardContent>
     </Card>

@@ -13,11 +13,16 @@ export interface CheckInInput {
 /** What the reader is waiting on. The location step is the slow one. */
 export type CheckInStage = "idle" | "checking" | "locating";
 
+/** What a member already sent about this event, so it is not offered twice. */
+export type ReportState = "pending" | "approved" | "declined";
+
 /** The fence's half of a refusal, when that is what turned the member away. */
 export interface LocationRefusal {
   verdict: "outside" | "coarse" | "missing";
   /** The attempt a report should name. */
   attemptId: string | null;
+  /** Null when this member has not reported this event yet. */
+  reportStatus: ReportState | null;
 }
 
 /**
@@ -67,6 +72,11 @@ function refusalOf(body: unknown): LocationRefusal | null {
     verdict,
     attemptId: match(body)
       .with({ location: { attemptId: P.string } }, (found) => found.location.attemptId)
+      .otherwise(() => null),
+    reportStatus: match(body)
+      .with({ location: { report: { status: "pending" } } }, () => "pending" as const)
+      .with({ location: { report: { status: "approved" } } }, () => "approved" as const)
+      .with({ location: { report: { status: "declined" } } }, () => "declined" as const)
       .otherwise(() => null),
   };
 }

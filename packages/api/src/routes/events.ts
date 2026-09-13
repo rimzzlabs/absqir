@@ -132,6 +132,12 @@ const locationResult = z.object({
   flagged: z.boolean(),
   /** The refused attempt, for a member who wants to report it. Null on success. */
   attemptId: z.string().nullable(),
+  /**
+   * The report this member already sent for this event, when there is one.
+   * The page needs it before it offers the button: one report stands per
+   * event, so offering a second only to refuse it on send is a dead end.
+   */
+  report: z.object({ status: z.enum(["pending", "approved", "declined"]) }).nullable(),
 });
 
 const checkInResult = z.object({
@@ -552,6 +558,25 @@ async function fenceColumns(
     }));
 }
 
+/** The report this person already has on this event, if any. */
+async function reportStateFor(
+  c: Parameters<typeof organizationIdOf>[0],
+  eventId: string,
+  personId: string,
+) {
+  const found = await c.var.db
+    .select({ status: schema.checkInReport.status })
+    .from(schema.checkInReport)
+    .where(
+      and(eq(schema.checkInReport.eventId, eventId), eq(schema.checkInReport.personId, personId)),
+    )
+    .limit(1);
+
+  return match(found[0])
+    .with(P.nullish, () => null)
+    .otherwise((row) => ({ status: row.status }));
+}
+
 const FORBIDDEN_MESSAGE = "This needs the organizer role or higher";
 
 const app = new OpenAPIHono<AppEnv>();
@@ -958,7 +983,10 @@ export const eventRoutes = app
     };
 
     if (!decision.accepted) {
-      const attemptId = await recordAttempt({ ...attempt, outcome: "refused" });
+      const [attemptId, report] = await Promise.all([
+        recordAttempt({ ...attempt, outcome: "refused" }),
+        reportStateFor(c, id, me.id),
+      ]);
 
       return c.json(
         {
@@ -968,6 +996,7 @@ export const eventRoutes = app
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
             attemptId,
+            report,
           },
         },
         409,
@@ -1000,6 +1029,7 @@ export const eventRoutes = app
             distanceMeters: decision.columns.distanceMeters,
             flagged: false,
             attemptId: null,
+            report: null,
           }))
           .otherwise(() => null),
       },
@@ -1119,6 +1149,7 @@ export const eventRoutes = app
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
             attemptId,
+            report: null,
           },
         },
         409,
@@ -1149,6 +1180,7 @@ export const eventRoutes = app
             distanceMeters: decision.columns.distanceMeters,
             flagged: decision.suspect,
             attemptId: null,
+            report: null,
           }))
           .otherwise(() => null),
       },

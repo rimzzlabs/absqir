@@ -141,6 +141,7 @@ function Scanner() {
                       key={refusal.attemptId ?? eventId}
                       eventId={eventId}
                       attemptId={refusal.attemptId}
+                      reportStatus={refusal.reportStatus}
                       refusal={error ?? ""}
                     />
                   ))

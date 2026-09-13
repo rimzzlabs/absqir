@@ -86,6 +86,7 @@ function CheckInBody(props: CheckInPageProps) {
               key={refusal.attemptId ?? props.eventId}
               eventId={props.eventId}
               attemptId={refusal.attemptId}
+              reportStatus={refusal.reportStatus}
               refusal={error.message}
             />
           ))

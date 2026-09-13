@@ -1,4 +1,3 @@
-import { formatDistance } from "@absqir/core/geo";
 import { isRiskReason } from "@absqir/core/location-risk";
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
@@ -46,15 +45,19 @@ const reportSchema = z.object({
   attempt: z
     .object({
       at: z.string(),
-      verdict: z.string().nullable(),
-      /** Already written for a reader: "53.8 km", "340 m". */
-      distance: z.string().nullable(),
+      verdict: z.enum(["inside", "edge", "outside", "coarse", "missing"]).nullable(),
+      /** Raw metres. The page writes them, so one formatter serves everywhere. */
+      distanceMeters: z.number().nullable(),
       accuracyMeters: z.number().nullable(),
       riskReasons: z.array(z.string()),
       /**
-       * Always true today, and stated rather than assumed. A refusal only
-       * happens after the room screen's code is checked, so reaching this
-       * point means the member held a live token from the screen itself.
+       * The member held a live code from the room screen. It is checked
+       * before the place is, so a refusal always got past it.
+       *
+       * This is a fact, not a verdict. A live code and a reading kilometres
+       * away do not fit together, and the page says so rather than deciding
+       * which half to believe: a phone can place somebody badly indoors, and
+       * a code can be passed to a friend across town.
        */
       heldRoomCode: z.boolean(),
     })
@@ -199,9 +202,7 @@ function toJson(row: Row, priorReports: number) {
       .otherwise((attempt) => ({
         at: attempt.createdAt.toISOString(),
         verdict: attempt.locationVerdict ?? null,
-        distance: match(attempt.distanceMeters)
-          .with(P.number, (meters) => formatDistance(meters))
-          .otherwise(() => null),
+        distanceMeters: attempt.distanceMeters ?? null,
         accuracyMeters: attempt.accuracyMeters ?? null,
         riskReasons: pipe(attempt.riskReasons, A.filter(isRiskReason), F.toMutable),
         heldRoomCode: attempt.method === "screen",
