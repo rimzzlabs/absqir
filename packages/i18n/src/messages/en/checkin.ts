@@ -14,7 +14,7 @@ export const checkin = {
     locatingTitle: "Finding where you are",
     locatingHint:
       "This event checks that you are at the place. Allow location, and hold still for a moment.",
-    refusedTitle: "Not checked in",
+    refusedTitle: "You are not checked in yet",
     manualLabel: "Cannot scan? Paste the link",
     manualSubmit: "Check in",
     manualHint: "The room screen prints the link under its code.",
@@ -54,9 +54,9 @@ export const checkin = {
     myPass: "My pass",
     upNext: "Up next",
     opens: "Check-in opens {{when}}",
-    emptyTitle: "Nothing expects you yet",
+    emptyTitle: "You have nothing coming up yet",
     emptyDescription: "Events appear here once an organizer plans one for a group you belong to.",
-    nothingRuns: "Nothing runs right now, so no pass works yet.",
+    nothingRuns: "No event is running right now, so no pass works yet.",
   },
   steps: {
     title: "How it works",
@@ -72,7 +72,7 @@ export const checkin = {
     title: "Your last check-ins",
     description: "Newest first.",
     history: "History",
-    empty: "No closed event has your name yet. Your first scan lands here.",
+    empty: "No closed event has your name on it yet. Your first check-in lands here.",
     inAt: " · in at {{time}}",
   },
   report: {
@@ -162,7 +162,7 @@ export const checkin = {
     wasDeclined: "Declined",
   },
   risk: {
-    "patched-api": "Something in the browser replaced the location API.",
+    "patched-api": "Something in the browser replaced the part that reports location.",
     "automated-browser": "The browser reported that a script drives it.",
     "frozen-track": "Every reading named the same spot to the half metre.",
     teleport: "Too far from the last check-in to have travelled in the time.",

@@ -14,7 +14,7 @@ export const checkin = {
     locatingTitle: "Mencari posisi Anda",
     locatingHint:
       "Acara ini memeriksa apakah Anda ada di tempatnya. Izinkan lokasi, lalu diam sebentar.",
-    refusedTitle: "Belum tercatat hadir",
+    refusedTitle: "Anda belum tercatat hadir",
     manualLabel: "Tidak bisa memindai? Tempel tautannya",
     manualSubmit: "Check-in",
     manualHint: "Layar ruangan mencetak tautannya di bawah kode.",
@@ -54,7 +54,7 @@ export const checkin = {
     myPass: "Pas saya",
     upNext: "Berikutnya",
     opens: "Check-in dibuka {{when}}",
-    emptyTitle: "Belum ada yang menunggu Anda",
+    emptyTitle: "Belum ada acara untuk Anda",
     emptyDescription: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     nothingRuns: "Tidak ada acara yang berlangsung sekarang, jadi belum ada pas yang berlaku.",
   },
@@ -74,7 +74,7 @@ export const checkin = {
     description: "Terbaru dulu.",
     history: "Riwayat",
     empty:
-      "Belum ada acara tertutup yang memuat nama Anda. Pindaian pertama Anda mendarat di sini.",
+      "Belum ada acara tertutup yang memuat nama Anda. Check-in pertama Anda akan muncul di sini.",
     inAt: " · masuk pukul {{time}}",
   },
   report: {
@@ -165,7 +165,7 @@ export const checkin = {
     wasDeclined: "Ditolak",
   },
   risk: {
-    "patched-api": "Ada yang mengganti API lokasi di peramban.",
+    "patched-api": "Ada yang mengganti bagian peramban yang melaporkan lokasi.",
     "automated-browser": "Peramban melaporkan bahwa sebuah skrip yang mengendalikannya.",
     "frozen-track": "Setiap bacaan menyebut titik yang sama sampai setengah meter.",
     teleport: "Terlalu jauh dari check-in sebelumnya untuk ditempuh dalam waktu itu.",

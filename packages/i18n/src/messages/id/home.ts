@@ -1,7 +1,7 @@
 /** Halaman depan: satu untuk penyelenggara, satu untuk anggota, satu untuk yang belum punya organisasi. */
 export const home = {
   hello: "Halo, {{name}}",
-  fallbackDescription: "Keadaan organisasi hari ini.",
+  fallbackDescription: "Bagaimana keadaan organisasi Anda hari ini.",
   groups_one: "{{count, number}} grup",
   groups_other: "{{count, number}} grup",
   accounts_one: "{{count, number}} akun",
@@ -12,12 +12,12 @@ export const home = {
   stats: {
     events: "Acara",
     eventsHint: "{{count, number}} sudah ditutup",
-    people: "Orang yang terlihat",
+    people: "Orang yang terhitung",
     peopleHint: "Dalam 30 hari terakhir",
     attendance: "Kehadiran",
-    attendanceHint: "Hadir atau terlambat, dari semua yang dinilai",
+    attendanceHint: "Hadir atau terlambat, dari semua yang dihitung",
     onTime: "Tepat waktu",
-    onTimeHint: "Dari yang datang, siapa yang mengalahkan batas terlambat",
+    onTimeHint: "Dari orang yang datang, berapa yang tepat waktu",
   },
   charts: {
     measure: "Kehadiran",
@@ -53,7 +53,7 @@ export const home = {
     runningNow: "Sedang berlangsung",
     upNext: "Berikutnya",
     nothingPlanned: "Belum ada rencana",
-    nothingExpects: "Belum ada yang menunggu Anda sekarang",
+    nothingExpects: "Belum ada acara untuk Anda saat ini",
     nothingExpectsHint:
       "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
     at: "pukul {{time}}",
@@ -66,11 +66,11 @@ export const home = {
     allMyEvents: "Semua acara saya",
     today: "Hari ini",
     standing: "Catatan Anda",
-    standingEmpty: "Belum ada acara tertutup yang memuat nama Anda.",
+    standingEmpty: "Belum ada acara tertutup yang memuat nama Anda di dalamnya.",
     closedEvents_one: "Satu acara tertutup.",
     closedEvents_other: "{{count, number}} acara tertutup.",
     history: "Riwayat",
-    rateHint: "Hadir atau terlambat, dari acara yang dihitung.",
+    rateHint: "Hadir atau terlambat, dari acara yang ikut dihitung.",
     leave: "Izin",
     leaveWaiting_one: "Satu pengajuan menunggu keputusan.",
     leaveWaiting_other: "{{count, number}} pengajuan menunggu keputusan.",

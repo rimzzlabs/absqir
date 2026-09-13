@@ -23,13 +23,14 @@ export const reports = {
   groupsLabel: "Grup",
   summary: {
     events: "Acara",
-    eventsHint: "{{count, number}} sudah ditutup, jadi baris tidak hadirnya sudah ditulis",
-    people: "Orang yang terlihat",
+    eventsHint: "{{count, number}} sudah ditutup, jadi ketidakhadirannya sudah tercatat",
+    people: "Orang yang terhitung",
     peopleHint: "{{count, number}} catatan",
     attendance: "Kehadiran",
-    attendanceHint: "Hadir atau terlambat, dari semua yang dinilai. Izin tidak dihitung.",
+    attendanceHint:
+      "Hadir atau terlambat, dari semua yang dihitung. Yang izin tidak ikut dihitung.",
     onTime: "Tepat waktu",
-    onTimeHint: "Dari orang yang datang, berapa yang mengalahkan batas terlambat.",
+    onTimeHint: "Dari orang yang datang, berapa yang tiba sebelum batas terlambat.",
     barTitle: "{{status}}: {{count, number}}",
   },
   tables: {

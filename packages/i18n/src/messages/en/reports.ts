@@ -1,7 +1,7 @@
 /** Reports: who showed up, how often, and how late. */
 export const reports = {
   title: "Reports",
-  description: "Who showed up, how often, and how late. Every table downloads as a CSV.",
+  description: "Who arrived, how often, and how late. Every table downloads as a CSV.",
   downloadCsv: "Download CSV",
   range: "{{from}} to {{to}}",
   tabs: {
@@ -22,13 +22,13 @@ export const reports = {
   groupsLabel: "Groups",
   summary: {
     events: "Events",
-    eventsHint: "{{count, number}} closed, so their absent rows are written",
-    people: "People seen",
+    eventsHint: "{{count, number}} closed, so their absences are recorded",
+    people: "People counted",
     peopleHint: "{{count, number}} records",
     attendance: "Attendance",
-    attendanceHint: "Present or late, over everyone judged. Excused is left out.",
+    attendanceHint: "Present or late, out of everyone counted. Excused people are left out.",
     onTime: "On time",
-    onTimeHint: "Of the people who turned up, how many beat the late mark.",
+    onTimeHint: "Of the people who arrived, how many arrived before the late mark.",
     barTitle: "{{status}}: {{count, number}}",
   },
   tables: {
