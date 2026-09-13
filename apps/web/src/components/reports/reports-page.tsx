@@ -66,29 +66,36 @@ function ReportsBody() {
   // to the last 30 days for whichever end is missing.
   const range = useMemo<ReportRange>(() => {
     const fallback = presetRange("30d");
-    const days =
-      preset === "custom"
-        ? {
-            from: params.from ? startOfDay(params.from) : fallback.from,
-            to: params.to ? endOfDay(params.to) : fallback.to,
-          }
-        : presetRange(preset);
+    const days = match(preset)
+      .with("custom", () => ({
+        from: match(params.from)
+          .with(P.nullish, () => fallback.from)
+          .otherwise((from) => startOfDay(from)),
+        to: match(params.to)
+          .with(P.nullish, () => fallback.to)
+          .otherwise((to) => endOfDay(to)),
+      }))
+      .otherwise((preset) => presetRange(preset));
 
     return { ...days, groupId: params.group };
   }, [preset, params.from, params.to, params.group]);
 
   const setPreset = (next: RangePreset) => {
     void setParams(
-      next === "custom"
-        ? { range: next, from: range.from, to: range.to }
-        : { range: next, from: null, to: null },
+      match(next)
+        .with("custom", (next) => ({ range: next, from: range.from, to: range.to }))
+        .otherwise((next) => ({ range: next, from: null, to: null })),
     );
   };
 
   const setRange = (next: ReportRange) => {
     void setParams({
-      from: preset === "custom" || next.from.getTime() !== range.from.getTime() ? next.from : null,
-      to: preset === "custom" || next.to.getTime() !== range.to.getTime() ? next.to : null,
+      from: match(preset === "custom" || next.from.getTime() !== range.from.getTime())
+        .with(true, () => next.from)
+        .otherwise(() => null),
+      to: match(preset === "custom" || next.to.getTime() !== range.to.getTime())
+        .with(true, () => next.to)
+        .otherwise(() => null),
       group: next.groupId,
     });
   };
@@ -145,9 +152,15 @@ function ReportsBody() {
         </TabsList>
       </Tabs>
 
-      {tab === "people" ? <PeopleReportTable query={people} /> : null}
-      {tab === "groups" ? <GroupReportTable query={byGroup} /> : null}
-      {tab === "events" ? <EventReportTable query={byEvent} /> : null}
+      {match(tab)
+        .with("people", () => <PeopleReportTable query={people} />)
+        .otherwise(() => null)}
+      {match(tab)
+        .with("groups", () => <GroupReportTable query={byGroup} />)
+        .otherwise(() => null)}
+      {match(tab)
+        .with("events", () => <EventReportTable query={byEvent} />)
+        .otherwise(() => null)}
     </>
   );
 }

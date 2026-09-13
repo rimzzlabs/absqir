@@ -1,5 +1,6 @@
 import jsQR from "jsqr";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { match, P } from "ts-pattern";
 
 export interface UseCameraOptions {
   /**
@@ -34,7 +35,9 @@ const INSECURE = "The camera needs an https address.";
 function causeOf(cause: unknown): Omit<CameraFault, "message"> & { cause: string } {
   if (!window.isSecureContext) return { kind: "insecure", cause: INSECURE };
 
-  const name = cause instanceof Error ? cause.name : "";
+  const name = match(cause)
+    .with(P.instanceOf(Error), (cause) => cause.name)
+    .otherwise(() => "" as const);
 
   if (name === "NotAllowedError") {
     return { kind: "refused", cause: "Camera access was refused." };
@@ -88,8 +91,12 @@ export function useCamera(onCode: (code: string) => void, options: UseCameraOpti
     if (!devices?.getUserMedia) {
       const secure = window.isSecureContext;
       setFault({
-        kind: secure ? "missing" : "insecure",
-        message: `${secure ? "This browser has no camera." : INSECURE} ${fallback}`,
+        kind: match(secure)
+          .with(true, () => "missing" as const)
+          .otherwise(() => "insecure" as const),
+        message: `${match(secure)
+          .with(true, () => "This browser has no camera." as const)
+          .otherwise(() => INSECURE)} ${fallback}`,
       });
       return;
     }

@@ -49,8 +49,13 @@ function GroupCards(props: { rows: readonly Group[]; onOpen: (id: string) => voi
             <CardHeader>
               <CardTitle>{group.name}</CardTitle>
               <CardDescription>
-                {group.memberCount} {group.memberCount === 1 ? "person" : "people"}
-                {group.description ? ` · ${group.description}` : ""}
+                {group.memberCount}{" "}
+                {match(group.memberCount)
+                  .with(1, () => "person" as const)
+                  .otherwise(() => "people" as const)}
+                {match(group.description)
+                  .with(P.string.minLength(1), (description) => ` · ${description}`)
+                  .otherwise(() => "" as const)}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -71,14 +76,14 @@ function GroupsBody(props: GroupsPageProps) {
       <PageHeader
         title="Groups"
         description="Who is expected where. Events in the next phase invite a whole group at once."
-        actions={
-          canManage ? (
+        actions={match(canManage)
+          .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
               New group
             </Button>
-          ) : null
-        }
+          ))
+          .otherwise(() => null)}
       />
 
       {match(groups)

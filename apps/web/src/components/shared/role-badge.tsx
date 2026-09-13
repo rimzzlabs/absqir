@@ -1,4 +1,5 @@
 import { Badge } from "@absqir/ui/badge";
+import { match } from "ts-pattern";
 
 export type RoleName = "owner" | "admin" | "organizer" | "member";
 
@@ -14,7 +15,9 @@ export interface RoleBadgeProps {
 }
 
 export function RoleBadge(props: RoleBadgeProps) {
-  const variant = props.role === "member" ? "outline" : "secondary";
+  const variant = match(props.role)
+    .with("member", () => "outline" as const)
+    .otherwise(() => "secondary" as const);
 
   return <Badge variant={variant}>{LABELS[props.role]}</Badge>;
 }

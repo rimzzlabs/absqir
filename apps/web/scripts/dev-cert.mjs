@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { networkInterfaces } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { match } from "ts-pattern";
 
 const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const certDir = join(webRoot, ".certs");
@@ -46,7 +47,9 @@ if (!existsSync(join(caRoot, "rootCA.pem"))) {
 
 // The LAN address changes with the network, so the certificate is remade when
 // the list of names no longer matches the one it was signed for.
-const signedFor = existsSync(hostsFile) ? JSON.parse(readFileSync(hostsFile, "utf8")) : null;
+const signedFor = match(existsSync(hostsFile))
+  .with(true, () => JSON.parse(readFileSync(hostsFile, "utf8")))
+  .otherwise(() => null);
 const fresh = existsSync(certFile) && existsSync(keyFile);
 const current = fresh && JSON.stringify(signedFor) === JSON.stringify(hosts);
 

@@ -1,5 +1,6 @@
 import { formatDate, formatRange } from "@absqir/core/date";
 import { Button } from "@absqir/ui/button";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { LeaveStatusBadge } from "@/components/shared/status-badge";
 import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
@@ -13,11 +14,13 @@ export interface MyLeaveCardProps {
 export function MyLeaveCard(props: MyLeaveCardProps) {
   const { request } = props;
   const withdraw = useWithdrawLeave();
-  const decidedNote = request.decidedAt ? (
-    <span className="text-muted-foreground text-xs tabular-nums">
-      Decided {formatDate(new Date(request.decidedAt), "date")}
-    </span>
-  ) : null;
+  const decidedNote = match(request.decidedAt)
+    .with(P.string.minLength(1), (decidedAt) => (
+      <span className="text-muted-foreground text-xs tabular-nums">
+        Decided {formatDate(new Date(decidedAt), "date")}
+      </span>
+    ))
+    .otherwise(() => null);
 
   return (
     <li className="bg-card text-card-foreground ring-foreground/10 flex h-full min-w-0 flex-col gap-3 rounded-xl p-4 ring-1">
@@ -37,25 +40,29 @@ export function MyLeaveCard(props: MyLeaveCardProps) {
 
       <p className="line-clamp-3 text-sm">{request.reason}</p>
 
-      {request.decisionNote ? (
-        <p className="text-muted-foreground border-border border-l-2 pl-3 text-xs">
-          {request.decisionNote}
-        </p>
-      ) : null}
+      {match(request.decisionNote)
+        .with(P.string.minLength(1), (decisionNote) => (
+          <p className="text-muted-foreground border-border border-l-2 pl-3 text-xs">
+            {decisionNote}
+          </p>
+        ))
+        .otherwise(() => null)}
 
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        {request.status === "pending" ? (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={withdraw.isPending}
-            onClick={() => withdraw.mutate(request.id)}
-          >
-            {withdraw.isPending ? "Withdrawing…" : "Withdraw"}
-          </Button>
-        ) : (
-          decidedNote
-        )}
+        {match(request.status)
+          .with("pending", () => (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={withdraw.isPending}
+              onClick={() => withdraw.mutate(request.id)}
+            >
+              {match(withdraw.isPending)
+                .with(true, () => "Withdrawing…" as const)
+                .otherwise(() => "Withdraw" as const)}
+            </Button>
+          ))
+          .otherwise(() => decidedNote)}
       </div>
       <FormError error={withdraw.error} />
     </li>

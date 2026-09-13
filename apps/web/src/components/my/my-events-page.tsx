@@ -34,12 +34,17 @@ function EventGrid(props: {
             <QrCodeIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {props.scope === "past" ? "Nothing has happened yet" : "Nothing expects you yet"}
+            {match(props.scope)
+              .with("past", () => "Nothing has happened yet" as const)
+              .otherwise(() => "Nothing expects you yet" as const)}
           </EmptyTitle>
           <EmptyDescription>
-            {props.scope === "past"
-              ? "Closed events land here with your record on each."
-              : "Events appear here once an organizer plans one for a group you belong to."}
+            {match(props.scope)
+              .with("past", () => "Closed events land here with your record on each." as const)
+              .otherwise(
+                () =>
+                  "Events appear here once an organizer plans one for a group you belong to." as const,
+              )}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -88,17 +93,21 @@ function MyEventsBody() {
           <div className="space-y-4">
             <EventGrid rows={rows} scope={scope} onPass={setPassFor} />
 
-            {events.hasNextPage ? (
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  disabled={events.isFetchingNextPage}
-                  onClick={() => void events.fetchNextPage()}
-                >
-                  {events.isFetchingNextPage ? "Loading…" : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+            {match(events.hasNextPage)
+              .with(true, () => (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    disabled={events.isFetchingNextPage}
+                    onClick={() => void events.fetchNextPage()}
+                  >
+                    {match(events.isFetchingNextPage)
+                      .with(true, () => "Loading…" as const)
+                      .otherwise(() => "Load more" as const)}
+                  </Button>
+                </div>
+              ))
+              .otherwise(() => null)}
           </div>
         ))
         .otherwise(() => null)}

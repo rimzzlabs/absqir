@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { A, pipe } from "@mobily/ts-belt";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { type AskLeaveValues, askLeaveSchema } from "@/lib/leave-schemas";
 import { useAskLeave } from "@/mutations/use-ask-leave";
@@ -97,56 +98,60 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
             noValidate
           >
             <ResponsiveDialogBody>
-              {preset ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Event</p>
-                  <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
-                    <p className="text-sm font-medium">{preset.title}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {formatRange(new Date(preset.startsAt), new Date(preset.endsAt))}
-                    </p>
+              {match(preset)
+                .with(P.nullish, () => (
+                  <FormField
+                    control={form.control}
+                    name="eventId"
+                    label="Event"
+                    render={(field) => (
+                      <Select
+                        items={A.map(options, (option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value ?? "")}
+                      >
+                        <SelectTrigger id="leave-event" className="w-full">
+                          <SelectValue placeholder="Pick an event" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Upcoming events</SelectLabel>
+                            {match(options.length)
+                              .with(0, () => (
+                                <p className="text-muted-foreground px-1.5 py-1 text-sm">
+                                  Nothing ahead of you to ask about.
+                                </p>
+                              ))
+                              .otherwise(() =>
+                                A.map(options, (option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    <span className="flex flex-col">
+                                      <span>{option.label}</span>
+                                      <SelectItemDescription>{option.hint}</SelectItemDescription>
+                                    </span>
+                                  </SelectItem>
+                                )),
+                              )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                ))
+                .otherwise((preset) => (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Event</p>
+                    <div className="bg-muted/50 ring-foreground/10 rounded-lg px-3 py-2 ring-1">
+                      <p className="text-sm font-medium">{preset.title}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatRange(new Date(preset.startsAt), new Date(preset.endsAt))}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="eventId"
-                  label="Event"
-                  render={(field) => (
-                    <Select
-                      items={A.map(options, (option) => ({
-                        value: option.value,
-                        label: option.label,
-                      }))}
-                      value={field.value}
-                      onValueChange={(value) => field.onChange(value ?? "")}
-                    >
-                      <SelectTrigger id="leave-event" className="w-full">
-                        <SelectValue placeholder="Pick an event" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Upcoming events</SelectLabel>
-                          {options.length === 0 ? (
-                            <p className="text-muted-foreground px-1.5 py-1 text-sm">
-                              Nothing ahead of you to ask about.
-                            </p>
-                          ) : (
-                            A.map(options, (option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                <span className="flex flex-col">
-                                  <span>{option.label}</span>
-                                  <SelectItemDescription>{option.hint}</SelectItemDescription>
-                                </span>
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              )}
+                ))}
               <FormField
                 control={form.control}
                 name="reason"
@@ -167,7 +172,9 @@ export function AskLeaveDialog(props: AskLeaveDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={ask.isPending}>
-                {ask.isPending ? "Sending…" : "Send"}
+                {match(ask.isPending)
+                  .with(true, () => "Sending…" as const)
+                  .otherwise(() => "Send" as const)}
               </Button>
             </ResponsiveDialogFooter>
           </form>

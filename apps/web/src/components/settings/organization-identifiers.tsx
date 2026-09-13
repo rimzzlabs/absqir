@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-group";
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { match } from "ts-pattern";
 import { SettingsRow } from "@/components/settings/settings-section";
 
 interface CopyRowProps {
@@ -40,8 +41,14 @@ function CopyRow(props: CopyRowProps) {
         />
         <InputGroupAddon align="inline-end">
           <Button type="button" size="xs" variant="ghost" onClick={copy}>
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? "Copied" : "Copy"}
+            {match(copied)
+              .with(true, () => <CheckIcon />)
+              .otherwise(() => (
+                <CopyIcon />
+              ))}
+            {match(copied)
+              .with(true, () => "Copied" as const)
+              .otherwise(() => "Copy" as const)}
           </Button>
         </InputGroupAddon>
       </InputGroup>

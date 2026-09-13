@@ -32,11 +32,12 @@ export interface SchedulesPageProps {
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function describe(schedule: Schedule): string {
-  const when =
-    schedule.frequency === "daily"
-      ? "Every day"
-      : A.map(schedule.weekdays, (day) => DAY_LABELS[day]).join(", ");
-  const end = schedule.endsOn ? ` until ${schedule.endsOn}` : "";
+  const when = match(schedule.frequency)
+    .with("daily", () => "Every day" as const)
+    .otherwise(() => A.map(schedule.weekdays, (day) => DAY_LABELS[day]).join(", "));
+  const end = match(schedule.endsOn)
+    .with(P.string.minLength(1), (endsOn) => ` until ${endsOn}`)
+    .otherwise(() => "" as const);
 
   return `${when} at ${schedule.startTime}, ${schedule.durationMinutes} min, from ${schedule.startsOn}${end} (${schedule.timezone})`;
 }
@@ -52,7 +53,11 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {schedule.title}
-          {schedule.active ? null : <Badge variant="outline">Paused</Badge>}
+          {match(schedule.active)
+            .with(true, () => null)
+            .otherwise(() => (
+              <Badge variant="outline">Paused</Badge>
+            ))}
         </CardTitle>
         <CardDescription>{describe(schedule)}</CardDescription>
       </CardHeader>
@@ -62,23 +67,27 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
             {group.name}
           </Badge>
         ))}
-        {schedule.groups.length === 0 ? (
-          <span className="text-muted-foreground text-xs">
-            No group yet, so nobody is expected.
-          </span>
-        ) : null}
-        {props.canManage ? (
-          <div className="ml-auto flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              <PencilSimpleIcon />
-              Edit
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
-              <TrashIcon />
-              Delete
-            </Button>
-          </div>
-        ) : null}
+        {match(schedule.groups.length)
+          .with(0, () => (
+            <span className="text-muted-foreground text-xs">
+              No group yet, so nobody is expected.
+            </span>
+          ))
+          .otherwise(() => null)}
+        {match(props.canManage)
+          .with(true, () => (
+            <div className="ml-auto flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <PencilSimpleIcon />
+                Edit
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
+                <TrashIcon />
+                Delete
+              </Button>
+            </div>
+          ))
+          .otherwise(() => null)}
       </CardContent>
 
       <ScheduleDialog open={editing} onOpenChange={setEditing} schedule={schedule} />
@@ -99,7 +108,9 @@ function ScheduleCard(props: { schedule: Schedule; canManage: boolean }) {
               disabled={remove.isPending}
               onClick={() => remove.mutate(schedule.id, { onSuccess: () => setRemoving(false) })}
             >
-              {remove.isPending ? "Deleting…" : "Delete"}
+              {match(remove.isPending)
+                .with(true, () => "Deleting…" as const)
+                .otherwise(() => "Delete" as const)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -118,40 +129,42 @@ function SchedulesBody(props: SchedulesPageProps) {
       <PageHeader
         title="Schedules"
         description="Rules that create events on their own. Each spawns two weeks ahead and keeps going."
-        actions={
-          canManage ? (
+        actions={match(canManage)
+          .with(true, () => (
             <Button onClick={() => setCreating(true)}>
               <PlusIcon />
               New schedule
             </Button>
-          ) : null
-        }
+          ))
+          .otherwise(() => null)}
       />
 
       {match(schedules)
         .with({ isPending: true }, () => <Skeleton className="h-32 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
-          rows.length === 0 ? (
-            <Empty className="border-border rounded-xl border border-dashed py-16">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <RepeatIcon />
-                </EmptyMedia>
-                <EmptyTitle>No schedule yet</EmptyTitle>
-                <EmptyDescription>
-                  Every weekday at nine, every Tuesday evening: set the rule once and the events
-                  appear by themselves.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {A.map(rows, (schedule) => (
-                <ScheduleCard key={schedule.id} schedule={schedule} canManage={canManage} />
-              ))}
-            </div>
-          ),
+          match(rows.length)
+            .with(0, () => (
+              <Empty className="border-border rounded-xl border border-dashed py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <RepeatIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>No schedule yet</EmptyTitle>
+                  <EmptyDescription>
+                    Every weekday at nine, every Tuesday evening: set the rule once and the events
+                    appear by themselves.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ))
+            .otherwise(() => (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {A.map(rows, (schedule) => (
+                  <ScheduleCard key={schedule.id} schedule={schedule} canManage={canManage} />
+                ))}
+              </div>
+            )),
         )
         .otherwise(() => null)}
 

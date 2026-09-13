@@ -37,33 +37,39 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
 
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 font-medium">
-          {notification.href ? (
-            <a href={notification.href} className="hover:underline">
-              {notification.title}
-            </a>
-          ) : (
-            notification.title
-          )}
-          {unread ? (
-            <>
-              <span aria-hidden className="bg-primary size-1.5 rounded-full" />
-              <span className="sr-only">Unread</span>
-            </>
-          ) : null}
+          {match(notification.href)
+            .with(P.string.minLength(1), (href) => (
+              <a href={href} className="hover:underline">
+                {notification.title}
+              </a>
+            ))
+            .otherwise(() => notification.title)}
+          {match(unread)
+            .with(true, () => (
+              <>
+                <span aria-hidden className="bg-primary size-1.5 rounded-full" />
+                <span className="sr-only">Unread</span>
+              </>
+            ))
+            .otherwise(() => null)}
         </p>
-        {notification.body ? (
-          <p className="text-muted-foreground mt-0.5 text-sm">{notification.body}</p>
-        ) : null}
+        {match(notification.body)
+          .with(P.string.minLength(1), (body) => (
+            <p className="text-muted-foreground mt-0.5 text-sm">{body}</p>
+          ))
+          .otherwise(() => null)}
         <p className="text-muted-foreground mt-1 text-xs">
           {relativeToNow(new Date(notification.createdAt))}
         </p>
       </div>
 
-      {unread ? (
-        <Button variant="ghost" size="sm" onClick={() => props.onRead(notification.id)}>
-          Mark read
-        </Button>
-      ) : null}
+      {match(unread)
+        .with(true, () => (
+          <Button variant="ghost" size="sm" onClick={() => props.onRead(notification.id)}>
+            Mark read
+          </Button>
+        ))
+        .otherwise(() => null)}
     </li>
   );
 }
@@ -75,11 +81,17 @@ function NothingHere(props: { scope: NotificationScope }) {
         <EmptyMedia variant="icon">
           <BellIcon />
         </EmptyMedia>
-        <EmptyTitle>{props.scope === "unread" ? "Nothing waiting" : "Nothing yet"}</EmptyTitle>
+        <EmptyTitle>
+          {match(props.scope)
+            .with("unread", () => "Nothing waiting" as const)
+            .otherwise(() => "Nothing yet" as const)}
+        </EmptyTitle>
         <EmptyDescription>
-          {props.scope === "unread"
-            ? "You have read everything."
-            : "Reminders before an event, leave requests, and closings land here."}
+          {match(props.scope)
+            .with("unread", () => "You have read everything." as const)
+            .otherwise(
+              () => "Reminders before an event, leave requests, and closings land here." as const,
+            )}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -103,8 +115,8 @@ function NotificationsBody() {
       <PageHeader
         title="Notifications"
         description="Everything that happened that concerns you. Email as well, when the instance sends it."
-        actions={
-          unread > 0 ? (
+        actions={match(unread > 0)
+          .with(true, () => (
             <Button
               variant="outline"
               size="sm"
@@ -113,8 +125,8 @@ function NotificationsBody() {
             >
               Mark all read
             </Button>
-          ) : null
-        }
+          ))
+          .otherwise(() => null)}
       />
 
       <Tabs value={scope} onValueChange={(value) => void setScope(value as NotificationScope)}>
@@ -124,21 +136,23 @@ function NotificationsBody() {
         </TabsList>
       </Tabs>
 
-      {markRead.isError ? <FormError error={markRead.error} /> : null}
+      {match(markRead.isError)
+        .with(true, () => <FormError error={markRead.error} />)
+        .otherwise(() => null)}
 
       {match(notifications)
         .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
-          rows.length === 0 ? (
-            <NothingHere scope={scope} />
-          ) : (
-            <ul className="border-border overflow-hidden rounded-xl border">
-              {A.map(rows, (row) => (
-                <Row key={row.id} notification={row} onRead={(id) => markRead.mutate([id])} />
-              ))}
-            </ul>
-          ),
+          match(rows.length)
+            .with(0, () => <NothingHere scope={scope} />)
+            .otherwise(() => (
+              <ul className="border-border overflow-hidden rounded-xl border">
+                {A.map(rows, (row) => (
+                  <Row key={row.id} notification={row} onRead={(id) => markRead.mutate([id])} />
+                ))}
+              </ul>
+            )),
         )
         .otherwise(() => null)}
     </>

@@ -12,6 +12,7 @@ import {
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import { presetRange, type RangePreset } from "@/lib/report-window";
 import type { Group } from "@/queries/use-groups";
 import type { ReportRange } from "@/queries/use-reports";
@@ -119,7 +120,9 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
 
               props.onRangeChange({
                 ...props.range,
-                groupId: value === ALL_GROUPS ? null : value,
+                groupId: match(value === ALL_GROUPS)
+                  .with(true, () => null)
+                  .otherwise(() => value),
               });
             }}
           >
@@ -130,16 +133,18 @@ export function ReportRangeControls(props: ReportRangeControlsProps) {
               <SelectGroup>
                 <SelectItem value={ALL_GROUPS}>Every event</SelectItem>
               </SelectGroup>
-              {props.groups.length > 0 ? (
-                <SelectGroup>
-                  <SelectLabel>Groups</SelectLabel>
-                  {A.map(props.groups, (group) => (
-                    <SelectItem key={group.id} value={group.id}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ) : null}
+              {match(props.groups.length > 0)
+                .with(true, () => (
+                  <SelectGroup>
+                    <SelectLabel>Groups</SelectLabel>
+                    {A.map(props.groups, (group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))
+                .otherwise(() => null)}
             </SelectContent>
           </Select>
         </FieldContent>

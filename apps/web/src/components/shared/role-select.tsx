@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@absqir/ui/select";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import { type InvitableRole, ROLE_OPTIONS } from "@/lib/directory-schemas";
 
 export interface RoleSelectProps {
@@ -23,7 +24,9 @@ export interface RoleSelectProps {
 const OWNER = { value: "owner", label: "Owner", hint: "Everything, including deleting the org." };
 
 export function RoleSelect(props: RoleSelectProps) {
-  const options = props.includeOwner ? [...ROLE_OPTIONS, OWNER] : [...ROLE_OPTIONS];
+  const options = match(Boolean(props.includeOwner))
+    .with(true, () => [...ROLE_OPTIONS, OWNER])
+    .otherwise(() => [...ROLE_OPTIONS]);
 
   return (
     <Select

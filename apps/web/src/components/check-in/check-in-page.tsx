@@ -93,9 +93,9 @@ function CheckInBody(props: CheckInPageProps) {
           <CheckCircleIcon weight="fill" className="size-8 text-emerald-500" />
         </Mark>
         <AuthHeading
-          title={
-            result.already ? `Already in, ${result.personName}` : `You are in, ${result.personName}`
-          }
+          title={match(result.already)
+            .with(true, () => `Already in, ${result.personName}`)
+            .otherwise(() => `You are in, ${result.personName}`)}
           description={result.eventTitle}
         />
         <div className="border-border flex items-center gap-3 rounded-lg border p-3 text-sm">

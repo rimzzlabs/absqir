@@ -27,7 +27,9 @@ function Seats(props: { event: PublicEvent }) {
   return (
     <p className="text-muted-foreground text-sm tabular-nums">
       {event.registered} of {event.limit} seats taken
-      {event.seatsLeft === 0 ? " · full" : ""}
+      {match(event.seatsLeft)
+        .with(0, () => " · full" as const)
+        .otherwise(() => "" as const)}
     </p>
   );
 }
@@ -50,17 +52,21 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
         <a href="/my/events" className={buttonVariants({ className: "w-full" })}>
           My events
         </a>
-        {event.status === "scheduled" ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            disabled={withdraw.isPending}
-            onClick={() => withdraw.mutate(event.id)}
-          >
-            {withdraw.isPending ? "Withdrawing…" : "Withdraw my registration"}
-          </Button>
-        ) : null}
+        {match(event.status)
+          .with("scheduled", () => (
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={withdraw.isPending}
+              onClick={() => withdraw.mutate(event.id)}
+            >
+              {match(withdraw.isPending)
+                .with(true, () => "Withdrawing…" as const)
+                .otherwise(() => "Withdraw my registration" as const)}
+            </Button>
+          ))
+          .otherwise(() => null)}
         <FormError error={withdraw.error} />
       </Reveal>
     );
@@ -69,7 +75,9 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
   if (!event.open) {
     return (
       <p className="text-muted-foreground text-sm">
-        {event.status === "done" ? "This event is over." : "Registration is closed."}
+        {match(event.status)
+          .with("done", () => "This event is over." as const)
+          .otherwise(() => "Registration is closed." as const)}
       </p>
     );
   }
@@ -102,7 +110,9 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
         disabled={register.isPending}
         onClick={() => register.mutate(event.id)}
       >
-        {register.isPending ? "Registering…" : "Register"}
+        {match(register.isPending)
+          .with(true, () => "Registering…" as const)
+          .otherwise(() => "Register" as const)}
       </Button>
       <p className="text-muted-foreground text-sm">
         You join {event.organizationName} as a member, and this event expects you.
@@ -135,9 +145,11 @@ function PublicEventBody(props: PublicEventPageProps) {
             description={formatRange(new Date(data.startsAt), new Date(data.endsAt))}
           />
         </div>
-        {data.description ? (
-          <p className="text-muted-foreground text-sm whitespace-pre-line">{data.description}</p>
-        ) : null}
+        {match(data.description)
+          .with(P.string.minLength(1), (description) => (
+            <p className="text-muted-foreground text-sm whitespace-pre-line">{description}</p>
+          ))
+          .otherwise(() => null)}
         <Seats event={data} />
         <Actions {...props} event={data} />
       </div>

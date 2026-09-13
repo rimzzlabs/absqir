@@ -5,30 +5,34 @@ import node from "@astrojs/node";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
+import { match } from "ts-pattern";
 
 // One codebase, two targets. Cloudflare Workers is the default; the Docker
 // image builds with DEPLOY_TARGET=node. The alias below swaps the platform
 // glue (bindings, execution context) per target at build time.
-const deployTarget = process.env.DEPLOY_TARGET === "node" ? "node" : "cloudflare";
+const deployTarget = match(process.env.DEPLOY_TARGET)
+  .with("node", () => "node")
+  .otherwise(() => "cloudflare");
 
 // `pnpm dev:https` signs a certificate first, so a phone on the LAN reaches a
 // secure context. Without one the browser hides the camera API and the scanner
 // cannot open. Plain `pnpm dev` stays http.
 const certDir = fileURLToPath(new URL("./.certs/", import.meta.url));
-const devHttps =
-  process.env.DEV_HTTPS === "1" && existsSync(`${certDir}cert.pem`)
-    ? {
-        cert: readFileSync(`${certDir}cert.pem`),
-        key: readFileSync(`${certDir}key.pem`),
-      }
-    : undefined;
+const devHttps = match(process.env.DEV_HTTPS === "1" && existsSync(`${certDir}cert.pem`))
+  .with(true, () => ({
+    cert: readFileSync(`${certDir}cert.pem`),
+    key: readFileSync(`${certDir}key.pem`),
+  }))
+  .otherwise(() => undefined);
 
 // Every page depends on the reader's session, so the whole site renders per
 // request. One server serves the assets, the pages, and the Hono API from a
 // single origin.
 export default defineConfig({
   output: "server",
-  adapter: deployTarget === "node" ? node({ mode: "standalone" }) : cloudflare(),
+  adapter: match(deployTarget)
+    .with("node", () => node({ mode: "standalone" }))
+    .otherwise(() => cloudflare()),
   integrations: [
     react({
       // Keep Babel and the React Compiler away from Vite's pre-bundled deps.

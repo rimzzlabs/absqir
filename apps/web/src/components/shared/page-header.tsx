@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { match } from "ts-pattern";
 
 export interface PageHeaderProps {
   title: string;
@@ -12,11 +13,15 @@ export function PageHeader(props: PageHeaderProps) {
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">{props.title}</h1>
-        {props.description ? (
-          <p className="text-muted-foreground mt-1 max-w-prose text-sm">{props.description}</p>
-        ) : null}
+        {match(Boolean(props.description))
+          .with(true, () => (
+            <p className="text-muted-foreground mt-1 max-w-prose text-sm">{props.description}</p>
+          ))
+          .otherwise(() => null)}
       </div>
-      {props.actions ? <div className="flex items-center gap-2">{props.actions}</div> : null}
+      {match(Boolean(props.actions))
+        .with(true, () => <div className="flex items-center gap-2">{props.actions}</div>)
+        .otherwise(() => null)}
     </header>
   );
 }

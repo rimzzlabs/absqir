@@ -1,6 +1,7 @@
 import { myKeys } from "@absqir/core/query-keys";
 import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import QRCode from "qrcode";
+import { match } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
 export type MyEventScope = "upcoming" | "past";
@@ -25,7 +26,9 @@ export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
         {
           query: {
             scope: filter.scope,
-            limit: filter.limit === undefined ? undefined : String(filter.limit),
+            limit: match(filter.limit)
+              .with(undefined, () => undefined)
+              .otherwise((limit) => String(limit)),
             cursor: ctx.pageParam ?? undefined,
           },
         },

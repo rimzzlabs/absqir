@@ -26,9 +26,10 @@ import {
 } from "@absqir/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { A, F, pipe } from "@mobily/ts-belt";
+import { A, F, O, pipe } from "@mobily/ts-belt";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { GroupPicker } from "@/components/shared/group-picker";
 import { type ScheduleValues, scheduleSchema } from "@/lib/event-schemas";
@@ -70,7 +71,9 @@ function defaults(schedule: Schedule | null): ScheduleValues {
       lateAfterMinutes: String(schedule.lateAfterMinutes),
       opensBeforeMinutes: String(schedule.opensBeforeMinutes),
       startsOn: fromDay(schedule.startsOn),
-      endsOn: schedule.endsOn ? fromDay(schedule.endsOn) : null,
+      endsOn: match(schedule.endsOn)
+        .with(P.string.minLength(1), (endsOn) => fromDay(endsOn))
+        .otherwise(() => null),
       active: schedule.active,
       allowWalkIns: schedule.allowWalkIns,
       groupIds: pipe(
@@ -108,7 +111,9 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
   const create = useCreateSchedule();
   const update = useUpdateSchedule();
   const pending = create.isPending || update.isPending;
-  const saveLabel = editing ? "Save" : "Create";
+  const saveLabel = match(editing)
+    .with(true, () => "Save" as const)
+    .otherwise(() => "Create" as const);
   // A new rule starts in the zone the organizer reads times in.
   const timezone = props.schedule?.timezone ?? displayTimezone() ?? deviceTimezone();
 
@@ -121,14 +126,20 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
       title: values.title,
       description: values.description || null,
       frequency: values.frequency,
-      weekdays: values.frequency === "weekly" ? values.weekdays : [],
+      weekdays: match(values.frequency)
+        .with("weekly", () => values.weekdays)
+        .otherwise(() => []),
       startTime: values.startTime,
       durationMinutes: Number(values.durationMinutes),
       lateAfterMinutes: Number(values.lateAfterMinutes),
       opensBeforeMinutes: Number(values.opensBeforeMinutes),
       timezone,
       startsOn: formatDate(values.startsOn, "iso"),
-      endsOn: values.endsOn ? formatDate(values.endsOn, "iso") : null,
+      endsOn: pipe(
+        O.fromNullable(values.endsOn),
+        O.map((endsOn) => formatDate(endsOn, "iso")),
+        O.toNullable,
+      ),
       active: values.active,
       allowWalkIns: values.allowWalkIns,
       groupIds: values.groupIds,
@@ -153,7 +164,9 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
       <ResponsiveDialogContent className="sm:max-w-lg">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            {editing ? "Edit schedule" : "New schedule"}
+            {match(editing)
+              .with(true, () => "Edit schedule" as const)
+              .otherwise(() => "New schedule" as const)}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
             A rule that creates events on its own, two weeks ahead. Times are in {timezone}.
@@ -217,31 +230,39 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 />
               </div>
 
-              {frequency === "weekly" ? (
-                <Field data-invalid={weekdayError ? true : undefined}>
-                  <FieldLabel>On</FieldLabel>
-                  <FieldContent>
-                    <ToggleGroup
-                      multiple
-                      value={A.map(form.watch("weekdays"), String)}
-                      onValueChange={(value) =>
-                        form.setValue("weekdays", pipe(value, A.map(Number), F.toMutable), {
-                          shouldValidate: true,
-                        })
-                      }
-                      variant="outline"
-                      className="flex-wrap"
-                    >
-                      {A.map(WEEKDAYS, (day) => (
-                        <ToggleGroupItem key={day.value} value={String(day.value)}>
-                          {day.label}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
-                    <FieldError errors={[weekdayError]} />
-                  </FieldContent>
-                </Field>
-              ) : null}
+              {match(frequency)
+                .with("weekly", () => (
+                  <Field
+                    data-invalid={pipe(
+                      O.fromNullable(weekdayError),
+                      O.map(() => true as const),
+                      O.toUndefined,
+                    )}
+                  >
+                    <FieldLabel>On</FieldLabel>
+                    <FieldContent>
+                      <ToggleGroup
+                        multiple
+                        value={A.map(form.watch("weekdays"), String)}
+                        onValueChange={(value) =>
+                          form.setValue("weekdays", pipe(value, A.map(Number), F.toMutable), {
+                            shouldValidate: true,
+                          })
+                        }
+                        variant="outline"
+                        className="flex-wrap"
+                      >
+                        {A.map(WEEKDAYS, (day) => (
+                          <ToggleGroupItem key={day.value} value={String(day.value)}>
+                            {day.label}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                      <FieldError errors={[weekdayError]} />
+                    </FieldContent>
+                  </Field>
+                ))
+                .otherwise(() => null)}
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <FormField
@@ -355,7 +376,9 @@ export function ScheduleDialog(props: ScheduleDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : saveLabel}
+                {match(pending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>
           </form>

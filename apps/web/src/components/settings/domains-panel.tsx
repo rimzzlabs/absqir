@@ -55,25 +55,34 @@ function DomainRow(props: { row: OrganizationDomain }) {
     <div className="border-border space-y-3 border-b py-4 last:border-b-0">
       <div className="flex flex-wrap items-center gap-3">
         <p className="font-medium">{row.domain}</p>
-        {row.verified ? (
-          <Badge variant="secondary">
-            Verified{row.verifiedBy === "email" ? " by email" : " by DNS"}
-          </Badge>
-        ) : (
-          <Badge variant="outline">Waiting for the record</Badge>
-        )}
+        {match(row.verified)
+          .with(true, () => (
+            <Badge variant="secondary">
+              Verified
+              {match(row.verifiedBy)
+                .with("email", () => " by email" as const)
+                .otherwise(() => " by DNS" as const)}
+            </Badge>
+          ))
+          .otherwise(() => (
+            <Badge variant="outline">Waiting for the record</Badge>
+          ))}
         <div className="ml-auto flex items-center gap-2">
-          {row.verified ? null : (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={verify.isPending}
-              onClick={() => verify.mutate(row.id)}
-            >
-              <ArrowClockwiseIcon />
-              {verify.isPending ? "Checking…" : "Check now"}
-            </Button>
-          )}
+          {match(row.verified)
+            .with(true, () => null)
+            .otherwise(() => (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={verify.isPending}
+                onClick={() => verify.mutate(row.id)}
+              >
+                <ArrowClockwiseIcon />
+                {match(verify.isPending)
+                  .with(true, () => "Checking…" as const)
+                  .otherwise(() => "Check now" as const)}
+              </Button>
+            ))}
           <Button
             size="icon-sm"
             variant="ghost"
@@ -86,17 +95,19 @@ function DomainRow(props: { row: OrganizationDomain }) {
         </div>
       </div>
 
-      {row.verified ? null : (
-        <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-sm">
-          <p>Add this TXT record, then press Check now.</p>
-          <dl className="mt-2 grid gap-1 font-mono text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
-            <dt className="font-sans">Host</dt>
-            <dd className="text-foreground break-all">{row.recordHost}</dd>
-            <dt className="font-sans">Value</dt>
-            <dd className="text-foreground break-all">{row.recordValue}</dd>
-          </dl>
-        </div>
-      )}
+      {match(row.verified)
+        .with(true, () => null)
+        .otherwise(() => (
+          <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-sm">
+            <p>Add this TXT record, then press Check now.</p>
+            <dl className="mt-2 grid gap-1 font-mono text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
+              <dt className="font-sans">Host</dt>
+              <dd className="text-foreground break-all">{row.recordHost}</dd>
+              <dt className="font-sans">Value</dt>
+              <dd className="text-foreground break-all">{row.recordValue}</dd>
+            </dl>
+          </div>
+        ))}
 
       <FormError error={verify.error ?? release.error} />
     </div>
@@ -139,7 +150,9 @@ function ClaimForm() {
           </Field>
           <Button type="submit" disabled={claim.isPending}>
             <PlusIcon />
-            {claim.isPending ? "Claiming…" : "Claim"}
+            {match(claim.isPending)
+              .with(true, () => "Claiming…" as const)
+              .otherwise(() => "Claim" as const)}
           </Button>
         </form>
         <FormError error={claim.error} />
@@ -203,17 +216,19 @@ export function DomainsPanel() {
 
             <section className="space-y-1">
               <h2 className="text-sm font-medium">Domains</h2>
-              {data.items.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  No domain is claimed. Nobody finds this workspace by their email.
-                </p>
-              ) : (
-                <div className="border-border rounded-xl border px-4">
-                  {A.map(data.items, (row) => (
-                    <DomainRow key={row.id} row={row} />
-                  ))}
-                </div>
-              )}
+              {match(data.items.length)
+                .with(0, () => (
+                  <p className="text-muted-foreground text-sm">
+                    No domain is claimed. Nobody finds this workspace by their email.
+                  </p>
+                ))
+                .otherwise(() => (
+                  <div className="border-border rounded-xl border px-4">
+                    {A.map(data.items, (row) => (
+                      <DomainRow key={row.id} row={row} />
+                    ))}
+                  </div>
+                ))}
             </section>
           </>
         ))

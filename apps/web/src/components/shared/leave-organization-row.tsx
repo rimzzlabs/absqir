@@ -10,6 +10,7 @@ import {
 } from "@absqir/ui/alert-dialog";
 import { Button } from "@absqir/ui/button";
 import { useState } from "react";
+import { match } from "ts-pattern";
 import { DangerZoneRow } from "@/components/shared/danger-zone";
 import { FormError } from "@/components/shared/form-error";
 import type { RoleName } from "@/components/shared/role-badge";
@@ -30,9 +31,16 @@ export function LeaveOrganizationRow(props: LeaveOrganizationRowProps) {
   const leave = useLeaveOrganization();
   const owner = useSoleOwner(props.role);
 
-  const description = owner.isSoleOwner
-    ? "You hold the only owner seat. Make somebody else an owner first, or delete the organization."
-    : "You lose every screen behind this organization. Your directory entry stays, without an account behind it.";
+  const description = match(owner.isSoleOwner)
+    .with(
+      true,
+      () =>
+        "You hold the only owner seat. Make somebody else an owner first, or delete the organization." as const,
+    )
+    .otherwise(
+      () =>
+        "You lose every screen behind this organization. Your directory entry stays, without an account behind it." as const,
+    );
 
   return (
     <>
@@ -67,7 +75,9 @@ export function LeaveOrganizationRow(props: LeaveOrganizationRowProps) {
               disabled={leave.isPending}
               onClick={() => leave.mutate(props.organization.id)}
             >
-              {leave.isPending ? "Leaving…" : "Leave"}
+              {match(leave.isPending)
+                .with(true, () => "Leaving…" as const)
+                .otherwise(() => "Leave" as const)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

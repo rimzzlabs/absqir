@@ -87,59 +87,77 @@ export function EventRecords(props: EventRecordsProps) {
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
-          rows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Nobody is expected. Tick a group on the event, or let walk-ins in.
-            </p>
-          ) : (
-            <div className="border-border overflow-x-auto rounded-xl border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Identifier</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Checked in</TableHead>
-                    <TableHead>How</TableHead>
-                    <TableHead className="w-12" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {A.map(rows, (row) => {
-                    const unexpected = row.expected ? null : "Walk-in";
-                    const origin = row.registered ? "Registered" : unexpected;
+          match(rows.length)
+            .with(0, () => (
+              <p className="text-muted-foreground text-sm">
+                Nobody is expected. Tick a group on the event, or let walk-ins in.
+              </p>
+            ))
+            .otherwise(() => (
+              <div className="border-border overflow-x-auto rounded-xl border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Identifier</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Checked in</TableHead>
+                      <TableHead>How</TableHead>
+                      <TableHead className="w-12" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {A.map(rows, (row) => {
+                      const unexpected = match(row.expected)
+                        .with(true, () => null)
+                        .otherwise(() => "Walk-in" as const);
+                      const origin = match(row.registered)
+                        .with(true, () => "Registered" as const)
+                        .otherwise(() => unexpected);
 
-                    return (
-                      <TableRow key={row.personId}>
-                        <TableCell className="font-medium">
-                          {row.name}
-                          {origin ? (
-                            <Badge variant="secondary" className="ml-2">
-                              {origin}
-                            </Badge>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">{row.identifier ?? "—"}</TableCell>
-                        <TableCell>
-                          <AttendanceStatusBadge status={row.status} />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground tabular-nums">
-                          {row.checkedInAt ? formatDate(new Date(row.checkedInAt), "time") : "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          {row.method ? METHODS[row.method] : "—"}
-                          {row.note ? ` · ${row.note}` : ""}
-                        </TableCell>
-                        <TableCell>
-                          <RowActions event={props.event} record={row} />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          ),
+                      return (
+                        <TableRow key={row.personId}>
+                          <TableCell className="font-medium">
+                            {row.name}
+                            {match(origin)
+                              .with(P.string.minLength(1), (origin) => (
+                                <Badge variant="secondary" className="ml-2">
+                                  {origin}
+                                </Badge>
+                              ))
+                              .otherwise(() => null)}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {row.identifier ?? "—"}
+                          </TableCell>
+                          <TableCell>
+                            <AttendanceStatusBadge status={row.status} />
+                          </TableCell>
+                          <TableCell className="text-muted-foreground tabular-nums">
+                            {match(row.checkedInAt)
+                              .with(P.string.minLength(1), (checkedInAt) =>
+                                formatDate(new Date(checkedInAt), "time"),
+                              )
+                              .otherwise(() => "—" as const)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">
+                            {match(row.method)
+                              .with(P.string.minLength(1), (method) => METHODS[method])
+                              .otherwise(() => "—" as const)}
+                            {match(row.note)
+                              .with(P.string.minLength(1), (note) => ` · ${note}`)
+                              .otherwise(() => "" as const)}
+                          </TableCell>
+                          <TableCell>
+                            <RowActions event={props.event} record={row} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )),
         )
         .otherwise(() => null)}
     </section>

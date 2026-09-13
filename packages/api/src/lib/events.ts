@@ -329,10 +329,14 @@ export async function listEvents(db: Database, params: ListEventsParams) {
     O.fromNullable(cursor),
     O.mapNullable((cursor) =>
       or(
-        (ascending ? gt : lt)(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
+        match(ascending)
+          .with(true, () => gt)
+          .otherwise(() => lt)(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
         and(
           eq(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
-          (ascending ? gt : lt)(eventTable.id, cursor.id),
+          match(ascending)
+            .with(true, () => gt)
+            .otherwise(() => lt)(eventTable.id, cursor.id),
         ),
       ),
     ),

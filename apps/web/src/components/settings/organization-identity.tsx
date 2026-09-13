@@ -4,6 +4,7 @@ import { Button } from "@absqir/ui/button";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { CameraIcon, XIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { initialsOf, toAvatarDataUrl } from "@/lib/avatar";
 import { useUpdateOrganization } from "@/mutations/use-update-organization";
@@ -26,7 +27,9 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
   const save = useUpdateOrganization();
 
   const logo = current.data?.logo ?? null;
-  const logoLabel = logo ? "Change logo" : "Add a logo";
+  const logoLabel = match(logo)
+    .with(P.string.minLength(1), () => "Change logo" as const)
+    .otherwise(() => "Add a logo" as const);
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -35,14 +38,20 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
     try {
       save.mutate({ organizationId: props.organization.id, logo: await toAvatarDataUrl(file) });
     } catch (error) {
-      setReadError(error instanceof Error ? error : new Error("Could not read that picture."));
+      setReadError(
+        match(error)
+          .with(P.instanceOf(Error), (error) => error)
+          .otherwise(() => new Error("Could not read that picture.")),
+      );
     }
   };
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-6">
       <Avatar size="lg" className="size-24">
-        {logo ? <AvatarImage src={logo} alt="" /> : null}
+        {match(logo)
+          .with(P.string.minLength(1), (logo) => <AvatarImage src={logo} alt="" />)
+          .otherwise(() => null)}
         <AvatarFallback
           name={props.organization.name}
           className="text-2xl font-medium tracking-wide"
@@ -59,53 +68,61 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
           {props.organization.slug}
         </p>
         <div className="mt-2">
-          {current.data ? (
-            <span className="text-muted-foreground text-xs">
-              Started {formatDate(new Date(current.data.createdAt))}
-            </span>
-          ) : (
-            <Skeleton className="h-4 w-32" />
-          )}
+          {match(current.data)
+            .with(P.nullish, () => <Skeleton className="h-4 w-32" />)
+            .otherwise((data) => (
+              <span className="text-muted-foreground text-xs">
+                Started {formatDate(new Date(data.createdAt))}
+              </span>
+            ))}
         </div>
       </div>
 
-      {props.canEdit ? (
-        <div className="flex flex-col gap-2 sm:items-end">
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            onChange={(event) => void onFile(event.target.files?.[0])}
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={save.isPending}
-              onClick={() => fileInput.current?.click()}
-            >
-              <CameraIcon />
-              {save.isPending ? "Saving…" : logoLabel}
-            </Button>
-            {logo ? (
+      {match(props.canEdit)
+        .with(true, () => (
+          <div className="flex flex-col gap-2 sm:items-end">
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(event) => void onFile(event.target.files?.[0])}
+            />
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 disabled={save.isPending}
-                onClick={() => save.mutate({ organizationId: props.organization.id, logo: null })}
+                onClick={() => fileInput.current?.click()}
               >
-                <XIcon />
-                Remove
+                <CameraIcon />
+                {match(save.isPending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => logoLabel)}
               </Button>
-            ) : null}
+              {match(logo)
+                .with(P.string.minLength(1), () => (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={save.isPending}
+                    onClick={() =>
+                      save.mutate({ organizationId: props.organization.id, logo: null })
+                    }
+                  >
+                    <XIcon />
+                    Remove
+                  </Button>
+                ))
+                .otherwise(() => null)}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              PNG, JPEG or WebP. Shrunk to 128px. It shows in the workspace switcher.
+            </p>
+            <FormError error={readError ?? save.error} />
           </div>
-          <p className="text-muted-foreground text-xs">
-            PNG, JPEG or WebP. Shrunk to 128px. It shows in the workspace switcher.
-          </p>
-          <FormError error={readError ?? save.error} />
-        </div>
-      ) : null}
+        ))
+        .otherwise(() => null)}
     </div>
   );
 }

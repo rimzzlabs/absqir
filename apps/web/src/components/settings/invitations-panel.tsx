@@ -20,7 +20,9 @@ import { useInviteMember } from "@/mutations/use-invite-member";
 import { useInvitations } from "@/queries/use-members";
 
 function asRole(role: string) {
-  return role === "owner" || role === "admin" || role === "organizer" ? role : "member";
+  return match(role)
+    .with("owner", "admin", "organizer", (name) => name)
+    .otherwise(() => "member" as const);
 }
 
 function InviteForm() {
@@ -69,7 +71,9 @@ function InviteForm() {
             </Field>
             <Button type="submit" disabled={invite.isPending}>
               <PaperPlaneTiltIcon />
-              {invite.isPending ? "Sending…" : "Send"}
+              {match(invite.isPending)
+                .with(true, () => "Sending…" as const)
+                .otherwise(() => "Send" as const)}
             </Button>
           </form>
         </Form>
@@ -87,47 +91,47 @@ function PendingList() {
     .with({ isPending: true }, () => <Skeleton className="h-32 rounded-xl" />)
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (rows) =>
-      rows.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No invitation is waiting.</p>
-      ) : (
-        <div className="border-border overflow-x-auto rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead className="w-16" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {A.map(rows, (row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.email}</TableCell>
-                  <TableCell>
-                    <RoleBadge role={asRole(row.role)} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(new Date(row.expiresAt), "date")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Cancel the invitation for ${row.email}`}
-                      disabled={cancel.isPending}
-                      onClick={() => cancel.mutate(row.id)}
-                    >
-                      <XIcon />
-                    </Button>
-                  </TableCell>
+      match(rows.length)
+        .with(0, () => <p className="text-muted-foreground text-sm">No invitation is waiting.</p>)
+        .otherwise(() => (
+          <div className="border-border overflow-x-auto rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead className="w-16" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <FormError error={cancel.error} />
-        </div>
-      ),
+              </TableHeader>
+              <TableBody>
+                {A.map(rows, (row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.email}</TableCell>
+                    <TableCell>
+                      <RoleBadge role={asRole(row.role)} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(new Date(row.expiresAt), "date")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Cancel the invitation for ${row.email}`}
+                        disabled={cancel.isPending}
+                        onClick={() => cancel.mutate(row.id)}
+                      >
+                        <XIcon />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <FormError error={cancel.error} />
+          </div>
+        )),
     )
     .otherwise(() => null);
 }

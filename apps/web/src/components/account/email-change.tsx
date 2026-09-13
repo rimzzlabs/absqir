@@ -4,6 +4,7 @@ import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { CodeInput } from "@/components/auth/code-input";
 import { FormError } from "@/components/shared/form-error";
 import { type NewEmailValues, newEmailSchema } from "@/lib/account-schemas";
@@ -49,7 +50,9 @@ function AddressStep(props: { onSent: (email: string) => void; onCancel: () => v
 
         <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" disabled={request.isPending}>
-            {request.isPending ? "Sending…" : "Send the code"}
+            {match(request.isPending)
+              .with(true, () => "Sending…" as const)
+              .otherwise(() => "Send the code" as const)}
           </Button>
           <Button type="button" variant="ghost" onClick={props.onCancel}>
             Cancel
@@ -68,7 +71,9 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
     defaultValues: { code: "" },
   });
 
-  const resendLabel = resend.isSuccess ? "Sent again" : "Send a new code";
+  const resendLabel = match(resend.isSuccess)
+    .with(true, () => "Sent again" as const)
+    .otherwise(() => "Send a new code" as const);
   const submit = form.handleSubmit((values) =>
     confirm.mutate({ newEmail: props.newEmail, code: values.code }),
   );
@@ -97,7 +102,9 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={confirm.isPending}>
-            {confirm.isPending ? "Checking…" : "Change email"}
+            {match(confirm.isPending)
+              .with(true, () => "Checking…" as const)
+              .otherwise(() => "Change email" as const)}
           </Button>
           <Button
             type="button"
@@ -107,7 +114,9 @@ function CodeStep(props: { newEmail: string; onBack: () => void }) {
             disabled={resend.isPending}
             onClick={() => resend.mutate(props.newEmail)}
           >
-            {resend.isPending ? "Sending…" : resendLabel}
+            {match(resend.isPending)
+              .with(true, () => "Sending…" as const)
+              .otherwise(() => resendLabel)}
           </Button>
           <Button type="button" variant="link" size="sm" className="px-0" onClick={props.onBack}>
             Use another address
@@ -126,9 +135,9 @@ export interface EmailChangeProps {
 export function EmailChange(props: EmailChangeProps) {
   const [pending, setPending] = useState<string | null>(null);
 
-  return pending ? (
-    <CodeStep newEmail={pending} onBack={() => setPending(null)} />
-  ) : (
-    <AddressStep onSent={setPending} onCancel={props.onCancel} />
-  );
+  return match(pending)
+    .with(P.string.minLength(1), (pending) => (
+      <CodeStep newEmail={pending} onBack={() => setPending(null)} />
+    ))
+    .otherwise(() => <AddressStep onSent={setPending} onCancel={props.onCancel} />);
 }

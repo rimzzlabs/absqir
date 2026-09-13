@@ -10,6 +10,7 @@ import {
 } from "@absqir/ui/select";
 import { A } from "@mobily/ts-belt";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 import { useGroups } from "@/queries/use-groups";
 
 export interface EventsToolbarProps {
@@ -59,16 +60,18 @@ export function EventsToolbar(props: EventsToolbarProps) {
           <SelectGroup>
             <SelectItem value={EVERY_GROUP}>Every group</SelectItem>
           </SelectGroup>
-          {rows.length > 0 ? (
-            <SelectGroup>
-              <SelectLabel>Groups</SelectLabel>
-              {A.map(rows, (group) => (
-                <SelectItem key={group.id} value={group.id}>
-                  {group.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          ) : null}
+          {match(rows.length > 0)
+            .with(true, () => (
+              <SelectGroup>
+                <SelectLabel>Groups</SelectLabel>
+                {A.map(rows, (group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))
+            .otherwise(() => null)}
         </SelectContent>
       </Select>
     </div>

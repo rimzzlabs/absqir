@@ -4,6 +4,7 @@ import { Input } from "@absqir/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { AuthProviderButtons } from "@/components/auth/auth-provider-buttons";
 import { FormError } from "@/components/shared/form-error";
@@ -69,11 +70,13 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
           description="Enter your email. We will tell you what comes next."
         />
 
-        {props.notice ? (
-          <p role="alert" className="text-destructive text-sm">
-            {props.notice}
-          </p>
-        ) : null}
+        {match(props.notice)
+          .with(P.string.minLength(1), (notice) => (
+            <p role="alert" className="text-destructive text-sm">
+              {notice}
+            </p>
+          ))
+          .otherwise(() => null)}
 
         <FormField
           control={form.control}
@@ -102,7 +105,9 @@ export function AuthEmailStep(props: AuthEmailStepProps) {
         <FormError error={lookup.error ?? sendCode.error} />
 
         <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Checking…" : "Continue"}
+          {match(pending)
+            .with(true, () => "Checking…" as const)
+            .otherwise(() => "Continue" as const)}
         </Button>
 
         <AuthProviderButtons providers={props.providers} next={props.next} />

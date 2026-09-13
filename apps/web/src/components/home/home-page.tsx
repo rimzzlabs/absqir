@@ -48,15 +48,21 @@ interface Step {
 function CountLinks(props: { counts: Organization["counts"] }) {
   const links = [
     {
-      label: props.counts.people === 1 ? "1 person" : `${props.counts.people} people`,
+      label: match(props.counts.people)
+        .with(1, () => "1 person" as const)
+        .otherwise((people) => `${people} people`),
       href: "/people",
     },
     {
-      label: props.counts.groups === 1 ? "1 group" : `${props.counts.groups} groups`,
+      label: match(props.counts.groups)
+        .with(1, () => "1 group" as const)
+        .otherwise((groups) => `${groups} groups`),
       href: "/groups",
     },
     {
-      label: props.counts.members === 1 ? "1 account" : `${props.counts.members} accounts`,
+      label: match(props.counts.members)
+        .with(1, () => "1 account" as const)
+        .otherwise((members) => `${members} accounts`),
       href: "/settings?tab=members",
     },
   ];
@@ -65,7 +71,9 @@ function CountLinks(props: { counts: Organization["counts"] }) {
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
       {A.mapWithIndex(links, (index, link) => (
         <span key={link.href} className="flex items-center gap-2">
-          {index > 0 ? <span aria-hidden>·</span> : null}
+          {match(index > 0)
+            .with(true, () => <span aria-hidden>·</span>)
+            .otherwise(() => null)}
           <a href={link.href} className="hover:text-foreground underline underline-offset-4">
             {link.label}
           </a>
@@ -79,10 +87,9 @@ function CountLinks(props: { counts: Organization["counts"] }) {
 function InvitationPrompt(props: { pending: number }) {
   if (props.pending === 0) return null;
 
-  const line =
-    props.pending === 1
-      ? "One invitation is still waiting to be accepted."
-      : `${props.pending} invitations are still waiting to be accepted.`;
+  const line = match(props.pending)
+    .with(1, () => "One invitation is still waiting to be accepted." as const)
+    .otherwise((pending) => `${pending} invitations are still waiting to be accepted.`);
 
   return (
     <p className="text-muted-foreground text-sm">
@@ -209,11 +216,13 @@ function SetupSteps(props: { organization: Organization; steps: Step[] }) {
         <ol className="space-y-3">
           {A.map(props.steps, (step) => (
             <li key={step.label} className="flex items-start gap-3">
-              {step.done ? (
-                <CheckCircleIcon weight="fill" className="mt-0.5 size-5 text-emerald-500" />
-              ) : (
-                <CircleIcon className="text-muted-foreground mt-0.5 size-5" />
-              )}
+              {match(step.done)
+                .with(true, () => (
+                  <CheckCircleIcon weight="fill" className="mt-0.5 size-5 text-emerald-500" />
+                ))
+                .otherwise(() => (
+                  <CircleIcon className="text-muted-foreground mt-0.5 size-5" />
+                ))}
               <div className="flex-1">
                 <a href={step.href} className="text-sm font-medium hover:underline">
                   {step.label}
@@ -277,33 +286,41 @@ function UpcomingEvents() {
           Next events
         </CardTitle>
         <CardDescription>
-          {rows.length === 0
-            ? "Nothing is planned. Create an event, or a schedule that creates them for you."
-            : "Soonest first. Running ones accept check-ins now."}
+          {match(rows.length)
+            .with(
+              0,
+              () =>
+                "Nothing is planned. Create an event, or a schedule that creates them for you." as const,
+            )
+            .otherwise(() => "Soonest first. Running ones accept check-ins now." as const)}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {events.isError ? <FormError error={events.error} /> : null}
-        {rows.length > 0 ? (
-          <ul className="divide-border divide-y">
-            {A.map(rows, (event) => (
-              <li key={event.id}>
-                <a
-                  href={`/events/${event.id}`}
-                  className="flex items-center gap-3 py-2 text-sm hover:underline"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{event.title}</span>
-                    <span className="text-muted-foreground block text-xs">
-                      {formatRange(new Date(event.startsAt), new Date(event.endsAt))}
+        {match(events.isError)
+          .with(true, () => <FormError error={events.error} />)
+          .otherwise(() => null)}
+        {match(rows.length > 0)
+          .with(true, () => (
+            <ul className="divide-border divide-y">
+              {A.map(rows, (event) => (
+                <li key={event.id}>
+                  <a
+                    href={`/events/${event.id}`}
+                    className="flex items-center gap-3 py-2 text-sm hover:underline"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{event.title}</span>
+                      <span className="text-muted-foreground block text-xs">
+                        {formatRange(new Date(event.startsAt), new Date(event.endsAt))}
+                      </span>
                     </span>
-                  </span>
-                  <EventStatusBadge status={event.status} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+                    <EventStatusBadge status={event.status} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ))
+          .otherwise(() => null)}
         <div className="flex gap-2">
           <a href="/events" className={buttonVariants({ variant: "outline", size: "sm" })}>
             All events
@@ -324,19 +341,19 @@ function HomeBody(props: HomePageProps) {
     <>
       <PageHeader
         title={`Hello, ${props.userName.split(" ")[0] ?? props.userName}`}
-        description={
-          organization.data ? (
-            <CountLinks counts={organization.data.counts} />
-          ) : (
-            "Where the organization stands today."
-          )
-        }
+        description={match(organization.data)
+          .with(P.nullish, () => "Where the organization stands today.")
+          .otherwise((data) => <CountLinks counts={data.counts} />)}
       />
 
-      {organization.isError ? <FormError error={organization.error} /> : null}
-      {organization.data ? (
-        <InvitationPrompt pending={organization.data.counts.pendingInvitations} />
-      ) : null}
+      {match(organization.isError)
+        .with(true, () => <FormError error={organization.error} />)
+        .otherwise(() => null)}
+      {match(organization.data)
+        .with(P.nullish, () => null)
+        .otherwise((data) => (
+          <InvitationPrompt pending={data.counts.pendingInvitations} />
+        ))}
 
       <ThirtyDayStats />
 

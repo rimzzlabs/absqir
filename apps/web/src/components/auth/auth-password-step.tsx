@@ -5,6 +5,7 @@ import { Input } from "@absqir/ui/input";
 import { Label } from "@absqir/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { FormError } from "@/components/shared/form-error";
 import { type PasswordValues, passwordSchema } from "@/lib/auth-schemas";
@@ -87,7 +88,9 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
         <FormError error={signIn.error ?? sendCode.error} />
 
         <Button type="submit" disabled={signIn.isPending} className="w-full">
-          {signIn.isPending ? "Signing in…" : "Sign in"}
+          {match(signIn.isPending)
+            .with(true, () => "Signing in…" as const)
+            .otherwise(() => "Sign in" as const)}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
@@ -102,7 +105,9 @@ export function AuthPasswordStep(props: AuthPasswordStepProps) {
             disabled={sendCode.isPending}
             onClick={onCode}
           >
-            {sendCode.isPending ? "Sending…" : "Email me a code instead"}
+            {match(sendCode.isPending)
+              .with(true, () => "Sending…" as const)
+              .otherwise(() => "Email me a code instead" as const)}
           </Button>
         </div>
       </form>

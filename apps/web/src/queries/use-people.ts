@@ -1,5 +1,6 @@
 import { peopleKeys } from "@absqir/core/query-keys";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
+import { match, P } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
 export function usePeople(query = "") {
@@ -7,7 +8,11 @@ export function usePeople(query = "") {
     queryKey: peopleKeys.list(query),
     queryFn: async (ctx: QueryFunctionContext) => {
       const response = await api.people.$get(
-        { query: query ? { q: query } : {} },
+        {
+          query: match(query)
+            .with(P.string.minLength(1), (query) => ({ q: query }))
+            .otherwise(() => ({})),
+        },
         { init: { signal: ctx.signal } },
       );
 

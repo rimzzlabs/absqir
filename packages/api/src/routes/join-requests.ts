@@ -334,9 +334,9 @@ export const joinRequestRoutes = app
           .otherwise((status) =>
             and(
               eq(joinRequest.organizationId, organizationId),
-              status === "pending"
-                ? eq(joinRequest.status, "pending")
-                : ne(joinRequest.status, "pending"),
+              match(status)
+                .with("pending", () => eq(joinRequest.status, "pending"))
+                .otherwise(() => ne(joinRequest.status, "pending")),
             ),
           ),
       )

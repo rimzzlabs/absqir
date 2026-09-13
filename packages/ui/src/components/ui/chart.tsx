@@ -206,47 +206,55 @@ function ChartTooltipContent({
                 )
                 .otherwise(() => (
                   <>
-                    {itemConfig?.icon ? (
-                      <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            },
-                          )}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
+                    {match(itemConfig?.icon)
+                      .with(
+                        P.nullish,
+                        () =>
+                          !hideIndicator && (
+                            <div
+                              className={cn(
+                                "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                                {
+                                  "h-2.5 w-2.5": indicator === "dot",
+                                  "w-1": indicator === "line",
+                                  "w-0 border-[1.5px] border-dashed bg-transparent":
+                                    indicator === "dashed",
+                                  "my-0.5": nestLabel && indicator === "dashed",
+                                },
+                              )}
+                              style={
+                                {
+                                  "--color-bg": indicatorColor,
+                                  "--color-border": indicatorColor,
+                                } as React.CSSProperties
+                              }
+                            />
+                          ),
                       )
-                    )}
+                      .otherwise((Icon) => (
+                        <Icon />
+                      ))}
                     <div
                       className={cn(
                         "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center",
+                        match(nestLabel)
+                          .with(true, () => "items-end" as const)
+                          .otherwise(() => "items-center" as const),
                       )}
                     >
                       <div className="grid gap-1.5">
-                        {nestLabel ? tooltipLabel : null}
+                        {match(nestLabel)
+                          .with(true, () => tooltipLabel)
+                          .otherwise(() => null)}
                         <span className="text-muted-foreground">
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>
                       {item.value != null && (
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {typeof item.value === "number"
-                            ? item.value.toLocaleString()
-                            : String(item.value)}
+                          {match(item.value)
+                            .with(P.number, (value) => value.toLocaleString())
+                            .otherwise((value) => String(value))}
                         </span>
                       )}
                     </div>

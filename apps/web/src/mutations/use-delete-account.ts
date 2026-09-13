@@ -1,5 +1,6 @@
 import { accountMutationKeys } from "@absqir/core/query-keys";
 import { useMutation } from "@tanstack/react-query";
+import { match } from "ts-pattern";
 import { authClient } from "@/lib/auth-client";
 
 export interface DeleteAccountInput {
@@ -26,7 +27,9 @@ export function useDeleteAccount() {
       }
 
       const { error } = await authClient.deleteUser(
-        values.password === undefined ? {} : { password: values.password },
+        match(values.password)
+          .with(undefined, () => ({}))
+          .otherwise((password) => ({ password })),
       );
 
       if (error?.code === "SESSION_EXPIRED") {

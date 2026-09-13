@@ -1,5 +1,6 @@
 import { accountKeys, accountMutationKeys } from "@absqir/core/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { match, P } from "ts-pattern";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-error";
 
@@ -10,9 +11,9 @@ export function useRevokeSession() {
   return useMutation({
     mutationKey: accountMutationKeys.revokeSession(),
     mutationFn: async (token: string | null) => {
-      const { error } = token
-        ? await authClient.revokeSession({ token })
-        : await authClient.revokeOtherSessions();
+      const { error } = await match(token)
+        .with(P.string.minLength(1), async (token) => await authClient.revokeSession({ token }))
+        .otherwise(async () => await authClient.revokeOtherSessions());
 
       if (error) throw authErrorMessage(error, "Could not sign that device out.");
     },

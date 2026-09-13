@@ -31,7 +31,9 @@ export interface MembersTableProps {
 }
 
 function asRole(role: string): RoleName {
-  return role === "owner" || role === "admin" || role === "organizer" ? role : "member";
+  return match(role)
+    .with("owner", "admin", "organizer", (name) => name)
+    .otherwise(() => "member" as const);
 }
 
 function MemberRow(props: { member: Member; viewerRole: RoleName; isSelf: boolean }) {
@@ -51,70 +53,80 @@ function MemberRow(props: { member: Member; viewerRole: RoleName; isSelf: boolea
       <TableCell>
         <div className="flex items-center gap-3">
           <Avatar>
-            {member.user.image ? <AvatarImage src={member.user.image} alt="" /> : null}
+            {match(member.user.image)
+              .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
+              .otherwise(() => null)}
             <AvatarFallback name={member.user.name}>{initialsOf(member.user.name)}</AvatarFallback>
           </Avatar>
           <div>
             <p className="font-medium">
               {member.user.name}
-              {props.isSelf ? <span className="text-muted-foreground"> (you)</span> : null}
+              {match(props.isSelf)
+                .with(true, () => <span className="text-muted-foreground"> (you)</span>)
+                .otherwise(() => null)}
             </p>
             <p className="text-muted-foreground text-xs">{member.user.email}</p>
           </div>
         </div>
       </TableCell>
       <TableCell>
-        {canChange ? (
-          <div className="w-40">
-            <RoleSelect
-              value={role as InvitableRole}
-              includeOwner={viewerIsOwner}
-              disabled={updateRole.isPending}
-              onChange={(value) => updateRole.mutate({ memberId: member.id, role: value })}
-            />
-          </div>
-        ) : (
-          <RoleBadge role={role} />
-        )}
+        {match(canChange)
+          .with(true, () => (
+            <div className="w-40">
+              <RoleSelect
+                value={role as InvitableRole}
+                includeOwner={viewerIsOwner}
+                disabled={updateRole.isPending}
+                onChange={(value) => updateRole.mutate({ memberId: member.id, role: value })}
+              />
+            </div>
+          ))
+          .otherwise(() => (
+            <RoleBadge role={role} />
+          ))}
         <FormError error={updateRole.error} />
       </TableCell>
       <TableCell className="text-right">
-        {canChange ? (
-          <>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Remove ${member.user.name}`}
-              onClick={() => setRemoving(true)}
-            >
-              <TrashIcon />
-            </Button>
-            <AlertDialog open={removing} onOpenChange={setRemoving}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Remove {member.user.name}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    They lose access to this organization. Their directory entry stays, without an
-                    account behind it.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <FormError error={remove.error} />
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Keep</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    disabled={remove.isPending}
-                    onClick={() =>
-                      remove.mutate(member.id, { onSuccess: () => setRemoving(false) })
-                    }
-                  >
-                    {remove.isPending ? "Removing…" : "Remove"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
-        ) : null}
+        {match(canChange)
+          .with(true, () => (
+            <>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Remove ${member.user.name}`}
+                onClick={() => setRemoving(true)}
+              >
+                <TrashIcon />
+              </Button>
+              <AlertDialog open={removing} onOpenChange={setRemoving}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove {member.user.name}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      They lose access to this organization. Their directory entry stays, without an
+                      account behind it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <FormError error={remove.error} />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      disabled={remove.isPending}
+                      onClick={() =>
+                        remove.mutate(member.id, { onSuccess: () => setRemoving(false) })
+                      }
+                    >
+                      {match(remove.isPending)
+                        .with(true, () => "Removing…" as const)
+                        .otherwise(() => "Remove" as const)}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          ))
+          .otherwise(() => null)}
       </TableCell>
     </TableRow>
   );

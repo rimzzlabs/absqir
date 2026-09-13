@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { match } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { CodeInput } from "@/components/auth/code-input";
 import { FormError } from "@/components/shared/form-error";
@@ -30,8 +31,12 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
   const verify = useVerifyCode({ redirectTo: props.next });
   const resend = useSendCode();
   const cooldown = useCooldown(RESEND_COOLDOWN_SECONDS);
-  const submitLabel = props.isNew ? "Create my account" : "Sign in";
-  const resendLabel = cooldown.ready ? "Send a new code" : `New code in ${cooldown.remaining}s`;
+  const submitLabel = match(props.isNew)
+    .with(true, () => "Create my account" as const)
+    .otherwise(() => "Sign in" as const);
+  const resendLabel = match(cooldown.ready)
+    .with(true, () => "Send a new code" as const)
+    .otherwise(() => `New code in ${cooldown.remaining}s`);
 
   return (
     <Form {...form}>
@@ -43,7 +48,9 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
         noValidate
       >
         <AuthHeading
-          title={props.isNew ? "Check your inbox" : "Enter your code"}
+          title={match(props.isNew)
+            .with(true, () => "Check your inbox")
+            .otherwise(() => "Enter your code")}
           description={`We sent a 6 digit code to ${props.email}. It works for 10 minutes.`}
         />
 
@@ -69,7 +76,9 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
         <FormError error={verify.error ?? resend.error} />
 
         <Button type="submit" disabled={verify.isPending} className="w-full">
-          {verify.isPending ? "Checking…" : submitLabel}
+          {match(verify.isPending)
+            .with(true, () => "Checking…" as const)
+            .otherwise(() => submitLabel)}
         </Button>
 
         <div className="flex items-center justify-between text-sm">
@@ -89,7 +98,9 @@ export function AuthCodeStep(props: AuthCodeStepProps) {
               )
             }
           >
-            {resend.isPending ? "Sending…" : resendLabel}
+            {match(resend.isPending)
+              .with(true, () => "Sending…" as const)
+              .otherwise(() => resendLabel)}
           </Button>
         </div>
       </form>

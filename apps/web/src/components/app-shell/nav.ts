@@ -14,6 +14,7 @@ import {
   UsersIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react";
+import { match } from "ts-pattern";
 
 export type RoleName = "owner" | "admin" | "organizer" | "member";
 
@@ -117,7 +118,9 @@ export const SOLO_NAV: NavGroup[] = [
 export const GITHUB_URL = "https://github.com/rimzzlabs/absqir";
 
 export function navFor(role: RoleName): NavGroup[] {
-  const groups = roleAtLeast(role, "organizer") ? MANAGER_NAV : MEMBER_NAV;
+  const groups = match(roleAtLeast(role, "organizer"))
+    .with(true, () => MANAGER_NAV)
+    .otherwise(() => MEMBER_NAV);
 
   return groups
     .map((group) => ({

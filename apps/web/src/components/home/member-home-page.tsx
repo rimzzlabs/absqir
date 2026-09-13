@@ -32,14 +32,15 @@ export interface MemberHomePageProps {
 }
 
 function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
-  const waitingNote =
-    props.pending === 1
-      ? "One request waits for a decision."
-      : `${props.pending} requests wait for a decision.`;
-  const restingNote = props.latest
-    ? "Your last request."
-    : "Cannot make an event? Ask before it starts.";
-  const badge: LeaveStatus | null = props.pending > 0 ? "pending" : props.latest;
+  const waitingNote = match(props.pending)
+    .with(1, () => "One request waits for a decision." as const)
+    .otherwise((pending) => `${pending} requests wait for a decision.`);
+  const restingNote = match(props.latest)
+    .with(P.string.minLength(1), () => "Your last request.")
+    .otherwise(() => "Cannot make an event? Ask before it starts." as const);
+  const badge: LeaveStatus | null = match(props.pending > 0)
+    .with(true, () => "pending" as const)
+    .otherwise(() => props.latest);
 
   return (
     <Card size="sm">
@@ -48,12 +49,18 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
           <NotePencilIcon />
           Leave
         </CardTitle>
-        <CardDescription>{props.pending > 0 ? waitingNote : restingNote}</CardDescription>
-        {badge ? (
-          <CardAction>
-            <LeaveStatusBadge status={badge} />
-          </CardAction>
-        ) : null}
+        <CardDescription>
+          {match(props.pending > 0)
+            .with(true, () => waitingNote)
+            .otherwise(() => restingNote)}
+        </CardDescription>
+        {match(badge)
+          .with(P.string.minLength(1), (badge) => (
+            <CardAction>
+              <LeaveStatusBadge status={badge} />
+            </CardAction>
+          ))
+          .otherwise(() => null)}
       </CardHeader>
       <CardContent>
         <a href="/my/leave" className={buttonVariants({ variant: "outline", size: "sm" })}>
@@ -87,7 +94,9 @@ function MemberHomeBody(props: MemberHomePageProps) {
               href="/settings?tab=profile"
               className="text-foreground underline underline-offset-4"
             >
-              {props.timezone ? describeTimezone(props.timezone) : "this device's clock"}
+              {match(props.timezone)
+                .with(P.string.minLength(1), (timezone) => describeTimezone(timezone))
+                .otherwise(() => "this device's clock" as const)}
             </a>
             .
           </>
@@ -118,11 +127,11 @@ function MemberHomeBody(props: MemberHomePageProps) {
             ))
             .otherwise(() => null)}
 
-          {leave.isError ? (
-            <FormError error={leave.error} />
-          ) : (
-            <LeaveCard pending={pendingLeave} latest={requests[0]?.status ?? null} />
-          )}
+          {match(leave.isError)
+            .with(true, () => <FormError error={leave.error} />)
+            .otherwise(() => (
+              <LeaveCard pending={pendingLeave} latest={requests[0]?.status ?? null} />
+            ))}
         </div>
       </div>
 

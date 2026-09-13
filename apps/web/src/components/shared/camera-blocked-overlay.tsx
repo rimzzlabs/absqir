@@ -16,6 +16,7 @@ import {
 } from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
+import { match } from "ts-pattern";
 import type { CameraFault } from "@/components/shared/use-camera";
 
 export interface CameraBlockedOverlayProps {
@@ -141,7 +142,9 @@ export function CameraBlockedOverlay(props: CameraBlockedOverlayProps) {
         showCloseButton={false}
         className={cn(
           "left-4 max-w-[calc(100%-2rem)] translate-x-0 translate-y-0 sm:max-w-sm",
-          top ? "top-4 bottom-auto" : "top-auto bottom-4",
+          match(top)
+            .with(true, () => "top-4 bottom-auto" as const)
+            .otherwise(() => "top-auto bottom-4" as const),
         )}
       >
         {/* The whole bar is marked, because the button inside it sits wherever
@@ -153,7 +156,9 @@ export function CameraBlockedOverlay(props: CameraBlockedOverlayProps) {
             aria-hidden
             className={cn(
               "bg-primary pointer-events-none fixed inset-x-0 z-[60] h-1 animate-pulse",
-              top ? "top-0" : "bottom-0",
+              match(top)
+                .with(true, () => "top-0" as const)
+                .otherwise(() => "bottom-0" as const),
             )}
           />,
           document.body,
@@ -162,7 +167,12 @@ export function CameraBlockedOverlay(props: CameraBlockedOverlayProps) {
         {/* Ties the card to that bar. The card sits 1rem in, so the line is 1rem. */}
         <span
           aria-hidden
-          className={cn("bg-primary absolute left-8 h-4 w-0.5", top ? "-top-4" : "-bottom-4")}
+          className={cn(
+            "bg-primary absolute left-8 h-4 w-0.5",
+            match(top)
+              .with(true, () => "-top-4" as const)
+              .otherwise(() => "-bottom-4" as const),
+          )}
         />
 
         <DialogHeader>

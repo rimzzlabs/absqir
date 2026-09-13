@@ -1,3 +1,4 @@
+import { match, P } from "ts-pattern";
 /** The providers this build knows, in the order the buttons appear. */
 export const AUTH_PROVIDERS = ["github", "google"] as const;
 
@@ -10,7 +11,9 @@ export function isAuthProvider(value: string): value is AuthProviderId {
 }
 
 export function providerLabel(provider: AuthProviderId | null): string {
-  return provider ? LABELS[provider] : "The provider";
+  return match(provider)
+    .with(P.string.minLength(1), (provider) => LABELS[provider])
+    .otherwise(() => "The provider");
 }
 
 /**
@@ -39,7 +42,9 @@ const MAX_EMAIL_LENGTH = 254;
 function emailIn(description: string | null): string | null {
   const found = description?.match(EMAIL_PATTERN)?.[0] ?? null;
 
-  return found && found.length <= MAX_EMAIL_LENGTH ? found : null;
+  return match(Boolean(found && found.length <= MAX_EMAIL_LENGTH))
+    .with(true, () => found)
+    .otherwise(() => null);
 }
 
 /**
@@ -62,9 +67,12 @@ export function readCallbackError(params: {
     return {
       needsInvitation: true,
       email,
-      message: email
-        ? `${name} signed you in as ${email}. That address has no invitation here.`
-        : `The address ${name} returned has no invitation here.`,
+      message: match(email)
+        .with(
+          P.string.minLength(1),
+          (email) => `${name} signed you in as ${email}. That address has no invitation here.`,
+        )
+        .otherwise(() => `The address ${name} returned has no invitation here.`),
     };
   }
 

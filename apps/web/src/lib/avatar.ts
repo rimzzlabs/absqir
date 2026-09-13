@@ -1,4 +1,5 @@
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 /** Matches MAX_AVATAR_BYTES in packages/api. */
 export const MAX_AVATAR_BYTES = 48_000;
 const SIZE = 128;
@@ -44,7 +45,9 @@ export async function toAvatarDataUrl(file: File): Promise<string> {
 /** Two letters for the fallback circle. */
 export function initialsOf(name: string): string {
   const parts = A.filter(name.trim().split(/\s+/), Boolean);
-  const letters = parts.length >= 2 ? [parts[0], parts.at(-1)] : parts.slice(0, 1);
+  const letters = match(parts.length >= 2)
+    .with(true, () => [parts[0], parts.at(-1)])
+    .otherwise(() => parts.slice(0, 1));
 
   return A.map(letters, (part) => part?.[0]?.toUpperCase() ?? "")
     .join("")

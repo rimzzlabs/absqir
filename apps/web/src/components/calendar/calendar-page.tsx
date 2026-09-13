@@ -97,7 +97,11 @@ function CalendarBody() {
   );
 
   const step = (direction: 1 | -1) => {
-    setCursor(view === "month" ? addMonths(cursor, direction) : addDays(cursor, direction * 7));
+    setCursor(
+      match(view)
+        .with("month", () => addMonths(cursor, direction))
+        .otherwise(() => addDays(cursor, direction * 7)),
+    );
   };
 
   const openEntry = (entry: CalendarEntry) => {
@@ -149,7 +153,9 @@ function CalendarBody() {
         </ToggleGroup>
       </div>
 
-      {calendar.isError ? <FormError error={calendar.error} /> : null}
+      {match(calendar.isError)
+        .with(true, () => <FormError error={calendar.error} />)
+        .otherwise(() => null)}
 
       {match(calendar)
         .with({ isPending: true }, () => <Skeleton className="h-[32rem] rounded-xl" />)

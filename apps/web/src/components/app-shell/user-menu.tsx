@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
 import { SignOutIcon, SlidersHorizontalIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { match, P } from "ts-pattern";
 import type { ShellUser } from "@/components/app-shell/app-shell";
 import { initialsOf } from "@/lib/avatar";
 import { useSignOut } from "@/mutations/use-sign-out";
@@ -27,7 +28,9 @@ export function UserMenu(props: UserMenuProps) {
         render={<Button variant="ghost" size="icon" aria-label="Account menu" />}
       >
         <Avatar>
-          {props.user.image ? <AvatarImage src={props.user.image} alt="" /> : null}
+          {match(props.user.image)
+            .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
+            .otherwise(() => null)}
           <AvatarFallback name={props.user.name}>{initialsOf(props.user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>

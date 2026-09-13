@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
 import { BellIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { match } from "ts-pattern";
 import { NotificationPreview } from "@/components/app-shell/notification-preview";
 import { useCanHover } from "@/lib/use-can-hover";
 import { useNotificationStream } from "@/queries/use-notification-stream";
@@ -34,16 +35,22 @@ export function NotificationBell() {
             variant="ghost"
             size="icon"
             className="relative"
-            aria-label={count === 0 ? "Notifications" : `Notifications, ${count} unread`}
+            aria-label={match(count)
+              .with(0, () => "Notifications")
+              .otherwise((count) => `Notifications, ${count} unread`)}
           />
         }
       >
         <BellIcon />
-        {count > 0 ? (
-          <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums">
-            {count > MAX_SHOWN ? `${MAX_SHOWN}+` : count}
-          </span>
-        ) : null}
+        {match(count > 0)
+          .with(true, () => (
+            <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums">
+              {match(count > MAX_SHOWN)
+                .with(true, () => `${MAX_SHOWN}+`)
+                .otherwise(() => count)}
+            </span>
+          ))
+          .otherwise(() => null)}
       </PopoverTrigger>
 
       <PopoverContent align="end" sideOffset={8} className="w-80 gap-0 p-0">

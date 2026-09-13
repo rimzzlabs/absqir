@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
 import { UploadSimpleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { FormError } from "@/components/shared/form-error";
 import { initialsOf, toAvatarDataUrl } from "@/lib/avatar";
@@ -25,7 +26,11 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
     try {
       setImage(await toAvatarDataUrl(file));
     } catch (error) {
-      setResizeError(error instanceof Error ? error : new Error("Could not read that picture."));
+      setResizeError(
+        match(error)
+          .with(P.instanceOf(Error), (error) => error)
+          .otherwise(() => new Error("Could not read that picture.")),
+      );
     }
   };
 
@@ -38,7 +43,9 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
 
       <div className="flex items-center gap-5">
         <Avatar size="lg" className="size-20">
-          {image ? <AvatarImage src={image} alt="" /> : null}
+          {match(image)
+            .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
+            .otherwise(() => null)}
           <AvatarFallback name={props.status.name} className="text-lg">
             {initialsOf(props.status.name)}
           </AvatarFallback>
@@ -54,7 +61,9 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
           />
           <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
             <UploadSimpleIcon />
-            {image ? "Choose another" : "Choose a picture"}
+            {match(image)
+              .with(P.string.minLength(1), () => "Choose another" as const)
+              .otherwise(() => "Choose a picture" as const)}
           </Button>
           <p className="text-muted-foreground text-xs">PNG, JPEG, or WebP. Shrunk to 128px.</p>
         </div>
@@ -69,7 +78,9 @@ export function OnboardingAvatarStep(props: OnboardingAvatarStepProps) {
           disabled={save.isPending || !image}
           onClick={() => save.mutate(image)}
         >
-          {save.isPending ? "Saving…" : "Save and continue"}
+          {match(save.isPending)
+            .with(true, () => "Saving…" as const)
+            .otherwise(() => "Save and continue" as const)}
         </Button>
         <Button
           type="button"

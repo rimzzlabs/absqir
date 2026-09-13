@@ -1,5 +1,6 @@
 import { formatDate } from "@absqir/core/date";
 import { A } from "@mobily/ts-belt";
+import { match } from "ts-pattern";
 import type { CalendarEvent, ProjectedEvent } from "@/queries/use-calendar";
 
 /** One line in a day cell: a real event, or one a schedule still owes. */
@@ -8,7 +9,9 @@ export type CalendarEntry =
   | { kind: "projected"; key: string; startsAt: Date; endsAt: Date; title: string };
 
 export function entryTitle(entry: CalendarEntry): string {
-  return entry.kind === "event" ? entry.event.title : entry.title;
+  return match(entry)
+    .with({ kind: "event" }, (entry) => entry.event.title)
+    .otherwise((entry) => entry.title);
 }
 
 /** The map key for a day, in the display zone, so a cell holds the account's own day. */

@@ -1,5 +1,6 @@
 import { cn } from "@absqir/ui/lib/utils";
 import type { ReactNode } from "react";
+import { match } from "ts-pattern";
 
 export interface SettingsSectionProps {
   title: string;
@@ -17,11 +18,15 @@ export function SettingsSection(props: SettingsSectionProps) {
       <header className="border-border flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b pb-4">
         <div className="min-w-0">
           <h2 className="font-heading text-lg font-semibold tracking-tight">{props.title}</h2>
-          {props.description ? (
-            <p className="text-muted-foreground mt-1 max-w-prose text-sm">{props.description}</p>
-          ) : null}
+          {match(Boolean(props.description))
+            .with(true, () => (
+              <p className="text-muted-foreground mt-1 max-w-prose text-sm">{props.description}</p>
+            ))
+            .otherwise(() => null)}
         </div>
-        {props.actions ? <div className="flex items-center gap-2">{props.actions}</div> : null}
+        {match(Boolean(props.actions))
+          .with(true, () => <div className="flex items-center gap-2">{props.actions}</div>)
+          .otherwise(() => null)}
       </header>
       {props.children}
     </section>
@@ -49,7 +54,9 @@ export function SettingsRow(props: SettingsRowProps) {
     >
       <div className="min-w-0">
         <p className="text-sm font-medium">{props.label}</p>
-        {props.hint ? <p className="text-muted-foreground mt-1 text-sm">{props.hint}</p> : null}
+        {match(Boolean(props.hint))
+          .with(true, () => <p className="text-muted-foreground mt-1 text-sm">{props.hint}</p>)
+          .otherwise(() => null)}
       </div>
       <div className="min-w-0">{props.children}</div>
     </div>

@@ -14,6 +14,7 @@ import { Separator } from "@absqir/ui/separator";
 import { Textarea } from "@absqir/ui/textarea";
 import { A } from "@mobily/ts-belt";
 import { useState } from "react";
+import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { OnboardingEventCard } from "@/components/onboarding/onboarding-event-card";
 import { FormError } from "@/components/shared/form-error";
@@ -50,7 +51,9 @@ export interface JoinOrganizationProps {
 }
 
 function asRole(role: string) {
-  return role === "owner" || role === "admin" || role === "organizer" ? role : "member";
+  return match(role)
+    .with("owner", "admin", "organizer", (name) => name)
+    .otherwise(() => "member" as const);
 }
 
 function initialsOf(name: string) {
@@ -70,7 +73,9 @@ export function JoinOrganization(props: JoinOrganizationProps) {
   const withdraw = useWithdrawJoinRequest();
   const createInOnboarding = useOnboardingOrganization();
   const createLater = useCreateOrganization();
-  const create = variant === "onboarding" ? createInOnboarding : createLater;
+  const create = match(variant)
+    .with("onboarding", () => createInOnboarding)
+    .otherwise(() => createLater);
 
   const [message, setMessage] = useState("");
   const [writing, setWriting] = useState(false);
@@ -84,8 +89,12 @@ export function JoinOrganization(props: JoinOrganizationProps) {
   const hasEvent = Boolean(props.eventId);
   const workspace = status.workspace;
   const waiting = status.joinRequest;
-  const requestLabel = writing ? "Send request" : "Ask to join";
-  const joinLabel = workspace?.joinPolicy === "auto" ? "Join" : requestLabel;
+  const requestLabel = match(writing)
+    .with(true, () => "Send request" as const)
+    .otherwise(() => "Ask to join" as const);
+  const joinLabel = match(workspace)
+    .with({ joinPolicy: "auto" }, () => "Join" as const)
+    .otherwise(() => requestLabel);
 
   const heading = (() => {
     if (waiting) {
@@ -110,135 +119,163 @@ export function JoinOrganization(props: JoinOrganizationProps) {
     }
 
     if (workspace) {
-      return workspace.joinPolicy === "auto"
-        ? {
-            title: `${workspace.name} is on absqir`,
-            description: `Everybody at ${workspace.domain} can come straight in.`,
-          }
-        : {
-            title: `${workspace.name} is on absqir`,
-            description: `They take people from ${workspace.domain}. Ask, and an organizer decides.`,
-          };
+      return match(workspace.joinPolicy)
+        .with("auto", () => ({
+          title: `${workspace.name} is on absqir`,
+          description: `Everybody at ${workspace.domain} can come straight in.`,
+        }))
+        .otherwise(() => ({
+          title: `${workspace.name} is on absqir`,
+          description: `They take people from ${workspace.domain}. Ask, and an organizer decides.`,
+        }));
     }
 
     return {
       title: "You are not in an organization yet",
-      description: status.canCreateOrganizations
-        ? "Start one below, or wait for an invitation."
-        : "An organizer has to invite you.",
+      description: match(status.canCreateOrganizations)
+        .with(true, () => "Start one below, or wait for an invitation." as const)
+        .otherwise(() => "An organizer has to invite you." as const),
     };
   })();
 
   return (
     <div className="space-y-6">
-      {props.heading === false ? null : (
-        <AuthHeading title={heading.title} description={heading.description} />
-      )}
+      {match(props.heading === false)
+        .with(true, () => null)
+        .otherwise(() => (
+          <AuthHeading title={heading.title} description={heading.description} />
+        ))}
 
-      {props.eventId ? <OnboardingEventCard eventId={props.eventId} /> : null}
+      {match(props.eventId)
+        .with(P.string.minLength(1), (eventId) => <OnboardingEventCard eventId={eventId} />)
+        .otherwise(() => null)}
 
-      {waiting ? (
-        <Item variant="outline">
-          <ItemContent>
-            <ItemTitle>{waiting.organizationName}</ItemTitle>
-            <ItemDescription>Sent {relativeToNow(new Date(waiting.createdAt))}</ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={withdraw.isPending}
-              onClick={() => withdraw.mutate()}
-            >
-              {withdraw.isPending ? "Withdrawing…" : "Withdraw"}
-            </Button>
-          </ItemActions>
-        </Item>
-      ) : null}
-
-      {hasInvitations ? (
-        <ItemGroup>
-          {A.map(invitations, (invitation) => (
-            <Item key={invitation.id} variant="outline">
-              <ItemContent>
-                <ItemTitle>{invitation.organizationName}</ItemTitle>
-                <ItemDescription>Join as {roleLabel(asRole(invitation.role))}</ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  size="sm"
-                  disabled={accept.isPending}
-                  onClick={() => accept.mutate(invitation.id)}
-                >
-                  {accept.isPending ? "Joining…" : "Accept"}
-                </Button>
-              </ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
-      ) : null}
-
-      {workspace && !waiting ? (
-        <div className="space-y-3">
+      {match(waiting)
+        .with(P.nullish, () => null)
+        .otherwise((waiting) => (
           <Item variant="outline">
-            <ItemMedia>
-              <Avatar>
-                {workspace.logo ? <AvatarImage src={workspace.logo} alt="" /> : null}
-                <AvatarFallback>{initialsOf(workspace.name)}</AvatarFallback>
-              </Avatar>
-            </ItemMedia>
             <ItemContent>
-              <ItemTitle>{workspace.name}</ItemTitle>
-              <ItemDescription>{workspace.domain}</ItemDescription>
+              <ItemTitle>{waiting.organizationName}</ItemTitle>
+              <ItemDescription>Sent {relativeToNow(new Date(waiting.createdAt))}</ItemDescription>
             </ItemContent>
             <ItemActions>
               <Button
                 size="sm"
-                disabled={ask.isPending}
-                onClick={() => {
-                  if (workspace.joinPolicy === "request" && !writing) {
-                    setWriting(true);
-                    return;
-                  }
-
-                  ask.mutate({ message: message.trim() || undefined });
-                }}
+                variant="ghost"
+                disabled={withdraw.isPending}
+                onClick={() => withdraw.mutate()}
               >
-                {ask.isPending ? "Sending…" : joinLabel}
+                {match(withdraw.isPending)
+                  .with(true, () => "Withdrawing…" as const)
+                  .otherwise(() => "Withdraw" as const)}
               </Button>
             </ItemActions>
           </Item>
+        ))}
 
-          {writing && workspace.joinPolicy === "request" ? (
-            <Textarea
-              autoFocus
-              rows={3}
-              maxLength={MAX_MESSAGE_LENGTH}
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={`Tell ${workspace.name} who you are. This is optional.`}
-              aria-label="A note for the organizers"
+      {match(hasInvitations)
+        .with(true, () => (
+          <ItemGroup>
+            {A.map(invitations, (invitation) => (
+              <Item key={invitation.id} variant="outline">
+                <ItemContent>
+                  <ItemTitle>{invitation.organizationName}</ItemTitle>
+                  <ItemDescription>Join as {roleLabel(asRole(invitation.role))}</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    size="sm"
+                    disabled={accept.isPending}
+                    onClick={() => accept.mutate(invitation.id)}
+                  >
+                    {match(accept.isPending)
+                      .with(true, () => "Joining…" as const)
+                      .otherwise(() => "Accept" as const)}
+                  </Button>
+                </ItemActions>
+              </Item>
+            ))}
+          </ItemGroup>
+        ))
+        .otherwise(() => null)}
+
+      {match({ workspace, waiting })
+        .with({ workspace: P.nonNullable, waiting: P.nullish }, ({ workspace }) => (
+          <div className="space-y-3">
+            <Item variant="outline">
+              <ItemMedia>
+                <Avatar>
+                  {match(workspace.logo)
+                    .with(P.string.minLength(1), (logo) => <AvatarImage src={logo} alt="" />)
+                    .otherwise(() => null)}
+                  <AvatarFallback>{initialsOf(workspace.name)}</AvatarFallback>
+                </Avatar>
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>{workspace.name}</ItemTitle>
+                <ItemDescription>{workspace.domain}</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  size="sm"
+                  disabled={ask.isPending}
+                  onClick={() => {
+                    if (workspace.joinPolicy === "request" && !writing) {
+                      setWriting(true);
+                      return;
+                    }
+
+                    ask.mutate({ message: message.trim() || undefined });
+                  }}
+                >
+                  {match(ask.isPending)
+                    .with(true, () => "Sending…" as const)
+                    .otherwise(() => joinLabel)}
+                </Button>
+              </ItemActions>
+            </Item>
+
+            {match(writing && workspace.joinPolicy === "request")
+              .with(true, () => (
+                <Textarea
+                  autoFocus
+                  rows={3}
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  placeholder={`Tell ${workspace.name} who you are. This is optional.`}
+                  aria-label="A note for the organizers"
+                />
+              ))
+              .otherwise(() => null)}
+          </div>
+        ))
+        .otherwise(() => null)}
+
+      {match(status.canCreateOrganizations && !waiting)
+        .with(true, () => (
+          <>
+            {match(Boolean(hasInvitations || workspace))
+              .with(true, () => <Separator />)
+              .otherwise(() => null)}
+            <OrganizationForm
+              submitLabel={match(workspace)
+                .with(P.nullish, () => "Create organization")
+                .otherwise(() => "Start a separate organization")}
+              pending={create.isPending}
+              onSubmit={(values) => create.mutate(values)}
             />
-          ) : null}
-        </div>
-      ) : null}
+          </>
+        ))
+        .otherwise(() => null)}
 
-      {status.canCreateOrganizations && !waiting ? (
-        <>
-          {hasInvitations || workspace ? <Separator /> : null}
-          <OrganizationForm
-            submitLabel={workspace ? "Start a separate organization" : "Create organization"}
-            pending={create.isPending}
-            onSubmit={(values) => create.mutate(values)}
-          />
-        </>
-      ) : null}
-
-      {!hasInvitations && !workspace && !waiting && !hasEvent ? (
-        <p className="text-muted-foreground text-sm">
-          An invitation to {status.email} brings you straight in. Open its link and you are there.
-        </p>
-      ) : null}
+      {match(!hasInvitations && !workspace && !waiting && !hasEvent)
+        .with(true, () => (
+          <p className="text-muted-foreground text-sm">
+            An invitation to {status.email} brings you straight in. Open its link and you are there.
+          </p>
+        ))
+        .otherwise(() => null)}
 
       <FormError error={accept.error ?? ask.error ?? withdraw.error ?? create.error} />
 

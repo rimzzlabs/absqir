@@ -2,6 +2,7 @@ import { Button } from "@absqir/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-group";
 import { CheckIcon, CopyIcon, GlobeIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { match } from "ts-pattern";
 import type { Event } from "@/queries/use-events";
 
 export interface PublicLinkProps {
@@ -29,10 +30,11 @@ export function PublicLink(props: PublicLinkProps) {
     }
   };
 
-  const seats =
-    event.registrationLimit === null
-      ? `${event.registrationCount} registered`
-      : `${event.registrationCount} of ${event.registrationLimit} seats taken`;
+  const seats = match(event.registrationLimit)
+    .with(null, () => `${event.registrationCount} registered`)
+    .otherwise(
+      (registrationLimit) => `${event.registrationCount} of ${registrationLimit} seats taken`,
+    );
 
   return (
     <div className="border-border space-y-2 rounded-xl border p-4">
@@ -45,8 +47,14 @@ export function PublicLink(props: PublicLinkProps) {
         <InputGroupInput readOnly value={url} onFocus={(event) => event.currentTarget.select()} />
         <InputGroupAddon align="inline-end">
           <Button type="button" size="xs" variant="ghost" onClick={copy}>
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? "Copied" : "Copy"}
+            {match(copied)
+              .with(true, () => <CheckIcon />)
+              .otherwise(() => (
+                <CopyIcon />
+              ))}
+            {match(copied)
+              .with(true, () => "Copied" as const)
+              .otherwise(() => "Copy" as const)}
           </Button>
         </InputGroupAddon>
       </InputGroup>

@@ -1,6 +1,7 @@
 import { Button } from "@absqir/ui/button";
 import { A } from "@mobily/ts-belt";
 import { useState } from "react";
+import { match } from "ts-pattern";
 import { ProviderIcon } from "@/components/shared/provider-icon";
 import { authClient } from "@/lib/auth-client";
 import { type AuthProviderId, providerLabel } from "@/lib/auth-providers";
@@ -58,7 +59,9 @@ export function AuthProviderButtons(props: AuthProviderButtonsProps) {
             }}
           >
             <ProviderIcon provider={provider} />
-            {pending === provider ? "Opening…" : `Continue with ${providerLabel(provider)}`}
+            {match(pending === provider)
+              .with(true, () => "Opening…" as const)
+              .otherwise(() => `Continue with ${providerLabel(provider)}`)}
           </Button>
         ))}
       </div>

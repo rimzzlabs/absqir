@@ -16,6 +16,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { RoleSelect } from "@/components/shared/role-select";
 import { type PersonValues, personSchema } from "@/lib/directory-schemas";
@@ -51,8 +52,12 @@ export function PersonDialog(props: PersonDialogProps) {
   const update = useUpdatePerson();
   const pending = create.isPending || update.isPending;
   const invite = form.watch("invite");
-  const addLabel = invite ? "Add and invite" : "Add";
-  const saveLabel = editing ? "Save" : addLabel;
+  const addLabel = match(invite)
+    .with(true, () => "Add and invite" as const)
+    .otherwise(() => "Add" as const);
+  const saveLabel = match(editing)
+    .with(true, () => "Save" as const)
+    .otherwise(() => addLabel);
   const email = form.watch("email");
 
   // Reopening for another person, or after a save, starts from that person.
@@ -63,7 +68,9 @@ export function PersonDialog(props: PersonDialogProps) {
   const onSubmit = (values: PersonValues) => {
     const payload = {
       name: values.name,
-      email: values.email ? values.email.toLowerCase() : null,
+      email: match(values.email)
+        .with(P.string.minLength(1), (email) => email.toLowerCase())
+        .otherwise(() => null),
       identifier: values.identifier || null,
     };
 
@@ -85,11 +92,21 @@ export function PersonDialog(props: PersonDialogProps) {
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{editing ? "Edit person" : "Add a person"}</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>
+            {match(editing)
+              .with(true, () => "Edit person" as const)
+              .otherwise(() => "Add a person" as const)}
+          </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {editing
-              ? "Changes apply to the directory. The account, if any, keeps its own name."
-              : "A directory entry. Tick the box to email an invitation right away."}
+            {match(editing)
+              .with(
+                true,
+                () =>
+                  "Changes apply to the directory. The account, if any, keeps its own name." as const,
+              )
+              .otherwise(
+                () => "A directory entry. Tick the box to email an invitation right away." as const,
+              )}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -121,32 +138,36 @@ export function PersonDialog(props: PersonDialogProps) {
                 render={(field) => <Input {...field} id="person-identifier" autoComplete="off" />}
               />
 
-              {editing ? null : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="person-invite"
-                      checked={invite}
-                      disabled={!email}
-                      onCheckedChange={(checked) => form.setValue("invite", checked === true)}
-                    />
-                    <Label htmlFor="person-invite">Send an invitation to sign in</Label>
-                  </div>
+              {match(editing)
+                .with(true, () => null)
+                .otherwise(() => (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="person-invite"
+                        checked={invite}
+                        disabled={!email}
+                        onCheckedChange={(checked) => form.setValue("invite", checked === true)}
+                      />
+                      <Label htmlFor="person-invite">Send an invitation to sign in</Label>
+                    </div>
 
-                  {invite ? (
-                    <Field>
-                      <FieldLabel htmlFor="person-role">Role</FieldLabel>
-                      <FieldContent>
-                        <RoleSelect
-                          id="person-role"
-                          value={form.watch("role")}
-                          onChange={(value) => form.setValue("role", value)}
-                        />
-                      </FieldContent>
-                    </Field>
-                  ) : null}
-                </>
-              )}
+                    {match(invite)
+                      .with(true, () => (
+                        <Field>
+                          <FieldLabel htmlFor="person-role">Role</FieldLabel>
+                          <FieldContent>
+                            <RoleSelect
+                              id="person-role"
+                              value={form.watch("role")}
+                              onChange={(value) => form.setValue("role", value)}
+                            />
+                          </FieldContent>
+                        </Field>
+                      ))
+                      .otherwise(() => null)}
+                  </>
+                ))}
 
               <FormError error={create.error ?? update.error} />
             </ResponsiveDialogBody>
@@ -155,7 +176,9 @@ export function PersonDialog(props: PersonDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : saveLabel}
+                {match(pending)
+                  .with(true, () => "Saving…" as const)
+                  .otherwise(() => saveLabel)}
               </Button>
             </ResponsiveDialogFooter>
           </form>

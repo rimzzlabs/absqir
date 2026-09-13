@@ -5,6 +5,7 @@ import { Input } from "@absqir/ui/input";
 import { A } from "@mobily/ts-belt";
 import { CheckCircleIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
+import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
 import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay";
 import { FormError } from "@/components/shared/form-error";
@@ -72,7 +73,11 @@ function ScannerBody(props: ScannerProps) {
         >
           ← Back
         </a>
-        {data ? <EventStatusBadge status={data.status} /> : null}
+        {match(data)
+          .with(P.nullish, () => null)
+          .otherwise((data) => (
+            <EventStatusBadge status={data.status} />
+          ))}
       </div>
 
       <div>
@@ -86,19 +91,23 @@ function ScannerBody(props: ScannerProps) {
 
       <div className="bg-muted relative aspect-square overflow-hidden rounded-2xl">
         <video ref={camera.video} muted playsInline className="size-full object-cover" />
-        {!camera.active && !camera.fault ? (
-          <p className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm">
-            Opening the camera…
-          </p>
-        ) : null}
+        {match(!camera.active && !camera.fault)
+          .with(true, () => (
+            <p className="text-muted-foreground absolute inset-0 flex items-center justify-center text-sm">
+              Opening the camera…
+            </p>
+          ))
+          .otherwise(() => null)}
       </div>
 
-      {camera.fault ? (
-        <Alert>
-          <AlertTitle>The camera is not available</AlertTitle>
-          <AlertDescription>{camera.fault.message}</AlertDescription>
-        </Alert>
-      ) : null}
+      {match(camera.fault)
+        .with(P.nullish, () => null)
+        .otherwise((fault) => (
+          <Alert>
+            <AlertTitle>The camera is not available</AlertTitle>
+            <AlertDescription>{fault.message}</AlertDescription>
+          </Alert>
+        ))}
 
       <CameraBlockedOverlay fault={camera.fault} onRetry={camera.retry} />
 
@@ -130,25 +139,33 @@ function ScannerBody(props: ScannerProps) {
             key={entry.key}
             className="border-border flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
           >
-            {entry.result ? (
-              <CheckCircleIcon weight="fill" className="size-5 shrink-0 text-emerald-500" />
-            ) : (
-              <WarningCircleIcon weight="fill" className="text-destructive size-5 shrink-0" />
-            )}
+            {match(entry.result)
+              .with(P.nullish, () => (
+                <WarningCircleIcon weight="fill" className="text-destructive size-5 shrink-0" />
+              ))
+              .otherwise(() => (
+                <CheckCircleIcon weight="fill" className="size-5 shrink-0 text-emerald-500" />
+              ))}
             <div className="min-w-0 flex-1">
-              {entry.result ? (
-                <>
-                  <p className="truncate font-medium">{entry.result.personName}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {entry.result.already ? "Already in since " : "Checked in at "}
-                    {formatDate(new Date(entry.result.checkedInAt), "time")}
-                  </p>
-                </>
-              ) : (
-                <p className="text-destructive">{entry.error}</p>
-              )}
+              {match(entry.result)
+                .with(P.nullish, () => <p className="text-destructive">{entry.error}</p>)
+                .otherwise((result) => (
+                  <>
+                    <p className="truncate font-medium">{result.personName}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {match(result.already)
+                        .with(true, () => "Already in since " as const)
+                        .otherwise(() => "Checked in at " as const)}
+                      {formatDate(new Date(result.checkedInAt), "time")}
+                    </p>
+                  </>
+                ))}
             </div>
-            {entry.result ? <AttendanceStatusBadge status={entry.result.status} /> : null}
+            {match(entry.result)
+              .with(P.nullish, () => null)
+              .otherwise((result) => (
+                <AttendanceStatusBadge status={result.status} />
+              ))}
           </li>
         ))}
       </ul>

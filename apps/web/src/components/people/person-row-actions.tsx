@@ -23,6 +23,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { match, P } from "ts-pattern";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { FormError } from "@/components/shared/form-error";
 import { useInvitePerson } from "@/mutations/use-invite-person";
@@ -58,15 +59,19 @@ export function PersonRowActions(props: PersonRowActionsProps) {
             <PencilSimpleIcon />
             Edit
           </DropdownMenuItem>
-          {canInvite ? (
-            <DropdownMenuItem
-              disabled={invite.isPending}
-              onClick={() => invite.mutate({ id: person.id, role: "member" })}
-            >
-              <PaperPlaneTiltIcon />
-              {person.invited ? "Resend invitation" : "Invite to sign in"}
-            </DropdownMenuItem>
-          ) : null}
+          {match(canInvite)
+            .with(true, () => (
+              <DropdownMenuItem
+                disabled={invite.isPending}
+                onClick={() => invite.mutate({ id: person.id, role: "member" })}
+              >
+                <PaperPlaneTiltIcon />
+                {match(person.invited)
+                  .with(true, () => "Resend invitation" as const)
+                  .otherwise(() => "Invite to sign in" as const)}
+              </DropdownMenuItem>
+            ))
+            .otherwise(() => null)}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
@@ -88,9 +93,15 @@ export function PersonRowActions(props: PersonRowActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {person.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              {person.role
-                ? "This removes the directory entry and the account's membership in this organization. The account itself stays."
-                : "This removes the directory entry and any pending invitation."}
+              {match(person.role)
+                .with(
+                  P.string.minLength(1),
+                  () =>
+                    "This removes the directory entry and the account's membership in this organization. The account itself stays.",
+                )
+                .otherwise(
+                  () => "This removes the directory entry and any pending invitation." as const,
+                )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FormError error={remove.error} />
@@ -101,7 +112,9 @@ export function PersonRowActions(props: PersonRowActionsProps) {
               disabled={remove.isPending}
               onClick={() => remove.mutate(person.id, { onSuccess: () => setRemoving(false) })}
             >
-              {remove.isPending ? "Removing…" : "Remove"}
+              {match(remove.isPending)
+                .with(true, () => "Removing…" as const)
+                .otherwise(() => "Remove" as const)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

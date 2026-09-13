@@ -20,8 +20,12 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
     .with({ isPending: true }, () => <Skeleton className="h-20 rounded-xl" />)
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => {
-      const soldOut = data.seatsLeft === 0 ? "Every seat is taken." : null;
-      const note = data.open ? soldOut : "This event no longer takes people.";
+      const soldOut = match(data.seatsLeft)
+        .with(0, () => "Every seat is taken." as const)
+        .otherwise(() => null);
+      const note = match(data.open)
+        .with(true, () => soldOut)
+        .otherwise(() => "This event no longer takes people." as const);
 
       return (
         <div className="space-y-3">
@@ -39,11 +43,17 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
                 disabled={join.isPending || !data.open || data.seatsLeft === 0}
                 onClick={() => join.mutate(data.id)}
               >
-                {join.isPending ? "Registering…" : "Register"}
+                {match(join.isPending)
+                  .with(true, () => "Registering…" as const)
+                  .otherwise(() => "Register" as const)}
               </Button>
             </ItemActions>
           </Item>
-          {note ? <p className="text-muted-foreground text-sm">{note}</p> : null}
+          {match(note)
+            .with(P.string.minLength(1), (note) => (
+              <p className="text-muted-foreground text-sm">{note}</p>
+            ))
+            .otherwise(() => null)}
           <FormError error={join.error} />
         </div>
       );

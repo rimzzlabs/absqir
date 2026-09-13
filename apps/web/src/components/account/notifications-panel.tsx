@@ -13,7 +13,7 @@ import {
   MinusIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { useUpdateNotificationChannel } from "@/mutations/use-update-notification-channel";
@@ -66,17 +66,19 @@ function reachesEmail(channel: NotificationChannel): boolean {
 }
 
 function Mark(props: { on: boolean; label: string }) {
-  return props.on ? (
-    <span className="text-primary inline-flex items-center gap-1 text-sm">
-      <CheckIcon weight="bold" className="size-4" />
-      <span className="sr-only">{props.label}</span>
-    </span>
-  ) : (
-    <span className="text-muted-foreground/60 inline-flex items-center">
-      <MinusIcon className="size-4" />
-      <span className="sr-only">No {props.label.toLowerCase()}</span>
-    </span>
-  );
+  return match(props.on)
+    .with(true, () => (
+      <span className="text-primary inline-flex items-center gap-1 text-sm">
+        <CheckIcon weight="bold" className="size-4" />
+        <span className="sr-only">{props.label}</span>
+      </span>
+    ))
+    .otherwise(() => (
+      <span className="text-muted-foreground/60 inline-flex items-center">
+        <MinusIcon className="size-4" />
+        <span className="sr-only">No {props.label.toLowerCase()}</span>
+      </span>
+    ));
 }
 
 function isChannel(value: string): value is NotificationChannel {
@@ -110,11 +112,13 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
         hint={
           <>
             Applies from now on. What was already written stays where it is.
-            {saveNote ? (
-              <span className="text-foreground block pt-2" role="status">
-                {saveNote}
-              </span>
-            ) : null}
+            {match(saveNote)
+              .with(P.string.minLength(1), (saveNote) => (
+                <span className="text-foreground block pt-2" role="status">
+                  {saveNote}
+                </span>
+              ))
+              .otherwise(() => null)}
           </>
         }
       >
@@ -130,14 +134,16 @@ export function NotificationsPanel(props: NotificationsPanelProps) {
                 <span
                   className={cn(
                     "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md",
-                    option.value === channel
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground",
+                    match(option.value === channel)
+                      .with(true, () => "bg-primary/10 text-primary" as const)
+                      .otherwise(() => "bg-muted text-muted-foreground" as const),
                   )}
                 >
                   <option.icon
                     className="size-4"
-                    weight={option.value === channel ? "fill" : "regular"}
+                    weight={match(option.value === channel)
+                      .with(true, () => "fill" as const)
+                      .otherwise(() => "regular" as const)}
                   />
                 </span>
                 <FieldContent>

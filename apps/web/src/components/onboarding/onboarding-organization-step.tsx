@@ -1,4 +1,5 @@
 import { Button } from "@absqir/ui/button";
+import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { JoinOrganization } from "@/components/shared/join-organization";
 import { useOnboardingFinish } from "@/mutations/use-onboarding-finish";
@@ -34,7 +35,9 @@ export function OnboardingOrganizationStep(props: OnboardingOrganizationStepProp
             disabled={finish.isPending}
             onClick={() => finish.mutate()}
           >
-            {finish.isPending ? "Finishing…" : "Finish without joining"}
+            {match(finish.isPending)
+              .with(true, () => "Finishing…" as const)
+              .otherwise(() => "Finish without joining" as const)}
           </Button>
         </>
       }
