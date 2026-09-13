@@ -29,6 +29,11 @@ export interface DataColumn<T> {
   /** The table heading, and the label on a card. */
   header?: ReactNode;
   cell: (row: T) => ReactNode;
+  /**
+   * What the card shows instead of `cell`. A phone has no room for a control
+   * that a table row holds comfortably, so a column may fold it away here.
+   */
+  card?: (row: T) => ReactNode;
   place?: ColumnPlace;
   headClassName?: string;
   cellClassName?: string;
@@ -58,6 +63,11 @@ export function placeOf<T>(column: DataColumn<T>): ColumnPlace {
   return column.place ?? "field";
 }
 
+/** The card body of a column: its own `card`, or the table cell. */
+export function cardCellOf<T>(column: DataColumn<T>, row: T): ReactNode {
+  return (column.card ?? column.cell)(row);
+}
+
 /**
  * Sorts a column set into the parts of a card. The first `primary` and the
  * first `action` win, so a caller that marks two of either still gets a
@@ -82,12 +92,12 @@ function RowCard<T>(props: { columns: readonly DataColumn<T>[]; row: T }) {
         <div className="min-w-0 flex-1 font-medium">
           {match(parts.primary)
             .with(P.nullish, () => null)
-            .otherwise((column) => column.cell(row))}
+            .otherwise((column) => cardCellOf(column, row))}
         </div>
         {match(parts.action)
           .with(P.nullish, () => null)
           .otherwise((column) => (
-            <div className="-mt-1 -mr-1 shrink-0">{column.cell(row)}</div>
+            <div className="-mt-1 -mr-1 shrink-0">{cardCellOf(column, row)}</div>
           ))}
       </div>
 
@@ -98,7 +108,9 @@ function RowCard<T>(props: { columns: readonly DataColumn<T>[]; row: T }) {
             {A.map(parts.fields, (column) => (
               <div key={column.key} className="flex items-start justify-between gap-4">
                 <dt className="shrink-0 text-muted-foreground text-xs">{column.header}</dt>
-                <dd className="min-w-0 break-words text-right text-sm">{column.cell(row)}</dd>
+                <dd className="min-w-0 break-words text-right text-sm">
+                  {cardCellOf(column, row)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -109,7 +121,7 @@ function RowCard<T>(props: { columns: readonly DataColumn<T>[]; row: T }) {
         .otherwise(() => (
           <div className="mt-3 space-y-2">
             {A.map(parts.footer, (column) => (
-              <div key={column.key}>{column.cell(row)}</div>
+              <div key={column.key}>{cardCellOf(column, row)}</div>
             ))}
           </div>
         ))}
