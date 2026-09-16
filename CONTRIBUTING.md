@@ -5,9 +5,13 @@ checks expect, and how a change lands.
 
 ## Set up
 
-Follow the "Develop" section in [README.md](README.md). You need Node 22+,
-pnpm, and a local Postgres. `pnpm dev` starts the site and the API on one
-origin.
+Run `./setup.sh` from the repository root. The script installs what is
+missing, writes the environment files, and pushes the schema. It asks before
+every install, and it skips each step that is done already.
+
+For the steps by hand, follow the "Develop" section in
+[README.md](README.md). You need Node 22+, pnpm, and a local Postgres.
+`pnpm dev` starts the site and the API on one origin.
 
 ## How dev resolves the packages
 
