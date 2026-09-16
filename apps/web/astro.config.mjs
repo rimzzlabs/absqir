@@ -25,6 +25,18 @@ const devHttps = match(process.env.DEV_HTTPS === "1" && existsSync(`${certDir}ce
   }))
   .otherwise(() => undefined);
 
+// The workspace packages the worker runs. `db` stays out: `src/migrate.ts`
+// imports the node-postgres migrator, which the worker never loads.
+const SCANNED_PACKAGES = ["api", "auth", "core", "i18n", "ui"];
+
+// Absolute globs, because the packages sit outside this app's Vite root.
+const scanEntries = [
+  fileURLToPath(new URL("./src/**/*.{ts,tsx,astro}", import.meta.url)),
+  ...SCANNED_PACKAGES.map((name) =>
+    fileURLToPath(new URL(`../../packages/${name}/src/**/*.{ts,tsx}`, import.meta.url)),
+  ),
+];
+
 // Every page depends on the reader's session, so the whole site renders per
 // request. One server serves the assets, the pages, and the Hono API from a
 // single origin.
@@ -77,6 +89,19 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     server: { https: devHttps },
+    // The dev server pre-bundles the dependencies of each Vite environment.
+    // Astro does not scan the sources for the server environments. A first
+    // import then shows a new dependency, and the optimizer re-runs. The
+    // re-run rewrites the cache while the worker still reads it, so the
+    // request fails with "The file does not exist ... in the optimize deps
+    // directory". The workerd runner keeps the broken module until a restart.
+    // These entries scan the app and the UI package at startup, so every
+    // dependency is in the cache before the first request. An edit outside
+    // apps/web no longer starts a re-run.
+    environments: {
+      ssr: { optimizeDeps: { entries: scanEntries } },
+      astro: { optimizeDeps: { entries: scanEntries } },
+    },
     resolve: {
       alias: {
         "@app-runtime": fileURLToPath(
