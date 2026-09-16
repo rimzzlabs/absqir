@@ -6,7 +6,6 @@ import {
   isReservedSlug,
   isSlugTakenCode,
   orgPath,
-  RESERVED_SLUGS,
   splitOrgPath,
 } from "../src/org-path";
 
@@ -29,11 +28,6 @@ describe("isReservedSlug", () => {
   it("allows a name absqir does not hold", () => {
     expect(isReservedSlug("acme")).toBe(false);
     expect(isReservedSlug("acme-corp")).toBe(false);
-  });
-
-  it("lists every reserved slug in order", () => {
-    expect(RESERVED_SLUGS).toContain("settings");
-    expect([...RESERVED_SLUGS].sort()).toEqual([...RESERVED_SLUGS]);
   });
 });
 

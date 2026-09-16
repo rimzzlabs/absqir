@@ -77,9 +77,6 @@ export function isSlugTakenCode(code: string | null | undefined): boolean {
   return code === "ORGANIZATION_ALREADY_EXISTS" || code === "ORGANIZATION_SLUG_ALREADY_TAKEN";
 }
 
-/** Every reserved slug, sorted. The settings page reads this to explain. */
-export const RESERVED_SLUGS: readonly string[] = [...RESERVED].sort();
-
 /** True when absqir keeps `slug` for itself, so no organization can hold it. */
 export function isReservedSlug(slug: string): boolean {
   return RESERVED.has(slug.trim().toLowerCase());
