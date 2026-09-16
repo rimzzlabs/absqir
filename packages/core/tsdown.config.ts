@@ -17,6 +17,8 @@ export default defineConfig((options) => ({
     "src/member-access.ts",
     "src/geo.ts",
     "src/location-risk.ts",
+    "src/active-path.ts",
+    "src/slug.ts",
   ],
   format: "esm",
   platform: "neutral",

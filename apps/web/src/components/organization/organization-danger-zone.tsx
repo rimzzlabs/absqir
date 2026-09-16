@@ -28,8 +28,8 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
   if (props.role !== "owner") {
     return (
       <DangerZoneRow
-        title={t("settings:organization.danger.title")}
-        description={t("settings:organization.danger.ownerOnly")}
+        title={t("organization:general.danger.title")}
+        description={t("organization:general.danger.ownerOnly")}
         action={
           <Button type="button" variant="outline" disabled>
             {t("common:actions.delete")}
@@ -42,11 +42,11 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
   return (
     <>
       <DangerZoneRow
-        title={t("settings:organization.danger.title")}
-        description={t("settings:organization.danger.description")}
+        title={t("organization:general.danger.title")}
+        description={t("organization:general.danger.description")}
         action={
           <Button type="button" variant="destructive" onClick={() => setStage("phrase")}>
-            {t("settings:organization.danger.button")}
+            {t("organization:general.danger.button")}
           </Button>
         }
       />
@@ -56,11 +56,11 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title={t("settings:organization.danger.confirmTitle", { name: props.organization.name })}
-        description={t("settings:organization.danger.confirmDescription")}
+        title={t("organization:general.danger.confirmTitle", { name: props.organization.name })}
+        description={t("organization:general.danger.confirmDescription")}
         phrase={props.organization.slug}
-        phraseLabel={t("settings:organization.danger.phraseLabel")}
-        confirmLabel={t("settings:organization.danger.continue")}
+        phraseLabel={t("organization:general.danger.phraseLabel")}
+        confirmLabel={t("organization:general.danger.continue")}
         onConfirm={() => setStage("final")}
       />
 
@@ -69,17 +69,17 @@ function DeleteOrganizationRow(props: OrganizationDangerZoneProps) {
         onOpenChange={(open) => {
           if (!open) stop();
         }}
-        title={t("settings:organization.danger.lastWord")}
-        description={t("settings:organization.danger.lastWordDescription", {
+        title={t("organization:general.danger.lastWord")}
+        description={t("organization:general.danger.lastWordDescription", {
           name: props.organization.name,
         })}
-        confirmLabel={t("settings:organization.danger.deleteForever")}
+        confirmLabel={t("organization:general.danger.deleteForever")}
         pending={remove.isPending}
         error={remove.error}
         onConfirm={() => remove.mutate(props.organization.id)}
       >
-        <p>{t("settings:organization.danger.losing")}</p>
-        <p>{t("settings:organization.danger.keeping")}</p>
+        <p>{t("organization:general.danger.losing")}</p>
+        <p>{t("organization:general.danger.keeping")}</p>
       </FinalWordDialog>
     </>
   );

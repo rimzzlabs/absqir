@@ -51,10 +51,9 @@ invitations and, when allowed, a form to create an organization.
 
 ## Your account
 
-**Settings** is one page for everyone, whatever their role. A list of
-sections sits on the left. Owners and admins see the organization sections,
-**Members**, **Invitations**, **Requests**, **Domains** and
-**Organization**. Everyone sees the sections about themselves:
+**Settings** holds your account, whatever your role. A list of sections
+sits on the left. Everything the organization owns sits under its own menu
+instead. See [The organization menu](#the-organization-menu).
 
 - **Profile**: the name and the picture organizers see, the email, and the
   time zone. A new address receives a 6 digit code. Nothing changes until
@@ -93,12 +92,23 @@ A change of email or password needs a session read less than an hour ago.
 An older session is told to sign in again first.
 
 Tabs, filters and searches live in the address bar: `/events?scope=past`,
-`/groups?q=ops`, `/settings?tab=security`. A link carries the view with
-it, and the back button returns to the previous one.
+`/organization/members?q=ada`, `/settings?tab=security`. A link carries the
+view with it, and the back button returns to the previous one.
 
-## The organization tab
+## The organization menu
 
-Owners and admins get an **Organization** tab. It holds four blocks:
+The sidebar carries an **Organization** menu. An owner and an admin see
+three entries. An organizer sees **Groups** alone.
+
+| Entry            | Address                  | What it holds                        |
+| ---------------- | ------------------------ | ------------------------------------ |
+| **Organization** | `/organization`          | General, Places and Domains          |
+| **Members**      | `/organization/members`  | The people in it, and the invitations |
+| **Groups**       | `/organization/groups`   | The groups an event expects          |
+
+### Organization
+
+**General** holds four blocks:
 
 - The logo, the name, and the day the organization started. The logo is a
   small picture, shrunk to 128px in the browser. It shows in the workspace
@@ -115,6 +125,32 @@ organization. An owner can delete it. Deletion takes two steps: copy the
 slug, then read the last word and press again. It takes the directory, the
 groups, the events, and every attendance record with it. The members keep
 their accounts.
+
+**Places** names where you check people in. See
+[Places and fences](/location). **Domains** claims the email domain your
+people share.
+
+### Members
+
+One list holds the people who joined and the people who hold an invitation,
+because both belong to the organization in your mind. A toolbar sits above
+it: a search on the left, **Add member** on the right.
+
+Search filters on the name and on the email, over both kinds of row.
+
+Each row carries a status:
+
+- **Joined** — the person is in. Change the role, set the identifier, or
+  remove the person.
+- **Invited** — the invitation waits, and the row shows the days left.
+  **Send again** issues a fresh link and starts the seven days over, which
+  also covers a person who holds no account yet. **Cancel** drops it.
+
+Join requests sit under the list. A request lands there when someone at a
+verified domain asks to come in. Two buttons answer it: **Let in**, and
+**Decline**.
+
+Add member takes an email address and a role, and sends the invitation.
 
 ## Delete an account
 

@@ -16,12 +16,9 @@ import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { QueryError } from "@/components/shared/query-error";
+import { initialsOf } from "@/lib/avatar";
 import { useDecideJoinRequest } from "@/mutations/use-decide-join-request";
 import { type JoinRequest, useJoinRequests } from "@/queries/use-join-requests";
-
-function initialsOf(name: string) {
-  return name.slice(0, 2).toUpperCase();
-}
 
 function RequestRow(props: { row: JoinRequest }) {
   const { row } = props;
@@ -35,13 +32,13 @@ function RequestRow(props: { row: JoinRequest }) {
           {match(row.image)
             .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
             .otherwise(() => null)}
-          <AvatarFallback>{initialsOf(row.name)}</AvatarFallback>
+          <AvatarFallback name={row.name}>{initialsOf(row.name)}</AvatarFallback>
         </Avatar>
       </ItemMedia>
       <ItemContent>
         <ItemTitle>{row.name}</ItemTitle>
         <ItemDescription>
-          {t("settings:requests.asked", {
+          {t("organization:requests.asked", {
             email: row.email,
             when: relativeToNow(new Date(row.createdAt)),
           })}
@@ -58,7 +55,7 @@ function RequestRow(props: { row: JoinRequest }) {
           onClick={() => decide.mutate({ id: row.id, decision: "declined" })}
         >
           <XIcon />
-          {t("settings:requests.decline")}
+          {t("organization:requests.decline")}
         </Button>
         <Button
           size="sm"
@@ -68,7 +65,7 @@ function RequestRow(props: { row: JoinRequest }) {
           <CheckIcon />
           {match(decide.isPending)
             .with(true, () => t("common:actions.saving"))
-            .otherwise(() => t("settings:requests.letIn"))}
+            .otherwise(() => t("organization:requests.letIn"))}
         </Button>
       </ItemActions>
     </Item>
@@ -89,7 +86,7 @@ export function JoinRequestsPanel() {
         .with({ data: P.select(P.nonNullable) }, (data) =>
           match(data.items.length)
             .with(0, () => (
-              <p className="text-muted-foreground text-sm">{t("settings:requests.empty")}</p>
+              <p className="text-muted-foreground text-sm">{t("organization:requests.empty")}</p>
             ))
             .otherwise(() => (
               <div className="space-y-3">

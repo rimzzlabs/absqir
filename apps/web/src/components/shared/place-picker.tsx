@@ -94,7 +94,7 @@ export function PlacePicker(props: PlacePickerProps) {
           {match(rows.length)
             .with(0, () => (
               <FieldDescription>
-                <a href="/settings?tab=places" className="underline underline-offset-4">
+                <a href="/organization?tab=places" className="underline underline-offset-4">
                   {t("common:placePicker.savePlaceLink")}
                 </a>{" "}
                 {t("common:placePicker.savePlaceRest")}

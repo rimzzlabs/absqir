@@ -53,10 +53,10 @@ interface Step {
 function CountLinks(props: { counts: Organization["counts"] }) {
   const t = useTranslate();
   const links = [
-    { label: t("home:groups", { count: props.counts.groups }), href: "/groups" },
+    { label: t("home:groups", { count: props.counts.groups }), href: "/organization/groups" },
     {
       label: t("home:accounts", { count: props.counts.members }),
-      href: "/settings?tab=members",
+      href: "/organization/members",
     },
   ];
 
@@ -85,7 +85,7 @@ function InvitationPrompt(props: { pending: number }) {
   return (
     <p className="text-muted-foreground text-sm">
       {t("home:invitationsWaiting", { count: props.pending })}{" "}
-      <a href="/settings?tab=invitations" className="text-foreground underline underline-offset-4">
+      <a href="/organization/members" className="text-foreground underline underline-offset-4">
         {t("home:reviewInvitations")}
       </a>
       .
@@ -185,13 +185,13 @@ function stepsOf(t: Translate, organization: Organization): Step[] {
       done: counts.groups > 0,
       label: t("home:setup.groups"),
       hint: t("home:setup.groupsHint"),
-      href: "/groups",
+      href: "/organization/groups",
     },
     {
       done: counts.members > 1 || counts.pendingInvitations > 0,
       label: t("home:setup.organizers"),
       hint: t("home:setup.organizersHint"),
-      href: "/settings?tab=invitations",
+      href: "/organization/members",
     },
   ];
 }
@@ -256,7 +256,7 @@ function AdminSetup(props: { organization: Organization; userEmail: string }) {
       done: false,
       label: t("home:setup.claim", { domain: claimable }),
       hint: t("home:setup.claimHint"),
-      href: "/settings?tab=domains",
+      href: "/organization?tab=domains",
     });
   }
 

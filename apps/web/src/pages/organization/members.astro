@@ -1,0 +1,21 @@
+---
+import { translatorFor } from "@absqir/i18n";
+import { MembersPage } from "@/components/organization/members-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { user, activeMembership } = Astro.locals;
+const role = activeMembership?.role ?? "member";
+
+if (!user) {
+  return Astro.redirect("/sign-in", 302);
+}
+
+if (!activeMembership || (role !== "owner" && role !== "admin")) {
+  return Astro.redirect("/settings", 302);
+}
+const t = translatorFor(Astro.locals.locale);
+---
+
+<DashboardLayout title={t("shell:titles.members")}>
+  <MembersPage client:load locale={Astro.locals.locale} role={role} currentUserId={user.id} />
+</DashboardLayout>

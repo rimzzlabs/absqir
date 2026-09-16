@@ -4,7 +4,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@absqir/ui/input-g
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
-import { SettingsRow } from "@/components/settings/settings-section";
+import { SettingsRow } from "@/components/shared/settings-section";
 
 interface CopyRowProps {
   label: string;
@@ -69,13 +69,13 @@ export function OrganizationIdentifiers(props: OrganizationIdentifiersProps) {
   return (
     <>
       <CopyRow
-        label={t("settings:organization.slug")}
-        hint={t("settings:organization.slugHint")}
+        label={t("organization:general.slug")}
+        hint={t("organization:general.slugHint")}
         value={props.organization.slug}
       />
       <CopyRow
-        label={t("settings:organization.id")}
-        hint={t("settings:organization.idHint")}
+        label={t("organization:general.id")}
+        hint={t("organization:general.idHint")}
         value={props.organization.id}
       />
     </>

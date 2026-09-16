@@ -30,8 +30,8 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
 
   const logo = current.data?.logo ?? null;
   const logoLabel = match(logo)
-    .with(P.string.minLength(1), () => t("settings:organization.changeLogo"))
-    .otherwise(() => t("settings:organization.addLogo"));
+    .with(P.string.minLength(1), () => t("organization:general.changeLogo"))
+    .otherwise(() => t("organization:general.addLogo"));
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -43,7 +43,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
       setReadError(
         match(error)
           .with(P.instanceOf(Error), (error) => error)
-          .otherwise(() => new Error(t("settings:organization.unreadable"))),
+          .otherwise(() => new Error(t("organization:general.unreadable"))),
       );
     }
   };
@@ -74,7 +74,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
             .with(P.nullish, () => <Skeleton className="h-4 w-32" />)
             .otherwise((data) => (
               <span className="text-muted-foreground text-xs">
-                {t("settings:organization.started", { date: formatDate(new Date(data.createdAt)) })}
+                {t("organization:general.started", { date: formatDate(new Date(data.createdAt)) })}
               </span>
             ))}
         </div>
@@ -118,9 +118,7 @@ export function OrganizationIdentity(props: OrganizationIdentityProps) {
                 ))
                 .otherwise(() => null)}
             </div>
-            <p className="text-muted-foreground text-xs">
-              {t("settings:organization.logoFormats")}
-            </p>
+            <p className="text-muted-foreground text-xs">{t("organization:general.logoFormats")}</p>
             <FormError error={readError ?? save.error} />
           </div>
         ))

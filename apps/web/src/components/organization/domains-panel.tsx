@@ -46,14 +46,14 @@ function DomainRow(props: { row: OrganizationDomain }) {
         {match(row.verified)
           .with(true, () => (
             <Badge variant="secondary">
-              {t("settings:domains.verified")}
+              {t("organization:domains.verified")}
               {match(row.verifiedBy)
-                .with("email", () => t("settings:domains.byEmail"))
-                .otherwise(() => t("settings:domains.byDns"))}
+                .with("email", () => t("organization:domains.byEmail"))
+                .otherwise(() => t("organization:domains.byDns"))}
             </Badge>
           ))
           .otherwise(() => (
-            <Badge variant="outline">{t("settings:domains.waiting")}</Badge>
+            <Badge variant="outline">{t("organization:domains.waiting")}</Badge>
           ))}
         <div className="ml-auto flex items-center gap-2">
           {match(row.verified)
@@ -67,13 +67,13 @@ function DomainRow(props: { row: OrganizationDomain }) {
               >
                 <ArrowClockwiseIcon />
                 {match(verify.isPending)
-                  .with(true, () => t("settings:domains.checking"))
-                  .otherwise(() => t("settings:domains.checkNow"))}
+                  .with(true, () => t("organization:domains.checking"))
+                  .otherwise(() => t("organization:domains.checkNow"))}
               </Button>
             ))}
           <IconAction
             variant="ghost"
-            label={t("settings:domains.releaseLabel", { domain: row.domain })}
+            label={t("organization:domains.releaseLabel", { domain: row.domain })}
             disabled={release.isPending}
             onClick={() => release.mutate(row.id)}
           >
@@ -86,11 +86,11 @@ function DomainRow(props: { row: OrganizationDomain }) {
         .with(true, () => null)
         .otherwise(() => (
           <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-sm">
-            <p>{t("settings:domains.recordHint")}</p>
+            <p>{t("organization:domains.recordHint")}</p>
             <dl className="mt-2 grid gap-1 font-mono text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
-              <dt className="font-sans">{t("settings:domains.host")}</dt>
+              <dt className="font-sans">{t("organization:domains.host")}</dt>
               <dd className="text-foreground break-all">{row.recordHost}</dd>
-              <dt className="font-sans">{t("settings:domains.value")}</dt>
+              <dt className="font-sans">{t("organization:domains.value")}</dt>
               <dd className="text-foreground break-all">{row.recordValue}</dd>
             </dl>
           </div>
@@ -109,8 +109,8 @@ function ClaimForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("settings:domains.claimTitle")}</CardTitle>
-        <CardDescription>{t("settings:domains.claimDescription")}</CardDescription>
+        <CardTitle>{t("organization:domains.claimTitle")}</CardTitle>
+        <CardDescription>{t("organization:domains.claimDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -122,7 +122,7 @@ function ClaimForm() {
           }}
         >
           <Field className="min-w-56 flex-1">
-            <FieldLabel htmlFor="claim-domain">{t("settings:domains.domain")}</FieldLabel>
+            <FieldLabel htmlFor="claim-domain">{t("organization:domains.domain")}</FieldLabel>
             <FieldContent>
               <Input
                 id="claim-domain"
@@ -136,8 +136,8 @@ function ClaimForm() {
           <Button type="submit" disabled={claim.isPending}>
             <PlusIcon />
             {match(claim.isPending)
-              .with(true, () => t("settings:domains.claiming"))
-              .otherwise(() => t("settings:domains.claim"))}
+              .with(true, () => t("organization:domains.claiming"))
+              .otherwise(() => t("organization:domains.claim"))}
           </Button>
         </form>
         <FormError error={claim.error} />
@@ -162,12 +162,12 @@ export function DomainsPanel() {
         .with({ data: P.select(P.nonNullable) }, (data) => (
           <>
             <Field>
-              <FieldLabel htmlFor="join-policy">{t("settings:domains.policyLabel")}</FieldLabel>
+              <FieldLabel htmlFor="join-policy">{t("organization:domains.policyLabel")}</FieldLabel>
               <FieldContent>
                 <Select
                   items={A.map(POLICY_OPTIONS, (option) => ({
                     value: option,
-                    label: t(`settings:domains.policies.${option}`),
+                    label: t(`organization:domains.policies.${option}`),
                   }))}
                   value={data.joinPolicy}
                   disabled={setPolicy.isPending}
@@ -180,13 +180,13 @@ export function DomainsPanel() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>{t("settings:domains.policyGroup")}</SelectLabel>
+                      <SelectLabel>{t("organization:domains.policyGroup")}</SelectLabel>
                       {A.map(POLICY_OPTIONS, (option) => (
                         <SelectItem key={option} value={option}>
                           <span className="flex flex-col">
-                            <span>{t(`settings:domains.policies.${option}`)}</span>
+                            <span>{t(`organization:domains.policies.${option}`)}</span>
                             <SelectItemDescription>
-                              {t(`settings:domains.policies.${option}Hint`)}
+                              {t(`organization:domains.policies.${option}Hint`)}
                             </SelectItemDescription>
                           </span>
                         </SelectItem>
@@ -194,17 +194,17 @@ export function DomainsPanel() {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <FieldDescription>{t("settings:domains.policyHint")}</FieldDescription>
+                <FieldDescription>{t("organization:domains.policyHint")}</FieldDescription>
               </FieldContent>
             </Field>
 
             <FormError error={setPolicy.error} />
 
             <section className="space-y-1">
-              <h2 className="text-sm font-medium">{t("settings:domains.listTitle")}</h2>
+              <h2 className="text-sm font-medium">{t("organization:domains.listTitle")}</h2>
               {match(data.items.length)
                 .with(0, () => (
-                  <p className="text-muted-foreground text-sm">{t("settings:domains.empty")}</p>
+                  <p className="text-muted-foreground text-sm">{t("organization:domains.empty")}</p>
                 ))
                 .otherwise(() => (
                   <div className="border-border rounded-xl border px-4">

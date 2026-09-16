@@ -14,7 +14,7 @@ import { QueryError } from "@/components/shared/query-error";
 import { type Organization, useOrganization } from "@/queries/use-organization";
 
 interface Tile {
-  /** The key under `settings:organization.counts` that names the tile. */
+  /** The key under `organization:general.counts` that names the tile. */
   key: "members" | "people" | "groups" | "invitations";
   icon: Icon;
   read: (counts: Organization["counts"]) => number;
@@ -44,13 +44,13 @@ export function OrganizationCounts() {
           <div key={tile.key} className="border-border rounded-xl border px-4 py-3">
             <dt className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <tile.icon className="size-4 shrink-0" />
-              {t(`settings:organization.counts.${tile.key}`)}
+              {t(`organization:general.counts.${tile.key}`)}
             </dt>
             <dd className="font-heading mt-1 text-2xl font-semibold tabular-nums">
               {formatNumber(tile.read(organization.counts))}
             </dd>
             <p className="text-muted-foreground mt-0.5 text-xs">
-              {t(`settings:organization.counts.${tile.key}Hint`)}
+              {t(`organization:general.counts.${tile.key}Hint`)}
             </p>
           </div>
         ))}

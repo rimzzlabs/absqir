@@ -4,9 +4,9 @@ import { Button } from "@absqir/ui/button";
 import { A, pipe } from "@mobily/ts-belt";
 import { useEffect, useState } from "react";
 import { match, P } from "ts-pattern";
-import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { ProviderIcon } from "@/components/shared/provider-icon";
+import { SettingsRow } from "@/components/shared/settings-section";
 import { authClient } from "@/lib/auth-client";
 import {
   type AuthProviderId,

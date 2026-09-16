@@ -1,5 +1,7 @@
+import { activeHref, isActivePath } from "@absqir/core/active-path";
 import { A } from "@mobily/ts-belt";
 import {
+  BuildingsIcon,
   CalendarBlankIcon,
   ChartBarIcon,
   ClockCounterClockwiseIcon,
@@ -25,6 +27,8 @@ export type NavId =
   | "events"
   | "calendar"
   | "schedules"
+  | "organization"
+  | "members"
   | "groups"
   | "leave"
   | "checkInProblems"
@@ -39,7 +43,7 @@ export type NavId =
 export type NavGroupId =
   | "overview"
   | "attendance"
-  | "directory"
+  | "organization"
   | "requests"
   | "other"
   | "me"
@@ -80,8 +84,14 @@ export const MANAGER_NAV: NavGroup[] = [
     ],
   },
   {
-    id: "directory",
-    items: [{ href: "/groups", id: "groups", icon: UsersThreeIcon, minimum: "organizer" }],
+    // The organization, the people in it, and the groups they sit in. One
+    // context, so one menu: a reader never leaves it to rename either.
+    id: "organization",
+    items: [
+      { href: "/organization", id: "organization", icon: BuildingsIcon, minimum: "admin" },
+      { href: "/organization/members", id: "members", icon: UsersIcon, minimum: "admin" },
+      { href: "/organization/groups", id: "groups", icon: UsersThreeIcon, minimum: "organizer" },
+    ],
   },
   {
     id: "requests",
@@ -161,10 +171,12 @@ export function navFor(role: RoleName): NavGroup[] {
     .filter((group) => group.items.length > 0);
 }
 
-export function isActivePath(href: string, currentPath: string): boolean {
-  if (href === "/") return currentPath === "/";
-
-  return currentPath === href || currentPath.startsWith(`${href}/`);
+/** The entry the reader is standing on, across every group in the sidebar. */
+export function activeHrefFor(groups: readonly NavGroup[], currentPath: string): string | null {
+  return activeHref(
+    A.flatMap(groups, (group) => A.map(group.items, (item) => item.href)),
+    currentPath,
+  );
 }
 
-export { UsersIcon };
+export { isActivePath };

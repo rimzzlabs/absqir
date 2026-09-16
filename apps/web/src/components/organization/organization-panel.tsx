@@ -1,13 +1,13 @@
 import { useTranslate } from "@absqir/i18n/react";
 import { match } from "ts-pattern";
-import { OrganizationCounts } from "@/components/settings/organization-counts";
-import { OrganizationDangerZone } from "@/components/settings/organization-danger-zone";
-import { OrganizationIdentifiers } from "@/components/settings/organization-identifiers";
-import { OrganizationIdentity } from "@/components/settings/organization-identity";
-import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
+import { OrganizationCounts } from "@/components/organization/organization-counts";
+import { OrganizationDangerZone } from "@/components/organization/organization-danger-zone";
+import { OrganizationIdentifiers } from "@/components/organization/organization-identifiers";
+import { OrganizationIdentity } from "@/components/organization/organization-identity";
 import { FormError } from "@/components/shared/form-error";
 import { OrganizationForm } from "@/components/shared/organization-form";
 import type { RoleName } from "@/components/shared/role-badge";
+import { SettingsRow, SettingsSection } from "@/components/shared/settings-section";
 import { useUpdateOrganization } from "@/mutations/use-update-organization";
 
 export interface OrganizationPanelProps {
@@ -22,10 +22,10 @@ function NameRow(props: OrganizationPanelProps) {
 
   return (
     <SettingsRow
-      label={t("settings:organization.nameRow")}
+      label={t("organization:general.nameRow")}
       hint={match(canEdit)
-        .with(true, () => t("settings:organization.nameHintEditable"))
-        .otherwise(() => t("settings:organization.nameHintReadOnly"))}
+        .with(true, () => t("organization:general.nameHintEditable"))
+        .otherwise(() => t("organization:general.nameHintReadOnly"))}
     >
       <fieldset disabled={!canEdit} className="max-w-md">
         <OrganizationForm
@@ -48,8 +48,8 @@ export function OrganizationPanel(props: OrganizationPanelProps) {
   return (
     <div className="space-y-12">
       <SettingsSection
-        title={t("settings:organization.title")}
-        description={t("settings:organization.description")}
+        title={t("organization:general.title")}
+        description={t("organization:general.description")}
       >
         <OrganizationIdentity organization={props.organization} canEdit={canEdit} />
         <div className="border-border border-t">
@@ -59,8 +59,8 @@ export function OrganizationPanel(props: OrganizationPanelProps) {
       </SettingsSection>
 
       <SettingsSection
-        title={t("settings:organization.glance")}
-        description={t("settings:organization.glanceDescription")}
+        title={t("organization:general.glance")}
+        description={t("organization:general.glanceDescription")}
       >
         <OrganizationCounts />
       </SettingsSection>
