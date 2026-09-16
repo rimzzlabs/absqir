@@ -128,7 +128,7 @@ function ClaimForm() {
                 id="claim-domain"
                 value={domain}
                 autoComplete="off"
-                placeholder="kolosal.ai"
+                placeholder="example.com"
                 onChange={(event) => setDomain(event.target.value)}
               />
             </FieldContent>

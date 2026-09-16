@@ -218,7 +218,7 @@ export function isClaimableDomain(value: string): boolean {
 
 /**
  * The claimable domain an address belongs to, or null. A claim matches the
- * whole domain only: kolosal.ai never matches mail.kolosal.ai, because a
+ * whole domain only: example.com never matches mail.example.com, because a
  * subdomain can belong to someone else.
  */
 export function claimableDomainOfEmail(email: string): string | null {
