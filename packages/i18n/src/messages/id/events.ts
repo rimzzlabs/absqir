@@ -63,6 +63,8 @@ export const events = {
     closed: "Acara ini sudah ditutup.",
     preparing: "Menyiapkan kode…",
     qrAlt: "Kode QR untuk check-in",
+    codeChangesIn_one: "Kode berganti dalam {{count, number}} detik",
+    codeChangesIn_other: "Kode berganti dalam {{count, number}} detik",
     hint: "Pindai dengan kamera ponsel Anda, lalu konfirmasi di halaman yang terbuka. Masuk dulu kalau ponsel meminta. Kodenya berganti setiap beberapa detik, jadi foto dari kode itu langsung tidak berlaku.",
   },
   dialog: {

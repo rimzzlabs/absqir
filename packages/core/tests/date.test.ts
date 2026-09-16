@@ -4,6 +4,7 @@ import {
   formatDate,
   formatRange,
   inDisplayZone,
+  millisecondsUntil,
   parseDisplayDay,
   setDisplayLocaleResolver,
   setDisplayTimezoneResolver,
@@ -76,6 +77,22 @@ describe("inDisplayZone", () => {
 
     expect(start.getTime()).toBe(Date.parse("2026-09-08T04:00:00Z"));
     expect(formatDate(start, "iso")).toBe("2026-09-08");
+  });
+});
+
+describe("millisecondsUntil", () => {
+  const now = new Date("2026-09-09T12:00:00Z");
+
+  it("counts the milliseconds left", () => {
+    expect(millisecondsUntil(new Date("2026-09-09T12:00:20Z"), now)).toBe(20_000);
+  });
+
+  it("answers zero the moment it lands", () => {
+    expect(millisecondsUntil(now, now)).toBe(0);
+  });
+
+  it("answers zero after it passes, never a negative number", () => {
+    expect(millisecondsUntil(new Date("2026-09-09T11:59:55Z"), now)).toBe(0);
   });
 });
 

@@ -132,6 +132,15 @@ export function daysUntil(target: Date, now: Date = new Date()): number {
   return differenceInCalendarDays(target, now);
 }
 
+/**
+ * The milliseconds left before `target`, and zero once it passes. A countdown
+ * reads this, so a clock that has run out answers 0 rather than a negative
+ * number the caller has to guard.
+ */
+export function millisecondsUntil(target: Date, now: Date = new Date()): number {
+  return Math.max(target.getTime() - now.getTime(), 0);
+}
+
 /** "Mon 8 Sep, 09:00 to 10:00", or both ends in full when they fall on different days. */
 export function formatRange(start: Date, end: Date): string {
   const t = translatorFor(resolveLocale());

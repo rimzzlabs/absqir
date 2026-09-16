@@ -61,6 +61,8 @@ export const events = {
     closed: "This event is closed.",
     preparing: "Preparing the code…",
     qrAlt: "QR code for checking in",
+    codeChangesIn_one: "The code changes in {{count, number}} second",
+    codeChangesIn_other: "The code changes in {{count, number}} seconds",
     hint: "Scan with your phone camera, then confirm on the page that opens. Sign in first if the phone asks. The code changes every few seconds, so a photo of it stops working at once.",
   },
   dialog: {
