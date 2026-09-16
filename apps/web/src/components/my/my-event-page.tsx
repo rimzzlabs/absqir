@@ -30,12 +30,15 @@ import {
   LeaveStatusBadge,
 } from "@/components/shared/status-badge";
 import { initialsOf } from "@/lib/avatar";
+import { useOrgHref } from "@/lib/org-path";
 import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
 import { type MyEventDetail, useMyEvent } from "@/queries/use-my";
 
 export interface MyEventPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   eventId: string;
 }
 
@@ -65,10 +68,11 @@ function useNow(everyMs = 30_000): Date {
 function Header(props: { event: MyEventDetail }) {
   const { event } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   return (
     <header className="space-y-4">
-      <BackLink href="/my/events">{t("my:event.back")}</BackLink>
+      <BackLink href={orgHref("/my/events")}>{t("my:event.back")}</BackLink>
 
       <div>
         <div className="flex flex-wrap items-center gap-3">
@@ -224,6 +228,7 @@ function MySide(props: {
 }) {
   const { event } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const withdraw = useWithdrawLeave();
   const running = event.status === "running";
   const canAsk = event.status !== "done" && !event.record && !event.leave;
@@ -343,7 +348,7 @@ function MySide(props: {
               {match(running && !event.record)
                 .with(true, () => (
                   <>
-                    <a href="/check-in" className={buttonVariants({ size: "lg" })}>
+                    <a href={orgHref("/check-in")} className={buttonVariants({ size: "lg" })}>
                       <ScanIcon />
                       {t("my:event.checkIn")}
                     </a>
@@ -455,6 +460,7 @@ function Roster(props: { event: MyEventDetail; className?: string }) {
 
 function MyEventBody(props: MyEventPageProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const event = useMyEvent(props.eventId);
   const [showPass, setShowPass] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -472,7 +478,7 @@ function MyEventBody(props: MyEventPageProps) {
     ))
     .with({ isError: true, error: P.select() }, (error) => (
       <div className="space-y-4">
-        <BackLink href="/my/events">{t("my:event.back")}</BackLink>
+        <BackLink href={orgHref("/my/events")}>{t("my:event.back")}</BackLink>
         <FormError error={error} />
         <p className="text-muted-foreground text-sm">{t("my:event.notExpected")}</p>
       </div>
@@ -509,7 +515,7 @@ function MyEventBody(props: MyEventPageProps) {
 /** One event, as the member who is expected at it reads it. */
 export function MyEventPage(props: MyEventPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <MyEventBody {...props} />
     </Providers>
   );

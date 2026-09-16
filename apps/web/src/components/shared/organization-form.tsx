@@ -1,4 +1,4 @@
-import { toSlugDraft } from "@absqir/core/slug";
+import { toSlug, toSlugDraft } from "@absqir/core/slug";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
@@ -8,7 +8,6 @@ import { useEffect, useRef } from "react";
 import { type ControllerRenderProps, useForm } from "react-hook-form";
 import { match } from "ts-pattern";
 import { type OrganizationValues, organizationSchema } from "@/lib/auth-schemas";
-import { toSlug } from "@/lib/slug";
 
 export interface OrganizationFormProps {
   submitLabel: string;

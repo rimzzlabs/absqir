@@ -15,6 +15,7 @@ import { A, pipe } from "@mobily/ts-belt";
 import { CaretRightIcon, ChartBarIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { type AttendanceStatus, AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import type { HistoryRow } from "@/queries/use-my";
 
 export interface MemberHomeStandingProps {
@@ -34,6 +35,7 @@ const RECENT = 5;
 /** How it has gone: the rate, the split, and the last few records. */
 export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const total = props.history.length;
   const countNote = t("home:member.closedEvents", { count: total });
   const counts = Object.fromEntries(
@@ -62,7 +64,10 @@ export function MemberHomeStanding(props: MemberHomeStandingProps) {
             .otherwise(() => countNote)}
         </CardDescription>
         <CardAction>
-          <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/my/history")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("home:member.history")}
             <CaretRightIcon />
           </a>

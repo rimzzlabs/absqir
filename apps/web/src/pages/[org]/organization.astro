@@ -6,11 +6,15 @@ import DashboardLayout from "@/layouts/dashboard-layout.astro";
 // Only an owner or an admin runs the organization. Everybody else lands on
 // their own settings, which is the nearest page they can use.
 const { activeMembership } = Astro.locals;
-const role = activeMembership?.role ?? "member";
 
-if (!activeMembership || (role !== "owner" && role !== "admin")) {
+if (!activeMembership) return Astro.redirect("/", 302);
+
+const role = activeMembership.role;
+
+if (role !== "owner" && role !== "admin") {
   return Astro.redirect("/settings", 302);
 }
+
 const t = translatorFor(Astro.locals.locale);
 ---
 
@@ -18,6 +22,7 @@ const t = translatorFor(Astro.locals.locale);
   <OrganizationSettingsPage
     client:load
     locale={Astro.locals.locale}
+    orgSlug={activeMembership.slug}
     role={role}
     organization={{
       id: activeMembership.organizationId,

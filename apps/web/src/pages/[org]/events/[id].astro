@@ -1,0 +1,42 @@
+---
+import { orgPath } from "@absqir/core/org-path";
+import { translatorFor } from "@absqir/i18n";
+import { EventDetail } from "@/components/events/event-detail";
+import { MyEventPage } from "@/components/my/my-event-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { id } = Astro.params;
+const { activeMembership } = Astro.locals;
+
+if (!activeMembership) return Astro.redirect("/", 302);
+
+const orgSlug = activeMembership.slug;
+const role = activeMembership.role;
+
+if (!id) {
+  return Astro.redirect(orgPath(orgSlug, "/events"), 302);
+}
+
+const t = translatorFor(Astro.locals.locale);
+---
+
+<DashboardLayout title={t("shell:titles.event")}>
+  {
+    role === "member" ? (
+      <MyEventPage
+        client:load
+        locale={Astro.locals.locale}
+        orgSlug={orgSlug}
+        eventId={id}
+      />
+    ) : (
+      <EventDetail
+        client:load
+        locale={Astro.locals.locale}
+        orgSlug={orgSlug}
+        eventId={id}
+        role={role}
+      />
+    )
+  }
+</DashboardLayout>

@@ -16,6 +16,7 @@ import { CalendarBlankIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { STRETCHED_LINK } from "@/components/shared/stretched-link";
+import { useOrgHref } from "@/lib/org-path";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface MemberHomeAgendaProps {
@@ -67,6 +68,7 @@ function AgendaRow(props: { event: MyEvent }) {
 /** The member's next days, as an agenda. */
 export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const rows = A.filter(props.events, (row) => row.status !== "done").slice(0, PREVIEW);
   const agendaHint = match(rows.length)
     .with(0, () => t("home:member.agendaEmpty"))
@@ -87,7 +89,10 @@ export function MemberHomeAgenda(props: MemberHomeAgendaProps) {
             .otherwise(() => agendaHint)}
         </CardDescription>
         <CardAction>
-          <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/my/events")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("home:member.allMyEvents")}
             <CaretRightIcon />
           </a>

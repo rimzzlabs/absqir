@@ -8,6 +8,7 @@ import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
 import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
 import { FormError } from "@/components/shared/form-error";
+import { useOrgHref } from "@/lib/org-path";
 import { useMarkRead } from "@/mutations/use-mark-read";
 import { type Notification, useNotifications } from "@/queries/use-notifications";
 
@@ -117,6 +118,7 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
 
 export function NotificationPreview(props: NotificationPreviewProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const notifications = useNotifications("all", { enabled: props.open });
   const markRead = useMarkRead();
 
@@ -176,7 +178,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
 
       <div className="border-border border-t p-1">
         <a
-          href="/notifications"
+          href={orgHref("/notifications")}
           className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
         >
           {t("shell:notifications.all")}

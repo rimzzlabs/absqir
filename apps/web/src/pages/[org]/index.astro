@@ -1,0 +1,36 @@
+---
+import { HomePage } from "@/components/home/home-page";
+import { MemberHomePage } from "@/components/home/member-home-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { user, activeMembership } = Astro.locals;
+
+// The middleware refuses this address unless the slug names an organization
+// the reader belongs to, so the membership is always there.
+if (!activeMembership) return Astro.redirect("/", 302);
+
+const isMember = activeMembership.role === "member";
+---
+
+<DashboardLayout title="Home">
+  {
+    isMember ? (
+      <MemberHomePage
+        client:load
+        locale={Astro.locals.locale}
+        orgSlug={activeMembership.slug}
+        userName={user?.name ?? ""}
+        organizationName={activeMembership.name}
+        timezone={user?.timezone ?? null}
+      />
+    ) : (
+      <HomePage
+        client:load
+        locale={Astro.locals.locale}
+        orgSlug={activeMembership.slug}
+        userName={user?.name ?? ""}
+        userEmail={user?.email ?? ""}
+      />
+    )
+  }
+</DashboardLayout>

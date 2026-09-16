@@ -1,0 +1,10 @@
+---
+import { orgPath } from "@absqir/core/org-path";
+
+// Groups moved under the organization menu. Old links still land there.
+const { activeMembership } = Astro.locals;
+
+if (!activeMembership) return Astro.redirect("/", 302);
+
+return Astro.redirect(orgPath(activeMembership.slug, "/organization/groups"), 302);
+---

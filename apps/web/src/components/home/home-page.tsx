@@ -15,6 +15,7 @@ import { ratePercent } from "@/components/reports/report-summary";
 import { PageHeader } from "@/components/shared/page-header";
 import { QueryError } from "@/components/shared/query-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { presetRange } from "@/lib/report-window";
 import { useDomains } from "@/queries/use-domains";
 import { useEvents } from "@/queries/use-events";
@@ -29,6 +30,8 @@ import {
 export interface HomePageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   userName: string;
   /** The reader's own address. It decides whether a domain is theirs to claim. */
   userEmail: string;
@@ -52,11 +55,15 @@ interface Step {
 
 function CountLinks(props: { counts: Organization["counts"] }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const links = [
-    { label: t("home:groups", { count: props.counts.groups }), href: "/organization/groups" },
+    {
+      label: t("home:groups", { count: props.counts.groups }),
+      href: orgHref("/organization/groups"),
+    },
     {
       label: t("home:accounts", { count: props.counts.members }),
-      href: "/organization/members",
+      href: orgHref("/organization/members"),
     },
   ];
 
@@ -79,13 +86,17 @@ function CountLinks(props: { counts: Organization["counts"] }) {
 /** Waiting invitations are a prompt, not a number to stare at. */
 function InvitationPrompt(props: { pending: number }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   if (props.pending === 0) return null;
 
   return (
     <p className="text-muted-foreground text-sm">
       {t("home:invitationsWaiting", { count: props.pending })}{" "}
-      <a href="/organization/members" className="text-foreground underline underline-offset-4">
+      <a
+        href={orgHref("/organization/members")}
+        className="text-foreground underline underline-offset-4"
+      >
         {t("home:reviewInvitations")}
       </a>
       .
@@ -94,8 +105,10 @@ function InvitationPrompt(props: { pending: number }) {
 }
 
 function Stat(props: { label: string; value: string; hint: string }) {
+  const orgHref = useOrgHref();
+
   return (
-    <a href="/reports" className="block">
+    <a href={orgHref("/reports")} className="block">
       <Card className="hover:bg-muted/40 h-full transition-colors">
         <CardHeader>
           <CardDescription>{props.label}</CardDescription>
@@ -177,21 +190,29 @@ function Charts() {
   );
 }
 
-function stepsOf(t: Translate, organization: Organization): Step[] {
-  const { counts } = organization;
+interface StepsParams {
+  t: Translate;
+  organization: Organization;
+  /** From `useOrgHref`, because a plain function cannot call the hook. */
+  orgHref: (path: string) => string;
+}
+
+function stepsOf(params: StepsParams): Step[] {
+  const { t, orgHref } = params;
+  const { counts } = params.organization;
 
   return [
     {
       done: counts.groups > 0,
       label: t("home:setup.groups"),
       hint: t("home:setup.groupsHint"),
-      href: "/organization/groups",
+      href: orgHref("/organization/groups"),
     },
     {
       done: counts.members > 1 || counts.pendingInvitations > 0,
       label: t("home:setup.organizers"),
       hint: t("home:setup.organizersHint"),
-      href: "/organization/members",
+      href: orgHref("/organization/members"),
     },
   ];
 }
@@ -240,9 +261,10 @@ function SetupSteps(props: { organization: Organization; steps: Step[] }) {
  */
 function AdminSetup(props: { organization: Organization; userEmail: string }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const domains = useDomains();
   const claimable = claimableDomainOfEmail(props.userEmail);
-  const steps = stepsOf(t, props.organization);
+  const steps = stepsOf({ t, organization: props.organization, orgHref });
 
   // Without the list there is no way to know the domain is unclaimed, and a
   // step that is already done must not appear at all.
@@ -256,7 +278,7 @@ function AdminSetup(props: { organization: Organization; userEmail: string }) {
       done: false,
       label: t("home:setup.claim", { domain: claimable }),
       hint: t("home:setup.claimHint"),
-      href: "/organization?tab=domains",
+      href: orgHref("/organization?tab=domains"),
     });
   }
 
@@ -265,15 +287,22 @@ function AdminSetup(props: { organization: Organization; userEmail: string }) {
 
 function Setup(props: { organization: Organization; userEmail: string }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const { role } = props.organization;
 
   if (role === "owner" || role === "admin") return <AdminSetup {...props} />;
 
-  return <SetupSteps organization={props.organization} steps={stepsOf(t, props.organization)} />;
+  return (
+    <SetupSteps
+      organization={props.organization}
+      steps={stepsOf({ t, organization: props.organization, orgHref })}
+    />
+  );
 }
 
 function UpcomingEvents() {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const events = useEvents({ scope: "upcoming", q: "", groupId: "" });
   const rows = (events.data?.pages[0]?.items ?? []).slice(0, 5);
 
@@ -317,10 +346,16 @@ function UpcomingEvents() {
           ))
           .otherwise(() => null)}
         <div className="flex gap-2">
-          <a href="/events" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <a
+            href={orgHref("/events")}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
             {t("home:upcoming.allEvents")}
           </a>
-          <a href="/schedules" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/schedules")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("home:upcoming.schedules")}
           </a>
         </div>
@@ -372,7 +407,7 @@ function HomeBody(props: HomePageProps) {
 
 export function HomePage(props: HomePageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <HomeBody {...props} />
     </Providers>
   );

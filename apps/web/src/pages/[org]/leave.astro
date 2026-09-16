@@ -1,0 +1,25 @@
+---
+import { orgPath } from "@absqir/core/org-path";
+import { translatorFor } from "@absqir/i18n";
+import { LeavePage } from "@/components/leave/leave-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { activeMembership } = Astro.locals;
+
+// The middleware refuses this address unless the slug names an organization
+// the reader belongs to, so the membership is always there.
+if (!activeMembership) return Astro.redirect("/", 302);
+
+const orgSlug = activeMembership.slug;
+const role = activeMembership.role;
+
+if (role === "member") {
+  return Astro.redirect(orgPath(orgSlug, "/my/leave"), 302);
+}
+
+const t = translatorFor(Astro.locals.locale);
+---
+
+<DashboardLayout title={t("shell:titles.leave")}>
+  <LeavePage client:load locale={Astro.locals.locale} orgSlug={orgSlug} />
+</DashboardLayout>

@@ -20,6 +20,8 @@ import { useEvent } from "@/queries/use-events";
 export interface ScannerProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   eventId: string;
 }
 
@@ -181,7 +183,7 @@ function ScannerBody(props: ScannerProps) {
 
 export function Scanner(props: ScannerProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <ScannerBody {...props} />
     </Providers>
   );

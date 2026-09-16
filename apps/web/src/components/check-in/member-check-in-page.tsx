@@ -237,11 +237,13 @@ function MemberCheckInBody() {
 export interface MemberCheckInPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function MemberCheckInPage(props: MemberCheckInPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <MemberCheckInBody />
     </Providers>
   );

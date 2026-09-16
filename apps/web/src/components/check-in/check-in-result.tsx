@@ -5,6 +5,7 @@ import { Reveal } from "@absqir/ui/reveal";
 import { CheckCircleIcon, ScanIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import type { CheckInResult as Result } from "@/mutations/use-check-in";
 
 export interface CheckInResultProps {
@@ -17,6 +18,7 @@ export interface CheckInResultProps {
 export function CheckInResult(props: CheckInResultProps) {
   const { result } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   return (
     <Reveal className="flex flex-col items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 text-center sm:p-8">
@@ -45,7 +47,7 @@ export function CheckInResult(props: CheckInResultProps) {
           <ScanIcon />
           {t("checkin:result.scanAnother")}
         </Button>
-        <a href="/my/history" className={buttonVariants({ variant: "ghost" })}>
+        <a href={orgHref("/my/history")} className={buttonVariants({ variant: "ghost" })}>
           {t("checkin:result.myHistory")}
         </a>
       </div>

@@ -4,10 +4,15 @@ import { CheckInPage } from "@/components/check-in/check-in-page";
 import AuthLayout from "@/layouts/auth-layout.astro";
 
 const { id } = Astro.params;
+const { activeMembership } = Astro.locals;
 
 if (!id) {
   return Astro.redirect("/", 302);
 }
+
+// The middleware turns a reader with no organization away from this address,
+// so the membership is always there.
+if (!activeMembership) return Astro.redirect("/", 302);
 
 // The QR code carries the rotating token in the URL the camera opens. The
 // middleware already made sure the reader is signed in.
@@ -16,5 +21,11 @@ const t = translatorFor(Astro.locals.locale);
 ---
 
 <AuthLayout title={`${t("shell:titles.checkIn")} — absqir`}>
-  <CheckInPage client:load locale={Astro.locals.locale} eventId={id} token={token} />
+  <CheckInPage
+    client:load
+    locale={Astro.locals.locale}
+    orgSlug={activeMembership.slug}
+    eventId={id}
+    token={token}
+  />
 </AuthLayout>

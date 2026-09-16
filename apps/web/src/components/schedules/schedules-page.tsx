@@ -30,6 +30,8 @@ import { type Schedule, useSchedules } from "@/queries/use-schedules";
 export interface SchedulesPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   role: RoleName;
 }
 
@@ -186,7 +188,7 @@ function SchedulesBody(props: SchedulesPageProps) {
 
 export function SchedulesPage(props: SchedulesPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <SchedulesBody {...props} />
     </Providers>
   );

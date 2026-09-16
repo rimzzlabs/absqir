@@ -49,3 +49,23 @@ export function toSlugDraft(value: string): string {
 
   return slug;
 }
+
+/**
+ * What a finished slug looks like: lower case ASCII letters, digits, and a
+ * hyphen between them. Two to forty characters, and never a hyphen at
+ * either end. This is the same shape the address bar carries.
+ */
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
+
+/** True when `value` is a finished slug the server accepts. */
+export function isSlug(value: string): boolean {
+  return SLUG_PATTERN.test(value);
+}
+
+/**
+ * The slug a name leads to. Unlike `toSlugDraft`, this one is the finished
+ * answer, so it drops the hyphen a draft keeps at the end.
+ */
+export function toSlug(name: string): string {
+  return toSlugDraft(name).replace(/-+$/, "").slice(0, 40).replace(/-+$/, "");
+}

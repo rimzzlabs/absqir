@@ -29,6 +29,7 @@ import { EventDialog } from "@/components/events/event-dialog";
 import { Providers } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
 import { QueryError } from "@/components/shared/query-error";
+import { useOrgHref } from "@/lib/org-path";
 import { parseAsLocalDate } from "@/lib/url-state";
 import { useCalendar } from "@/queries/use-calendar";
 
@@ -82,6 +83,7 @@ function today() {
 
 function CalendarBody() {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const [params, setParams] = useQueryStates(PARAMS);
   const view = params.view;
   const cursor = params.date ?? today();
@@ -113,7 +115,7 @@ function CalendarBody() {
 
   const openEntry = (entry: CalendarEntry) => {
     if (entry.kind === "event") {
-      window.location.href = `/events/${entry.event.id}`;
+      window.location.href = orgHref(`/events/${entry.event.id}`);
       return;
     }
 
@@ -213,11 +215,13 @@ function CalendarBody() {
 export interface CalendarPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function CalendarPage(props: CalendarPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <CalendarBody />
     </Providers>
   );

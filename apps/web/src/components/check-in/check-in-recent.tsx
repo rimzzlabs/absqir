@@ -15,6 +15,7 @@ import { CaretRightIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useMyHistory } from "@/queries/use-my";
 
 /** Enough to prove the last scans worked, without a scroll. */
@@ -23,6 +24,7 @@ const RECENT = 4;
 /** The last few records, so the reader can tell a scan really landed. */
 export function CheckInRecent() {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const history = useMyHistory();
 
   return (
@@ -34,7 +36,10 @@ export function CheckInRecent() {
         </CardTitle>
         <CardDescription>{t("checkin:recent.description")}</CardDescription>
         <CardAction>
-          <a href="/my/history" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/my/history")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("checkin:recent.history")}
             <CaretRightIcon />
           </a>

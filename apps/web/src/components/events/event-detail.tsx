@@ -36,6 +36,7 @@ import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useCloseEvent } from "@/mutations/use-close-event";
 import { useOpenEvent } from "@/mutations/use-open-event";
 import { useRemoveEvent } from "@/mutations/use-remove-event";
@@ -44,6 +45,8 @@ import { type Event, useEvent } from "@/queries/use-events";
 export interface EventDetailProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   eventId: string;
   role: RoleName;
 }
@@ -62,6 +65,7 @@ function Stat(props: { label: string; value: number }) {
 function Header(props: { event: Event; role: RoleName }) {
   const { event } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const open = useOpenEvent();
   const close = useCloseEvent();
   const remove = useRemoveEvent();
@@ -71,7 +75,7 @@ function Header(props: { event: Event; role: RoleName }) {
 
   return (
     <header className="space-y-4">
-      <BackLink href="/events">{t("events:title")}</BackLink>
+      <BackLink href={orgHref("/events")}>{t("events:title")}</BackLink>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -199,7 +203,9 @@ function Header(props: { event: Event; role: RoleName }) {
               variant="destructive"
               disabled={remove.isPending}
               onClick={() =>
-                remove.mutate(event.id, { onSuccess: () => window.location.assign("/events") })
+                remove.mutate(event.id, {
+                  onSuccess: () => window.location.assign(orgHref("/events")),
+                })
               }
             >
               {match(remove.isPending)
@@ -245,7 +251,7 @@ function EventDetailBody(props: EventDetailProps) {
 
 export function EventDetail(props: EventDetailProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <EventDetailBody {...props} />
     </Providers>
   );

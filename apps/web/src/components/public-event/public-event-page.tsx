@@ -8,6 +8,7 @@ import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
+import { useOrgHref } from "@/lib/org-path";
 import { useRegisterEvent } from "@/mutations/use-register-event";
 import { useWithdrawEvent } from "@/mutations/use-withdraw-event";
 import { type PublicEvent, usePublicEvent } from "@/queries/use-public-event";
@@ -15,6 +16,12 @@ import { type PublicEvent, usePublicEvent } from "@/queries/use-public-event";
 export interface PublicEventPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /**
+   * The organization of the reader who is already a member, so the link out
+   * lands on their own pages. Null for a stranger, whose link out is the
+   * root, and the middleware takes it from there.
+   */
+  orgSlug?: string | null;
   eventId: string;
   signedIn: boolean;
 }
@@ -47,6 +54,7 @@ function Seats(props: { event: PublicEvent }) {
 function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
   const { event } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const register = useRegisterEvent();
   const withdraw = useWithdrawEvent();
 
@@ -58,7 +66,7 @@ function Actions(props: PublicEventPageProps & { event: PublicEvent }) {
           {t("publicEvent:youAreRegistered")}
         </div>
         <p className="text-muted-foreground text-sm">{t("publicEvent:youAreRegisteredHint")}</p>
-        <a href="/my/events" className={buttonVariants({ className: "w-full" })}>
+        <a href={orgHref("/my/events")} className={buttonVariants({ className: "w-full" })}>
           {t("publicEvent:myEvents")}
         </a>
         {match(event.status)
@@ -169,7 +177,7 @@ function PublicEventBody(props: PublicEventPageProps) {
 
 export function PublicEventPage(props: PublicEventPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <PublicEventBody {...props} />
     </Providers>
   );
