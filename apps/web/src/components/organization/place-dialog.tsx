@@ -12,6 +12,7 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@absqir/ui/responsive-dialog";
+import { Textarea } from "@absqir/ui/textarea";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -77,7 +78,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
 
   return (
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="sm:max-w-5xl">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
@@ -97,77 +98,96 @@ export function PlaceDialog(props: PlaceDialogProps) {
           className="flex min-h-0 flex-1 flex-col gap-4"
           noValidate
         >
-          <ResponsiveDialogBody className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="place-name">{t("organization:places.dialog.name")}</Label>
-              <Input
-                id="place-name"
-                value={draft.name}
-                onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                placeholder={t("organization:places.dialog.namePlaceholder")}
-                autoFocus
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="place-address">{t("organization:places.dialog.address")}</Label>
-              <Input
-                id="place-address"
-                value={draft.address}
-                onChange={(event) => setDraft({ ...draft, address: event.target.value })}
-                placeholder={t("organization:places.dialog.addressPlaceholder")}
-              />
-            </div>
-
-            <MapPicker value={draft} onChange={(value) => setDraft({ ...draft, ...value })} />
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="place-radius">{t("organization:places.dialog.radius")}</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="place-radius"
-                  type="range"
-                  min={MIN_RADIUS_METERS}
-                  max={1000}
-                  step={5}
-                  value={Math.min(1000, draft.radiusMeters)}
-                  onChange={(event) =>
-                    setDraft({ ...draft, radiusMeters: Number(event.target.value) })
-                  }
-                  className="accent-primary h-2 flex-1"
-                />
+          {/*
+            One column on a phone, in the order the organizer works: the name,
+            the pin, then the radius that the map above already draws. Above md
+            the map moves to a column of its own, where it is big enough to
+            drop a pin without ten zooms, and the fields stack beside it.
+          */}
+          <ResponsiveDialogBody className="flex flex-col gap-4 md:grid md:grid-cols-2 md:grid-rows-[auto_1fr] md:items-start md:gap-6">
+            <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="place-name">{t("organization:places.dialog.name")}</Label>
                 <Input
-                  aria-label={t("organization:places.dialog.radiusLabel")}
-                  type="number"
-                  inputMode="numeric"
-                  min={MIN_RADIUS_METERS}
-                  max={MAX_RADIUS_METERS}
-                  value={draft.radiusMeters}
-                  onChange={(event) =>
-                    setDraft({ ...draft, radiusMeters: Number(event.target.value) })
-                  }
-                  className="w-24 tabular-nums"
+                  id="place-name"
+                  value={draft.name}
+                  onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+                  placeholder={t("organization:places.dialog.namePlaceholder")}
+                  autoFocus
                 />
-                <span className="text-muted-foreground text-sm">
-                  {t("organization:places.dialog.metres")}
-                </span>
               </div>
-              <p className="text-muted-foreground text-xs">
-                {t("organization:places.dialog.radiusHint", { count: MIN_RADIUS_METERS })}
-              </p>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="place-address">{t("organization:places.dialog.address")}</Label>
+                <Textarea
+                  id="place-address"
+                  rows={3}
+                  value={draft.address}
+                  onChange={(event) => setDraft({ ...draft, address: event.target.value })}
+                  placeholder={t("organization:places.dialog.addressPlaceholder")}
+                />
+              </div>
             </div>
 
-            {/* The pin, not the name, is what the fence is made of. */}
-            {match(placed)
-              .with(false, () => (
-                <p className="text-muted-foreground text-sm">
-                  {t("organization:places.dialog.placeHintBefore")}{" "}
-                  <b>{t("organization:places.dialog.placeHintButton")}</b>.
-                </p>
-              ))
-              .otherwise(() => null)}
+            <div className="md:col-start-2 md:row-span-2 md:row-start-1">
+              {/* The height follows the window on a laptop, so a taller screen
+                  gives a bigger map instead of the same small square. */}
+              <MapPicker
+                value={draft}
+                onChange={(value) => setDraft({ ...draft, ...value })}
+                className="md:h-[min(68vh,38rem)]"
+              />
+            </div>
 
-            <FormError error={create.error ?? update.error} />
+            <div className="flex flex-col gap-4 md:col-start-1 md:row-start-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="place-radius">{t("organization:places.dialog.radius")}</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="place-radius"
+                    type="range"
+                    min={MIN_RADIUS_METERS}
+                    max={1000}
+                    step={5}
+                    value={Math.min(1000, draft.radiusMeters)}
+                    onChange={(event) =>
+                      setDraft({ ...draft, radiusMeters: Number(event.target.value) })
+                    }
+                    className="accent-primary h-2 flex-1"
+                  />
+                  <Input
+                    aria-label={t("organization:places.dialog.radiusLabel")}
+                    type="number"
+                    inputMode="numeric"
+                    min={MIN_RADIUS_METERS}
+                    max={MAX_RADIUS_METERS}
+                    value={draft.radiusMeters}
+                    onChange={(event) =>
+                      setDraft({ ...draft, radiusMeters: Number(event.target.value) })
+                    }
+                    className="w-24 tabular-nums"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    {t("organization:places.dialog.metres")}
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {t("organization:places.dialog.radiusHint", { count: MIN_RADIUS_METERS })}
+                </p>
+              </div>
+
+              {/* The pin, not the name, is what the fence is made of. */}
+              {match(placed)
+                .with(false, () => (
+                  <p className="text-muted-foreground text-sm">
+                    {t("organization:places.dialog.placeHintBefore")}{" "}
+                    <b>{t("organization:places.dialog.placeHintButton")}</b>.
+                  </p>
+                ))
+                .otherwise(() => null)}
+
+              <FormError error={create.error ?? update.error} />
+            </div>
           </ResponsiveDialogBody>
 
           <ResponsiveDialogFooter>

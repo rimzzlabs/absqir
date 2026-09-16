@@ -128,6 +128,22 @@ export function MapPicker(props: MapPickerProps) {
     };
   }, []);
 
+  /*
+   * Leaflet measures its host once, when it builds the map. Every later change
+   * of that box leaves the tiles in the old grid: a dialog that opens, a
+   * column that appears at a wider width, a window the reader drags. The
+   * observer tells the map to measure again, whichever of those it was.
+   */
+  useEffect(() => {
+    const element = host.current;
+    if (!ready || !element) return;
+
+    const observer = new ResizeObserver(() => map.current?.invalidateSize());
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [ready]);
+
   // Follows the value, whichever control changed it: the map, the radius
   // slider, or the "use my location" button.
   useEffect(() => {
