@@ -29,6 +29,10 @@ export interface SectionNavProps<TValue extends string> {
  * The sections of a settings-shaped page. A column on a wide screen, one
  * scrolling row on a phone. Every entry is a real link, so it opens in a
  * new tab and the address bar carries the section.
+ *
+ * The column stops below the app bar, not at the top of the window. The bar
+ * sticks there from `md` up, so a column that stopped at the window edge
+ * would slide its first entry under the bar.
  */
 export function SectionNav<TValue extends string>(props: SectionNavProps<TValue>) {
   const list = useRef<HTMLElement>(null);
@@ -59,7 +63,7 @@ export function SectionNav<TValue extends string>(props: SectionNavProps<TValue>
     <nav
       ref={list}
       aria-label={props.label}
-      className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:gap-6 lg:self-start lg:overflow-visible lg:px-0"
+      className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:sticky lg:top-[calc(var(--app-bar-height)+--spacing(6))] lg:mx-0 lg:flex-col lg:gap-6 lg:self-start lg:overflow-visible lg:px-0"
     >
       {A.mapWithIndex(props.groups, (index, group) => (
         <div key={group.label ?? index} className="flex shrink-0 gap-1 lg:flex-col">
