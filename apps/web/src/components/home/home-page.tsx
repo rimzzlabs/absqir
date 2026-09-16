@@ -12,8 +12,8 @@ import { lazy, Suspense } from "react";
 import { match, P } from "ts-pattern";
 import { Providers } from "@/components/providers";
 import { ratePercent } from "@/components/reports/report-summary";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { presetRange } from "@/lib/report-window";
 import { useDomains } from "@/queries/use-domains";
@@ -114,7 +114,7 @@ function ThirtyDayStats() {
   const t = useTranslate();
   const summary = useReportSummary(RANGE);
 
-  if (summary.isError) return <FormError error={summary.error} />;
+  if (summary.isError) return <QueryError query={summary} />;
 
   if (!summary.data) {
     return (
@@ -165,7 +165,7 @@ function Charts() {
   );
 
   if (byEvent.isError || byGroup.isError) {
-    return <FormError error={byEvent.error ?? byGroup.error} />;
+    return <QueryError query={[byEvent, byGroup]} />;
   }
 
   if (!byEvent.data || !byGroup.data) return skeletons;
@@ -292,7 +292,7 @@ function UpcomingEvents() {
       </CardHeader>
       <CardContent className="space-y-3">
         {match(events.isError)
-          .with(true, () => <FormError error={events.error} />)
+          .with(true, () => <QueryError query={events} />)
           .otherwise(() => null)}
         {match(rows.length > 0)
           .with(true, () => (
@@ -343,7 +343,7 @@ function HomeBody(props: HomePageProps) {
       />
 
       {match(organization.isError)
-        .with(true, () => <FormError error={organization.error} />)
+        .with(true, () => <QueryError query={organization} />)
         .otherwise(() => null)}
       {match(organization.data)
         .with(P.nullish, () => null)

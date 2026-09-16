@@ -20,8 +20,8 @@ import { MemberHomeNow } from "@/components/home/member-home-now";
 import { MemberHomeStanding } from "@/components/home/member-home-standing";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { type LeaveStatus, LeaveStatusBadge } from "@/components/shared/status-badge";
 import { useMyLeave } from "@/queries/use-leave";
 import { useMyEvents, useMyHistory } from "@/queries/use-my";
@@ -115,7 +115,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
 
       {match(events)
         .with({ isPending: true }, () => <Skeleton className="h-44 rounded-2xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={events} />)
         .with({ data: P.nonNullable }, () => <MemberHomeNow events={rows} onPass={setPassFor} />)
         .otherwise(() => null)}
 
@@ -125,14 +125,14 @@ function MemberHomeBody(props: MemberHomePageProps) {
         <div className="flex flex-col gap-6">
           {match(history)
             .with({ isPending: true }, () => <Skeleton className="h-72 rounded-xl" />)
-            .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+            .with({ isError: true }, () => <QueryError query={history} />)
             .with({ data: P.select(P.nonNullable) }, (data) => (
               <MemberHomeStanding history={data} />
             ))
             .otherwise(() => null)}
 
           {match(leave.isError)
-            .with(true, () => <FormError error={leave.error} />)
+            .with(true, () => <QueryError query={leave} />)
             .otherwise(() => (
               <LeaveCard pending={pendingLeave} latest={requests[0]?.status ?? null} />
             ))}

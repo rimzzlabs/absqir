@@ -27,8 +27,8 @@ import { CalendarGrid } from "@/components/calendar/calendar-grid";
 import { DaySheet } from "@/components/calendar/day-sheet";
 import { EventDialog } from "@/components/events/event-dialog";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { parseAsLocalDate } from "@/lib/url-state";
 import { useCalendar } from "@/queries/use-calendar";
 
@@ -173,7 +173,7 @@ function CalendarBody() {
       </div>
 
       {match(calendar.isError)
-        .with(true, () => <FormError error={calendar.error} />)
+        .with(true, () => <QueryError query={calendar} />)
         .otherwise(() => null)}
 
       {match(calendar)
