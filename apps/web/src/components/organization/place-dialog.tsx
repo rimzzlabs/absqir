@@ -12,6 +12,7 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@absqir/ui/responsive-dialog";
+import { Textarea } from "@absqir/ui/textarea";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
@@ -77,7 +78,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
 
   return (
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <ResponsiveDialogContent className="sm:max-w-3xl">
+      <ResponsiveDialogContent className="sm:max-w-5xl">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
@@ -103,7 +104,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
             the map moves to a column of its own, where it is big enough to
             drop a pin without ten zooms, and the fields stack beside it.
           */}
-          <ResponsiveDialogBody className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start md:gap-6">
+          <ResponsiveDialogBody className="flex flex-col gap-4 md:grid md:grid-cols-2 md:grid-rows-[auto_1fr] md:items-start md:gap-6">
             <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="place-name">{t("organization:places.dialog.name")}</Label>
@@ -118,8 +119,9 @@ export function PlaceDialog(props: PlaceDialogProps) {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="place-address">{t("organization:places.dialog.address")}</Label>
-                <Input
+                <Textarea
                   id="place-address"
+                  rows={3}
                   value={draft.address}
                   onChange={(event) => setDraft({ ...draft, address: event.target.value })}
                   placeholder={t("organization:places.dialog.addressPlaceholder")}
@@ -133,7 +135,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
               <MapPicker
                 value={draft}
                 onChange={(value) => setDraft({ ...draft, ...value })}
-                className="md:h-[min(60vh,28rem)]"
+                className="md:h-[min(68vh,38rem)]"
               />
             </div>
 
