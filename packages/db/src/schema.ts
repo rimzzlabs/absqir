@@ -234,11 +234,11 @@ export const invitation = pgTable("invitation", {
 });
 
 /**
- * A domain an organization claims, such as kolosal.ai. A new account whose
+ * A domain an organization claims, such as example.com. A new account whose
  * address ends in a verified domain finds the organization on its own,
  * which is what `organization.joinPolicy` then decides about. The claim
- * covers the whole domain and nothing under it: kolosal.ai never matches
- * mail.kolosal.ai, because a subdomain can belong to someone else.
+ * covers the whole domain and nothing under it: example.com never matches
+ * mail.example.com, because a subdomain can belong to someone else.
  */
 export const organizationDomain = pgTable(
   "organization_domain",

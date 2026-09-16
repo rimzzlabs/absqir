@@ -17,7 +17,7 @@ describe("txtRecords", () => {
       reply({ Status: 0, Answer: [{ type: 16, data: '"absqir-domain-verification=abc"' }] }),
     );
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(
       R.Ok(["absqir-domain-verification=abc"]),
     );
   });
@@ -28,7 +28,7 @@ describe("txtRecords", () => {
       reply({ Status: 0, Answer: [{ type: 16, data: '"absqir-domain-" "verification=abc"' }] }),
     );
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(
       R.Ok(["absqir-domain-verification=abc"]),
     );
   });
@@ -45,7 +45,7 @@ describe("txtRecords", () => {
       }),
     );
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(
       R.Ok(["absqir-domain-verification=abc"]),
     );
   });
@@ -53,13 +53,13 @@ describe("txtRecords", () => {
   it("answers with no records when the host carries none", async () => {
     vi.stubGlobal("fetch", reply({ Status: 0 }));
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(R.Ok([]));
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(R.Ok([]));
   });
 
   it("answers with no records when the host does not exist", async () => {
     vi.stubGlobal("fetch", reply({ Status: 3 }));
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(R.Ok([]));
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(R.Ok([]));
   });
 
   // The old version returned [] for all three, so a caller could not tell a
@@ -67,18 +67,18 @@ describe("txtRecords", () => {
   it("reports an unreachable resolver instead of an empty answer", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(R.Error("unreachable"));
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(R.Error("unreachable"));
   });
 
   it("reports a resolver that refuses the query", async () => {
     vi.stubGlobal("fetch", reply({}, false));
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(R.Error("resolver"));
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(R.Error("resolver"));
   });
 
   it("reports a resolver that answers with a failure code", async () => {
     vi.stubGlobal("fetch", reply({ Status: 2 }));
 
-    await expect(txtRecords("_absqir.kolosal.ai")).resolves.toEqual(R.Error("resolver"));
+    await expect(txtRecords("_absqir.example.com")).resolves.toEqual(R.Error("resolver"));
   });
 });
