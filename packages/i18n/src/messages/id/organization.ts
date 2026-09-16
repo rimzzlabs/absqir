@@ -108,8 +108,15 @@ export const organization = {
     role: "Peran",
     send: "Kirim undangan",
     sending: "Mengirim…",
-    resendLabel: "Kirim lagi undangan ke {{email}}",
-    cancelLabel: "Batalkan undangan untuk {{email}}",
+    actions: "Tindakan untuk undangan ke {{email}}",
+    resend: "Kirim lagi",
+    cancel: "Batalkan undangan",
+    cancelTitle: "Batalkan undangan ke {{email}}?",
+    cancelDescription:
+      "Tautan di email itu berhenti bekerja. Anda bisa mengirim undangan baru kapan saja.",
+    keep: "Biarkan",
+    cancelling: "Membatalkan…",
+    cancelConfirm: "Batalkan undangan",
   },
   requests: {
     title: "Permintaan bergabung",
