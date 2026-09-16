@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/rimzzlabs/absqir/compare/v0.5.0...v0.6.0) (2026-09-16)
+
+
+### Features
+
+* **repo:** set up a machine with one script ([#41](https://github.com/rimzzlabs/absqir/issues/41)) ([448e68b](https://github.com/rimzzlabs/absqir/commit/448e68b4b4f0f7889396b0dda6e1c8d47abd8ac1))
+
 ## [0.5.0](https://github.com/rimzzlabs/absqir/compare/v0.4.0...v0.5.0) (2026-09-13)
 
 
