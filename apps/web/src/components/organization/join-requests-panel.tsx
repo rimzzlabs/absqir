@@ -16,12 +16,9 @@ import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
 import { QueryError } from "@/components/shared/query-error";
+import { initialsOf } from "@/lib/avatar";
 import { useDecideJoinRequest } from "@/mutations/use-decide-join-request";
 import { type JoinRequest, useJoinRequests } from "@/queries/use-join-requests";
-
-function initialsOf(name: string) {
-  return name.slice(0, 2).toUpperCase();
-}
 
 function RequestRow(props: { row: JoinRequest }) {
   const { row } = props;
@@ -35,7 +32,7 @@ function RequestRow(props: { row: JoinRequest }) {
           {match(row.image)
             .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
             .otherwise(() => null)}
-          <AvatarFallback>{initialsOf(row.name)}</AvatarFallback>
+          <AvatarFallback name={row.name}>{initialsOf(row.name)}</AvatarFallback>
         </Avatar>
       </ItemMedia>
       <ItemContent>
