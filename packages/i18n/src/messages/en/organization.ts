@@ -106,8 +106,15 @@ export const organization = {
     role: "Role",
     send: "Send invitation",
     sending: "Sending…",
-    resendLabel: "Send the invitation to {{email}} again",
-    cancelLabel: "Cancel the invitation for {{email}}",
+    actions: "Actions for the invitation to {{email}}",
+    resend: "Send again",
+    cancel: "Cancel invitation",
+    cancelTitle: "Cancel the invitation to {{email}}?",
+    cancelDescription:
+      "The link in that email stops working. You can send a new invitation at any time.",
+    keep: "Keep it",
+    cancelling: "Cancelling…",
+    cancelConfirm: "Cancel invitation",
   },
   requests: {
     title: "Join requests",

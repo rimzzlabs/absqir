@@ -10,6 +10,12 @@ import {
   AlertDialogTitle,
 } from "@absqir/ui/alert-dialog";
 import { Button } from "@absqir/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@absqir/ui/dropdown-menu";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
 import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
@@ -291,38 +297,100 @@ export function MemberCardActions(props: {
 }
 
 /**
+ * A cancel kills the link in the email, and no undo brings it back, so the
+ * reader states the intent twice. The mutation lives here, the same way the
+ * remove dialog owns its own, so a failure shows next to the button that
+ * caused it.
+ */
+function CancelInvitationDialog(props: {
+  invitation: Invitation;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { invitation } = props;
+  const t = useTranslate();
+  const cancel = useCancelInvitation();
+
+  return (
+    <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {t("organization:invitations.cancelTitle", { email: invitation.email })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("organization:invitations.cancelDescription")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <FormError error={cancel.error} />
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("organization:invitations.keep")}</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={cancel.isPending}
+            onClick={() =>
+              cancel.mutate(invitation.id, { onSuccess: () => props.onOpenChange(false) })
+            }
+          >
+            {match(cancel.isPending)
+              .with(true, () => t("organization:invitations.cancelling"))
+              .otherwise(() => t("organization:invitations.cancelConfirm"))}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+/**
  * Send again, or drop it. `useInviteMember` already asks for a resend, so the
  * same call refreshes the link instead of refusing a duplicate. Each row owns
- * its mutations, so one pending request does not grey out the whole list.
+ * its mutation, so one pending request does not grey out the whole list.
+ *
+ * Both actions arrive from one corner, the way the controls of a member card
+ * do. A resend moves the expiry on the row back to seven days, so the list
+ * itself reports the result.
  */
 export function InvitationActions(props: { invitation: Invitation }) {
   const { invitation } = props;
   const t = useTranslate();
   const resend = useInviteMember();
-  const cancel = useCancelInvitation();
-  const busy = resend.isPending || cancel.isPending;
+  const [cancelling, setCancelling] = useState(false);
 
   return (
-    <div className="flex items-center justify-end gap-1">
-      <IconAction
-        variant="ghost"
-        label={t("organization:invitations.resendLabel", { email: invitation.email })}
-        disabled={busy}
-        onClick={() =>
-          resend.mutate({ email: invitation.email, role: asInvitableRole(invitation.role) })
-        }
-      >
-        <PaperPlaneTiltIcon />
-      </IconAction>
-      <IconAction
-        variant="ghost"
-        label={t("organization:invitations.cancelLabel", { email: invitation.email })}
-        disabled={busy}
-        onClick={() => cancel.mutate(invitation.id)}
-      >
-        <XIcon />
-      </IconAction>
-      <FormError error={resend.error ?? cancel.error} />
+    // A failed resend prints under the button. In a row the actions column is
+    // narrow, so a message beside the button would squeeze it to one word.
+    <div className="flex flex-col items-end gap-1">
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+          <DotsThreeIcon weight="bold" />
+          <span className="sr-only">
+            {t("organization:invitations.actions", { email: invitation.email })}
+          </span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            disabled={resend.isPending}
+            onClick={() =>
+              resend.mutate({ email: invitation.email, role: asInvitableRole(invitation.role) })
+            }
+          >
+            <PaperPlaneTiltIcon />
+            {t("organization:invitations.resend")}
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={() => setCancelling(true)}>
+            <XIcon />
+            {t("organization:invitations.cancel")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <CancelInvitationDialog
+        invitation={invitation}
+        open={cancelling}
+        onOpenChange={setCancelling}
+      />
+      <FormError error={resend.error} />
     </div>
   );
 }
