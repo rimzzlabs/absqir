@@ -1,3 +1,5 @@
+import { isReservedSlug } from "@absqir/core/org-path";
+import { SLUG_PATTERN } from "@absqir/core/slug";
 import type { Translate } from "@absqir/i18n";
 import { z } from "zod";
 
@@ -92,7 +94,10 @@ export function organizationSchema(t: Translate) {
       .trim()
       .min(2, t("common:validation.slugTooShort"))
       .max(40, t("common:validation.slugTooLong"))
-      .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, t("common:validation.slugChars")),
+      .regex(SLUG_PATTERN, t("common:validation.slugChars"))
+      // The slug sits at the root of the site, next to the addresses absqir
+      // serves itself, so the reserved ones are refused before the request.
+      .refine((slug) => !isReservedSlug(slug), t("errors:slugReserved")),
   });
 }
 

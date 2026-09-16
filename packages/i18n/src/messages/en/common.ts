@@ -132,7 +132,11 @@ export const common = {
   organizationForm: {
     name: "Organization name",
     slug: "Short name",
-    slugHint: "Lowercase letters, digits, and hyphens. It shows up in links.",
+    slugHint: "Lowercase letters, digits, and hyphens. This becomes the address of your pages.",
+    slugChecking: "Checking that short name…",
+    slugFree: "Your pages will live at {{address}}.",
+    slugTaken: "That short name is already taken. Pick another one.",
+    slugReserved: "absqir keeps that short name. Pick another one.",
   },
   leaveOrganization: {
     rowTitle: "Leave {{name}}",

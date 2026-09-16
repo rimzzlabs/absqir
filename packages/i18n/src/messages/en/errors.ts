@@ -112,6 +112,7 @@ export const errors = {
   qrCodeExpired: "That code has expired. Scan the screen again.",
   signInFirst: "Sign in first.",
   slugTaken: "That short name is already in use. Pick another one.",
+  slugReserved: "absqir keeps that short name. Pick another one.",
   someoneWithThatEmailIsListed: "Somebody with that email or ID number is already listed.",
   noRefusedCheckInToReport: "No check-in was refused at this event, so there is nothing to report.",
   tooManyRequests: "Too many tries in a row. Wait a minute, then try again.",

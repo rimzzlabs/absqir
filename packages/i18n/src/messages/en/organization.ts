@@ -28,11 +28,16 @@ export const organization = {
     started: "Started {{date}}",
     nameRow: "Name and short name",
     nameHintEditable:
-      "The name people read, and the short word that names this organization everywhere else.",
+      "The name people read, and the short name that becomes the address of every page here.",
     nameHintReadOnly: "Only owners and admins can change these.",
+    slugChangeTitle: "Change the address of this organization?",
+    slugChangeDescription: "Every page moves from {{from}} to {{to}}.",
+    slugChangeCost:
+      "Every saved link and every bookmark on the old address stops working. A person who opens one gets a page not found. Tell your members before you save.",
+    slugChangeConfirm: "Change the address",
     slug: "Short name",
     slugHint:
-      "The command line uses this to name the organization: absqir member add --org <slug>.",
+      "The address of every page here, and the name the command line uses: absqir member add --org <slug>.",
     id: "Organization ID",
     idHint: "What absqir calls it internally. Quote it when you report a problem.",
     glance: "At a glance",

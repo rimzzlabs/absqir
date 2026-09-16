@@ -29,13 +29,13 @@ export const organizationKeys = {
   members: () => [...organizationKeys.all, "members"] as const,
   invitations: () => [...organizationKeys.all, "invitations"] as const,
   invitation: (id: string) => [...organizationKeys.all, "invitation", id] as const,
+  slug: (slug: string) => [...organizationKeys.all, "slug", slug] as const,
 };
 
 export const organizationMutationKeys = {
   all: ["organization-mutations"] as const,
   create: () => [...organizationMutationKeys.all, "create"] as const,
   update: () => [...organizationMutationKeys.all, "update"] as const,
-  setActive: () => [...organizationMutationKeys.all, "set-active"] as const,
   invite: () => [...organizationMutationKeys.all, "invite"] as const,
   cancelInvitation: () => [...organizationMutationKeys.all, "cancel-invitation"] as const,
   acceptInvitation: () => [...organizationMutationKeys.all, "accept-invitation"] as const,

@@ -1,3 +1,4 @@
+import { orgPath } from "@absqir/core/org-path";
 import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import {
@@ -30,7 +31,6 @@ import { OrganizationForm } from "@/components/shared/organization-form";
 import { roleLabel } from "@/components/shared/role-badge";
 import { initialsOf } from "@/lib/avatar";
 import { useCreateOrganization } from "@/mutations/use-create-organization";
-import { useSetActiveOrganization } from "@/mutations/use-set-active-organization";
 
 export interface OrgSwitcherProps {
   memberships: readonly ShellMembership[];
@@ -55,9 +55,20 @@ function OrgAvatar(props: { membership: ShellMembership; size?: "sm" | "default"
 export function OrgSwitcher(props: OrgSwitcherProps) {
   const t = useTranslate();
   const { isMobile } = useSidebar();
-  const setActive = useSetActiveOrganization();
   const create = useCreateOrganization();
   const [creating, setCreating] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  // The address decides which organization a page shows, so a switch is a
+  // move to the other address. The middleware reads the slug there and
+  // points the session at it.
+  const switchTo = (organizationId: string) => {
+    const next = A.getBy(props.memberships, (row) => row.organizationId === organizationId);
+    if (!next) return;
+
+    setSwitching(true);
+    window.location.assign(orgPath(next.slug, "/"));
+  };
 
   return (
     <SidebarMenu>
@@ -119,14 +130,14 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
             <DropdownMenuRadioGroup
               value={props.active?.organizationId ?? ""}
               onValueChange={(value) => {
-                if (value && value !== props.active?.organizationId) setActive.mutate(value);
+                if (value && value !== props.active?.organizationId) switchTo(value);
               }}
             >
               {A.map(props.memberships, (membership) => (
                 <DropdownMenuRadioItem
                   key={membership.organizationId}
                   value={membership.organizationId}
-                  disabled={setActive.isPending}
+                  disabled={switching}
                 >
                   <OrgAvatar membership={membership} size="sm" />
                   <span className="truncate">{membership.name}</span>
@@ -167,7 +178,7 @@ export function OrgSwitcher(props: OrgSwitcherProps) {
                 pending={create.isPending}
                 onSubmit={(values) => create.mutate(values)}
               />
-              <FormError error={create.error ?? setActive.error} />
+              <FormError error={create.error} />
             </ResponsiveDialogBody>
           </ResponsiveDialogContent>
         </ResponsiveDialog>

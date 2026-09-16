@@ -60,6 +60,23 @@ const HELD = [
 
 const RESERVED = new Set<string>([...TAKEN, ...HELD]);
 
+/**
+ * What absqir answers when a caller asks for a slug it keeps for itself.
+ * Better Auth carries no code of its own for this, so the message is the
+ * code: every caller matches on it to answer in the reader's language.
+ */
+export const SLUG_RESERVED = "SLUG_RESERVED";
+
+/**
+ * True when a failure says another organization already holds the slug.
+ * Better Auth names it one way when an organization is created and another
+ * way when one is renamed, and the reader has the same thing to fix either
+ * way, so both codes live here rather than at each caller.
+ */
+export function isSlugTakenCode(code: string | null | undefined): boolean {
+  return code === "ORGANIZATION_ALREADY_EXISTS" || code === "ORGANIZATION_SLUG_ALREADY_TAKEN";
+}
+
 /** Every reserved slug, sorted. The settings page reads this to explain. */
 export const RESERVED_SLUGS: readonly string[] = [...RESERVED].sort();
 
