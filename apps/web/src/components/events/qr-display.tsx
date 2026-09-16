@@ -2,6 +2,7 @@ import { formatRange } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { match, P } from "ts-pattern";
+import { TokenTimer } from "@/components/events/token-timer";
 import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
@@ -73,11 +74,19 @@ function QrScreen(props: QrDisplayProps) {
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (token) => (
-          <img
-            src={token.qrDataUrl}
-            alt={t("events:display.qrAlt")}
-            className="border-border w-[min(80vw,60vh)] rounded-2xl border bg-white p-4"
-          />
+          <div className="flex w-[min(80vw,60vh)] flex-col gap-3">
+            <img
+              src={token.qrDataUrl}
+              alt={t("events:display.qrAlt")}
+              className="border-border w-full rounded-2xl border bg-white p-4"
+            />
+            {/* A scheduled or a closed event turns no code over, so the time
+                left says nothing. The token carries the status the server saw
+                as it signed, so the two never disagree on screen. */}
+            {match(token.status)
+              .with("running", () => <TokenTimer expiresAt={token.expiresAt} />)
+              .otherwise(() => null)}
+          </div>
         ))
         .otherwise(() => null)}
 

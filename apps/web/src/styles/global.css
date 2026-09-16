@@ -29,3 +29,21 @@
     opacity: 0;
   }
 }
+
+/* The bar under the room screen code. It empties across one token's window.
+   The duration arrives per token, because a window is cut to the clock and a
+   screen that opens partway through one gets whatever is left of it. */
+@keyframes token-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.token-drain {
+  animation-name: token-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
