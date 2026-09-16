@@ -4,9 +4,9 @@ import { Button } from "@absqir/ui/button";
 import { TranslateIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
 import { LanguageField } from "@/components/shared/language-field";
+import { SettingsRow } from "@/components/shared/settings-section";
 import { useDeviceLocale } from "@/lib/use-device-locale";
 import { useUpdateLocale } from "@/mutations/use-update-locale";
 

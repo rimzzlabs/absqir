@@ -331,7 +331,7 @@ export async function notifyJoinRequested(
       titleKey: "email:notify.joinRequested" as const,
       titleParams: { name: params.personName },
       body: params.message ?? params.email,
-      href: "/settings?tab=requests",
+      href: "/organization/members",
       dedupeKey: `join-requested:${params.requestId}:${userId}`,
     })),
   );

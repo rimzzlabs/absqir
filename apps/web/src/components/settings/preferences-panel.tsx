@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
 import { match } from "ts-pattern";
-import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
+import { SettingsRow, SettingsSection } from "@/components/shared/settings-section";
 import {
   type MotionPreference,
   setMotion,

@@ -41,7 +41,7 @@ function RequestRow(props: { row: JoinRequest }) {
       <ItemContent>
         <ItemTitle>{row.name}</ItemTitle>
         <ItemDescription>
-          {t("settings:requests.asked", {
+          {t("organization:requests.asked", {
             email: row.email,
             when: relativeToNow(new Date(row.createdAt)),
           })}
@@ -58,7 +58,7 @@ function RequestRow(props: { row: JoinRequest }) {
           onClick={() => decide.mutate({ id: row.id, decision: "declined" })}
         >
           <XIcon />
-          {t("settings:requests.decline")}
+          {t("organization:requests.decline")}
         </Button>
         <Button
           size="sm"
@@ -68,7 +68,7 @@ function RequestRow(props: { row: JoinRequest }) {
           <CheckIcon />
           {match(decide.isPending)
             .with(true, () => t("common:actions.saving"))
-            .otherwise(() => t("settings:requests.letIn"))}
+            .otherwise(() => t("organization:requests.letIn"))}
         </Button>
       </ItemActions>
     </Item>
@@ -89,7 +89,7 @@ export function JoinRequestsPanel() {
         .with({ data: P.select(P.nonNullable) }, (data) =>
           match(data.items.length)
             .with(0, () => (
-              <p className="text-muted-foreground text-sm">{t("settings:requests.empty")}</p>
+              <p className="text-muted-foreground text-sm">{t("organization:requests.empty")}</p>
             ))
             .otherwise(() => (
               <div className="space-y-3">

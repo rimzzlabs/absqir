@@ -12,8 +12,8 @@ import {
 import { GlobeHemisphereEastIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { SettingsRow } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
+import { SettingsRow } from "@/components/shared/settings-section";
 import { useDeviceTimezone } from "@/lib/use-device-timezone";
 import { useUpdateTimezone } from "@/mutations/use-update-timezone";
 

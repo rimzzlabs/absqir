@@ -19,7 +19,7 @@ import { A } from "@mobily/ts-belt";
 import { MapPinIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { PlaceDialog } from "@/components/settings/place-dialog";
+import { PlaceDialog } from "@/components/organization/place-dialog";
 import { FormError } from "@/components/shared/form-error";
 import { useRemovePlace } from "@/mutations/use-location-actions";
 import { type Place, useLocations } from "@/queries/use-locations";
@@ -29,10 +29,10 @@ function usage(t: Translate, place: Place): string {
   const parts = [
     match(place.eventCount)
       .with(0, () => null)
-      .otherwise((count) => t("settings:places.events", { count })),
+      .otherwise((count) => t("organization:places.events", { count })),
     match(place.scheduleCount)
       .with(0, () => null)
-      .otherwise((count) => t("settings:places.schedules", { count })),
+      .otherwise((count) => t("organization:places.schedules", { count })),
   ];
 
   return A.reject(parts, (part) => part === null).join(", ");
@@ -51,7 +51,7 @@ function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => voi
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-medium">{place.name}</p>
           <Badge variant="outline" className="tabular-nums">
-            {t("settings:places.radius", { radius: place.radiusMeters })}
+            {t("organization:places.radius", { radius: place.radiusMeters })}
           </Badge>
         </div>
 
@@ -71,13 +71,13 @@ function PlaceRow(props: { place: Place; onEdit: () => void; onDelete: () => voi
 
       <div className="flex items-center gap-1">
         <IconAction
-          label={t("settings:places.editLabel", { name: place.name })}
+          label={t("organization:places.editLabel", { name: place.name })}
           onClick={props.onEdit}
         >
           <PencilSimpleIcon />
         </IconAction>
         <IconAction
-          label={t("settings:places.deleteLabel", { name: place.name })}
+          label={t("organization:places.deleteLabel", { name: place.name })}
           onClick={props.onDelete}
         >
           <TrashIcon />
@@ -112,7 +112,7 @@ export function PlacesPanel() {
           }}
         >
           <PlusIcon />
-          {t("settings:places.new")}
+          {t("organization:places.new")}
         </Button>
       </div>
 
@@ -131,8 +131,8 @@ export function PlacesPanel() {
               <EmptyMedia variant="icon">
                 <MapPinIcon />
               </EmptyMedia>
-              <EmptyTitle>{t("settings:places.emptyTitle")}</EmptyTitle>
-              <EmptyDescription>{t("settings:places.emptyDescription")}</EmptyDescription>
+              <EmptyTitle>{t("organization:places.emptyTitle")}</EmptyTitle>
+              <EmptyDescription>{t("organization:places.emptyDescription")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ))
@@ -167,14 +167,14 @@ export function PlacesPanel() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("settings:places.deleteTitle", { name: deleting?.name ?? "" })}
+              {t("organization:places.deleteTitle", { name: deleting?.name ?? "" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {match(deleting)
                 .with(P.nonNullable, (place) =>
                   match(usage(t, place))
-                    .with("", () => t("settings:places.deleteUnused"))
-                    .otherwise((usage) => t("settings:places.deleteUsed", { usage })),
+                    .with("", () => t("organization:places.deleteUnused"))
+                    .otherwise((usage) => t("organization:places.deleteUsed", { usage })),
                 )
                 .otherwise(() => "")}
             </AlertDialogDescription>
@@ -193,8 +193,8 @@ export function PlacesPanel() {
               }}
             >
               {match(remove.isPending)
-                .with(true, () => t("settings:places.deleting"))
-                .otherwise(() => t("settings:places.deletePlace"))}
+                .with(true, () => t("organization:places.deleting"))
+                .otherwise(() => t("organization:places.deletePlace"))}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

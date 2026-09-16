@@ -41,6 +41,7 @@ export const NAMESPACES = [
   "reports",
   "schedules",
   "groups",
+  "organization",
   "settings",
   "account",
   "notifications",

@@ -14,6 +14,7 @@ import { leave } from "#src/messages/id/leave";
 import { my } from "#src/messages/id/my";
 import { notifications } from "#src/messages/id/notifications";
 import { onboarding } from "#src/messages/id/onboarding";
+import { organization } from "#src/messages/id/organization";
 import { publicEvent } from "#src/messages/id/public-event";
 import { reports } from "#src/messages/id/reports";
 import { schedules } from "#src/messages/id/schedules";
@@ -34,6 +35,7 @@ export const id = {
   reports,
   schedules,
   groups,
+  organization,
   settings,
   account,
   notifications,

@@ -18,6 +18,7 @@ import { ArrowSquareOutIcon, GithubLogoIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import {
+  activeHrefFor,
   CHECK_IN,
   GITHUB_URL,
   isActivePath,
@@ -37,10 +38,10 @@ export interface AppSidebarProps {
   canCreateOrganizations: boolean;
 }
 
-function NavEntry(props: { item: NavItem; currentPath: string }) {
+function NavEntry(props: { item: NavItem; activeHref: string | null }) {
   const { item } = props;
   const t = useTranslate();
-  const active = isActivePath(item.href, props.currentPath);
+  const active = item.href === props.activeHref;
   const label = t(`shell:nav.${item.id}`);
 
   return (
@@ -106,6 +107,7 @@ export function AppSidebar(props: AppSidebarProps) {
     .with(P.nullish, () => SOLO_NAV)
     .otherwise((active) => navFor(active.role));
   const member = active !== null && !roleAtLeast(active.role, "organizer");
+  const activeHref = activeHrefFor(groups, props.currentPath);
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -129,7 +131,7 @@ export function AppSidebar(props: AppSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {A.map(group.items, (item) => (
-                  <NavEntry key={item.href} item={item} currentPath={props.currentPath} />
+                  <NavEntry key={item.href} item={item} activeHref={activeHref} />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>

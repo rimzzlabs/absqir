@@ -1,16 +1,4 @@
 ---
-import { translatorFor } from "@absqir/i18n";
-import { GroupsPage } from "@/components/groups/groups-page";
-import DashboardLayout from "@/layouts/dashboard-layout.astro";
-
-const role = Astro.locals.activeMembership?.role ?? "member";
-
-if (role === "member") {
-  return Astro.redirect("/my/events", 302);
-}
-const t = translatorFor(Astro.locals.locale);
+// Groups moved under the organization menu. Old links still land there.
+return Astro.redirect("/organization/groups", 302);
 ---
-
-<DashboardLayout title={t("shell:titles.groups")}>
-  <GroupsPage client:load locale={Astro.locals.locale} role={role} />
-</DashboardLayout>

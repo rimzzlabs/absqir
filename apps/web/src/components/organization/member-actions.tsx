@@ -1,4 +1,3 @@
-import { canGrantOwner, canManageAccess } from "@absqir/core/member-access";
 import { useTranslate } from "@absqir/i18n/react";
 import {
   AlertDialog,
@@ -10,67 +9,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@absqir/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@absqir/ui/avatar";
 import { Button } from "@absqir/ui/button";
-import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@absqir/ui/field";
 import { IconAction } from "@absqir/ui/icon-action";
 import { Input } from "@absqir/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@absqir/ui/popover";
 import { Separator } from "@absqir/ui/separator";
-import { Skeleton } from "@absqir/ui/skeleton";
-import { A } from "@mobily/ts-belt";
-import { DotsThreeIcon, TrashIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon, PaperPlaneTiltIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
-import { QueryError } from "@/components/shared/query-error";
 import { RoleBadge, type RoleName } from "@/components/shared/role-badge";
 import { RoleSelect } from "@/components/shared/role-select";
-import { initialsOf } from "@/lib/avatar";
 import type { InvitableRole } from "@/lib/directory-schemas";
+import { useCancelInvitation } from "@/mutations/use-cancel-invitation";
+import { useInviteMember } from "@/mutations/use-invite-member";
 import { useRemoveMember } from "@/mutations/use-remove-member";
 import { useUpdateMemberRole } from "@/mutations/use-update-member-role";
 import { useUpdatePerson } from "@/mutations/use-update-person";
-import { type Member, useMembers } from "@/queries/use-members";
-import { type Person, usePeople } from "@/queries/use-people";
+import type { Invitation, Member } from "@/queries/use-members";
+import type { Person } from "@/queries/use-people";
 
-export interface MembersTableProps {
-  role: RoleName;
-  currentUserId: string;
-}
-
-function asRole(role: string): RoleName {
+export function asRole(role: string): RoleName {
   return match(role)
     .with("owner", "admin", "organizer", (name) => name)
     .otherwise(() => "member" as const);
 }
 
-function Identity(props: { member: Member; isSelf: boolean }) {
-  const { member } = props;
-  const t = useTranslate();
-
-  return (
-    <div className="flex items-center gap-3">
-      <Avatar>
-        {match(member.user.image)
-          .with(P.string.minLength(1), (image) => <AvatarImage src={image} alt="" />)
-          .otherwise(() => null)}
-        <AvatarFallback name={member.user.name}>{initialsOf(member.user.name)}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <p className="truncate font-medium">
-          {member.user.name}
-          {match(props.isSelf)
-            .with(true, () => (
-              <span className="text-muted-foreground">{t("settings:members.you")}</span>
-            ))
-            .otherwise(() => null)}
-        </p>
-        <p className="text-muted-foreground truncate text-xs">{member.user.email}</p>
-      </div>
-    </div>
-  );
+/** The roles an invitation can carry back into the select. */
+function asInvitableRole(role: string): InvitableRole {
+  return match(role)
+    .with("admin", "organizer", (name) => name)
+    .otherwise(() => "member" as const);
 }
 
 interface IdentifierDraft {
@@ -120,8 +90,8 @@ function IdentifierInput(props: { draft: IdentifierDraft; id: string; name: stri
     <Input
       id={props.id}
       value={draft.value}
-      aria-label={t("settings:members.identifierFor", { name: props.name })}
-      placeholder={t("settings:members.identifierPlaceholder")}
+      aria-label={t("organization:members.identifierFor", { name: props.name })}
+      placeholder={t("organization:members.identifierPlaceholder")}
       autoComplete="off"
       className="font-mono text-xs"
       disabled={draft.pending}
@@ -135,7 +105,7 @@ function IdentifierInput(props: { draft: IdentifierDraft; id: string; name: stri
 }
 
 /** The table cell. A card folds the same field into the popover below. */
-function IdentifierCell(props: { person: Person; name: string }) {
+export function IdentifierCell(props: { person: Person; name: string }) {
   const draft = useIdentifierDraft(props.person);
 
   return (
@@ -146,7 +116,7 @@ function IdentifierCell(props: { person: Person; name: string }) {
   );
 }
 
-function RoleCell(props: { member: Member; canChange: boolean; canGrantOwner: boolean }) {
+export function RoleCell(props: { member: Member; canChange: boolean; canGrantOwner: boolean }) {
   const { member } = props;
   const role = asRole(member.role);
   const updateRole = useUpdateMemberRole();
@@ -186,21 +156,23 @@ function RemoveDialog(props: {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t("settings:members.removeTitle", { name: member.user.name })}
+            {t("organization:members.removeTitle", { name: member.user.name })}
           </AlertDialogTitle>
-          <AlertDialogDescription>{t("settings:members.removeDescription")}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t("organization:members.removeDescription")}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <FormError error={remove.error} />
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("settings:members.keep")}</AlertDialogCancel>
+          <AlertDialogCancel>{t("organization:members.keep")}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={remove.isPending}
             onClick={() => remove.mutate(member.id, { onSuccess: () => props.onOpenChange(false) })}
           >
             {match(remove.isPending)
-              .with(true, () => t("settings:members.removing"))
-              .otherwise(() => t("settings:members.remove"))}
+              .with(true, () => t("organization:members.removing"))
+              .otherwise(() => t("organization:members.remove"))}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -208,7 +180,7 @@ function RemoveDialog(props: {
   );
 }
 
-function RemoveAction(props: { member: Member }) {
+export function RemoveAction(props: { member: Member }) {
   const t = useTranslate();
   const [removing, setRemoving] = useState(false);
 
@@ -216,7 +188,7 @@ function RemoveAction(props: { member: Member }) {
     <>
       <IconAction
         variant="ghost"
-        label={t("settings:members.removeLabel", { name: props.member.user.name })}
+        label={t("organization:members.removeLabel", { name: props.member.user.name })}
         onClick={() => setRemoving(true)}
       >
         <TrashIcon />
@@ -231,7 +203,7 @@ function RemoveAction(props: { member: Member }) {
  * field and the remove button fold into a popover there, so the card stays a
  * name, an email, and a role.
  */
-function CardActions(props: {
+export function MemberCardActions(props: {
   member: Member;
   person: Person | undefined;
   canChange: boolean;
@@ -255,7 +227,7 @@ function CardActions(props: {
         <PopoverTrigger render={<Button variant="ghost" size="icon-sm" />}>
           <DotsThreeIcon weight="bold" />
           <span className="sr-only">
-            {t("settings:members.cardActions", { name: member.user.name })}
+            {t("organization:members.cardActions", { name: member.user.name })}
           </span>
         </PopoverTrigger>
         <PopoverContent align="end">
@@ -264,7 +236,7 @@ function CardActions(props: {
             .otherwise((person) => (
               <Field>
                 <FieldLabel htmlFor={`card-identifier-${person.id}`}>
-                  {t("settings:members.identifier")}
+                  {t("organization:members.identifier")}
                 </FieldLabel>
                 <FieldContent>
                   <IdentifierInput
@@ -273,7 +245,7 @@ function CardActions(props: {
                     name={member.user.name}
                   />
                 </FieldContent>
-                <FieldDescription>{t("settings:members.identifierHint")}</FieldDescription>
+                <FieldDescription>{t("organization:members.identifierHint")}</FieldDescription>
                 <FormError error={draft.error} />
               </Field>
             ))}
@@ -283,7 +255,7 @@ function CardActions(props: {
               <>
                 <Field>
                   <FieldLabel htmlFor={`card-role-${member.id}`}>
-                    {t("settings:members.role")}
+                    {t("organization:members.role")}
                   </FieldLabel>
                   <FieldContent>
                     <RoleSelect
@@ -305,7 +277,7 @@ function CardActions(props: {
                   onClick={() => setRemoving(true)}
                 >
                   <TrashIcon />
-                  {t("settings:members.removeFromOrganization")}
+                  {t("organization:members.removeFromOrganization")}
                 </Button>
               </>
             ))
@@ -318,82 +290,39 @@ function CardActions(props: {
   );
 }
 
-export function MembersTable(props: MembersTableProps) {
+/**
+ * Send again, or drop it. `useInviteMember` already asks for a resend, so the
+ * same call refreshes the link instead of refusing a duplicate. Each row owns
+ * its mutations, so one pending request does not grey out the whole list.
+ */
+export function InvitationActions(props: { invitation: Invitation }) {
+  const { invitation } = props;
   const t = useTranslate();
-  const members = useMembers();
-  const people = usePeople();
-  const grantsOwner = canGrantOwner(props.role);
+  const resend = useInviteMember();
+  const cancel = useCancelInvitation();
+  const busy = resend.isPending || cancel.isPending;
 
-  // Every member is also a person. The directory row carries the identifier.
-  const directory = new Map(
-    A.flatMap(people.data ?? [], (person) =>
-      match(person.userId)
-        .with(P.string, (userId) => [[userId, person] as const])
-        .otherwise(() => []),
-    ),
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <IconAction
+        variant="ghost"
+        label={t("organization:invitations.resendLabel", { email: invitation.email })}
+        disabled={busy}
+        onClick={() =>
+          resend.mutate({ email: invitation.email, role: asInvitableRole(invitation.role) })
+        }
+      >
+        <PaperPlaneTiltIcon />
+      </IconAction>
+      <IconAction
+        variant="ghost"
+        label={t("organization:invitations.cancelLabel", { email: invitation.email })}
+        disabled={busy}
+        onClick={() => cancel.mutate(invitation.id)}
+      >
+        <XIcon />
+      </IconAction>
+      <FormError error={resend.error ?? cancel.error} />
+    </div>
   );
-
-  const isSelf = (member: Member) => member.userId === props.currentUserId;
-  const canChange = (member: Member) =>
-    canManageAccess(props.role, { role: asRole(member.role), isSelf: isSelf(member) });
-
-  const columns: DataColumn<Member>[] = [
-    {
-      key: "account",
-      header: t("settings:members.account"),
-      place: "primary",
-      cell: (member) => <Identity member={member} isSelf={isSelf(member)} />,
-    },
-    {
-      // The card carries this in the popover instead, where there is room.
-      key: "identifier",
-      header: t("settings:members.identifier"),
-      place: "none",
-      cell: (member) =>
-        match(directory.get(member.userId))
-          .with(P.nullish, () => <span className="text-muted-foreground">—</span>)
-          .otherwise((person) => <IdentifierCell person={person} name={member.user.name} />),
-    },
-    {
-      key: "role",
-      header: t("settings:members.role"),
-      cell: (member) => (
-        <RoleCell member={member} canChange={canChange(member)} canGrantOwner={grantsOwner} />
-      ),
-      // A card states the role and holds the select in the popover, so the
-      // three controls of a row arrive from one corner instead of three.
-      card: (member) => <RoleBadge role={asRole(member.role)} />,
-    },
-    {
-      key: "actions",
-      place: "action",
-      headClassName: "w-16",
-      cellClassName: "text-right",
-      cell: (member) =>
-        match(canChange(member))
-          .with(true, () => <RemoveAction member={member} />)
-          .otherwise(() => null),
-      card: (member) => (
-        <CardActions
-          member={member}
-          person={directory.get(member.userId)}
-          canChange={canChange(member)}
-          canGrantOwner={grantsOwner}
-        />
-      ),
-    },
-  ];
-
-  return match(members)
-    .with({ isPending: true }, () => <Skeleton className="h-48 rounded-xl" />)
-    .with({ isError: true }, () => <QueryError query={members} />)
-    .with({ data: P.select(P.nonNullable) }, (rows) => (
-      <DataTable
-        label={t("settings:members.tableLabel")}
-        columns={columns}
-        rows={rows}
-        getKey={(member) => member.id}
-      />
-    ))
-    .otherwise(() => null);
 }

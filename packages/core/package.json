@@ -20,6 +20,10 @@
       "development": "./src/money.ts",
       "default": "./dist/money.js"
     },
+    "./active-path": {
+      "development": "./src/active-path.ts",
+      "default": "./dist/active-path.js"
+    },
     "./date": {
       "development": "./src/date.ts",
       "default": "./dist/date.js"

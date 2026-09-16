@@ -5,16 +5,34 @@ import { match, P } from "ts-pattern";
 import { SettingsPage } from "@/components/settings/settings-page";
 import DashboardLayout from "@/layouts/dashboard-layout.astro";
 
-// Everyone has an account and preferences here. The organization tabs show
-// for owners and admins only; the page decides from the role.
+// Settings holds the account only. The organization moved to its own menu,
+// so a link that names one of its old tabs lands there instead.
 const { user, activeMembership } = Astro.locals;
 
 if (!user) {
   return Astro.redirect("/sign-in", 302);
 }
 
+const ORGANIZATION_TABS: Record<string, string> = {
+  members: "/organization/members",
+  invitations: "/organization/members",
+  requests: "/organization/members",
+  places: "/organization?tab=places",
+  domains: "/organization?tab=domains",
+  organization: "/organization",
+};
+
+const role = activeMembership?.role ?? null;
+const runsOrganization = role === "owner" || role === "admin";
+const requestedTab = Astro.url.searchParams.get("tab");
+const moved = ORGANIZATION_TABS[requestedTab ?? ""];
+
+if (runsOrganization && moved) {
+  return Astro.redirect(moved, 302);
+}
+
 // An account with no organization still owns a profile, preferences, and a
-// list of its devices. Only the organization tabs need one.
+// list of its devices.
 const organization = match(activeMembership)
   .with(P.nullish, () => null)
   .otherwise((activeMembership) => ({
@@ -40,10 +58,9 @@ const t = translatorFor(Astro.locals.locale);
   <SettingsPage
     client:load
     locale={Astro.locals.locale}
-    role={activeMembership?.role ?? null}
+    role={role}
     organization={organization}
-    currentUserId={user.id}
     user={shellUser}
-    requestedTab={Astro.url.searchParams.get("tab")}
+    requestedTab={requestedTab}
   />
 </DashboardLayout>

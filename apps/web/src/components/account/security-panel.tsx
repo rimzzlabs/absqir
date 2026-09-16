@@ -10,8 +10,8 @@ import { useForm } from "react-hook-form";
 import { match } from "ts-pattern";
 import { ConnectedAccounts } from "@/components/account/connected-accounts";
 import { DevicesGrid, useHasOtherDevices } from "@/components/account/devices-grid";
-import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
+import { SettingsRow, SettingsSection } from "@/components/shared/settings-section";
 import {
   type ChangePasswordValues,
   changePasswordSchema,

@@ -15,8 +15,8 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { SettingsRow, SettingsSection } from "@/components/settings/settings-section";
 import { FormError } from "@/components/shared/form-error";
+import { SettingsRow, SettingsSection } from "@/components/shared/settings-section";
 import { useUpdateNotificationChannel } from "@/mutations/use-update-notification-channel";
 
 export interface NotificationsPanelProps {

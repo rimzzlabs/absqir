@@ -81,11 +81,11 @@ export function PlaceDialog(props: PlaceDialogProps) {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {match(editing)
-              .with(true, () => t("settings:places.dialog.editTitle"))
-              .otherwise(() => t("settings:places.dialog.newTitle"))}
+              .with(true, () => t("organization:places.dialog.editTitle"))
+              .otherwise(() => t("organization:places.dialog.newTitle"))}
           </ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            {t("settings:places.dialog.description")}
+            {t("organization:places.dialog.description")}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -99,30 +99,30 @@ export function PlaceDialog(props: PlaceDialogProps) {
         >
           <ResponsiveDialogBody className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-name">{t("settings:places.dialog.name")}</Label>
+              <Label htmlFor="place-name">{t("organization:places.dialog.name")}</Label>
               <Input
                 id="place-name"
                 value={draft.name}
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                placeholder={t("settings:places.dialog.namePlaceholder")}
+                placeholder={t("organization:places.dialog.namePlaceholder")}
                 autoFocus
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-address">{t("settings:places.dialog.address")}</Label>
+              <Label htmlFor="place-address">{t("organization:places.dialog.address")}</Label>
               <Input
                 id="place-address"
                 value={draft.address}
                 onChange={(event) => setDraft({ ...draft, address: event.target.value })}
-                placeholder={t("settings:places.dialog.addressPlaceholder")}
+                placeholder={t("organization:places.dialog.addressPlaceholder")}
               />
             </div>
 
             <MapPicker value={draft} onChange={(value) => setDraft({ ...draft, ...value })} />
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="place-radius">{t("settings:places.dialog.radius")}</Label>
+              <Label htmlFor="place-radius">{t("organization:places.dialog.radius")}</Label>
               <div className="flex items-center gap-3">
                 <input
                   id="place-radius"
@@ -137,7 +137,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
                   className="accent-primary h-2 flex-1"
                 />
                 <Input
-                  aria-label={t("settings:places.dialog.radiusLabel")}
+                  aria-label={t("organization:places.dialog.radiusLabel")}
                   type="number"
                   inputMode="numeric"
                   min={MIN_RADIUS_METERS}
@@ -149,11 +149,11 @@ export function PlaceDialog(props: PlaceDialogProps) {
                   className="w-24 tabular-nums"
                 />
                 <span className="text-muted-foreground text-sm">
-                  {t("settings:places.dialog.metres")}
+                  {t("organization:places.dialog.metres")}
                 </span>
               </div>
               <p className="text-muted-foreground text-xs">
-                {t("settings:places.dialog.radiusHint", { count: MIN_RADIUS_METERS })}
+                {t("organization:places.dialog.radiusHint", { count: MIN_RADIUS_METERS })}
               </p>
             </div>
 
@@ -161,8 +161,8 @@ export function PlaceDialog(props: PlaceDialogProps) {
             {match(placed)
               .with(false, () => (
                 <p className="text-muted-foreground text-sm">
-                  {t("settings:places.dialog.placeHintBefore")}{" "}
-                  <b>{t("settings:places.dialog.placeHintButton")}</b>.
+                  {t("organization:places.dialog.placeHintBefore")}{" "}
+                  <b>{t("organization:places.dialog.placeHintButton")}</b>.
                 </p>
               ))
               .otherwise(() => null)}
@@ -180,7 +180,7 @@ export function PlaceDialog(props: PlaceDialogProps) {
                 .otherwise(() =>
                   match(editing)
                     .with(true, () => t("common:actions.save"))
-                    .otherwise(() => t("settings:places.dialog.create")),
+                    .otherwise(() => t("organization:places.dialog.create")),
                 )}
             </Button>
           </ResponsiveDialogFooter>

@@ -1,35 +1,36 @@
-import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import { A } from "@mobily/ts-belt";
 import type { Icon } from "@phosphor-icons/react";
 import { type MouseEvent, useEffect, useRef } from "react";
 import { match } from "ts-pattern";
 
-export interface SettingsNavItem<TValue extends string> {
+export interface SectionNavItem<TValue extends string> {
   value: TValue;
   /** Worded by the caller, which knows the reader's language. */
   label: string;
   icon: Icon;
 }
 
-export interface SettingsNavGroup<TValue extends string> {
-  label: string;
-  items: SettingsNavItem<TValue>[];
+export interface SectionNavGroup<TValue extends string> {
+  /** Null on a page whose sections need no heading above them. */
+  label: string | null;
+  items: SectionNavItem<TValue>[];
 }
 
-export interface SettingsNavProps<TValue extends string> {
-  groups: SettingsNavGroup<TValue>[];
+export interface SectionNavProps<TValue extends string> {
+  /** Names the whole list for a screen reader. */
+  label: string;
+  groups: SectionNavGroup<TValue>[];
   value: TValue;
   onChange: (value: TValue) => void;
 }
 
 /**
- * The sections of the settings page. A column on a wide screen, one
+ * The sections of a settings-shaped page. A column on a wide screen, one
  * scrolling row on a phone. Every entry is a real link, so it opens in a
  * new tab and the address bar carries the section.
  */
-export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValue>) {
-  const t = useTranslate();
+export function SectionNav<TValue extends string>(props: SectionNavProps<TValue>) {
   const list = useRef<HTMLElement>(null);
   const { value } = props;
 
@@ -57,14 +58,18 @@ export function SettingsNav<TValue extends string>(props: SettingsNavProps<TValu
   return (
     <nav
       ref={list}
-      aria-label={t("settings:nav.label")}
+      aria-label={props.label}
       className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:gap-6 lg:self-start lg:overflow-visible lg:px-0"
     >
-      {A.map(props.groups, (group) => (
-        <div key={group.label} className="flex shrink-0 gap-1 lg:flex-col">
-          <p className="text-muted-foreground hidden px-3 pb-1 text-xs font-medium tracking-wide uppercase lg:block">
-            {group.label}
-          </p>
+      {A.mapWithIndex(props.groups, (index, group) => (
+        <div key={group.label ?? index} className="flex shrink-0 gap-1 lg:flex-col">
+          {match(group.label)
+            .with(null, () => null)
+            .otherwise((label) => (
+              <p className="text-muted-foreground hidden px-3 pb-1 text-xs font-medium tracking-wide uppercase lg:block">
+                {label}
+              </p>
+            ))}
           {A.map(group.items, (item) => {
             const active = item.value === value;
 
