@@ -67,6 +67,10 @@
     "./location-risk": {
       "development": "./src/location-risk.ts",
       "default": "./dist/location-risk.js"
+    },
+    "./slug": {
+      "development": "./src/slug.ts",
+      "default": "./dist/slug.js"
     }
   },
   "imports": {
