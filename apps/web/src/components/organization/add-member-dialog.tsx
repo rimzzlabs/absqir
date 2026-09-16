@@ -1,6 +1,5 @@
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
-import { Field, FieldContent, FieldLabel } from "@absqir/ui/field";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
 import {
@@ -55,7 +54,7 @@ export function AddMemberDialog(props: AddMemberDialogProps) {
 
   return (
     <ResponsiveDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="sm:max-w-md">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>{t("organization:invitations.dialogTitle")}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
@@ -64,8 +63,14 @@ export function AddMemberDialog(props: AddMemberDialogProps) {
         </ResponsiveDialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(submit)} noValidate>
-            <ResponsiveDialogBody className="flex flex-col gap-4">
+          {/* The body scrolls and the footer stays put only while the form is
+              the flex column. See the note on DialogBody. */}
+          <form
+            onSubmit={form.handleSubmit(submit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+            noValidate
+          >
+            <ResponsiveDialogBody>
               <FormField
                 control={form.control}
                 name="email"
@@ -73,7 +78,7 @@ export function AddMemberDialog(props: AddMemberDialogProps) {
                 render={(field) => (
                   <Input
                     {...field}
-                    id="invite-email"
+                    id={field.name}
                     type="email"
                     autoComplete="off"
                     placeholder={t("organization:invitations.emailPlaceholder")}
@@ -81,18 +86,21 @@ export function AddMemberDialog(props: AddMemberDialogProps) {
                 )}
               />
 
-              <Field>
-                <FieldLabel htmlFor="invite-role">{t("organization:invitations.role")}</FieldLabel>
-                <FieldContent>
-                  {/* The owner seat is never handed out by invitation:
-                      an owner grants it on the row, after the person joins. */}
+              <FormField
+                control={form.control}
+                name="role"
+                label={t("organization:invitations.role")}
+                render={(field) => (
+                  // The owner seat is never handed out by invitation:
+                  // an owner grants it on the row, after the person joins.
                   <RoleSelect
-                    id="invite-role"
-                    value={form.watch("role")}
-                    onChange={(value) => form.setValue("role", value)}
+                    id={field.name}
+                    value={field.value}
+                    disabled={field.disabled}
+                    onChange={field.onChange}
                   />
-                </FieldContent>
-              </Field>
+                )}
+              />
 
               <FormError error={invite.error} />
             </ResponsiveDialogBody>
