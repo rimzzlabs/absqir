@@ -204,6 +204,21 @@ cookies on `SameSite=Lax`.
 
 ## Develop
 
+On macOS or Linux, one script does every step below:
+
+```bash
+./setup.sh
+```
+
+The script checks each tool first and installs only what is missing, so you
+can run it again at any time. It asks before every install. It sets up Node,
+pnpm and a local Postgres, writes the environment files with a fresh secret,
+installs the dependencies, and pushes the schema. `./setup.sh --check` reports
+what is missing and changes nothing. `./setup.sh --yes` installs without
+questions.
+
+The same steps by hand:
+
 1. Install the dependencies.
 
 ```bash
