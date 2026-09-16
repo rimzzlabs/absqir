@@ -179,4 +179,4 @@ export function activeHrefFor(groups: readonly NavGroup[], currentPath: string):
   );
 }
 
-export { isActivePath, UsersIcon };
+export { isActivePath };
