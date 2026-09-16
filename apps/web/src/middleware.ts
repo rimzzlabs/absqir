@@ -1,7 +1,14 @@
 import { defineMiddleware } from "astro:middleware";
 import { createRequestContext } from "@absqir/api";
 import { isRoleName } from "@absqir/auth";
-import { orgPath, splitOrgPath } from "@absqir/core/org-path";
+import {
+  isAccountPath,
+  isOrgFreePath,
+  isPublicPath,
+  orgPath,
+  SIGN_IN_PATH,
+  splitOrgPath,
+} from "@absqir/core/org-path";
 import { isSlug } from "@absqir/core/slug";
 import { schema } from "@absqir/db";
 import { isOnboardingStep } from "@absqir/db/schema";
@@ -11,9 +18,6 @@ import { A } from "@mobily/ts-belt";
 import { eq } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 
-/** The single sign-in door. A signed-in reader is sent to the dashboard. */
-const SIGN_IN_PATH = "/sign-in";
-
 /**
  * Where this browser remembers the language of the account that last used
  * it. The sign-in page has no session to ask, so without this it would fall
@@ -22,54 +26,6 @@ const SIGN_IN_PATH = "/sign-in";
  */
 const LOCALE_COOKIE = "locale";
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
-
-/** Reachable without a session. */
-function isPublicPath(path: string): boolean {
-  return (
-    path === SIGN_IN_PATH ||
-    path === "/sign-up" ||
-    path.startsWith("/invite/") ||
-    path.startsWith("/e/")
-  );
-}
-
-/**
- * Addresses that carry no organization slug, because they belong to the
- * person or to everyone. An account keeps one profile, one language, and one
- * set of devices across every organization it belongs to, so a slug in front
- * of the settings page would name an owner the page does not have.
- *
- * Every other address lives under `/<slug>`.
- */
-function isRootPath(path: string): boolean {
-  return (
-    path === "/" ||
-    path === "/settings" ||
-    path === "/account" ||
-    path === "/onboarding" ||
-    path === "/no-organization" ||
-    path === "/404" ||
-    path === "/500" ||
-    isPublicPath(path) ||
-    path.startsWith("/a/")
-  );
-}
-
-/**
- * Reachable by a signed-in reader who has no organization yet. The home page
- * shows the steps that lead into one; settings holds the account's own
- * profile, preferences, and devices, none of which need an organization.
- */
-function isOrgFreePath(path: string): boolean {
-  return (
-    path === "/" ||
-    path === "/settings" ||
-    path === "/account" ||
-    path === "/onboarding" ||
-    path.startsWith("/invite/") ||
-    path.startsWith("/e/")
-  );
-}
 
 /** The event id in a public event path, or null. */
 function eventIdOf(path: string): string | null {
@@ -229,7 +185,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return context.redirect(orgPath(landing.slug, "/") + context.url.search, 302);
     }
 
-    if (isRootPath(path)) {
+    if (isAccountPath(path)) {
       return withNoStore(await next());
     }
 

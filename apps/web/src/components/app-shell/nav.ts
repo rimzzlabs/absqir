@@ -1,4 +1,4 @@
-import { activeHref, isActivePath } from "@absqir/core/active-path";
+import { activeNavHref, isActivePath } from "@absqir/core/active-path";
 import { orgPath } from "@absqir/core/org-path";
 import { A } from "@mobily/ts-belt";
 import {
@@ -219,17 +219,11 @@ export interface ActiveHrefParams {
 
 /** The entry the reader is standing on, across every group in the sidebar. */
 export function activeHrefFor(params: ActiveHrefParams): string | null {
-  const found = activeHref(
-    A.flatMap(params.groups, (group) => A.map(group.items, (item) => item.href)),
-    params.currentPath,
-  );
-
-  // The dashboard is an ancestor of every page in the organization, so on a
-  // page with no entry of its own it would be the last one lit. It lights on
-  // itself instead.
-  return match(found === params.home && params.currentPath !== params.home)
-    .with(true, () => null)
-    .otherwise(() => found);
+  return activeNavHref({
+    hrefs: A.flatMap(params.groups, (group) => A.map(group.items, (item) => item.href)),
+    currentPath: params.currentPath,
+    home: params.home,
+  });
 }
 
 export { isActivePath };

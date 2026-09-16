@@ -29,6 +29,7 @@ function pick(rows: Notification[]): Notification[] {
 }
 
 function PreviewRow(props: { notification: Notification; onRead: (id: string) => Promise<void> }) {
+  const orgHref = useOrgHref();
   const { notification } = props;
   const t = useTranslate();
   // The row keeps the key it was written from, so it reads in whatever
@@ -82,7 +83,9 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
   );
 
   if (notification.href) {
-    const href = notification.href;
+    // A row holds the address inside the organization. The slug goes in
+    // front here, so a renamed organization never breaks an old row.
+    const href = orgHref(notification.href);
 
     return (
       <li>

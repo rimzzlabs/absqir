@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { isReservedSlug, orgPath, RESERVED_SLUGS, splitOrgPath } from "../src/org-path";
+import {
+  isAccountPath,
+  isOrgFreePath,
+  isPublicPath,
+  isReservedSlug,
+  isSlugTakenCode,
+  orgPath,
+  RESERVED_SLUGS,
+  splitOrgPath,
+} from "../src/org-path";
 
 describe("isReservedSlug", () => {
   it("refuses a name a root page already holds", () => {
@@ -79,6 +88,98 @@ describe("orgPath and splitOrgPath together", () => {
 
     for (const page of pages) {
       expect(splitOrgPath(orgPath("acme", page))).toEqual({ slug: "acme", rest: page });
+    }
+  });
+});
+
+describe("isPublicPath", () => {
+  it("opens the door, an invitation, and a public event", () => {
+    expect(isPublicPath("/sign-in")).toBe(true);
+    expect(isPublicPath("/sign-up")).toBe(true);
+    expect(isPublicPath("/invite/abc")).toBe(true);
+    expect(isPublicPath("/e/abc")).toBe(true);
+  });
+
+  it("closes everything else", () => {
+    expect(isPublicPath("/")).toBe(false);
+    expect(isPublicPath("/settings")).toBe(false);
+    expect(isPublicPath("/acme/events")).toBe(false);
+  });
+});
+
+describe("isAccountPath", () => {
+  it("keeps the account pages at the root", () => {
+    expect(isAccountPath("/")).toBe(true);
+    expect(isAccountPath("/settings")).toBe(true);
+    expect(isAccountPath("/account")).toBe(true);
+    expect(isAccountPath("/onboarding")).toBe(true);
+  });
+
+  it("keeps the public pages and the check-in link at the root", () => {
+    expect(isAccountPath("/sign-in")).toBe(true);
+    expect(isAccountPath("/e/abc")).toBe(true);
+    expect(isAccountPath("/a/abc")).toBe(true);
+  });
+
+  it("sends every organization page under a slug", () => {
+    const pages = [
+      "/acme",
+      "/acme/events",
+      "/acme/organization/members",
+      "/acme/my/history",
+      "/acme/check-in",
+      "/acme/settings",
+    ];
+
+    for (const page of pages) {
+      expect(isAccountPath(page)).toBe(false);
+    }
+  });
+
+  it("refuses the old address of a page that moved", () => {
+    expect(isAccountPath("/events")).toBe(false);
+    expect(isAccountPath("/organization")).toBe(false);
+    expect(isAccountPath("/my/events")).toBe(false);
+  });
+});
+
+describe("isOrgFreePath", () => {
+  it("opens what works without an organization", () => {
+    expect(isOrgFreePath("/")).toBe(true);
+    expect(isOrgFreePath("/settings")).toBe(true);
+    expect(isOrgFreePath("/onboarding")).toBe(true);
+    expect(isOrgFreePath("/invite/abc")).toBe(true);
+  });
+
+  it("closes the check-in link, which needs an organization", () => {
+    expect(isOrgFreePath("/a/abc")).toBe(false);
+  });
+
+  it("closes every organization page", () => {
+    expect(isOrgFreePath("/acme")).toBe(false);
+    expect(isOrgFreePath("/acme/events")).toBe(false);
+  });
+});
+
+describe("isSlugTakenCode", () => {
+  it("knows both names Better Auth gives the same failure", () => {
+    expect(isSlugTakenCode("ORGANIZATION_ALREADY_EXISTS")).toBe(true);
+    expect(isSlugTakenCode("ORGANIZATION_SLUG_ALREADY_TAKEN")).toBe(true);
+  });
+
+  it("leaves every other failure alone", () => {
+    expect(isSlugTakenCode("ORGANIZATION_NOT_FOUND")).toBe(false);
+    expect(isSlugTakenCode(null)).toBe(false);
+    expect(isSlugTakenCode(undefined)).toBe(false);
+  });
+});
+
+describe("a reserved slug never reaches a root page", () => {
+  it("holds every root address the app serves", () => {
+    const roots = ["settings", "account", "onboarding", "api", "invite", "sign-in", "sign-up"];
+
+    for (const root of roots) {
+      expect(isReservedSlug(root)).toBe(true);
     }
   });
 });

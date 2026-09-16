@@ -125,3 +125,59 @@ export function splitOrgPath(path: string): OrgPathParts | null {
 
   return { slug, rest };
 }
+
+/** The single sign-in door. */
+export const SIGN_IN_PATH = "/sign-in";
+
+/**
+ * Reachable without a session: the door itself, an invitation, and the
+ * public face of an event.
+ */
+export function isPublicPath(path: string): boolean {
+  return (
+    path === SIGN_IN_PATH ||
+    path === "/sign-up" ||
+    path.startsWith("/invite/") ||
+    path.startsWith("/e/")
+  );
+}
+
+/**
+ * Addresses that carry no organization slug, because they belong to the
+ * person or to everyone. An account keeps one profile, one language, and
+ * one set of devices across every organization it belongs to, so a slug in
+ * front of the settings page would name an owner the page does not have.
+ *
+ * Every other address lives under `/<slug>`.
+ */
+export function isAccountPath(path: string): boolean {
+  return (
+    path === "/" ||
+    path === "/settings" ||
+    path === "/account" ||
+    path === "/onboarding" ||
+    path === "/no-organization" ||
+    path === "/404" ||
+    path === "/500" ||
+    isPublicPath(path) ||
+    // The address a check-in QR opens. The token in it names the event, and
+    // the code is printed, so the address stays as short as it can be.
+    path.startsWith("/a/")
+  );
+}
+
+/**
+ * Reachable by a signed-in reader who belongs to no organization yet. The
+ * home page shows the steps that lead into one, and settings holds the
+ * account's own profile, preferences, and devices.
+ */
+export function isOrgFreePath(path: string): boolean {
+  return (
+    path === "/" ||
+    path === "/settings" ||
+    path === "/account" ||
+    path === "/onboarding" ||
+    path.startsWith("/invite/") ||
+    path.startsWith("/e/")
+  );
+}
