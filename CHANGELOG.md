@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.0](https://github.com/rimzzlabs/absqir/compare/v0.6.0...v0.7.0) (2026-09-16)
+
+
+### Features
+
+* **web:** give a failed read a way out ([#43](https://github.com/rimzzlabs/absqir/issues/43)) ([091d743](https://github.com/rimzzlabs/absqir/commit/091d743d745dbb785e405d8d3c396109a01446fd))
+* **web:** give the invited row one menu and tidy the add member dialog ([#54](https://github.com/rimzzlabs/absqir/issues/54)) ([db050e0](https://github.com/rimzzlabs/absqir/commit/db050e072f34e5f2e65950f98821c86db5cb21b2)), closes [#53](https://github.com/rimzzlabs/absqir/issues/53)
+* **web:** give the organization its own menu ([#49](https://github.com/rimzzlabs/absqir/issues/49)) ([df5a342](https://github.com/rimzzlabs/absqir/commit/df5a3422b916be4ded856acfcd7bcb72a1db4e4e))
+* **web:** make the place map usable on a laptop ([#51](https://github.com/rimzzlabs/absqir/issues/51)) ([60ebe88](https://github.com/rimzzlabs/absqir/commit/60ebe88daaa1e29a91c45976b400a69ad2d41dac))
+* **web:** move the language choice into Preferences ([#52](https://github.com/rimzzlabs/absqir/issues/52)) ([0745b27](https://github.com/rimzzlabs/absqir/commit/0745b27374f725fb818c0b74e0afb5ecc1aae2f2))
+* **web:** show the time left on the room screen code ([#50](https://github.com/rimzzlabs/absqir/issues/50)) ([fb368c6](https://github.com/rimzzlabs/absqir/commit/fb368c6a03756a61ed3b5f7ef21fff19732a786a))
+
+
+### Bug fixes
+
+* **web:** scan the workspace sources before the dev server serves ([#56](https://github.com/rimzzlabs/absqir/issues/56)) ([650b8e2](https://github.com/rimzzlabs/absqir/commit/650b8e2e75ba69b7a79393787526b5a089d95a5b))
+
 ## [0.6.0](https://github.com/rimzzlabs/absqir/compare/v0.5.0...v0.6.0) (2026-09-16)
 
 
