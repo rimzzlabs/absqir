@@ -11,13 +11,14 @@ export const settings = {
   },
   language: {
     label: "Bahasa",
-    hint: "Setiap layar, setiap notifikasi, dan setiap email untuk akun Anda memakai bahasa ini. Orang lain tetap dengan pilihannya sendiri.",
+    hint: "Akun Anda yang menyimpan pilihan ini, jadi setiap perangkat yang Anda pakai membaca absqir dengan bahasa yang sama. Notifikasi dan email Anda ikut. Orang lain tetap dengan pilihannya sendiri.",
     selectLabel: "Pilih bahasa",
     followingDevice: "Peramban Anda meminta {{language}}.",
   },
   preferences: {
     title: "Preferensi",
-    description: "Disimpan di peramban ini, bukan di akun. Ponsel dan layar ruangan bisa berbeda.",
+    description:
+      "Tema dan animasi tersimpan di peramban ini, jadi ponsel dan layar ruangan bisa berbeda. Bahasa mengikuti akun Anda.",
     theme: "Tema",
     themeHint: "Sistem mengikuti pengaturan perangkat dan berubah bersamanya.",
     themes: {

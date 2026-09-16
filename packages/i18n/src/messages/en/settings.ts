@@ -11,13 +11,14 @@ export const settings = {
   },
   language: {
     label: "Language",
-    hint: "Every screen, every notification and every email for your account reads in this language. Other people keep their own choice.",
+    hint: "Your account holds this one, so every device you sign in on reads absqir the same way. Your notifications and your emails follow it. Other people keep their own choice.",
     selectLabel: "Choose a language",
     followingDevice: "Your browser asks for {{language}}.",
   },
   preferences: {
     title: "Preferences",
-    description: "Kept in this browser, not on the account. A phone and a room screen can differ.",
+    description:
+      "The theme and the animation stay in this browser, so a phone and a room screen can differ. The language follows your account.",
     theme: "Theme",
     themeHint: "System follows the device setting and changes with it.",
     themes: {
