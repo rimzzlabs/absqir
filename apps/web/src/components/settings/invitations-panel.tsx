@@ -13,6 +13,7 @@ import { PaperPlaneTiltIcon, XIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { RoleBadge } from "@/components/shared/role-badge";
 import { RoleSelect } from "@/components/shared/role-select";
 import { type InviteValues, inviteSchema } from "@/lib/directory-schemas";
@@ -155,7 +156,7 @@ function PendingList() {
 
   return match(invitations)
     .with({ isPending: true }, () => <Skeleton className="h-32 rounded-xl" />)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={invitations} />)
     .with({ data: P.select(P.nonNullable) }, (rows) =>
       match(rows.length)
         .with(0, () => (

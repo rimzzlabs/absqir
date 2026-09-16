@@ -3,6 +3,7 @@ import { useTranslate } from "@absqir/i18n/react";
 import { A } from "@mobily/ts-belt";
 import { type QueryFunctionContext, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 
 export interface UseMembersOptions {
   /** Off until the caller needs the list, such as an owner-only check. */
@@ -22,7 +23,7 @@ export function useMembers(options?: UseMembersOptions) {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? t("errors:couldNotLoadMembers"));
+        throw authErrorMessage(t, error ?? null, t("errors:couldNotLoadMembers"));
       }
 
       return data.members;
@@ -43,7 +44,7 @@ export function useInvitations() {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? t("errors:couldNotLoadInvitations"));
+        throw authErrorMessage(t, error ?? null, t("errors:couldNotLoadInvitations"));
       }
 
       const now = Date.now();
@@ -71,7 +72,7 @@ export function useInvitation(id: string) {
       });
 
       if (error || !data) {
-        throw new Error(error?.message ?? t("errors:invitationMissing"));
+        throw authErrorMessage(t, error ?? null, t("errors:invitationMissing"));
       }
 
       return data;

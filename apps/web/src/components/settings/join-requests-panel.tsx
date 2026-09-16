@@ -15,6 +15,7 @@ import { A } from "@mobily/ts-belt";
 import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useDecideJoinRequest } from "@/mutations/use-decide-join-request";
 import { type JoinRequest, useJoinRequests } from "@/queries/use-join-requests";
 
@@ -84,7 +85,7 @@ export function JoinRequestsPanel() {
     <div className="space-y-4">
       {match(requests)
         .with({ isPending: true }, () => <Skeleton className="h-24 rounded-xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={requests} />)
         .with({ data: P.select(P.nonNullable) }, (data) =>
           match(data.items.length)
             .with(0, () => (

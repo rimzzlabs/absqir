@@ -24,9 +24,9 @@ import type { ReactNode } from "react";
 import { match, P } from "ts-pattern";
 import { GITHUB_URL } from "@/components/app-shell/nav";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { JoinOrganization } from "@/components/shared/join-organization";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { type OnboardingStatus, useOnboarding } from "@/queries/use-onboarding";
 
 export interface GettingStartedPageProps {
@@ -171,7 +171,7 @@ function GettingStartedBody(props: GettingStartedPageProps) {
             <Skeleton className="h-96 rounded-xl" />
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={status} />)
         .with({ data: P.select(P.nonNullable) }, (data) => {
           const steps = stepsFor(t, data);
           const done = A.filter(steps, (step) => step.state === "done").length;

@@ -10,7 +10,7 @@ import {
   UsersThreeIcon,
 } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { type Organization, useOrganization } from "@/queries/use-organization";
 
 interface Tile {
@@ -37,7 +37,7 @@ export function OrganizationCounts() {
   const current = useOrganization();
 
   return match(current)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={current} />)
     .with({ data: P.select(P.nonNullable) }, (organization) => (
       <dl className="grid grid-cols-2 gap-3 pt-6 sm:grid-cols-4">
         {A.map(TILES, (tile) => (

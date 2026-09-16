@@ -21,6 +21,7 @@ import { ArrowClockwiseIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import {
   type JoinPolicy,
   useClaimDomain,
@@ -157,7 +158,7 @@ export function DomainsPanel() {
 
       {match(domains)
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={domains} />)
         .with({ data: P.select(P.nonNullable) }, (data) => (
           <>
             <Field>

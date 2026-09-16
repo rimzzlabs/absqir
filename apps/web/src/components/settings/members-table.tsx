@@ -24,6 +24,7 @@ import { DotsThreeIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { RoleBadge, type RoleName } from "@/components/shared/role-badge";
 import { RoleSelect } from "@/components/shared/role-select";
 import { initialsOf } from "@/lib/avatar";
@@ -385,7 +386,7 @@ export function MembersTable(props: MembersTableProps) {
 
   return match(members)
     .with({ isPending: true }, () => <Skeleton className="h-48 rounded-xl" />)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={members} />)
     .with({ data: P.select(P.nonNullable) }, (rows) => (
       <DataTable
         label={t("settings:members.tableLabel")}
