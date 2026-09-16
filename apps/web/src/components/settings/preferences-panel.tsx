@@ -1,3 +1,4 @@
+import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Field, FieldLabel, FieldTitle } from "@absqir/ui/field";
 import { cn } from "@absqir/ui/lib/utils";
@@ -5,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@absqir/ui/radio-group";
 import { ToggleGroup, ToggleGroupItem } from "@absqir/ui/toggle-group";
 import { A } from "@mobily/ts-belt";
 import { match } from "ts-pattern";
+import { LanguageRow } from "@/components/settings/language-row";
 import { SettingsRow, SettingsSection } from "@/components/shared/settings-section";
 import {
   type MotionPreference,
@@ -119,8 +121,18 @@ function isTheme(value: unknown): value is ThemePreference {
   return value === "system" || value === "light" || value === "dark";
 }
 
-/** Choices that belong to this browser, not to the account. */
-export function PreferencesPanel() {
+export interface PreferencesPanelProps {
+  /** What the account reads in now. The language row saves to the account. */
+  locale: Locale;
+}
+
+/**
+ * How absqir reads. The theme and the animation belong to this browser, so a
+ * phone and a room screen can differ. The language belongs to the account,
+ * because it has to reach the emails and the reminders too, and the reader
+ * thinks of all three as one question: how do I read this.
+ */
+export function PreferencesPanel(props: PreferencesPanelProps) {
   const t = useTranslate();
   const theme = useThemePreference();
   const motion = useMotionPreference();
@@ -130,6 +142,8 @@ export function PreferencesPanel() {
       title={t("settings:preferences.title")}
       description={t("settings:preferences.description")}
     >
+      <LanguageRow locale={props.locale} />
+
       <SettingsRow
         label={t("settings:preferences.theme")}
         hint={t("settings:preferences.themeHint")}

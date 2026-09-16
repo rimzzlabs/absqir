@@ -78,12 +78,11 @@ function SettingsBody(props: SettingsPageProps) {
         image={props.user.image}
         createdAt={props.user.createdAt}
         role={props.role}
-        locale={props.locale}
         timezone={props.user.timezone}
         organization={props.organization}
       />
     ),
-    preferences: <PreferencesPanel />,
+    preferences: <PreferencesPanel locale={props.locale} />,
     notifications: <NotificationsPanel channel={props.user.notificationChannel} />,
     security: <SecurityPanel />,
   } satisfies Record<SettingsTab, ReactNode>;
