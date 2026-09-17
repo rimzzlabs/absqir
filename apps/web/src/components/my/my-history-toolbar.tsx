@@ -53,80 +53,91 @@ export function MyHistoryToolbar(props: MyHistoryToolbarProps) {
 
   return (
     <StickyToolbar>
-      <InputGroup className="w-full sm:w-64">
-        <InputGroupAddon>
-          <MagnifyingGlassIcon aria-hidden />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="search"
-          aria-label={t("my:history.searchLabel")}
-          placeholder={t("my:history.search")}
-          value={props.q}
-          onChange={(event) => props.onQChange(event.target.value)}
-        />
-      </InputGroup>
+      {/* Three controls do not fit one row on a phone, so the search takes
+          its own and the two selects share the next. They never leave half
+          a row empty. */}
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+        <InputGroup className="min-w-0 basis-full sm:basis-auto sm:max-w-64 sm:flex-1">
+          <InputGroupAddon>
+            <MagnifyingGlassIcon aria-hidden />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="search"
+            aria-label={t("my:history.searchLabel")}
+            placeholder={t("my:history.search")}
+            value={props.q}
+            onChange={(event) => props.onQChange(event.target.value)}
+          />
+        </InputGroup>
 
-      <Select
-        items={[
-          { value: EVERY_STATUS, label: t("my:history.everyStatus") },
-          ...A.map(STATUSES, (status) => ({ value: status, label: attendanceLabel(t, status) })),
-        ]}
-        value={props.status}
-        onValueChange={(value) => {
-          if (typeof value === "string") props.onStatusChange(value);
-        }}
-      >
-        <SelectTrigger aria-label={t("my:history.statusLabel")} className="w-full sm:w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem value={EVERY_STATUS}>{t("my:history.everyStatus")}</SelectItem>
-          </SelectGroup>
-          <SelectGroup>
-            <SelectLabel>{t("my:history.statusGroup")}</SelectLabel>
-            {A.map(STATUSES, (status) => (
-              <SelectItem key={status} value={status}>
-                {attendanceLabel(t, status)}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+        <Select
+          items={[
+            { value: EVERY_STATUS, label: t("my:history.everyStatus") },
+            ...A.map(STATUSES, (status) => ({ value: status, label: attendanceLabel(t, status) })),
+          ]}
+          value={props.status}
+          onValueChange={(value) => {
+            if (typeof value === "string") props.onStatusChange(value);
+          }}
+        >
+          <SelectTrigger
+            aria-label={t("my:history.statusLabel")}
+            className="min-w-0 flex-1 sm:max-w-44"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value={EVERY_STATUS}>{t("my:history.everyStatus")}</SelectItem>
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>{t("my:history.statusGroup")}</SelectLabel>
+              {A.map(STATUSES, (status) => (
+                <SelectItem key={status} value={status}>
+                  {attendanceLabel(t, status)}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-      <Select
-        items={A.map(WINDOWS, (when) => ({ value: when, label: windowLabel(t, when) }))}
-        value={props.when}
-        onValueChange={(value) => {
-          if (typeof value === "string") props.onWhenChange(value as HistoryWindow);
-        }}
-      >
-        <SelectTrigger aria-label={t("my:history.whenLabel")} className="w-full sm:w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem value="any">{t("my:history.everyTime")}</SelectItem>
-          </SelectGroup>
-          <SelectGroup>
-            <SelectLabel>{t("my:history.whenGroup")}</SelectLabel>
-            {A.map(["30d", "90d", "12m"] as const, (when) => (
-              <SelectItem key={when} value={when}>
-                {windowLabel(t, when)}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+        <Select
+          items={A.map(WINDOWS, (when) => ({ value: when, label: windowLabel(t, when) }))}
+          value={props.when}
+          onValueChange={(value) => {
+            if (typeof value === "string") props.onWhenChange(value as HistoryWindow);
+          }}
+        >
+          <SelectTrigger
+            aria-label={t("my:history.whenLabel")}
+            className="min-w-0 flex-1 sm:max-w-44"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="any">{t("my:history.everyTime")}</SelectItem>
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>{t("my:history.whenGroup")}</SelectLabel>
+              {A.map(["30d", "90d", "12m"] as const, (when) => (
+                <SelectItem key={when} value={when}>
+                  {windowLabel(t, when)}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-      {match(props.filtered)
-        .with(true, () => (
-          <Button variant="ghost" size="sm" onClick={props.onClear}>
-            <XIcon />
-            {t("my:history.clear")}
-          </Button>
-        ))
-        .otherwise(() => null)}
+        {match(props.filtered)
+          .with(true, () => (
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={props.onClear}>
+              <XIcon />
+              {t("my:history.clear")}
+            </Button>
+          ))
+          .otherwise(() => null)}
+      </div>
     </StickyToolbar>
   );
 }

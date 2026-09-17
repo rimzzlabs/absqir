@@ -39,16 +39,20 @@ export function EventsToolbar(props: EventsToolbarProps) {
   const rows = groups.data ?? [];
 
   return (
-    <StickyToolbar className="justify-between">
-      <Tabs value={props.scope} onValueChange={(value) => props.onScopeChange(String(value))}>
-        <TabsList>
+    <StickyToolbar>
+      <Tabs
+        value={props.scope}
+        onValueChange={(value) => props.onScopeChange(String(value))}
+        className="w-full sm:w-auto"
+      >
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="upcoming">{t("events:upcoming")}</TabsTrigger>
           <TabsTrigger value="past">{t("events:past")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-        <InputGroup className="w-full sm:w-60">
+      <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1 sm:justify-end">
+        <InputGroup className="min-w-0 flex-1 sm:max-w-60">
           <InputGroupAddon>
             <MagnifyingGlassIcon aria-hidden />
           </InputGroupAddon>
@@ -71,7 +75,10 @@ export function EventsToolbar(props: EventsToolbarProps) {
             if (typeof value === "string") props.onGroupChange(value);
           }}
         >
-          <SelectTrigger aria-label={t("events:filterByGroup")} className="w-full sm:w-48">
+          <SelectTrigger
+            aria-label={t("events:filterByGroup")}
+            className="min-w-0 flex-1 sm:max-w-48"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +102,7 @@ export function EventsToolbar(props: EventsToolbarProps) {
 
         {match(props.filtered)
           .with(true, () => (
-            <Button variant="ghost" size="sm" onClick={props.onClear}>
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={props.onClear}>
               <XIcon />
               {t("events:clearFilters")}
             </Button>

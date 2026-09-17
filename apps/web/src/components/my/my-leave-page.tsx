@@ -119,8 +119,12 @@ function MyLeaveBody() {
       />
 
       <StickyToolbar>
-        <Tabs value={scope} onValueChange={(value) => void setScope(value as MyScope)}>
-          <TabsList>
+        <Tabs
+          value={scope}
+          onValueChange={(value) => void setScope(value as MyScope)}
+          className="w-full sm:w-auto"
+        >
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="pending">{t("my:leave.waiting")}</TabsTrigger>
             <TabsTrigger value="decided">{t("my:leave.decided")}</TabsTrigger>
           </TabsList>

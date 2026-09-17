@@ -206,8 +206,12 @@ function LeaveBody() {
       <PageHeader title={t("leave:title")} description={t("leave:description")} />
 
       <StickyToolbar>
-        <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>
-          <TabsList>
+        <Tabs
+          value={scope}
+          onValueChange={(value) => void setScope(value as QueueScope)}
+          className="w-full sm:w-auto"
+        >
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="pending">{t("leave:pending")}</TabsTrigger>
             <TabsTrigger value="decided">{t("leave:decided")}</TabsTrigger>
           </TabsList>
