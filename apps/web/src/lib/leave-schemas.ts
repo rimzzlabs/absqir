@@ -1,6 +1,9 @@
 import type { Translate } from "@absqir/i18n";
 import { z } from "zod";
 
+/** How long a reason or a decision note may be. The counter reads it too. */
+export const REASON_LIMIT = 500;
+
 export function askLeaveSchema(t: Translate) {
   return z.object({
     eventId: z.string().min(1, t("my:leave.validation.pickEvent")),
@@ -8,13 +11,13 @@ export function askLeaveSchema(t: Translate) {
       .string()
       .trim()
       .min(1, t("my:leave.validation.reasonRequired"))
-      .max(500, t("my:leave.validation.tooLong")),
+      .max(REASON_LIMIT, t("my:leave.validation.tooLong")),
   });
 }
 
 export function decideLeaveSchema(t: Translate) {
   return z.object({
-    note: z.string().trim().max(500, t("my:leave.validation.tooLong")),
+    note: z.string().trim().max(REASON_LIMIT, t("my:leave.validation.tooLong")),
   });
 }
 

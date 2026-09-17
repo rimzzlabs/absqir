@@ -8,6 +8,10 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./leave-choices": {
+      "development": "./src/leave-choices.ts",
+      "default": "./dist/leave-choices.js"
+    },
     "./numbers": {
       "development": "./src/numbers.ts",
       "default": "./dist/numbers.js"

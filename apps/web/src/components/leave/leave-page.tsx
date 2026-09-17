@@ -1,8 +1,6 @@
-import { formatDate, formatRange } from "@absqir/core/date";
-import type { Locale, Translate } from "@absqir/i18n";
+import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
-import { type DataColumn, DataTable } from "@absqir/ui/data-table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Form, FormField } from "@absqir/ui/form";
 import {
@@ -18,17 +16,18 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { Textarea } from "@absqir/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { A } from "@mobily/ts-belt";
 import { NotePencilIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { match, P } from "ts-pattern";
+import { LeaveRow } from "@/components/leave/leave-row";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
-import { LeaveStatusBadge } from "@/components/shared/status-badge";
+import { StickyToolbar } from "@/components/shared/sticky-toolbar";
 import { type DecideLeaveValues, decideLeaveSchema } from "@/lib/leave-schemas";
-import { useOrgHref } from "@/lib/org-path";
 import { useDecideLeave } from "@/mutations/use-decide-leave";
 import { type LeaveRequest, type LeaveScope, useLeaveQueue } from "@/queries/use-leave";
 
@@ -127,102 +126,12 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   );
 }
 
-interface LeaveColumnsParams {
-  t: Translate;
-  onDecide: (d: Decision) => void;
-  /** From `useOrgHref`, because a plain function cannot call the hook. */
-  orgHref: (path: string) => string;
-}
-
-function leaveColumns(params: LeaveColumnsParams): DataColumn<LeaveRequest>[] {
-  const { t, onDecide, orgHref } = params;
-  return [
-    {
-      key: "person",
-      header: t("leave:person"),
-      place: "primary",
-      cell: (row) => row.personName,
-      cellClassName: "font-medium",
-    },
-    {
-      key: "event",
-      header: t("leave:event"),
-      cell: (row) => (
-        <>
-          <a href={orgHref(`/events/${row.eventId}`)} className="hover:underline">
-            {row.eventTitle}
-          </a>
-          <p className="text-muted-foreground text-xs">
-            {formatRange(new Date(row.startsAt), new Date(row.endsAt))}
-          </p>
-        </>
-      ),
-    },
-    {
-      key: "reason",
-      header: t("leave:reason"),
-      cell: (row) => (
-        <>
-          {row.reason}
-          {match(row.decisionNote)
-            .with(P.string.minLength(1), (decisionNote) => (
-              <p className="text-muted-foreground text-xs">
-                {t("leave:note", { note: decisionNote })}
-              </p>
-            ))
-            .otherwise(() => null)}
-        </>
-      ),
-      cellClassName: "max-w-xs whitespace-normal",
-    },
-    {
-      key: "asked",
-      header: t("leave:asked"),
-      cell: (row) => formatDate(new Date(row.createdAt), "date"),
-      cellClassName: "text-muted-foreground tabular-nums",
-    },
-    {
-      key: "status",
-      header: t("leave:status"),
-      cell: (row) => <LeaveStatusBadge status={row.status} />,
-    },
-    {
-      key: "decide",
-      place: "footer",
-      headClassName: "w-44",
-      cell: (row) =>
-        match(row.status)
-          .with("pending", () => (
-            <div className="flex gap-2 md:justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 md:flex-none"
-                onClick={() => onDecide({ request: row, decision: "declined" })}
-              >
-                {t("leave:decline")}
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1 md:flex-none"
-                onClick={() => onDecide({ request: row, decision: "approved" })}
-              >
-                {t("leave:approve")}
-              </Button>
-            </div>
-          ))
-          .otherwise(() => null),
-    },
-  ];
-}
-
 function Queue(props: {
   rows: readonly LeaveRequest[];
   scope: LeaveScope;
   onDecide: (d: Decision) => void;
 }) {
   const t = useTranslate();
-  const orgHref = useOrgHref();
 
   if (props.rows.length === 0) {
     return (
@@ -247,12 +156,34 @@ function Queue(props: {
   }
 
   return (
-    <DataTable
-      label={t("leave:tableLabel")}
-      columns={leaveColumns({ t, onDecide: props.onDecide, orgHref })}
-      rows={props.rows}
-      getKey={(row) => row.id}
-    />
+    <ul className="flex flex-col gap-2" aria-label={t("leave:tableLabel")}>
+      {A.map(props.rows, (row) => (
+        <LeaveRow
+          key={row.id}
+          request={row}
+          withPerson
+          actions={match(row.status)
+            .with("pending", () => (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => props.onDecide({ request: row, decision: "declined" })}
+                >
+                  {t("leave:decline")}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => props.onDecide({ request: row, decision: "approved" })}
+                >
+                  {t("leave:approve")}
+                </Button>
+              </>
+            ))
+            .otherwise(() => null)}
+        />
+      ))}
+    </ul>
   );
 }
 
@@ -274,15 +205,23 @@ function LeaveBody() {
     <>
       <PageHeader title={t("leave:title")} description={t("leave:description")} />
 
-      <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>
-        <TabsList>
-          <TabsTrigger value="pending">{t("leave:pending")}</TabsTrigger>
-          <TabsTrigger value="decided">{t("leave:decided")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <StickyToolbar>
+        <Tabs value={scope} onValueChange={(value) => void setScope(value as QueueScope)}>
+          <TabsList>
+            <TabsTrigger value="pending">{t("leave:pending")}</TabsTrigger>
+            <TabsTrigger value="decided">{t("leave:decided")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </StickyToolbar>
 
       {match(queue)
-        .with({ isPending: true }, () => <Skeleton className="h-48 rounded-xl" />)
+        .with({ isPending: true }, () => (
+          <div className="flex flex-col gap-2" aria-busy>
+            {A.map([0, 1, 2], (key) => (
+              <Skeleton key={key} className="h-28 rounded-xl" />
+            ))}
+          </div>
+        ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) => (
           <Queue rows={rows} scope={scope} onDecide={setPending} />
