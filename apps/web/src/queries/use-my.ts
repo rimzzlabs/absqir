@@ -1,4 +1,4 @@
-import { type HistoryFilter, myKeys } from "@absqir/core/query-keys";
+import { type HistoryFilter, type MyEventsFilter, myKeys } from "@absqir/core/query-keys";
 import { useTranslate } from "@absqir/i18n/react";
 import {
   keepPreviousData,
@@ -10,29 +10,27 @@ import QRCode from "qrcode";
 import { match } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
 
-export type MyEventScope = "upcoming" | "past";
+export type MyEventScope = MyEventsFilter["scope"];
+export type { MyEventsFilter };
 
-export interface MyEventsFilter {
-  scope: MyEventScope;
-  /** Rows per page. The server's default when absent. */
-  limit?: number;
-}
+const EVERY_EVENT: MyEventsFilter = { scope: "upcoming", q: "" };
 
 /**
  * The events that expect me, one page at a time. Upcoming ones soonest
  * first, past ones newest first. A running one moves through its statuses
  * on the clock, so the list refetches on its own.
  */
-export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
+export function useMyEvents(filter: MyEventsFilter = EVERY_EVENT) {
   const t = useTranslate();
   return useInfiniteQuery({
-    queryKey: myKeys.eventsPage(filter.scope, filter.limit ?? null),
+    queryKey: myKeys.eventsPage(filter),
     initialPageParam: null as string | null,
     queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
       const response = await api.my.events.$get(
         {
           query: {
             scope: filter.scope,
+            q: filter.q || undefined,
             limit: match(filter.limit)
               .with(undefined, () => undefined)
               .otherwise((limit) => String(limit)),
@@ -47,6 +45,8 @@ export function useMyEvents(filter: MyEventsFilter = { scope: "upcoming" }) {
       return response.json();
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // While the reader types, the old page stays instead of a skeleton.
+    placeholderData: keepPreviousData,
     refetchInterval: 30_000,
   });
 }
@@ -71,6 +71,42 @@ export function useMyEvent(eventId: string) {
       return response.json();
     },
     refetchInterval: 30_000,
+  });
+}
+
+/** What the first screen of the roster asks for. */
+export const ROSTER_PAGE_SIZE = 20;
+
+/**
+ * The names expected at one event that expects me, page by page. Names
+ * alone: the API sends no status, so no reader can tell from this list who
+ * missed what.
+ */
+export function useMyRoster(eventId: string, q = "") {
+  const t = useTranslate();
+  return useInfiniteQuery({
+    queryKey: myKeys.roster(eventId, q),
+    initialPageParam: null as string | null,
+    queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
+      const response = await api.my.events[":id"].roster.$get(
+        {
+          param: { id: eventId },
+          query: {
+            q: q || undefined,
+            limit: String(ROSTER_PAGE_SIZE),
+            cursor: ctx.pageParam ?? undefined,
+          },
+        },
+        { init: { signal: ctx.signal } },
+      );
+
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadThisEvent"));
+
+      return response.json();
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // While the reader types, the old page stays instead of a skeleton.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -151,3 +187,7 @@ export const EMPTY_HISTORY_SUMMARY: HistorySummary = {
   excused: 0,
   absent: 0,
 };
+
+export type RosterPerson = NonNullable<
+  ReturnType<typeof useMyRoster>["data"]
+>["pages"][number]["items"][number];

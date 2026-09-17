@@ -1,7 +1,6 @@
 import { useTranslate } from "@absqir/i18n/react";
-import { DataTableSkeleton } from "@absqir/ui/data-table";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { pendingRecordColumns } from "@/components/events/event-records";
+import { A } from "@mobily/ts-belt";
 import { BackLink } from "@/components/shared/back-link";
 import { useOrgHref } from "@/lib/org-path";
 
@@ -64,10 +63,12 @@ export function EventDetailSkeleton() {
 
       <section className="space-y-3">
         <Skeleton className="h-4 w-28" />
-        <DataTableSkeleton
-          label={t("events:records.tableLabel")}
-          columns={pendingRecordColumns(t)}
-        />
+        <Skeleton className="h-10 rounded-lg" />
+        <div className="flex flex-col gap-2">
+          {A.map([0, 1, 2, 3, 4], (key) => (
+            <Skeleton key={key} className="h-20 rounded-xl" />
+          ))}
+        </div>
       </section>
     </div>
   );

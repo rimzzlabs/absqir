@@ -9,6 +9,7 @@ export const events = {
   loadMore: "Muat lagi",
   search: "Cari berdasarkan judul",
   searchLabel: "Cari acara berdasarkan judul",
+  clearFilters: "Hapus saringan",
   everyGroup: "Semua grup",
   filterByGroup: "Saring berdasarkan grup",
   groupsLabel: "Grup",
@@ -117,8 +118,7 @@ export const events = {
   records: {
     heading: "Orang",
     tableLabel: "Orang yang diharapkan hadir di acara ini",
-    empty:
-      "Belum ada yang diharapkan hadir. Centang satu grup di acara ini, atau izinkan orang di luar daftar.",
+    empty: "Belum ada yang diharapkan hadir",
     name: "Nama",
     identifier: "Nomor induk",
     status: "Status",
@@ -139,7 +139,19 @@ export const events = {
     flagged_one: "Satu check-in perlu diperiksa",
     flagged_other: "{{count, number}} check-in perlu diperiksa",
     flaggedHint:
-      "Pembacaan lokasinya tidak seperti ponsel yang benar-benar berada di tempat itu. Buka kolom Di mana untuk membaca alasannya.",
+      "Pembacaan lokasinya tidak seperti ponsel yang benar-benar berada di tempat itu. Buka cip tempat di kartunya untuk membaca alasannya.",
+    listLabel: "Orang yang diharapkan hadir di acara ini",
+    search: "Cari orang",
+    searchLabel: "Cari berdasarkan nama atau nomor induk",
+    everyStatus: "Semua status",
+    filterByStatus: "Saring menurut status",
+    statusGroup: "Status",
+    clear: "Hapus saringan",
+    noCheckIn: "Tanpa check-in",
+    loadMore: "Muat lagi",
+    emptyHint: "Centang satu grup di acara ini, atau izinkan orang di luar daftar.",
+    noMatch: "Tidak ada yang cocok",
+    noMatchHint: "Coba nama lain, nomor induk lain, atau status lain.",
   },
   location: {
     reviewed: "Sudah diperiksa",
@@ -149,7 +161,7 @@ export const events = {
       "{{distance}} dari tempatnya. Check-in tetap diterima, karena tidak satu pun tanda ini menjadi bukti dengan sendirinya.",
     clearing: "Membersihkan…",
     clear: "Tampak wajar, bersihkan tandanya",
-    reject: "Untuk menolaknya, tandai {{name}} tidak hadir lewat menu barisnya.",
+    reject: "Untuk menolaknya, tandai {{name}} tidak hadir lewat menu di kartunya.",
   },
   validation: {
     titleRequired: "Isi judulnya.",

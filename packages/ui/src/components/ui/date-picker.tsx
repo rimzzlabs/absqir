@@ -1,3 +1,4 @@
+import type { Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { A, O, pipe } from "@mobily/ts-belt";
 
@@ -5,7 +6,15 @@ import { A, O, pipe } from "@mobily/ts-belt";
 
 import { CalendarBlankIcon, ClockIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
-import { format, isValid, setHours, setMinutes } from "date-fns";
+import {
+  format,
+  isSameDay,
+  isSameMonth,
+  isSameYear,
+  isValid,
+  setHours,
+  setMinutes,
+} from "date-fns";
 import * as React from "react";
 import { match, P } from "ts-pattern";
 import { Button } from "#src/components/ui/button";
@@ -343,4 +352,225 @@ function DateTimePicker({
   );
 }
 
-export { DatePicker, DateTimePicker, normalizeClock, TimeField };
+/* --------------------------------- range --------------------------------- */
+
+export interface DateRange {
+  from: Date | null;
+  to: Date | null;
+}
+
+export interface DateRangePickerProps {
+  id?: string;
+  value: DateRange;
+  onChange: (value: DateRange) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  /** Earliest and latest selectable days, inclusive. */
+  fromDate?: Date;
+  toDate?: Date;
+  className?: string;
+  "aria-label"?: string;
+}
+
+/** The clock of an instant, or the fallback for an end that has none yet. */
+function clockOf(value: Date | null, fallback: string): string {
+  return match(value)
+    .with(P.nullish, () => fallback)
+    .otherwise((value) => format(value, "HH:mm"));
+}
+
+/** True while the window covers whole days, which needs no clock on the trigger. */
+function wholeDays(value: DateRange): boolean {
+  return (
+    (value.from === null || format(value.from, "HH:mm") === "00:00") &&
+    (value.to === null || format(value.to, "HH:mm") === "23:59")
+  );
+}
+
+/**
+ * The shortest reading of one end that still says what it means.
+ *
+ * A window inside one month says the month once, and a window inside one
+ * year says the year once. The clock only appears when it is not the whole
+ * day, because "00:00 to 23:59" is what a plain date already means.
+ */
+function endLabel(at: Date, other: Date | null, clock: boolean): string {
+  const day = match(other)
+    .with(P.nullish, () => "d MMM yyyy")
+    .otherwise((other) =>
+      match({
+        month: isSameMonth(at, other) && isSameYear(at, other),
+        year: isSameYear(at, other),
+      })
+        .with({ month: true }, () => "d")
+        .with({ year: true }, () => "d MMM")
+        .otherwise(() => "d MMM yyyy"),
+    );
+
+  return format(
+    at,
+    match(clock)
+      .with(true, () => `${day}, HH:mm`)
+      .otherwise(() => day),
+  );
+}
+
+function rangeLabel(t: Translate, value: DateRange, empty: string): string {
+  const clock = !wholeDays(value);
+
+  return match([value.from, value.to] as const)
+    .with([P.nonNullable, P.nonNullable], ([from, to]) =>
+      match(isSameDay(from, to) && !clock)
+        .with(true, () => format(from, "d MMM yyyy"))
+        .otherwise(() =>
+          t("common:fields.range", {
+            // The last end carries the month and the year for both.
+            from: endLabel(from, to, clock),
+            to: endLabel(to, null, clock),
+          }),
+        ),
+    )
+    .with([P.nonNullable, P.nullish], ([from]) =>
+      t("common:fields.rangeFrom", { from: endLabel(from, null, clock) }),
+    )
+    .with([P.nullish, P.nonNullable], ([, to]) =>
+      t("common:fields.rangeUntil", { to: endLabel(to, null, clock) }),
+    )
+    .otherwise(() => empty);
+}
+
+/**
+ * One window: two days picked in a single calendar, with a time under each
+ * end.
+ *
+ * A range is one gesture, not two fields. The first press sets the start,
+ * the second the end, and the days between light up as the reader drags
+ * across them. The times default to the whole day, so picking two days
+ * alone means exactly what it looks like.
+ */
+function DateRangePicker({
+  id,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  fromDate,
+  toDate,
+  className,
+  ...props
+}: DateRangePickerProps) {
+  const t = useTranslate();
+  const empty = placeholder ?? t("common:fields.pickDate");
+  const fromClock = clockOf(value.from, "00:00");
+  const toClock = clockOf(value.to, "23:59");
+
+  const bounds = [
+    ...match(fromDate)
+      .with(P.nullish, () => [])
+      .otherwise((fromDate) => [{ before: fromDate }]),
+    ...match(toDate)
+      .with(P.nullish, () => [])
+      .otherwise((toDate) => [{ after: toDate }]),
+  ];
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            aria-label={props["aria-label"]}
+            data-slot="date-range-picker-trigger"
+            className={cn(
+              "w-full justify-start font-normal",
+              !value.from && !value.to && "text-muted-foreground",
+              className,
+            )}
+          />
+        }
+      >
+        <CalendarBlankIcon className="text-muted-foreground" />
+        <span className="truncate">{rangeLabel(t, value, empty)}</span>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit gap-0 p-0" align="start">
+        <Calendar
+          mode="range"
+          className="[--cell-size:--spacing(8)]"
+          selected={{ from: value.from ?? undefined, to: value.to ?? undefined }}
+          defaultMonth={value.from ?? undefined}
+          disabled={bounds}
+          onSelect={(range) =>
+            onChange({
+              from: pipe(
+                O.fromNullable(range?.from),
+                O.map((day: Date) => withClock(day, fromClock)),
+                O.toNullable,
+              ),
+              to: pipe(
+                O.fromNullable(range?.to),
+                O.map((day: Date) => withClock(day, toClock)),
+                O.toNullable,
+              ),
+            })
+          }
+        />
+        <div className="border-border flex items-center gap-2 border-t p-2">
+          <TimeField
+            aria-label={t("common:fields.startTime")}
+            value={match(value.from)
+              .with(P.nullish, () => "")
+              .otherwise(() => fromClock)}
+            disabled={!value.from}
+            placeholder={t("common:fields.pickDayFirst")}
+            onChange={(clock) =>
+              onChange({
+                from: pipe(
+                  O.fromNullable(value.from),
+                  O.map((day: Date) => withClock(day, clock)),
+                  O.toNullable,
+                ),
+                to: value.to,
+              })
+            }
+          />
+          <span aria-hidden className="text-muted-foreground text-sm">
+            &ndash;
+          </span>
+          <TimeField
+            aria-label={t("common:fields.endTime")}
+            value={match(value.to)
+              .with(P.nullish, () => "")
+              .otherwise(() => toClock)}
+            disabled={!value.to}
+            placeholder={t("common:fields.pickDayFirst")}
+            onChange={(clock) =>
+              onChange({
+                from: value.from,
+                to: pipe(
+                  O.fromNullable(value.to),
+                  O.map((day: Date) => withClock(day, clock)),
+                  O.toNullable,
+                ),
+              })
+            }
+          />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            disabled={!value.from && !value.to}
+            onClick={() => onChange({ from: null, to: null })}
+          >
+            {t("common:fields.clearDates")}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export { DatePicker, DateRangePicker, DateTimePicker, normalizeClock, TimeField };

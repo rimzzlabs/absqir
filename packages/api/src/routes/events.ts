@@ -7,6 +7,7 @@ import { csvCell } from "#src/lib/csv";
 import { acceptsCheckIns, statusForCheckIn, statusOf } from "#src/lib/event-status";
 import {
   eventRecords,
+  eventRecordsPage,
   existingRecord,
   finalizeEvent,
   findEvent,
@@ -325,16 +326,36 @@ const closeRoute = createRoute({
   },
 });
 
+const recordsPage = z.object({
+  items: z.array(recordSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+  /** Records worth a look across the whole event, not across the page. */
+  flagged: z.number(),
+});
+
+const RECORDS_PAGE_SIZE = 20;
+
 const recordsRoute = createRoute({
   method: "get",
   path: "/events/{id}/records",
   tags: ["events"],
-  summary: "Everyone expected, and everyone with a record",
-  request: { params: idParam },
+  summary: "Everyone expected, and everyone with a record, one page at a time",
+  description:
+    "By name. A search over the name and the identifier, and a status, narrow the list; `none` as the status asks for everyone the event still waits on. The page walks the (lower(name), id) order, not an offset.",
+  request: {
+    params: idParam,
+    query: z.object({
+      q: z.string().max(120).optional(),
+      status: z.enum(["present", "late", "excused", "absent", "none"]).optional(),
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    }),
+  },
   responses: {
     200: {
-      description: "Records, by name",
-      content: { "application/json": { schema: z.array(recordSchema) } },
+      description: "One page of records, with the flag count for the whole event",
+      content: { "application/json": { schema: recordsPage } },
     },
     401: unauthorized,
     403: forbidden,
@@ -839,11 +860,21 @@ export const eventRoutes = app
     const organizationId = organizationIdOf(c);
     const { id } = c.req.valid("param");
 
+    const query = c.req.valid("query");
+
     await settle(c.var.db, organizationId);
     const found = await findEvent(c.var.db, organizationId, id);
     if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
-    return c.json([...(await eventRecords(c.var.db, id))], 200);
+    const page = await eventRecordsPage(c.var.db, {
+      eventId: id,
+      q: query.q,
+      status: query.status,
+      cursor: query.cursor,
+      limit: query.limit ?? RECORDS_PAGE_SIZE,
+    });
+
+    return c.json(page, 200);
   })
   .openapi(setRecordRoute, async (c) => {
     if (roleBelow(c, "organizer")) return c.json({ error: c.var.t(FORBIDDEN_KEY) }, 403);

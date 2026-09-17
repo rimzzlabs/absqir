@@ -31,7 +31,8 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
   const location = props.record.location;
   const review = useReviewRecord();
 
-  if (!location) return <span className="text-muted-foreground">—</span>;
+  // A card has no empty cell to fill, so a record with no reading says nothing.
+  if (!location) return null;
 
   const reasons = A.filter(location.riskReasons, isRiskReason);
 
@@ -42,9 +43,7 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
         {distanceText(location)}
         {match(location.reviewedAt)
           .with(P.string.minLength(1), () => (
-            <Badge variant="outline" className="ml-1">
-              {t("events:location.reviewed")}
-            </Badge>
+            <Badge variant="outline">{t("events:location.reviewed")}</Badge>
           ))
           .otherwise(() => null)}
       </span>
@@ -99,9 +98,4 @@ export function RecordLocationCell(props: { eventId: string; record: EventRecord
         </PopoverContent>
       </Popover>
     ));
-}
-
-/** How many records on this event still want a human look. */
-export function flaggedCount(records: readonly EventRecord[]): number {
-  return A.filter(records, (row) => row.location?.flagged === true).length;
 }

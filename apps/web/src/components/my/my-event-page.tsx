@@ -1,10 +1,16 @@
 import { formatDate, formatRange, isSameDay, relativeToNow } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
-import { Avatar, AvatarFallback } from "@absqir/ui/avatar";
 import { Badge } from "@absqir/ui/badge";
 import { Button, buttonVariants } from "@absqir/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@absqir/ui/card";
 import { cn } from "@absqir/ui/lib/utils";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
@@ -19,6 +25,7 @@ import {
 import { useEffect, useState } from "react";
 import { match, P } from "ts-pattern";
 import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
+import { MyEventRoster } from "@/components/my/my-event-roster";
 import { opensAtOf } from "@/components/my/opens-at";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
@@ -29,7 +36,6 @@ import {
   EventStatusBadge,
   LeaveStatusBadge,
 } from "@/components/shared/status-badge";
-import { initialsOf } from "@/lib/avatar";
 import { useOrgHref } from "@/lib/org-path";
 import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
 import { type MyEventDetail, useMyEvent } from "@/queries/use-my";
@@ -165,12 +171,7 @@ function Schedule(props: { event: MyEventDetail; className?: string }) {
         <CardDescription>
           {match(next)
             .with(P.nullish, () => t("my:event.over"))
-            .otherwise((moment) =>
-              t("my:event.next", {
-                moment: t(`my:event.moments.${moment.key}`),
-                when: relativeToNow(moment.at),
-              }),
-            )}
+            .otherwise(() => t("my:event.timelineHint"))}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -230,8 +231,10 @@ function MySide(props: {
   const t = useTranslate();
   const orgHref = useOrgHref();
   const withdraw = useWithdrawLeave();
+  const now = useNow();
   const running = event.status === "running";
   const canAsk = event.status !== "done" && !event.record && !event.leave;
+  const next = A.find(momentsOf(event), (moment) => moment.at.getTime() > now.getTime());
 
   return (
     <Card className={props.className}>
@@ -239,9 +242,31 @@ function MySide(props: {
         <CardTitle>{t("my:event.you")}</CardTitle>
         <CardDescription>
           {match(event.record)
-            .with(P.nullish, () => t("my:event.nothingYet"))
-            .otherwise(() => t("my:event.yourRecord"))}
+            .with(P.nonNullable, () => t("my:event.yourRecord"))
+            .otherwise(() =>
+              match(event.status)
+                .with("done", () => t("my:event.noRecord"))
+                .otherwise(() => t("my:event.nothingRecorded")),
+            )}
         </CardDescription>
+
+        {/* What happens next, where the reader looks first. The timeline
+            below holds the whole list; this is only the one that matters. */}
+        {match(next)
+          .with(P.nullish, () => null)
+          .otherwise((moment) => (
+            <CardAction className="text-right">
+              <p className="text-sm font-medium">
+                {t("my:event.next", {
+                  moment: t(`my:event.moments.${moment.key}`),
+                  when: relativeToNow(moment.at),
+                })}
+              </p>
+              <p className="text-muted-foreground text-xs tabular-nums">
+                {timeNear(moment.at, new Date(event.startsAt))}
+              </p>
+            </CardAction>
+          ))}
       </CardHeader>
       <CardContent className="space-y-4">
         {match(event.record)
@@ -332,13 +357,9 @@ function MySide(props: {
             </div>
           ))}
 
-        {match(!event.record && !event.leave && !running)
+        {match(!event.record && !event.leave && !running && event.status !== "done")
           .with(true, () => (
-            <p className="text-muted-foreground text-sm">
-              {match(event.status)
-                .with("done", () => t("my:event.noRecord"))
-                .otherwise(() => t("my:event.checkInWhenOpen"))}
-            </p>
+            <p className="text-muted-foreground text-sm">{t("my:event.checkInWhenOpen")}</p>
           ))
           .otherwise(() => null)}
 
@@ -381,83 +402,6 @@ function MySide(props: {
   );
 }
 
-/** Who else is expected. Names and one head count, nothing per person. */
-function Roster(props: { event: MyEventDetail; className?: string }) {
-  const { event } = props;
-  const t = useTranslate();
-  const hidden = event.expectedTotal - event.attendees.length;
-  const checkedIn = match(event.expectedTotal)
-    .with(0, () => 0 as const)
-    .otherwise((total) => Math.round((event.checkedInCount / total) * 100));
-
-  return (
-    <Card className={props.className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UsersThreeIcon />
-          {t("my:event.roster")}
-        </CardTitle>
-        <CardDescription>
-          {match(event.status)
-            .with("scheduled", () => t("my:event.expected", { count: event.expectedTotal }))
-            .otherwise(() =>
-              t("my:event.checkedIn", {
-                checkedIn: event.checkedInCount,
-                expected: event.expectedTotal,
-              }),
-            )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {match(event.status)
-          .with("scheduled", () => null)
-          .otherwise(() => (
-            <div
-              role="progressbar"
-              aria-label={t("my:event.progressLabel")}
-              aria-valuenow={event.checkedInCount}
-              aria-valuemin={0}
-              aria-valuemax={event.expectedTotal}
-              className="bg-muted h-1.5 w-full overflow-hidden rounded-full"
-            >
-              <span
-                className="bg-primary block h-full rounded-full transition-[width] duration-500 ease-out"
-                style={{ width: `${checkedIn}%` }}
-              />
-            </div>
-          ))}
-
-        {match(event.attendees.length)
-          .with(0, () => (
-            <p className="text-muted-foreground text-sm">{t("my:event.nobodyElse")}</p>
-          ))
-          .otherwise(() => (
-            <ul className="space-y-2">
-              {A.map(event.attendees, (person) => (
-                <li key={person.id} className="flex min-w-0 items-center gap-2.5">
-                  <Avatar size="sm">
-                    <AvatarFallback name={person.name}>{initialsOf(person.name)}</AvatarFallback>
-                  </Avatar>
-                  <span className="truncate text-sm">{person.name}</span>
-                </li>
-              ))}
-            </ul>
-          ))}
-
-        {match(hidden > 0)
-          .with(true, () => (
-            <p className="text-muted-foreground text-sm">
-              {t("my:event.andMore", { count: hidden })}
-            </p>
-          ))
-          .otherwise(() => null)}
-
-        <p className="text-muted-foreground border-t pt-3 text-xs">{t("my:event.headCountOnly")}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
 function MyEventBody(props: MyEventPageProps) {
   const t = useTranslate();
   const orgHref = useOrgHref();
@@ -469,8 +413,8 @@ function MyEventBody(props: MyEventPageProps) {
     .with({ isPending: true }, () => (
       <div className="space-y-6" aria-busy>
         <Skeleton className="h-24 rounded-xl" />
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Skeleton className="h-56 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+        <div className="grid gap-4 md:grid-cols-2">
           <Skeleton className="h-56 rounded-xl" />
           <Skeleton className="h-56 rounded-xl" />
         </div>
@@ -487,17 +431,20 @@ function MyEventBody(props: MyEventPageProps) {
       <>
         <Header event={data} />
 
-        {/* My own standing comes first on a phone. The three cards sit side
-            by side once there is room, so the page fills instead of leaving
-            half of it blank. */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* What the reader can do comes first and takes the width, because
+            it is the only part of the page they act on. The two panels that
+            only tell them things sit under it, side by side. */}
+        <div className="space-y-4">
           <MySide
             event={data}
             onPass={() => setShowPass(true)}
             onAskLeave={() => setAsking(true)}
           />
-          <Schedule event={data} />
-          <Roster event={data} className="md:col-span-2 lg:col-span-1" />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Schedule event={data} />
+            <MyEventRoster event={data} />
+          </div>
         </div>
 
         <PassDialog

@@ -3,13 +3,13 @@ import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { A } from "@mobily/ts-belt";
 import { QrCodeIcon } from "@phosphor-icons/react";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useState } from "react";
+import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
+import { useDeferredValue, useState } from "react";
 import { match, P } from "ts-pattern";
 import { MyEventCard } from "@/components/my/my-event-card";
+import { MyEventsToolbar } from "@/components/my/my-events-toolbar";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
@@ -20,12 +20,14 @@ const SCOPE = parseAsStringLiteral([
   "upcoming",
   "past",
 ] as const satisfies MyEventScope[]).withDefault("upcoming");
+const TEXT = parseAsString.withDefault("");
 
-const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
+const LIST = "flex flex-col gap-2";
 
-function EventGrid(props: {
+function EventList(props: {
   rows: readonly MyEvent[];
   scope: MyEventScope;
+  filtered: boolean;
   onPass: (id: string) => void;
 }) {
   const t = useTranslate();
@@ -38,14 +40,22 @@ function EventGrid(props: {
             <QrCodeIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {match(props.scope)
-              .with("past", () => t("my:events.emptyPast"))
-              .otherwise(() => t("my:events.emptyUpcoming"))}
+            {match(props.filtered)
+              .with(true, () => t("my:events.noMatch"))
+              .otherwise(() =>
+                match(props.scope)
+                  .with("past", () => t("my:events.emptyPast"))
+                  .otherwise(() => t("my:events.emptyUpcoming")),
+              )}
           </EmptyTitle>
           <EmptyDescription>
-            {match(props.scope)
-              .with("past", () => t("my:events.emptyPastHint"))
-              .otherwise(() => t("my:events.emptyUpcomingHint"))}
+            {match(props.filtered)
+              .with(true, () => t("my:events.noMatchHint"))
+              .otherwise(() =>
+                match(props.scope)
+                  .with("past", () => t("my:events.emptyPastHint"))
+                  .otherwise(() => t("my:events.emptyUpcomingHint")),
+              )}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -53,7 +63,7 @@ function EventGrid(props: {
   }
 
   return (
-    <ul className={GRID}>
+    <ul className={LIST}>
       {A.map(props.rows, (event) => (
         <MyEventCard key={event.id} event={event} onPass={props.onPass} />
       ))}
@@ -64,33 +74,41 @@ function EventGrid(props: {
 function MyEventsBody() {
   const t = useTranslate();
   const [scope, setScope] = useQueryState("scope", SCOPE);
-  const events = useMyEvents({ scope });
+  const [q, setQ] = useQueryState("q", TEXT.withOptions({ throttleMs: 300 }));
+  // The list follows the typing a beat behind, so every keystroke does not fetch.
+  const wanted = useDeferredValue(q.trim());
+  const events = useMyEvents({ scope, q: wanted });
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
+  const filtered = wanted !== "";
   const [passFor, setPassFor] = useState<string | null>(null);
 
   return (
     <>
       <PageHeader title={t("my:events.title")} description={t("my:events.description")} />
 
-      <Tabs value={scope} onValueChange={(value) => void setScope(value as MyEventScope)}>
-        <TabsList>
-          <TabsTrigger value="upcoming">{t("my:events.upcoming")}</TabsTrigger>
-          <TabsTrigger value="past">{t("my:events.past")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <MyEventsToolbar
+        scope={scope}
+        onScopeChange={(value) => void setScope(value as MyEventScope)}
+        q={q}
+        onQChange={(value) => void setQ(value)}
+        filtered={filtered}
+        onClear={() => {
+          void setQ(null);
+        }}
+      />
 
       {match(events)
         .with({ isPending: true }, () => (
-          <div className={GRID} aria-busy>
-            {A.map([0, 1, 2, 3], (key) => (
-              <Skeleton key={key} className="h-44 rounded-xl" />
+          <div className={LIST} aria-busy>
+            {A.map([0, 1, 2, 3, 4], (key) => (
+              <Skeleton key={key} className="h-24 rounded-xl" />
             ))}
           </div>
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
-            <EventGrid rows={rows} scope={scope} onPass={setPassFor} />
+            <EventList rows={rows} scope={scope} filtered={filtered} onPass={setPassFor} />
 
             {match(events.hasNextPage)
               .with(true, () => (
