@@ -112,12 +112,15 @@ function Header(props: { event: Event; role: RoleName }) {
             .with("done", () => null)
             .otherwise(() => (
               <>
-                <a href={`/events/${event.id}/display`} className={buttonVariants({ size: "sm" })}>
+                <a
+                  href={orgHref(`/events/${event.id}/display`)}
+                  className={buttonVariants({ size: "sm" })}
+                >
                   <QrCodeIcon />
                   {t("events:detail.roomScreen")}
                 </a>
                 <a
-                  href={`/events/${event.id}/scan`}
+                  href={orgHref(`/events/${event.id}/scan`)}
                   className={buttonVariants({ size: "sm", variant: "outline" })}
                 >
                   <CameraIcon />

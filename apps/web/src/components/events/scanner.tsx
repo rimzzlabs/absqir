@@ -14,6 +14,7 @@ import { CameraBlockedOverlay } from "@/components/shared/camera-blocked-overlay
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge, EventStatusBadge } from "@/components/shared/status-badge";
 import { useCamera } from "@/components/shared/use-camera";
+import { useOrgHref } from "@/lib/org-path";
 import { type ScanResult, useScan } from "@/mutations/use-scan";
 import { useEvent } from "@/queries/use-events";
 
@@ -37,6 +38,7 @@ const REPEAT_MS = 4000;
 
 function ScannerBody(props: ScannerProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const event = useEvent(props.eventId);
   const scan = useScan();
   const [entries, setEntries] = useState<ScanEntry[]>([]);
@@ -75,7 +77,7 @@ function ScannerBody(props: ScannerProps) {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 py-6">
       <div className="flex items-center justify-between">
-        <BackLink href={`/events/${props.eventId}`}>{t("common:actions.back")}</BackLink>
+        <BackLink href={orgHref(`/events/${props.eventId}`)}>{t("common:actions.back")}</BackLink>
         {match(data)
           .with(P.nullish, () => null)
           .otherwise((data) => (

@@ -1,5 +1,6 @@
 ---
 import { isNotificationChannel } from "@absqir/core/notification-channel";
+import { orgPath } from "@absqir/core/org-path";
 import { translatorFor } from "@absqir/i18n";
 import { match, P } from "ts-pattern";
 import { SettingsPage } from "@/components/settings/settings-page";
@@ -27,8 +28,8 @@ const runsOrganization = role === "owner" || role === "admin";
 const requestedTab = Astro.url.searchParams.get("tab");
 const moved = ORGANIZATION_TABS[requestedTab ?? ""];
 
-if (runsOrganization && moved) {
-  return Astro.redirect(moved, 302);
+if (runsOrganization && moved && activeMembership) {
+  return Astro.redirect(orgPath(activeMembership.slug, moved), 302);
 }
 
 // An account with no organization still owns a profile, preferences, and a

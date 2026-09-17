@@ -19,7 +19,7 @@
     "preview": "pnpm --filter @absqir/web preview",
     "deploy": "turbo run build && pnpm --filter @absqir/web deploy",
     "typecheck": "turbo run typecheck",
-    "check": "biome check .",
+    "check": "biome check . && node scripts/check-addresses.mjs",
     "fix": "biome check --write .",
     "format": "prettier --write \"**/*.{md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{md,yml,yaml}\"",

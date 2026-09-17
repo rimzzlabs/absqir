@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { match, P } from "ts-pattern";
 import { ratePercent, StatusBar } from "@/components/reports/report-summary";
 import { FormError } from "@/components/shared/form-error";
+import { useOrgHref } from "@/lib/org-path";
 import type {
   EventReportRow,
   GroupReportRow,
@@ -187,7 +188,11 @@ export function GroupReportTable(props: { query: Query<GroupReportRow> }) {
   );
 }
 
-function eventColumns(t: Translate): DataColumn<EventReportRow>[] {
+function eventColumns(
+  t: Translate,
+  /** From `useOrgHref`, because a plain function cannot call the hook. */
+  orgHref: (path: string) => string,
+): DataColumn<EventReportRow>[] {
   return [
     {
       key: "event",
@@ -195,7 +200,7 @@ function eventColumns(t: Translate): DataColumn<EventReportRow>[] {
       place: "primary",
       cell: (row) => (
         <>
-          <a href={`/events/${row.eventId}`} className="hover:underline">
+          <a href={orgHref(`/events/${row.eventId}`)} className="hover:underline">
             {row.title}
           </a>
           <p className="text-muted-foreground text-xs">
@@ -215,6 +220,7 @@ function eventColumns(t: Translate): DataColumn<EventReportRow>[] {
 
 export function EventReportTable(props: { query: Query<EventReportRow> }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   return (
     <ReportQuery
@@ -228,7 +234,7 @@ export function EventReportTable(props: { query: Query<EventReportRow> }) {
       render={(rows) => (
         <DataTable
           label={t("reports:tables.byEvent")}
-          columns={eventColumns(t)}
+          columns={eventColumns(t, orgHref)}
           rows={rows}
           getKey={(row) => row.eventId}
         />

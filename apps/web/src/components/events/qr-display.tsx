@@ -7,6 +7,7 @@ import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useEvent } from "@/queries/use-events";
 import { useQrToken } from "@/queries/use-qr-token";
 
@@ -21,6 +22,7 @@ export interface QrDisplayProps {
 /** The room screen. Big code, few words, rotates on its own. */
 function QrScreen(props: QrDisplayProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const event = useEvent(props.eventId);
   const qr = useQrToken(props.eventId);
   const data = event.data;
@@ -30,7 +32,7 @@ function QrScreen(props: QrDisplayProps) {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-10 text-center">
-      <BackLink href={`/events/${props.eventId}`} className="absolute top-4 left-4">
+      <BackLink href={orgHref(`/events/${props.eventId}`)} className="absolute top-4 left-4">
         {t("common:actions.back")}
       </BackLink>
 

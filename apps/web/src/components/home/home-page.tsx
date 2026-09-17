@@ -329,7 +329,7 @@ function UpcomingEvents() {
               {A.map(rows, (event) => (
                 <li key={event.id}>
                   <a
-                    href={`/events/${event.id}`}
+                    href={orgHref(`/events/${event.id}`)}
                     className="flex items-center gap-3 py-2 text-sm hover:underline"
                   >
                     <span className="min-w-0 flex-1">

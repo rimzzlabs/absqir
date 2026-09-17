@@ -50,6 +50,7 @@ function byDay(events: readonly MyEvent[]): Day[] {
 
 /** One line of the agenda. A click opens the event. */
 function AgendaRow(props: { event: MyEvent }) {
+  const orgHref = useOrgHref();
   const { event } = props;
 
   return (
@@ -57,7 +58,10 @@ function AgendaRow(props: { event: MyEvent }) {
       <span className="text-muted-foreground w-11 shrink-0 text-xs tabular-nums">
         {formatDate(new Date(event.startsAt), "time")}
       </span>
-      <a href={`/events/${event.id}`} className={cn(STRETCHED_LINK, "flex-1 truncate font-medium")}>
+      <a
+        href={orgHref(`/events/${event.id}`)}
+        className={cn(STRETCHED_LINK, "flex-1 truncate font-medium")}
+      >
         {event.title}
       </a>
       <EventStatusBadge status={event.status} />
