@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.8.0](https://github.com/rimzzlabs/absqir/compare/v0.7.0...v0.8.0) (2026-09-17)
+
+
+### Features
+
+* **web:** give a group a members dialog and hold it to real members ([#62](https://github.com/rimzzlabs/absqir/issues/62)) ([a984c4f](https://github.com/rimzzlabs/absqir/commit/a984c4f7291cab852157e2488433c84de7ac9ca1))
+* **web:** give the event page a hierarchy, a live panel, and an honest skeleton ([#60](https://github.com/rimzzlabs/absqir/issues/60)) ([19beb44](https://github.com/rimzzlabs/absqir/commit/19beb4407e2b2744af64974f017906aebb0e06d9))
+* **web:** make every event list a list, and both event views searchable ([#64](https://github.com/rimzzlabs/absqir/issues/64)) ([12dff58](https://github.com/rimzzlabs/absqir/commit/12dff588aa7471c8adcffa2ab4f792769daf5a9c))
+* **web:** make my history a list of cards with a toolbar and real paging ([#63](https://github.com/rimzzlabs/absqir/issues/63)) ([d0dda2c](https://github.com/rimzzlabs/absqir/commit/d0dda2c60bb257e255f14379c49f4d313719bab5))
+* **web:** put the organization slug in front of every organization page ([#58](https://github.com/rimzzlabs/absqir/issues/58)) ([cbf3233](https://github.com/rimzzlabs/absqir/commit/cbf32330d2f88b70fad0955df3e4e24fb9000994)), closes [#57](https://github.com/rimzzlabs/absqir/issues/57)
+* **web:** read a leave request as the exchange it is, for both readers ([#65](https://github.com/rimzzlabs/absqir/issues/65)) ([c5f6c37](https://github.com/rimzzlabs/absqir/commit/c5f6c3703d67cda1e7bbb12aa83fff9d2fa58bdb))
+
+
+### Bug fixes
+
+* **web:** give every failed read a try-again button ([#67](https://github.com/rimzzlabs/absqir/issues/67)) ([66262d5](https://github.com/rimzzlabs/absqir/commit/66262d5c95f87bc3a2aad41ba1015dd1aae63d4f))
+* **web:** let the app bar separator stretch to the bar height ([#61](https://github.com/rimzzlabs/absqir/issues/61)) ([6a52e24](https://github.com/rimzzlabs/absqir/commit/6a52e249557919ed9d60cb321a5409ad8e34a96a))
+* **web:** stop a filter bar leaving half a row empty when it wraps ([#66](https://github.com/rimzzlabs/absqir/issues/66)) ([2bc3e21](https://github.com/rimzzlabs/absqir/commit/2bc3e218c28a92c0c817c0acec8b7146c6aece9a))
+
+
+### Refactors
+
+* **web:** build every list card from one set of shared parts ([#68](https://github.com/rimzzlabs/absqir/issues/68)) ([7ea2884](https://github.com/rimzzlabs/absqir/commit/7ea2884b90192c59629511e17532aecbdf9774da))
+
 ## [0.7.0](https://github.com/rimzzlabs/absqir/compare/v0.6.0...v0.7.0) (2026-09-16)
 
 
