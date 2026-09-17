@@ -1,4 +1,3 @@
-import { formatDate } from "@absqir/core/date";
 import type { Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Avatar, AvatarFallback } from "@absqir/ui/avatar";
@@ -13,9 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
 import { A } from "@mobily/ts-belt";
-import { CheckCircleIcon, DotsThreeIcon, MinusCircleIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { RecordLocationCell } from "@/components/events/record-location";
+import { CheckInLine } from "@/components/shared/check-in-line";
+import { ListCard } from "@/components/shared/list-card";
 import {
   type AttendanceStatus,
   AttendanceStatusBadge,
@@ -93,41 +94,6 @@ function RecordActions(props: EventRecordCardProps) {
   );
 }
 
-/** What the record says about the check-in, in one line. */
-function CheckedInLine(props: { record: EventRecord }) {
-  const t = useTranslate();
-  const { record } = props;
-
-  return (
-    <p className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
-      {match(record.checkedInAt)
-        .with(P.string.minLength(1), (checkedInAt) => (
-          <>
-            <CheckCircleIcon aria-hidden className="text-emerald-600 dark:text-emerald-400" />
-            <span className="text-foreground tabular-nums">
-              {formatDate(new Date(checkedInAt), "time")}
-            </span>
-          </>
-        ))
-        .otherwise(() => (
-          <>
-            <MinusCircleIcon aria-hidden />
-            <span>{t("events:records.noCheckIn")}</span>
-          </>
-        ))}
-
-      {match(record.method)
-        .with(P.string.and(P.when(isMethod)), (method) => (
-          <>
-            <span aria-hidden>·</span>
-            <span>{t(`events:records.methods.${method}`)}</span>
-          </>
-        ))
-        .otherwise(() => null)}
-    </p>
-  );
-}
-
 /** One person and what this event's record says about them, as a row in the list. */
 export function EventRecordCard(props: EventRecordCardProps) {
   const t = useTranslate();
@@ -135,7 +101,7 @@ export function EventRecordCard(props: EventRecordCardProps) {
   const origin = originOf(t, record);
 
   return (
-    <li className="ring-foreground/10 bg-card text-card-foreground relative isolate flex gap-3 overflow-hidden rounded-xl p-3 ring-1 sm:gap-4 sm:p-4">
+    <ListCard>
       <Avatar size="sm" className="mt-0.5 shrink-0">
         <AvatarFallback name={record.name}>{initialsOf(record.name)}</AvatarFallback>
       </Avatar>
@@ -157,7 +123,14 @@ export function EventRecordCard(props: EventRecordCardProps) {
           </div>
         </div>
 
-        <CheckedInLine record={record} />
+        <CheckInLine
+          checkedInAt={record.checkedInAt}
+          checkedIn={(time) => time}
+          missed={t("events:records.noCheckIn")}
+          method={match(record.method)
+            .with(P.string.and(P.when(isMethod)), (method) => t(`events:records.methods.${method}`))
+            .otherwise(() => null)}
+        />
 
         {match(record.note)
           .with(P.string.minLength(1), (note) => (
@@ -176,6 +149,6 @@ export function EventRecordCard(props: EventRecordCardProps) {
             .otherwise(() => null)}
         </div>
       </div>
-    </li>
+    </ListCard>
   );
 }
