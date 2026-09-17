@@ -1,7 +1,7 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, O, pipe } from "@mobily/ts-belt";
-import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { match, P } from "ts-pattern";
 import { decodeCursor, pageOf } from "#src/lib/cursor";
 import { statusOf } from "#src/lib/event-status";
@@ -150,9 +150,7 @@ function toMyEvent(
 const attendeeSchema = z.object({ id: z.string(), name: z.string() });
 
 const myEventDetailSchema = myEventSchema.extend({
-  /** Everyone expected, by name. Never the email and never the identifier. */
-  attendees: z.array(attendeeSchema),
-  /** Everyone expected, even the names past the cap. */
+  /** Everyone expected. The names come from the roster, page by page. */
   expectedTotal: z.number(),
   /** How many of them checked in. No per-person status. */
   checkedInCount: z.number(),
@@ -173,6 +171,16 @@ const myEventPage = z.object({
   items: z.array(myEventSchema),
   /** Pass it back as `cursor` for the next page. Null when this is the last page. */
   nextCursor: z.string().nullable(),
+});
+
+const rosterPage = z.object({
+  items: z.array(attendeeSchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+  /** Everyone expected, even the names past this page. */
+  expectedTotal: z.number(),
+  /** Which of these names is the reader. Two people can share a name. */
+  meId: z.string(),
 });
 
 const historyWindowEnum = z.enum(HISTORY_WINDOWS);
@@ -211,12 +219,14 @@ const eventsRoute = createRoute({
   method: "get",
   path: "/my/events",
   tags: ["me"],
-  summary: "The events that expect me, one page at a time",
+  summary: "The events that expect me, one page at a time, searchable",
   description:
     "Through a group or a registration. `upcoming` runs soonest first, `past` newest first. The page walks the (starts_at, id) index, not an offset.",
   request: {
     query: z.object({
       scope: z.enum(["upcoming", "past"]).optional(),
+      /** A piece of the title, any case. */
+      q: z.string().trim().max(120).optional(),
       cursor: z.string().max(256).optional(),
       limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
     }),
@@ -252,6 +262,37 @@ const detailRoute = createRoute({
     },
   },
 });
+
+const rosterRoute = createRoute({
+  method: "get",
+  path: "/my/events/{id}/roster",
+  tags: ["me"],
+  summary: "Everyone expected at an event that expects me, one page at a time",
+  description:
+    "Names alone, by name. No email, no identifier, and no status: who checked in stays between them and the organizer. The answer is 404 when the event does not expect me, the same as the pass.",
+  request: {
+    params: z.object({ id: z.string() }),
+    query: z.object({
+      q: z.string().max(120).optional(),
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "One page of names",
+      content: { "application/json": { schema: rosterPage } },
+    },
+    401: unauthorized,
+    403: forbidden,
+    404: {
+      description: "No such event, or I am not expected",
+      content: { "application/json": { schema: errorSchema } },
+    },
+  },
+});
+
+const ROSTER_PAGE_SIZE = 20;
 
 const passRoute = createRoute({
   method: "get",
@@ -327,6 +368,7 @@ export const myRoutes = app
       organizationId,
       scope: query.scope ?? "upcoming",
       expectedPersonId: me.id,
+      q: query.q || undefined,
       cursor: query.cursor,
       limit: query.limit ?? PAGE_SIZE,
       now,
@@ -427,7 +469,6 @@ export const myRoutes = app
 
     const roster = buildRoster({
       expected: names,
-      meId: me.id,
       checkedIn: A.filterMap(records, ({ row }) =>
         match(row.status)
           .with("present", "late", () => row.personId)
@@ -437,6 +478,75 @@ export const myRoutes = app
     const mine = A.find(records, ({ row }) => row.personId === me.id)?.row;
 
     return c.json({ ...toMyEvent(event, mine, leaves[0], reports[0]), ...roster }, 200);
+  })
+  .openapi(rosterRoute, async (c) => {
+    const organizationId = organizationIdOf(c);
+    const user = c.get("user");
+    if (!user) return c.json({ error: c.var.t("errors:unauthorized") }, 401);
+
+    const me = await personForUser(c.var.db, organizationId, user.id);
+    if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
+
+    const { id } = c.req.valid("param");
+    const query = c.req.valid("query");
+
+    const found = await findEvent(c.var.db, organizationId, id);
+    if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
+
+    // The same rule as the detail and the pass: an event that never expected
+    // this reader tells them nothing, not even that it exists.
+    const expected = await isExpected(c.var.db, id, me.id);
+    if (!expected) return c.json({ error: c.var.t("errors:notFound") }, 404);
+
+    const expectedIds = await expectedPersonIds(c.var.db, id);
+    if (expectedIds.length === 0) {
+      return c.json({ items: [], nextCursor: null, expectedTotal: 0, meId: me.id }, 200);
+    }
+
+    const limit = query.limit ?? ROSTER_PAGE_SIZE;
+    const sortName = sql<string>`lower(${person.name})`;
+    const cursor = decodeCursor(query.cursor);
+    const after = pipe(
+      O.fromNullable(cursor),
+      O.mapNullable((cursor) =>
+        or(gt(sortName, cursor.at), and(eq(sortName, cursor.at), gt(person.id, cursor.id))),
+      ),
+      O.toUndefined,
+    );
+    const needle = match(query.q?.trim())
+      .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_\\]/g, "\\$&")}%`)
+      .otherwise(() => null);
+
+    const rows = await c.var.db
+      .select({ id: person.id, name: person.name, at: sortName })
+      .from(person)
+      .where(
+        and(
+          inArray(person.id, [...expectedIds]),
+          match(needle)
+            .with(P.string.minLength(1), (needle) => ilike(person.name, needle))
+            .otherwise(() => undefined),
+          after,
+        ),
+      )
+      .orderBy(asc(sortName), asc(person.id))
+      .limit(limit + 1);
+
+    const page = pageOf(rows, limit, (row) => ({ at: row.at, id: row.id }));
+
+    return c.json(
+      {
+        items: pipe(
+          page.items,
+          A.map((row) => ({ id: row.id, name: row.name })),
+          F.toMutable,
+        ),
+        nextCursor: page.nextCursor,
+        expectedTotal: expectedIds.length,
+        meId: me.id,
+      },
+      200,
+    );
   })
   .openapi(passRoute, async (c) => {
     const organizationId = organizationIdOf(c);

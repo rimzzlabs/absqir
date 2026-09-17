@@ -493,23 +493,141 @@ export async function eventRecords(db: Database, eventId: string): Promise<reado
 
   const byPerson = new Map(A.map(records, (row) => [row.personId, row]));
 
-  return A.map(people, (row) => {
-    const record = byPerson.get(row.id);
+  return A.map(people, (row) => toRecordJson(row, expectedSet, registeredSet, byPerson));
+}
 
-    return {
-      personId: row.id,
-      name: row.name,
-      email: row.email ?? null,
-      identifier: row.identifier ?? null,
-      expected: expectedSet.has(row.id),
-      registered: registeredSet.has(row.id),
-      status: record?.status ?? null,
-      method: record?.method ?? null,
-      checkedInAt: record?.checkedInAt?.toISOString() ?? null,
-      note: record?.note ?? null,
-      location: locationJson(record),
-    };
-  });
+export interface EventRecordsPageParams {
+  eventId: string;
+  /** Matches a name or an identifier. */
+  q?: string;
+  /** One status, or "none" for everyone the event still waits on. */
+  status?: AttendanceStatus | "none";
+  cursor?: string;
+  limit: number;
+}
+
+export interface EventRecordsPage {
+  items: RecordJson[];
+  nextCursor: string | null;
+  /**
+   * Worth a look across the whole event, not across the page. A flag the
+   * organizer has to scroll to find is a flag that does nothing.
+   */
+  flagged: number;
+}
+
+/**
+ * One page of the same list, by name. The event's own records are read
+ * whole, because the list is everyone expected plus everyone with a record
+ * and only the two together say who belongs on it. The people rows are what
+ * the page fetches: the cursor walks (lower(name), id).
+ */
+export async function eventRecordsPage(
+  db: Database,
+  params: EventRecordsPageParams,
+): Promise<EventRecordsPage> {
+  const [expected, registered, records] = await Promise.all([
+    expectedPersonIds(db, params.eventId),
+    registeredPersonIds(db, params.eventId),
+    db.select().from(attendanceRecord).where(eq(attendanceRecord.eventId, params.eventId)),
+  ]);
+
+  const expectedSet = new Set(expected);
+  const registeredSet = new Set(registered);
+  const byPerson = new Map(A.map(records, (row) => [row.personId, row]));
+  const flagged = A.filter(
+    records,
+    (row) => (row.riskScore ?? 0) >= SUSPECT_AT && row.reviewedAt === null,
+  ).length;
+
+  const everyone = [...new Set([...expected, ...A.map(records, (row) => row.personId)])];
+  // The status filter needs no join: the records are already in hand, and the
+  // list is the people those records belong to.
+  const wanted = match(params.status)
+    .with(P.nullish, () => everyone)
+    .with("none", () => A.filter(everyone, (id) => !byPerson.has(id)))
+    .otherwise((status) => A.filter(everyone, (id) => byPerson.get(id)?.status === status));
+
+  if (wanted.length === 0) return { items: [], nextCursor: null, flagged };
+
+  const sortName = sql<string>`lower(${person.name})`;
+  const cursor = decodeCursor(params.cursor);
+  const after = pipe(
+    O.fromNullable(cursor),
+    O.mapNullable((cursor) =>
+      or(gt(sortName, cursor.at), and(eq(sortName, cursor.at), gt(person.id, cursor.id))),
+    ),
+    O.toUndefined,
+  );
+
+  const needle = match(params.q?.trim())
+    .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_\\]/g, "\\$&")}%`)
+    .otherwise(() => null);
+
+  const rows = await db
+    .select({
+      id: person.id,
+      name: person.name,
+      email: person.email,
+      identifier: person.identifier,
+      at: sortName,
+    })
+    .from(person)
+    .where(
+      and(
+        inArray(person.id, wanted),
+        match(needle)
+          .with(P.string.minLength(1), (needle) =>
+            or(ilike(person.name, needle), ilike(person.identifier, needle)),
+          )
+          .otherwise(() => undefined),
+        after,
+      ),
+    )
+    .orderBy(asc(sortName), asc(person.id))
+    .limit(params.limit + 1);
+
+  const page = pageOf(rows, params.limit, (row) => ({ at: row.at, id: row.id }));
+
+  return {
+    items: pipe(
+      page.items,
+      A.map((row) => toRecordJson(row, expectedSet, registeredSet, byPerson)),
+      F.toMutable,
+    ),
+    nextCursor: page.nextCursor,
+    flagged,
+  };
+}
+
+interface PersonRow {
+  id: string;
+  name: string;
+  email: string | null;
+  identifier: string | null;
+}
+
+function toRecordJson(
+  row: PersonRow,
+  expected: ReadonlySet<string>,
+  registered: ReadonlySet<string>,
+  byPerson: ReadonlyMap<string, RecordRow>,
+): RecordJson {
+  const record = byPerson.get(row.id);
+
+  return {
+    personId: row.id,
+    name: row.name,
+    email: row.email ?? null,
+    identifier: row.identifier ?? null,
+    expected: expected.has(row.id),
+    registered: registered.has(row.id),
+    status: record?.status ?? null,
+    method: record?.method ?? null,
+    checkedInAt: record?.checkedInAt?.toISOString() ?? null,
+    note: record?.note ?? null,
+    location: locationJson(record),
+  };
 }
 
 /**

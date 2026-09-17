@@ -3,7 +3,6 @@ import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
 import { Skeleton } from "@absqir/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { A } from "@mobily/ts-belt";
 import { PlusIcon, QrCodeIcon } from "@phosphor-icons/react";
 import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
@@ -34,9 +33,9 @@ const SCOPE = parseAsStringLiteral(["upcoming", "past"] as const satisfies ListS
 );
 const TEXT = parseAsString.withDefault("");
 
-const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
+const LIST = "flex flex-col gap-2";
 
-function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: boolean }) {
+function EventList(props: { rows: readonly Event[]; scope: ListScope; filtered: boolean }) {
   const t = useTranslate();
   const past = props.scope === "past";
   const emptyTitle = match(past)
@@ -69,7 +68,7 @@ function EventGrid(props: { rows: readonly Event[]; scope: ListScope; filtered: 
   }
 
   return (
-    <ul className={GRID}>
+    <ul className={LIST}>
       {A.map(props.rows, (event) => (
         <EventCard key={event.id} event={event} />
       ))}
@@ -82,10 +81,11 @@ function EventsBody(props: EventsPageProps) {
   const [scope, setScope] = useQueryState("scope", SCOPE);
   const [q, setQ] = useQueryState("q", TEXT.withOptions({ throttleMs: 300 }));
   const [groupId, setGroupId] = useQueryState("group", TEXT);
-  // The grid follows the typing a beat behind, so every keystroke does not fetch.
+  // The list follows the typing a beat behind, so every keystroke does not fetch.
   const wanted = useDeferredValue(q.trim());
   const events = useEvents({ scope, q: wanted, groupId });
   const rows = A.flatMap(events.data?.pages ?? [], (page) => page.items);
+  const filtered = wanted !== "" || groupId !== "";
   const [creating, setCreating] = useState(false);
   const canCreate = props.role !== "member";
 
@@ -104,34 +104,32 @@ function EventsBody(props: EventsPageProps) {
           .otherwise(() => null)}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={scope} onValueChange={(value) => void setScope(value as ListScope)}>
-          <TabsList>
-            <TabsTrigger value="upcoming">{t("events:upcoming")}</TabsTrigger>
-            <TabsTrigger value="past">{t("events:past")}</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <EventsToolbar
-          q={q}
-          onQChange={(value) => void setQ(value)}
-          groupId={groupId}
-          onGroupChange={(value) => void setGroupId(value)}
-        />
-      </div>
+      <EventsToolbar
+        scope={scope}
+        onScopeChange={(value) => void setScope(value as ListScope)}
+        q={q}
+        onQChange={(value) => void setQ(value)}
+        groupId={groupId}
+        onGroupChange={(value) => void setGroupId(value)}
+        filtered={filtered}
+        onClear={() => {
+          void setQ(null);
+          void setGroupId(null);
+        }}
+      />
 
       {match(events)
         .with({ isPending: true }, () => (
-          <div className={GRID} aria-busy>
-            {A.map([0, 1, 2, 3], (key) => (
-              <Skeleton key={key} className="h-44 rounded-xl" />
+          <div className={LIST} aria-busy>
+            {A.map([0, 1, 2, 3, 4], (key) => (
+              <Skeleton key={key} className="h-24 rounded-xl" />
             ))}
           </div>
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
-            <EventGrid rows={rows} scope={scope} filtered={wanted !== "" || groupId !== ""} />
+            <EventList rows={rows} scope={scope} filtered={filtered} />
 
             {match(events.hasNextPage)
               .with(true, () => (

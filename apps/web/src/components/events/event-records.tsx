@@ -1,198 +1,82 @@
-import { formatDate } from "@absqir/core/date";
-import type { Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
-import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
-import { type DataColumn, DataTable, DataTableSkeleton } from "@absqir/ui/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@absqir/ui/dropdown-menu";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
+import { cn } from "@absqir/ui/lib/utils";
+import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
-import { DotsThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
+import { parseAsString, useQueryState } from "nuqs";
+import { useDeferredValue } from "react";
 import { match, P } from "ts-pattern";
-import { flaggedCount, RecordLocationCell } from "@/components/events/record-location";
+import { EventRecordCard } from "@/components/events/event-record-card";
+import { EVERY_STATUS, EventRecordsToolbar } from "@/components/events/event-records-toolbar";
 import { FormError } from "@/components/shared/form-error";
-import {
-  type AttendanceStatus,
-  AttendanceStatusBadge,
-  attendanceLabel,
-} from "@/components/shared/status-badge";
-import { useSetRecord } from "@/mutations/use-set-record";
 import { type Event, type EventRecord, useEventRecords } from "@/queries/use-events";
 
 export interface EventRecordsProps {
   event: Event;
 }
 
-const STATUSES: AttendanceStatus[] = ["present", "late", "excused", "absent"];
+const TEXT = parseAsString.withDefault("");
+const LIST = "flex flex-col gap-2";
 
-/** The method codes the API stores, each with a line under `events:records.methods`. */
-const METHODS = ["screen", "scanner", "manual", "auto"] as const;
-
-function isMethod(value: string): value is (typeof METHODS)[number] {
-  return A.includes(METHODS, value as (typeof METHODS)[number]);
-}
-
-function RowActions(props: { event: Event; record: EventRecord }) {
+function RecordList(props: { event: Event; rows: readonly EventRecord[]; filtered: boolean }) {
   const t = useTranslate();
-  const set = useSetRecord();
+
+  if (props.rows.length === 0) {
+    return (
+      <Empty className="border-border rounded-xl border border-dashed py-12">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            {match(props.filtered)
+              .with(true, () => <MagnifyingGlassIcon />)
+              .otherwise(() => (
+                <UsersThreeIcon />
+              ))}
+          </EmptyMedia>
+          <EmptyTitle>
+            {match(props.filtered)
+              .with(true, () => t("events:records.noMatch"))
+              .otherwise(() => t("events:records.empty"))}
+          </EmptyTitle>
+          <EmptyDescription>
+            {match(props.filtered)
+              .with(true, () => t("events:records.noMatchHint"))
+              .otherwise(() => t("events:records.emptyHint"))}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("events:records.setStatus", { name: props.record.name })}
-          />
-        }
-      >
-        <DotsThreeIcon weight="bold" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("events:records.markAs")}</DropdownMenuLabel>
-          {A.map(STATUSES, (status) => (
-            <DropdownMenuItem
-              key={status}
-              disabled={set.isPending || props.record.status === status}
-              onClick={() =>
-                set.mutate({
-                  eventId: props.event.id,
-                  personId: props.record.personId,
-                  status,
-                  note: null,
-                })
-              }
-            >
-              {attendanceLabel(t, status)}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <ul className={LIST} aria-label={t("events:records.listLabel")}>
+      {A.map(props.rows, (row) => (
+        <EventRecordCard key={row.personId} event={props.event} record={row} />
+      ))}
+    </ul>
   );
 }
 
-/** "Registered", "Walk-in", or nothing when the person was simply expected. */
-function originOf(t: Translate, record: EventRecord): string | null {
-  return match(record.registered)
-    .with(true, () => t("events:records.registered"))
-    .otherwise(() =>
-      match(record.expected)
-        .with(true, () => null)
-        .otherwise(() => t("events:records.walkIn")),
-    );
-}
-
 /**
- * The headings alone, for the table before the event itself has loaded.
- *
- * The `Where` column is missing on purpose: only the event says whether it
- * asked for a location, and the skeleton runs before that answer arrives.
+ * Everyone this event expected, and everyone who turned up, as a list the
+ * organizer can search. The head count comes from the event, which counts
+ * the whole room: a page of rows could only ever count itself.
  */
-export function pendingRecordColumns(t: Translate): DataColumn<never>[] {
-  return [
-    { key: "name", header: t("events:records.name"), place: "primary", cell: () => null },
-    { key: "identifier", header: t("events:records.identifier"), cell: () => null },
-    { key: "status", header: t("events:records.status"), cell: () => null },
-    { key: "checkedIn", header: t("events:records.checkedIn"), cell: () => null },
-    { key: "how", header: t("events:records.how"), cell: () => null },
-    { key: "actions", place: "action", headClassName: "w-12", cell: () => null },
-  ];
-}
-
-function recordColumns(t: Translate, event: Event): DataColumn<EventRecord>[] {
-  // The column only exists on an event that asked. Every other event would
-  // show a full column of dashes.
-  const whereColumn: DataColumn<EventRecord>[] = match(event.requireLocation)
-    .with(true, () => [
-      {
-        key: "where",
-        header: t("events:records.where"),
-        cell: (row: EventRecord) => <RecordLocationCell eventId={event.id} record={row} />,
-      },
-    ])
-    .otherwise(() => []);
-
-  return [
-    {
-      key: "name",
-      header: t("events:records.name"),
-      place: "primary",
-      cell: (row) => (
-        <>
-          {row.name}
-          {match(originOf(t, row))
-            .with(P.string.minLength(1), (origin) => (
-              <Badge variant="secondary" className="ml-2">
-                {origin}
-              </Badge>
-            ))
-            .otherwise(() => null)}
-        </>
-      ),
-      cellClassName: "font-medium",
-    },
-    {
-      key: "identifier",
-      header: t("events:records.identifier"),
-      cell: (row) => row.identifier ?? t("events:records.none"),
-      cellClassName: "font-mono text-xs",
-    },
-    {
-      key: "status",
-      header: t("events:records.status"),
-      cell: (row) => <AttendanceStatusBadge status={row.status} />,
-    },
-    {
-      key: "checkedIn",
-      header: t("events:records.checkedIn"),
-      cell: (row) =>
-        match(row.checkedInAt)
-          .with(P.string.minLength(1), (checkedInAt) => formatDate(new Date(checkedInAt), "time"))
-          .otherwise(() => t("events:records.none")),
-      cellClassName: "text-muted-foreground tabular-nums",
-    },
-    {
-      key: "how",
-      header: t("events:records.how"),
-      cell: (row) => (
-        <>
-          {match(row.method)
-            .with(P.string.and(P.when(isMethod)), (method) => t(`events:records.methods.${method}`))
-            .otherwise(() => t("events:records.none"))}
-          {match(row.note)
-            .with(P.string.minLength(1), (note) => ` · ${note}`)
-            .otherwise(() => "" as const)}
-        </>
-      ),
-      cellClassName: "text-muted-foreground text-xs",
-    },
-    ...whereColumn,
-    {
-      key: "actions",
-      place: "action",
-      headClassName: "w-12",
-      cell: (row) => <RowActions event={event} record={row} />,
-    },
-  ];
-}
-
 export function EventRecords(props: EventRecordsProps) {
   const t = useTranslate();
-  const records = useEventRecords(props.event.id);
-
-  const flagged = flaggedCount(records.data ?? []);
-
-  const columns = recordColumns(t, props.event);
+  const [q, setQ] = useQueryState("who", TEXT.withOptions({ throttleMs: 300 }));
+  const [status, setStatus] = useQueryState("status", TEXT);
+  // The list follows the typing a beat behind, so every keystroke does not fetch.
+  const wanted = useDeferredValue(q.trim());
+  const records = useEventRecords(props.event.id, { q: wanted, status });
+  const pages = records.data?.pages ?? [];
+  const rows = A.flatMap(pages, (page) => page.items);
+  const flagged = A.head(pages)?.flagged ?? 0;
+  const filtered = wanted !== "" || status !== EVERY_STATUS;
+  // A filter is loading over a list that is already on screen.
+  const refiltering = records.isFetching && !records.isFetchingNextPage;
 
   return (
     <section aria-labelledby="records-heading" className="space-y-3">
@@ -200,16 +84,13 @@ export function EventRecords(props: EventRecordsProps) {
         <h2 id="records-heading" className="text-sm font-medium">
           {t("events:records.heading")}
         </h2>
-        {match(records.data)
-          .with(P.nullish, () => null)
-          .otherwise((rows) => (
-            <span className="text-muted-foreground text-sm tabular-nums">
-              {t("common:people", { count: rows.length })}
-            </span>
-          ))}
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {t("common:people", { count: props.event.counts.expected })}
+        </span>
       </div>
 
-      {/* A flag that nobody sees is a flag that does nothing. */}
+      {/* A flag that nobody sees is a flag that does nothing. It counts the
+          whole event, so a filter can never hide one. */}
       {match(flagged)
         .with(0, () => null)
         .otherwise((count) => (
@@ -222,24 +103,61 @@ export function EventRecords(props: EventRecordsProps) {
 
       {match(records)
         .with({ isPending: true }, () => (
-          <DataTableSkeleton label={t("events:records.tableLabel")} columns={columns} />
+          <div className="space-y-3" aria-busy>
+            <Skeleton className="h-10 rounded-lg" />
+            <div className={LIST}>
+              {A.map([0, 1, 2, 3, 4], (key) => (
+                <Skeleton key={key} className="h-20 rounded-xl" />
+              ))}
+            </div>
+          </div>
         ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
-        .with({ data: P.select(P.nonNullable) }, (rows) =>
-          match(rows.length)
-            .with(0, () => (
-              <p className="text-muted-foreground text-sm">{t("events:records.empty")}</p>
-            ))
-            .otherwise(() => (
-              <DataTable
-                label={t("events:records.tableLabel")}
-                columns={columns}
-                rows={rows}
-                getKey={(row) => row.personId}
-              />
-            )),
-        )
-        .otherwise(() => null)}
+        .otherwise(() => (
+          <div className="space-y-3">
+            <EventRecordsToolbar
+              q={q}
+              onQChange={(value) => void setQ(value)}
+              status={status}
+              onStatusChange={(value) => void setStatus(value || null)}
+              filtered={filtered}
+              onClear={() => {
+                void setQ(null);
+                void setStatus(null);
+              }}
+            />
+
+            {/* The old list stays while a new filter loads, dimmed, so the
+                page never blinks back to a skeleton under the organizer. */}
+            <div
+              aria-busy={refiltering}
+              className={cn(
+                "transition-opacity",
+                match(refiltering)
+                  .with(true, () => "opacity-60" as const)
+                  .otherwise(() => "" as const),
+              )}
+            >
+              <RecordList event={props.event} rows={rows} filtered={filtered} />
+            </div>
+
+            {match(records.hasNextPage)
+              .with(true, () => (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    disabled={records.isFetchingNextPage}
+                    onClick={() => void records.fetchNextPage()}
+                  >
+                    {match(records.isFetchingNextPage)
+                      .with(true, () => t("common:actions.loading"))
+                      .otherwise(() => t("events:records.loadMore"))}
+                  </Button>
+                </div>
+              ))
+              .otherwise(() => null)}
+          </div>
+        ))}
     </section>
   );
 }

@@ -27,6 +27,12 @@ export const common = {
   people_one: "{{count, number}} person",
   people_other: "{{count, number}} people",
   fields: {
+    range: "{{from}} – {{to}}",
+    rangeFrom: "From {{from}}",
+    rangeUntil: "Until {{to}}",
+    clearDates: "Clear",
+    startTime: "Start time",
+    endTime: "End time",
     pickDate: "Pick a date",
     pickDateTime: "Pick a date and time",
     pickDayFirst: "Pick a day first",

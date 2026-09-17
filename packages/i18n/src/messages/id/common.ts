@@ -27,6 +27,12 @@ export const common = {
   people_one: "{{count, number}} orang",
   people_other: "{{count, number}} orang",
   fields: {
+    range: "{{from}} – {{to}}",
+    rangeFrom: "Dari {{from}}",
+    rangeUntil: "Sampai {{to}}",
+    clearDates: "Hapus",
+    startTime: "Waktu mulai",
+    endTime: "Waktu selesai",
     pickDate: "Pilih tanggal",
     pickDateTime: "Pilih tanggal dan jam",
     pickDayFirst: "Pilih harinya dulu",

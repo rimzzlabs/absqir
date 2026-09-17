@@ -118,13 +118,32 @@ export interface EventListFilter {
   groupId: string;
 }
 
+/** What narrows the events that expect me. No group: a member has no group filter. */
+export interface MyEventsFilter {
+  scope: "upcoming" | "past";
+  q: string;
+  /** Rows per page. The server's default when absent. */
+  limit?: number;
+}
+
+/** What narrows one event's records. The empty string stands for "no filter". */
+export interface EventRecordsFilter {
+  /** Matches a name or an identifier. */
+  q: string;
+  /** One attendance status, "none" for everyone still waited on, or "" for all. */
+  status: string;
+}
+
 export const eventKeys = {
   all: ["events"] as const,
   /** Every page of every list. Mutations invalidate this prefix. */
   lists: () => [...eventKeys.all, "list"] as const,
   list: (filter: EventListFilter) => [...eventKeys.lists(), filter] as const,
   detail: (id: string) => [...eventKeys.all, "detail", id] as const,
+  /** Every page of every filter of one event's records. */
   records: (id: string) => [...eventKeys.all, "records", id] as const,
+  recordsPage: (id: string, filter: EventRecordsFilter) =>
+    [...eventKeys.records(id), filter] as const,
   qrToken: (id: string) => [...eventKeys.all, "qr-token", id] as const,
 };
 
@@ -157,10 +176,11 @@ export const myKeys = {
   all: ["my"] as const,
   /** Every page of every scope. Mutations invalidate this prefix. */
   events: () => [...myKeys.all, "events"] as const,
-  eventsPage: (scope: string, limit: number | null = null) =>
-    [...myKeys.events(), scope, limit] as const,
+  eventsPage: (filter: MyEventsFilter) => [...myKeys.events(), filter] as const,
   /** One event with its roster. Under `events()`, so the same prefix clears it. */
   event: (id: string) => [...myKeys.events(), "detail", id] as const,
+  /** Every page of every search of the names expected at one event. */
+  roster: (id: string, q: string) => [...myKeys.event(id), "roster", q] as const,
   pass: (id: string) => [...myKeys.all, "pass", id] as const,
   /** Every page of every filter of my record. Mutations invalidate this prefix. */
   history: () => [...myKeys.all, "history"] as const,

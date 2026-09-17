@@ -47,7 +47,7 @@ const CHOICES = 50;
 
 export function AskLeaveDialog(props: AskLeaveDialogProps) {
   const t = useTranslate();
-  const events = useMyEvents({ scope: "upcoming", limit: CHOICES });
+  const events = useMyEvents({ scope: "upcoming", q: "", limit: CHOICES });
   const mine = useMyLeave({ scope: "all", limit: CHOICES });
   const ask = useAskLeave();
   const form = useForm<AskLeaveValues>({
