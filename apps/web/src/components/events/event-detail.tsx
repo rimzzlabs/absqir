@@ -2,11 +2,11 @@ import { formatRange } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Badge } from "@absqir/ui/badge";
-import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
 import { EventActions } from "@/components/events/event-actions";
 import { EventAttendance } from "@/components/events/event-attendance";
+import { EventDetailSkeleton } from "@/components/events/event-detail-skeleton";
 import { EventGuide } from "@/components/events/event-guide";
 import { EventRecords } from "@/components/events/event-records";
 import { PublicLink } from "@/components/events/public-link";
@@ -78,12 +78,7 @@ function EventDetailBody(props: EventDetailProps) {
   const event = useEvent(props.eventId);
 
   return match(event)
-    .with({ isPending: true }, () => (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-48 rounded-xl" />
-      </div>
-    ))
+    .with({ isPending: true }, () => <EventDetailSkeleton />)
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-6">

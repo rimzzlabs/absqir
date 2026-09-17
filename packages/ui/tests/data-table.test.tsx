@@ -5,6 +5,7 @@ import {
   cardPartsOf,
   type DataColumn,
   DataTable,
+  DataTableSkeleton,
   placeOf,
 } from "#src/components/ui/data-table";
 
@@ -157,5 +158,33 @@ describe("DataTable", () => {
     expect(
       within(screen.getByRole("list", { name: "People" })).queryAllByRole("listitem"),
     ).toHaveLength(0);
+  });
+});
+
+describe("DataTableSkeleton", () => {
+  it("prints the real headings before the rows arrive", () => {
+    render(<DataTableSkeleton label="People" columns={COLUMNS} />);
+    const table = screen.getByRole("table");
+
+    expect(within(table).getByText("Name")).toBeDefined();
+    expect(within(table).getByText("Email")).toBeDefined();
+  });
+
+  it("stands in for three rows by default", () => {
+    const { container } = render(<DataTableSkeleton label="People" columns={COLUMNS} />);
+
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(3);
+  });
+
+  it("stands in for as many rows as the caller asks for", () => {
+    const { container } = render(<DataTableSkeleton label="People" columns={COLUMNS} rows={5} />);
+
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
+  });
+
+  it("carries no row content of its own", () => {
+    render(<DataTableSkeleton label="People" columns={COLUMNS} />);
+
+    expect(screen.queryByText("Ada Lovelace")).toBeNull();
   });
 });
