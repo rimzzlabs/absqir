@@ -24,6 +24,14 @@
       "development": "./src/active-path.ts",
       "default": "./dist/active-path.js"
     },
+    "./attendance-counts": {
+      "development": "./src/attendance-counts.ts",
+      "default": "./dist/attendance-counts.js"
+    },
+    "./event-clock": {
+      "development": "./src/event-clock.ts",
+      "default": "./dist/event-clock.js"
+    },
     "./date": {
       "development": "./src/date.ts",
       "default": "./dist/date.js"

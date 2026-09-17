@@ -4,7 +4,7 @@ import { useTranslate } from "@absqir/i18n/react";
 import { Alert, AlertDescription, AlertTitle } from "@absqir/ui/alert";
 import { Badge } from "@absqir/ui/badge";
 import { Button } from "@absqir/ui/button";
-import { type DataColumn, DataTable } from "@absqir/ui/data-table";
+import { type DataColumn, DataTable, DataTableSkeleton } from "@absqir/ui/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@absqir/ui/dropdown-menu";
-import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { DotsThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
@@ -91,6 +90,23 @@ function originOf(t: Translate, record: EventRecord): string | null {
         .with(true, () => null)
         .otherwise(() => t("events:records.walkIn")),
     );
+}
+
+/**
+ * The headings alone, for the table before the event itself has loaded.
+ *
+ * The `Where` column is missing on purpose: only the event says whether it
+ * asked for a location, and the skeleton runs before that answer arrives.
+ */
+export function pendingRecordColumns(t: Translate): DataColumn<never>[] {
+  return [
+    { key: "name", header: t("events:records.name"), place: "primary", cell: () => null },
+    { key: "identifier", header: t("events:records.identifier"), cell: () => null },
+    { key: "status", header: t("events:records.status"), cell: () => null },
+    { key: "checkedIn", header: t("events:records.checkedIn"), cell: () => null },
+    { key: "how", header: t("events:records.how"), cell: () => null },
+    { key: "actions", place: "action", headClassName: "w-12", cell: () => null },
+  ];
 }
 
 function recordColumns(t: Translate, event: Event): DataColumn<EventRecord>[] {
@@ -176,9 +192,22 @@ export function EventRecords(props: EventRecordsProps) {
 
   const flagged = flaggedCount(records.data ?? []);
 
+  const columns = recordColumns(t, props.event);
+
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-medium">{t("events:records.heading")}</h2>
+    <section aria-labelledby="records-heading" className="space-y-3">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h2 id="records-heading" className="text-sm font-medium">
+          {t("events:records.heading")}
+        </h2>
+        {match(records.data)
+          .with(P.nullish, () => null)
+          .otherwise((rows) => (
+            <span className="text-muted-foreground text-sm tabular-nums">
+              {t("common:people", { count: rows.length })}
+            </span>
+          ))}
+      </div>
 
       {/* A flag that nobody sees is a flag that does nothing. */}
       {match(flagged)
@@ -192,7 +221,9 @@ export function EventRecords(props: EventRecordsProps) {
         ))}
 
       {match(records)
-        .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
+        .with({ isPending: true }, () => (
+          <DataTableSkeleton label={t("events:records.tableLabel")} columns={columns} />
+        ))
         .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
           match(rows.length)
@@ -202,7 +233,7 @@ export function EventRecords(props: EventRecordsProps) {
             .otherwise(() => (
               <DataTable
                 label={t("events:records.tableLabel")}
-                columns={recordColumns(t, props.event)}
+                columns={columns}
                 rows={rows}
                 getKey={(row) => row.personId}
               />

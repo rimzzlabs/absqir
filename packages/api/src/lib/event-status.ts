@@ -1,3 +1,4 @@
+import { lateAt, opensAt } from "@absqir/core/event-clock";
 import { match } from "ts-pattern";
 
 export type EventStatus = "scheduled" | "running" | "done";
@@ -11,17 +12,9 @@ export interface EventTimes {
   closedAt: Date | null;
 }
 
-const MINUTE = 60_000;
-
-/** When check-in opens on its own. */
-export function opensAt(event: EventTimes): Date {
-  return new Date(event.startsAt.getTime() - event.opensBeforeMinutes * MINUTE);
-}
-
-/** The last instant a check-in counts as present. */
-export function lateAt(event: EventTimes): Date {
-  return new Date(event.startsAt.getTime() + event.lateAfterMinutes * MINUTE);
-}
+// The page states these two times to the organizer, so they live in core
+// and both sides read the same clock.
+export { lateAt, opensAt };
 
 /**
  * Never stored. `closedAt` wins, then the clock: an event past its end is

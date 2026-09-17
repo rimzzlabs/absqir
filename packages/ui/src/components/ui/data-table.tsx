@@ -2,6 +2,7 @@ import { A } from "@mobily/ts-belt";
 import type { ReactNode } from "react";
 import { match, P } from "ts-pattern";
 
+import { Skeleton } from "#src/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -169,5 +170,58 @@ export function DataTable<T>(props: DataTableProps<T>) {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** One stand-in row. Only the key matters: every cell is a grey bar. */
+interface PendingRow {
+  key: string;
+}
+
+export interface DataTableSkeletonProps<T> {
+  /** The same columns the loaded table uses, so the headings are already right. */
+  columns: readonly DataColumn<T>[];
+  label: string;
+  /** How many rows to stand in for. */
+  rows?: number;
+  className?: string;
+}
+
+/** The bar that stands in for one cell, sized by what the column holds. */
+function pendingCell(column: DataColumn<unknown>): ReactNode {
+  return match(placeOf(column))
+    .with("action", () => <Skeleton className="size-7 rounded-md" />)
+    .with("primary", () => <Skeleton className="h-4 w-32" />)
+    .otherwise(() => <Skeleton className="h-4 w-20" />);
+}
+
+/**
+ * The table before its rows arrive, in the shape the rows will take.
+ *
+ * The column headings are known before the data is, so they are printed for
+ * real. A reader sees the table they are about to get, in its own borders,
+ * instead of one grey block that becomes something else.
+ */
+export function DataTableSkeleton<T>(props: DataTableSkeletonProps<T>) {
+  const columns: readonly DataColumn<PendingRow>[] = A.map(props.columns, (column) => ({
+    key: column.key,
+    header: column.header,
+    place: column.place,
+    headClassName: column.headClassName,
+    cell: () => pendingCell(column as DataColumn<unknown>),
+  }));
+
+  const rows: readonly PendingRow[] = A.makeWithIndex(props.rows ?? 3, (index) => ({
+    key: `pending-${index}`,
+  }));
+
+  return (
+    <DataTable
+      className={props.className}
+      label={props.label}
+      columns={columns}
+      rows={rows}
+      getKey={(row) => row.key}
+    />
   );
 }

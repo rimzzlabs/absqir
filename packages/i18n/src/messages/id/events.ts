@@ -29,25 +29,43 @@ export const events = {
     noGroup: "Tanpa grup",
   },
   detail: {
-    times:
-      "{{range}} · terlambat setelah {{late, number}} menit · buka {{opens, number}} menit lebih awal",
     walkIns: "Orang di luar daftar diterima",
     roomScreen: "Layar ruangan",
     scanner: "Pemindai",
-    openNow: "Buka sekarang",
-    closeNow: "Tutup sekarang",
-    csv: "CSV",
-    closed: "Ditutup {{when}}. Semua yang diharapkan hadir tanpa check-in dicatat tidak hadir.",
+    openNow: "Buka check-in sekarang",
+    closeNow: "Tutup check-in sekarang",
+    csv: "Unduh CSV",
+    more: "Tindakan lain",
     deleteTitle: "Hapus {{title}}?",
     deleteDescription: "Setiap catatan acara ini ikut hilang. Tidak bisa dibatalkan.",
     keep: "Biarkan",
     deleting: "Menghapus…",
-    stats: {
-      expected: "Diharapkan",
-      present: "Hadir",
-      late: "Terlambat",
-      excused: "Izin",
-      absent: "Tidak hadir",
+    closeTitle: "Tutup check-in sekarang?",
+    closeDescription: "Check-in berhenti saat itu juga, dan acara ini tidak bisa dibuka lagi.",
+    closeMissing_one: "Satu orang belum check-in. Penutupan mencatatnya tidak hadir.",
+    closeMissing_other:
+      "{{count, number}} orang belum check-in. Penutupan mencatat mereka tidak hadir.",
+    closing: "Menutup…",
+    guide: {
+      scheduledTitle: "Check-in belum dibuka",
+      scheduledBody_one:
+        "Check-in terbuka pukul {{opens}}, satu menit sebelum acara mulai. Buka lebih awal jika orang sudah menunggu di pintu.",
+      scheduledBody_other:
+        "Check-in terbuka pukul {{opens}}, {{count, number}} menit sebelum acara mulai. Buka lebih awal jika orang sudah menunggu di pintu.",
+      runningTitle: "Check-in terbuka",
+      runningBody:
+        "Check-in tutup pukul {{ends}}. Check-in setelah pukul {{late}} dihitung terlambat.",
+      doneTitle: "Acara ini sudah ditutup",
+      doneBody:
+        "Ditutup pukul {{when}}. Semua yang diharapkan hadir tanpa check-in dicatat tidak hadir.",
+      endedBody:
+        "Acara berakhir pukul {{ends}}. Semua yang diharapkan hadir tanpa check-in dicatat tidak hadir.",
+    },
+    attendance: {
+      heading: "Kehadiran",
+      checkedIn: "sudah check-in",
+      expected: "dari {{count, number}} yang diharapkan",
+      notYet: "Belum",
     },
   },
   publicLink: {
