@@ -48,59 +48,64 @@ export function EventRecordsToolbar(props: EventRecordsToolbarProps) {
 
   return (
     <StickyToolbar>
-      <InputGroup className="w-full sm:w-64">
-        <InputGroupAddon>
-          <MagnifyingGlassIcon aria-hidden />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="search"
-          aria-label={t("events:records.searchLabel")}
-          placeholder={t("events:records.search")}
-          value={props.q}
-          onChange={(event) => props.onQChange(event.target.value)}
-        />
-      </InputGroup>
+      <div className="flex w-full min-w-0 items-center gap-2">
+        <InputGroup className="min-w-0 flex-1 sm:max-w-64">
+          <InputGroupAddon>
+            <MagnifyingGlassIcon aria-hidden />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="search"
+            aria-label={t("events:records.searchLabel")}
+            placeholder={t("events:records.search")}
+            value={props.q}
+            onChange={(event) => props.onQChange(event.target.value)}
+          />
+        </InputGroup>
 
-      <Select
-        items={[
-          { value: EVERY_STATUS, label: t("events:records.everyStatus") },
-          ...A.map([...STATUSES, NOT_YET], (value) => ({
-            value,
-            label: statusLabel(t, value),
-          })),
-        ]}
-        value={props.status}
-        onValueChange={(value) => {
-          if (typeof value === "string") props.onStatusChange(value);
-        }}
-      >
-        <SelectTrigger aria-label={t("events:records.filterByStatus")} className="w-full sm:w-48">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem value={EVERY_STATUS}>{t("events:records.everyStatus")}</SelectItem>
-          </SelectGroup>
-          <SelectGroup>
-            <SelectLabel>{t("events:records.statusGroup")}</SelectLabel>
-            {A.map(STATUSES, (status) => (
-              <SelectItem key={status} value={status}>
-                {attendanceLabel(t, status)}
-              </SelectItem>
-            ))}
-            <SelectItem value={NOT_YET}>{t("common:attendance.notYet")}</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+        <Select
+          items={[
+            { value: EVERY_STATUS, label: t("events:records.everyStatus") },
+            ...A.map([...STATUSES, NOT_YET], (value) => ({
+              value,
+              label: statusLabel(t, value),
+            })),
+          ]}
+          value={props.status}
+          onValueChange={(value) => {
+            if (typeof value === "string") props.onStatusChange(value);
+          }}
+        >
+          <SelectTrigger
+            aria-label={t("events:records.filterByStatus")}
+            className="min-w-0 flex-1 sm:max-w-48"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value={EVERY_STATUS}>{t("events:records.everyStatus")}</SelectItem>
+            </SelectGroup>
+            <SelectGroup>
+              <SelectLabel>{t("events:records.statusGroup")}</SelectLabel>
+              {A.map(STATUSES, (status) => (
+                <SelectItem key={status} value={status}>
+                  {attendanceLabel(t, status)}
+                </SelectItem>
+              ))}
+              <SelectItem value={NOT_YET}>{t("common:attendance.notYet")}</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-      {match(props.filtered)
-        .with(true, () => (
-          <Button variant="ghost" size="sm" onClick={props.onClear}>
-            <XIcon />
-            {t("events:records.clear")}
-          </Button>
-        ))
-        .otherwise(() => null)}
+        {match(props.filtered)
+          .with(true, () => (
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={props.onClear}>
+              <XIcon />
+              {t("events:records.clear")}
+            </Button>
+          ))
+          .otherwise(() => null)}
+      </div>
     </StickyToolbar>
   );
 }
