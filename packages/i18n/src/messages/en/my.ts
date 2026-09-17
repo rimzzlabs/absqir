@@ -16,7 +16,6 @@ export const my = {
     emptyPastHint: "Closed events land here with your record on each.",
     emptyUpcoming: "You have nothing coming up yet",
     emptyUpcomingHint: "Events appear here once an organizer plans one for a group you belong to.",
-    to: "{{start}} to {{end}}",
     registered: "Registered",
     myPass: "My pass",
     opens: "Opens {{when}}",

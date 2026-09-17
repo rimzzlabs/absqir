@@ -17,7 +17,6 @@ export const my = {
       "Acara yang sudah ditutup muncul di sini bersama catatan Anda di masing-masing acara.",
     emptyUpcoming: "Belum ada acara untuk Anda",
     emptyUpcomingHint: "Acara muncul di sini begitu penyelenggara merencanakannya untuk grup Anda.",
-    to: "{{start}} sampai {{end}}",
     registered: "Terdaftar",
     myPass: "QR saya",
     opens: "Dibuka {{when}}",

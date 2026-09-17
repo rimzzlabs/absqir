@@ -26,7 +26,6 @@ export const events = {
     checkedIn: "{{checkedIn, number}}/{{expected, number}} hadir",
     late: " · {{count, number}} terlambat",
     absent: " · {{count, number}} tidak hadir",
-    to: "{{start}} sampai {{end}}",
     noGroup: "Tanpa grup",
   },
   detail: {
