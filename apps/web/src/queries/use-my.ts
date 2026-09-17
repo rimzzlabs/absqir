@@ -1,6 +1,11 @@
-import { myKeys } from "@absqir/core/query-keys";
+import { type HistoryFilter, myKeys } from "@absqir/core/query-keys";
 import { useTranslate } from "@absqir/i18n/react";
-import { type QueryFunctionContext, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type QueryFunctionContext,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { match } from "ts-pattern";
 import { api, apiError } from "@/lib/api";
@@ -89,17 +94,43 @@ export function useMyPass(eventId: string | null) {
   });
 }
 
-export function useMyHistory() {
+const EVERY_FILTER: HistoryFilter = { q: "", status: "", when: "any" };
+
+/**
+ * My record, page by page. The filter is the key, so a new search starts at
+ * page one. Every page carries the same summary, counted over the window
+ * rather than over what is loaded.
+ */
+export function useMyHistory(filter: HistoryFilter = EVERY_FILTER) {
   const t = useTranslate();
-  return useQuery({
-    queryKey: myKeys.history(),
-    queryFn: async (ctx: QueryFunctionContext) => {
-      const response = await api.my.history.$get(undefined, { init: { signal: ctx.signal } });
+  return useInfiniteQuery({
+    queryKey: myKeys.historyPage(filter),
+    initialPageParam: null as string | null,
+    queryFn: async (ctx: QueryFunctionContext<readonly unknown[], string | null>) => {
+      const response = await api.my.history.$get(
+        {
+          query: {
+            q: filter.q || undefined,
+            status: match(filter.status)
+              .with("present", "late", "excused", "absent", (status) => status)
+              .otherwise(() => undefined),
+            when: filter.when,
+            limit: match(filter.limit)
+              .with(undefined, () => undefined)
+              .otherwise((limit) => String(limit)),
+            cursor: ctx.pageParam ?? undefined,
+          },
+        },
+        { init: { signal: ctx.signal } },
+      );
 
       if (!response.ok) throw await apiError(response, t("errors:couldNotLoadYourHistory"));
 
       return response.json();
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    // While the reader types, the old page stays instead of a skeleton.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -107,4 +138,16 @@ export type MyEvent = NonNullable<
   ReturnType<typeof useMyEvents>["data"]
 >["pages"][number]["items"][number];
 export type MyEventDetail = NonNullable<ReturnType<typeof useMyEvent>["data"]>;
-export type HistoryRow = NonNullable<ReturnType<typeof useMyHistory>["data"]>[number];
+export type { HistoryFilter };
+export type HistoryPage = NonNullable<ReturnType<typeof useMyHistory>["data"]>["pages"][number];
+export type HistoryRow = HistoryPage["items"][number];
+export type HistorySummary = HistoryPage["summary"];
+
+/** The counts before any page arrives: nothing recorded yet. */
+export const EMPTY_HISTORY_SUMMARY: HistorySummary = {
+  total: 0,
+  present: 0,
+  late: 0,
+  excused: 0,
+  absent: 0,
+};

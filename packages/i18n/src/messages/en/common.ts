@@ -104,6 +104,13 @@ export const common = {
     absent: "Absent",
     notYet: "Not yet",
   },
+  /** How a record came to be, for a line that explains one. */
+  checkInMethod: {
+    screen: "Scanned the screen",
+    scanner: "Scanned at the door",
+    manual: "Marked by an organizer",
+    auto: "Closed by the clock",
+  },
   leaveStatus: {
     pending: "Pending",
     approved: "Approved",

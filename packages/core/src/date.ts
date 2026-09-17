@@ -26,6 +26,10 @@ const PATTERNS = {
   dayOfMonth: "d",
   /** "Mon", beside the day number. */
   weekday: "EEE",
+  /** "Sep", above the big number in a date block. */
+  month: "MMM",
+  /** "2026", under it, for a record the current year does not explain. */
+  year: "yyyy",
   time: "HH:mm",
   iso: "yyyy-MM-dd",
 } as const;

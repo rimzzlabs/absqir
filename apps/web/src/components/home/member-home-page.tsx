@@ -25,7 +25,7 @@ import { QueryError } from "@/components/shared/query-error";
 import { type LeaveStatus, LeaveStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
 import { useMyLeave } from "@/queries/use-leave";
-import { useMyEvents, useMyHistory } from "@/queries/use-my";
+import { EMPTY_HISTORY_SUMMARY, useMyEvents, useMyHistory } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
   /** The language this reader gets, for every island under it. */
@@ -86,7 +86,9 @@ function MemberHomeBody(props: MemberHomePageProps) {
   const t = useTranslate();
   const orgHref = useOrgHref();
   const events = useMyEvents();
-  const history = useMyHistory();
+  // Enough rows for the standing card's short list; the counts beside it
+  // come from the summary, which reads every closed event.
+  const history = useMyHistory({ q: "", status: "", when: "any", limit: 5 });
   const leave = useMyLeave({ scope: "all" });
   const [passFor, setPassFor] = useState<string | null>(null);
 
@@ -135,7 +137,10 @@ function MemberHomeBody(props: MemberHomePageProps) {
             .with({ isPending: true }, () => <Skeleton className="h-72 rounded-xl" />)
             .with({ isError: true }, () => <QueryError query={history} />)
             .with({ data: P.select(P.nonNullable) }, (data) => (
-              <MemberHomeStanding history={data} />
+              <MemberHomeStanding
+                summary={data.pages[0]?.summary ?? EMPTY_HISTORY_SUMMARY}
+                recent={A.flatMap(data.pages, (page) => page.items)}
+              />
             ))
             .otherwise(() => null)}
 

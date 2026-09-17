@@ -1,8 +1,9 @@
 import { schema } from "@absqir/db";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, O, pipe } from "@mobily/ts-belt";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { match } from "ts-pattern";
+import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import { match, P } from "ts-pattern";
+import { decodeCursor, pageOf } from "#src/lib/cursor";
 import { statusOf } from "#src/lib/event-status";
 import {
   type EventJson,
@@ -16,6 +17,7 @@ import {
   settle,
   toEventJson,
 } from "#src/lib/events";
+import { HISTORY_WINDOWS, historySince } from "#src/lib/history-window";
 import { createPass } from "#src/lib/member-pass";
 import { organizationGuard, organizationIdOf } from "#src/lib/org-access";
 import { whenAny } from "#src/lib/query";
@@ -173,6 +175,27 @@ const myEventPage = z.object({
   nextCursor: z.string().nullable(),
 });
 
+const historyWindowEnum = z.enum(HISTORY_WINDOWS);
+
+const historyPage = z.object({
+  items: z.array(historySchema),
+  /** Pass it back as `cursor` for the next page. Null when this is the last page. */
+  nextCursor: z.string().nullable(),
+  /**
+   * The whole window, counted by the database, not by the page. The search
+   * and the status are left out on purpose: the summary is the standing the
+   * two of them narrow, so it must hold still while the reader looks
+   * something up. Only the window moves it.
+   */
+  summary: z.object({
+    total: z.number(),
+    present: z.number(),
+    late: z.number(),
+    excused: z.number(),
+    absent: z.number(),
+  }),
+});
+
 const errorSchema = z.object({ error: z.string() });
 
 const unauthorized = {
@@ -258,18 +281,29 @@ const historyRoute = createRoute({
   method: "get",
   path: "/my/history",
   tags: ["me"],
-  summary: "My past records, newest first",
+  summary: "My past records, newest first, one page at a time",
+  description:
+    "A title search, a status and a window narrow the list. The page walks the (starts_at, id) index, not an offset. The summary counts the window, not the page.",
+  request: {
+    query: z.object({
+      q: z.string().max(120).optional(),
+      status: attendanceEnum.optional(),
+      when: historyWindowEnum.optional(),
+      cursor: z.string().max(256).optional(),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
+    }),
+  },
   responses: {
     200: {
-      description: "Records",
-      content: { "application/json": { schema: z.array(historySchema) } },
+      description: "One page of records, with the counts for the whole window",
+      content: { "application/json": { schema: historyPage } },
     },
     401: unauthorized,
     403: forbidden,
   },
 });
 
-const HISTORY_LIMIT = 200;
+const HISTORY_PAGE_SIZE = 10;
 
 const app = new OpenAPIHono<AppEnv>();
 
@@ -429,38 +463,99 @@ export const myRoutes = app
     const me = await personForUser(c.var.db, organizationId, user.id);
     if (!me) return c.json({ error: c.var.t("errors:notInTheDirectoryYet") }, 403);
 
+    const query = c.req.valid("query");
     const now = new Date();
     await settle(c.var.db, organizationId, now);
 
-    const rows = await c.var.db
-      .select({ record: attendanceRecord, event: eventTable })
-      .from(attendanceRecord)
-      .innerJoin(eventTable, eq(eventTable.id, attendanceRecord.eventId))
-      .where(
-        and(
-          eq(attendanceRecord.personId, me.id),
-          eq(eventTable.organizationId, organizationId),
-          isPast(now),
+    const limit = query.limit ?? HISTORY_PAGE_SIZE;
+    const since = historySince(query.when ?? "any", now);
+    const needle = match(query.q?.trim())
+      .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_\\]/g, "\\$&")}%`)
+      .otherwise(() => null);
+
+    // My closed events inside the window, and nothing else. The list adds the
+    // search, the status and the cursor; the summary counts this much alone.
+    const window = and(
+      eq(attendanceRecord.personId, me.id),
+      eq(eventTable.organizationId, organizationId),
+      isPast(now),
+      match(since)
+        .with(P.nonNullable, (since) => gte(eventTable.startsAt, since))
+        .otherwise(() => undefined),
+    );
+
+    const cursor = decodeCursor(query.cursor);
+    const startsAtText = sql<string>`${eventTable.startsAt}::text`;
+    const after = pipe(
+      O.fromNullable(cursor),
+      O.mapNullable((cursor) =>
+        or(
+          lt(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
+          and(
+            eq(eventTable.startsAt, sql`${cursor.at}::timestamptz`),
+            lt(eventTable.id, cursor.id),
+          ),
         ),
-      )
-      .orderBy(desc(eventTable.startsAt))
-      .limit(HISTORY_LIMIT);
+      ),
+      O.toUndefined,
+    );
+
+    const [rows, counts] = await Promise.all([
+      c.var.db
+        .select({ record: attendanceRecord, event: eventTable, at: startsAtText })
+        .from(attendanceRecord)
+        .innerJoin(eventTable, eq(eventTable.id, attendanceRecord.eventId))
+        .where(
+          and(
+            window,
+            match(needle)
+              .with(P.string.minLength(1), (needle) => ilike(eventTable.title, needle))
+              .otherwise(() => undefined),
+            match(query.status)
+              .with(P.nonNullable, (status) => eq(attendanceRecord.status, status))
+              .otherwise(() => undefined),
+            after,
+          ),
+        )
+        .orderBy(desc(eventTable.startsAt), desc(eventTable.id))
+        .limit(limit + 1),
+      c.var.db
+        .select({
+          status: attendanceRecord.status,
+          value: sql<number>`count(*)`.mapWith(Number),
+        })
+        .from(attendanceRecord)
+        .innerJoin(eventTable, eq(eventTable.id, attendanceRecord.eventId))
+        .where(window)
+        .groupBy(attendanceRecord.status),
+    ]);
+
+    const page = pageOf(rows, limit, (entry) => ({ at: entry.at, id: entry.event.id }));
+    const summary = { total: 0, present: 0, late: 0, excused: 0, absent: 0 };
+    for (const row of counts) {
+      summary[row.status] = row.value;
+      summary.total += row.value;
+    }
 
     return c.json(
-      pipe(
-        rows,
-        A.map(({ record, event }) => ({
-          eventId: event.id,
-          title: event.title,
-          startsAt: event.startsAt.toISOString(),
-          endsAt: event.endsAt.toISOString(),
-          status: record.status,
-          checkedInAt: record.checkedInAt?.toISOString() ?? null,
-          method: record.method,
-          note: record.note ?? null,
-        })),
-        F.toMutable,
-      ),
+      {
+        items: pipe(
+          page.items,
+          A.map(({ record, event }) => ({
+            eventId: event.id,
+            title: event.title,
+            startsAt: event.startsAt.toISOString(),
+            endsAt: event.endsAt.toISOString(),
+            status: record.status,
+            checkedInAt: record.checkedInAt?.toISOString() ?? null,
+            method: record.method,
+            note: record.note ?? null,
+          })),
+          F.toMutable,
+        ),
+        nextCursor: page.nextCursor,
+        summary,
+      },
       200,
     );
   });
