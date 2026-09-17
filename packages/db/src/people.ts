@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import type { Database } from "#src/index";
-import { person } from "#src/schema";
+import { groupMember, person } from "#src/schema";
 
 export interface EnsurePersonParams {
   organizationId: string;
@@ -54,4 +54,28 @@ export async function ensurePersonForUser(db: Database, params: EnsurePersonPara
   });
 
   return id;
+}
+
+export interface DropFromGroupsParams {
+  organizationId: string;
+  userId: string;
+}
+
+/**
+ * Takes an account out of every group of one organization. The directory row
+ * stays behind, so an attendance record written before still reads with the
+ * name it was written under. The group memberships go, so nobody who left is
+ * expected at the next event.
+ */
+export async function dropPersonFromGroups(db: Database, params: DropFromGroupsParams) {
+  const rows = await db
+    .select({ id: person.id })
+    .from(person)
+    .where(and(eq(person.organizationId, params.organizationId), eq(person.userId, params.userId)))
+    .limit(1);
+
+  const found = rows[0];
+  if (!found) return;
+
+  await db.delete(groupMember).where(eq(groupMember.personId, found.id));
 }

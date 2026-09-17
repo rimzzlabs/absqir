@@ -28,3 +28,25 @@ export function usePeople(query = "") {
 }
 
 export type Person = NonNullable<ReturnType<typeof usePeople>["data"]>[number];
+
+/**
+ * The people a group can hold. An owner, an admin and an organizer run an
+ * event instead of attending it, and somebody who left keeps a directory row
+ * for old reports, so the server drops all three from this list.
+ */
+export function useExpectedPeople() {
+  const t = useTranslate();
+  return useQuery({
+    queryKey: peopleKeys.expected(),
+    queryFn: async (ctx: QueryFunctionContext) => {
+      const response = await api.people.$get(
+        { query: { expected: "true" } },
+        { init: { signal: ctx.signal } },
+      );
+
+      if (!response.ok) throw await apiError(response, t("errors:couldNotLoadDirectory"));
+
+      return response.json();
+    },
+  });
+}
