@@ -162,8 +162,21 @@ export const myKeys = {
   /** One event with its roster. Under `events()`, so the same prefix clears it. */
   event: (id: string) => [...myKeys.events(), "detail", id] as const,
   pass: (id: string) => [...myKeys.all, "pass", id] as const,
+  /** Every page of every filter of my record. Mutations invalidate this prefix. */
   history: () => [...myKeys.all, "history"] as const,
+  historyPage: (filter: HistoryFilter) => [...myKeys.history(), filter] as const,
 };
+
+/** What narrows my record. The empty string stands for "no filter". */
+export interface HistoryFilter {
+  q: string;
+  /** One attendance status, or the empty string for every status. */
+  status: string;
+  /** How far back the list reads. */
+  when: "any" | "30d" | "90d" | "12m";
+  /** Rows per page. The server's default when absent. */
+  limit?: number;
+}
 
 export const publicEventKeys = {
   all: ["events"] as const,

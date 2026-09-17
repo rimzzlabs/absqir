@@ -16,10 +16,13 @@ import { CaretRightIcon, ChartBarIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { type AttendanceStatus, AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
-import type { HistoryRow } from "@/queries/use-my";
+import type { HistoryRow, HistorySummary } from "@/queries/use-my";
 
 export interface MemberHomeStandingProps {
-  history: HistoryRow[];
+  /** The counts for every closed event, as the database counted them. */
+  summary: HistorySummary;
+  /** The last few records, newest first. */
+  recent: readonly HistoryRow[];
 }
 
 /** The same hues as the status badges, so the bar reads like the labels. */
@@ -36,20 +39,17 @@ const RECENT = 5;
 export function MemberHomeStanding(props: MemberHomeStandingProps) {
   const t = useTranslate();
   const orgHref = useOrgHref();
-  const total = props.history.length;
+  const total = props.summary.total;
   const countNote = t("home:member.closedEvents", { count: total });
   const counts = Object.fromEntries(
-    A.map(SEGMENTS, (segment) => [
-      segment.status,
-      A.filter(props.history, (row) => row.status === segment.status).length,
-    ]),
+    A.map(SEGMENTS, (segment) => [segment.status, props.summary[segment.status]]),
   ) as Record<AttendanceStatus, number>;
   // An excused event neither helps nor hurts.
   const judged = total - counts.excused;
   const rate = match(judged)
     .with(0, () => null)
     .otherwise((judged) => (counts.present + counts.late) / judged);
-  const recent = props.history.slice(0, RECENT);
+  const recent = props.recent.slice(0, RECENT);
 
   return (
     <Card>

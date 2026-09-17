@@ -104,6 +104,13 @@ export const common = {
     absent: "Tidak hadir",
     notYet: "Belum",
   },
+  /** How a record came to be, for a line that explains one. */
+  checkInMethod: {
+    screen: "Pindai layar",
+    scanner: "Dipindai di pintu",
+    manual: "Ditandai penyelenggara",
+    auto: "Ditutup oleh jam",
+  },
   leaveStatus: {
     pending: "Menunggu",
     approved: "Disetujui",
