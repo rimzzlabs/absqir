@@ -45,7 +45,26 @@ function* sourceFiles(directory) {
   }
 }
 
+/**
+ * Context never crosses from one island to the next, so the slug reaches an
+ * island only as a prop on its root. A root that forgets it leaves every
+ * link under it pointing at the site root — which is what happened to the
+ * notification bell in the header.
+ *
+ * So every root states the organization it belongs to, even when the answer
+ * is `null`. A forgotten prop and a deliberate `null` then look different.
+ */
+const PROVIDERS = /<Providers\b[^>]*>/s;
+const DECLARES_SLUG = /<Providers\b[^>]*\borgSlug=/s;
+
 const found = [];
+const silent = [];
+
+for (const path of sourceFiles(ROOT)) {
+  const text = readFileSync(path, "utf8");
+
+  if (PROVIDERS.test(text) && !DECLARES_SLUG.test(text)) silent.push(path);
+}
 
 for (const path of sourceFiles(ROOT)) {
   if (ALLOWED.has(path)) continue;
@@ -57,6 +76,19 @@ for (const path of sourceFiles(ROOT)) {
       found.push({ path, line: index + 1, address: match[1] ?? match[2] });
     }
   });
+}
+
+if (silent.length > 0) {
+  console.error("An island root renders <Providers> without saying which organization it is in:\n");
+
+  for (const path of silent) {
+    console.error(`  ${path}`);
+  }
+
+  console.error(
+    "\nPass orgSlug. Use null, with a comment saying why, when no organization owns the page.",
+  );
+  process.exit(1);
 }
 
 if (found.length > 0) {
@@ -72,4 +104,6 @@ if (found.length > 0) {
   process.exit(1);
 }
 
-console.log("Addresses: no organization page is linked by a written address without its slug.");
+console.log(
+  "Addresses: every island root names its organization, and no organization page is linked by a written address without its slug.",
+);
