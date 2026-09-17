@@ -7,7 +7,7 @@ import { OnboardingOrganizationStep } from "@/components/onboarding/onboarding-o
 import { OnboardingProfileStep } from "@/components/onboarding/onboarding-profile-step";
 import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useOnboarding } from "@/queries/use-onboarding";
 
 export interface OnboardingFlowProps {
@@ -32,7 +32,7 @@ function OnboardingBody(props: OnboardingFlowProps) {
     .with({ isPending: true }, () => (
       <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
     ))
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={status} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-8">
         <OnboardingSteps current={data.step} />

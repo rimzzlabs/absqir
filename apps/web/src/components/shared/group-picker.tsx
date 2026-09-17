@@ -4,7 +4,7 @@ import { Label } from "@absqir/ui/label";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { match } from "ts-pattern";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useGroups } from "@/queries/use-groups";
 
 export interface GroupPickerProps {
@@ -19,7 +19,7 @@ export function GroupPicker(props: GroupPickerProps) {
   const groups = useGroups();
 
   if (groups.isPending) return <Skeleton className="h-16 rounded-lg" />;
-  if (groups.isError) return <FormError error={groups.error} />;
+  if (groups.isError) return <QueryError query={groups} />;
 
   if (groups.data.length === 0) {
     return <p className="text-muted-foreground text-sm">{t("common:groupPicker.empty")}</p>;

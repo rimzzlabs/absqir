@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useRevokeSession } from "@/mutations/use-revoke-session";
 import { type Device, useDevices } from "@/queries/use-devices";
 
@@ -153,7 +154,7 @@ export function DevicesGrid() {
             <Skeleton className="h-48 rounded-xl" />
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={devices} />)
         .with({ data: P.nonNullable }, () => (
           <ScrollArea className="rounded-xl" viewportClassName="max-h-[32rem] pr-3">
             <ul className={cn(GRID, "p-px")}>

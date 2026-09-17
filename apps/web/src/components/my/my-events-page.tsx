@@ -12,8 +12,8 @@ import { MyEventCard } from "@/components/my/my-event-card";
 import { MyEventsToolbar } from "@/components/my/my-events-toolbar";
 import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { type MyEvent, type MyEventScope, useMyEvents } from "@/queries/use-my";
 
 const SCOPE = parseAsStringLiteral([
@@ -105,7 +105,7 @@ function MyEventsBody() {
             ))}
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={events} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
             <EventList rows={rows} scope={scope} filtered={filtered} onPass={setPassFor} />

@@ -23,6 +23,7 @@ import { Providers } from "@/components/providers";
 import { ScheduleDialog } from "@/components/schedules/schedule-dialog";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { useRemoveSchedule } from "@/mutations/use-remove-schedule";
 import { type Schedule, useSchedules } from "@/queries/use-schedules";
@@ -157,7 +158,7 @@ function SchedulesBody(props: SchedulesPageProps) {
 
       {match(schedules)
         .with({ isPending: true }, () => <Skeleton className="h-32 rounded-xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={schedules} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
           match(rows.length)
             .with(0, () => (

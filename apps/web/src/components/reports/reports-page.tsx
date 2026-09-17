@@ -21,8 +21,8 @@ import {
   GroupReportTable,
   PeopleReportTable,
 } from "@/components/reports/report-tables";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { parseAsLocalDate } from "@/lib/url-state";
 import { useGroups } from "@/queries/use-groups";
 import {
@@ -140,7 +140,7 @@ function ReportsBody() {
 
       {match(summary)
         .with({ isPending: true }, () => <Skeleton className="h-40 rounded-xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={summary} />)
         .with({ data: P.select(P.nonNullable) }, (data) => <ReportSummaryCards summary={data} />)
         .otherwise(() => null)}
 

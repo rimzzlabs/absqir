@@ -7,7 +7,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
 import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useOrgHref } from "@/lib/org-path";
 import { useMarkRead } from "@/mutations/use-mark-read";
 import { type Notification, useNotifications } from "@/queries/use-notifications";
@@ -156,9 +156,9 @@ export function NotificationPreview(props: NotificationPreviewProps) {
               <Skeleton className="h-10 rounded-md" />
             </div>
           ))
-          .with({ isError: true, error: P.select() }, (error) => (
+          .with({ isError: true }, () => (
             <div className="p-2">
-              <FormError error={error} />
+              <QueryError query={notifications} />
             </div>
           ))
           .with({ data: P.select(P.nonNullable) }, (rows) =>

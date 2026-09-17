@@ -18,8 +18,8 @@ import {
   MyHistoryToolbar,
 } from "@/components/my/my-history-toolbar";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { type HistoryRow, type HistorySummary, useMyHistory } from "@/queries/use-my";
 
 const TEXT = parseAsString.withDefault("");
@@ -153,7 +153,7 @@ function HistoryBody() {
             </div>
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={history} />)
         .when(
           () => blank,
           () => <HistoryList rows={[]} filtered={false} />,

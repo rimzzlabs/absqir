@@ -10,7 +10,7 @@ import { ChartBarIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { match, P } from "ts-pattern";
 import { ratePercent, StatusBar } from "@/components/reports/report-summary";
-import { FormError } from "@/components/shared/form-error";
+import { type FailedRead, QueryError } from "@/components/shared/query-error";
 import { useOrgHref } from "@/lib/org-path";
 import type {
   EventReportRow,
@@ -20,9 +20,10 @@ import type {
 } from "@/queries/use-reports";
 
 /** Every report table is one query in one of four states. */
-type Query<T> = Pick<ReturnType<typeof useReportPeople>, "isPending" | "isError" | "error"> & {
-  data?: T[];
-};
+type Query<T> = Pick<ReturnType<typeof useReportPeople>, "isPending" | "isError"> &
+  FailedRead & {
+    data?: T[];
+  };
 
 /** The four tallies every report row carries. */
 type Counts = PersonReportRow["counts"];
@@ -82,7 +83,7 @@ function ReportQuery<T>(props: {
 }) {
   return match(props.query)
     .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={props.query} />)
     .with({ data: P.select(P.nonNullable) }, (rows) =>
       match(rows.length)
         .with(0, () => props.empty)

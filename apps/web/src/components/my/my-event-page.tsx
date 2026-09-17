@@ -31,6 +31,7 @@ import { PassDialog } from "@/components/my/pass-dialog";
 import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import {
   AttendanceStatusBadge,
   EventStatusBadge,
@@ -420,10 +421,10 @@ function MyEventBody(props: MyEventPageProps) {
         </div>
       </div>
     ))
-    .with({ isError: true, error: P.select() }, (error) => (
+    .with({ isError: true }, () => (
       <div className="space-y-4">
         <BackLink href={orgHref("/my/events")}>{t("my:event.back")}</BackLink>
-        <FormError error={error} />
+        <QueryError query={event} />
         <p className="text-muted-foreground text-sm">{t("my:event.notExpected")}</p>
       </div>
     ))

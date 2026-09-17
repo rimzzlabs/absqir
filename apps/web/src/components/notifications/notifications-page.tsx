@@ -15,6 +15,7 @@ import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { useOrgHref } from "@/lib/org-path";
 import { useMarkRead } from "@/mutations/use-mark-read";
 import {
@@ -155,7 +156,7 @@ function NotificationsBody() {
 
       {match(notifications)
         .with({ isPending: true }, () => <Skeleton className="h-64 rounded-xl" />)
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={notifications} />)
         .with({ data: P.select(P.nonNullable) }, (rows) =>
           match(rows.length)
             .with(0, () => <NothingHere scope={scope} />)

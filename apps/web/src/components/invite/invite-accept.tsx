@@ -5,6 +5,7 @@ import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { roleLabel } from "@/components/shared/role-badge";
 import { useOnboardingAccept } from "@/mutations/use-onboarding-accept";
 import { useInvitation } from "@/queries/use-members";
@@ -49,13 +50,13 @@ function SignedIn(props: InviteAcceptProps) {
     .with({ isPending: true }, () => (
       <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
     ))
-    .with({ isError: true, error: P.select() }, (error) => (
+    .with({ isError: true }, () => (
       <div className="space-y-5">
         <AuthHeading
           title={t("invite:accept.brokenTitle")}
           description={t("invite:accept.brokenDescription")}
         />
-        <FormError error={error} />
+        <QueryError query={invitation} />
         <p className="text-muted-foreground text-sm">
           {t("invite:accept.signedInAs", { email: props.userEmail ?? "" })}
         </p>
