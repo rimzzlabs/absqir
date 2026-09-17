@@ -1,34 +1,13 @@
-import { formatDate, formatRange } from "@absqir/core/date";
-import { formatNumber } from "@absqir/core/numbers";
+import { formatRange } from "@absqir/core/date";
 import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@absqir/ui/alert-dialog";
 import { Badge } from "@absqir/ui/badge";
-import { Button, buttonVariants } from "@absqir/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@absqir/ui/card";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
-import {
-  CameraIcon,
-  DownloadSimpleIcon,
-  LockIcon,
-  LockOpenIcon,
-  PencilSimpleIcon,
-  QrCodeIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
-import { useState } from "react";
 import { match, P } from "ts-pattern";
-import { EventDialog } from "@/components/events/event-dialog";
+import { EventActions } from "@/components/events/event-actions";
+import { EventAttendance } from "@/components/events/event-attendance";
+import { EventGuide } from "@/components/events/event-guide";
 import { EventRecords } from "@/components/events/event-records";
 import { PublicLink } from "@/components/events/public-link";
 import { Providers } from "@/components/providers";
@@ -37,9 +16,6 @@ import { FormError } from "@/components/shared/form-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
-import { useCloseEvent } from "@/mutations/use-close-event";
-import { useOpenEvent } from "@/mutations/use-open-event";
-import { useRemoveEvent } from "@/mutations/use-remove-event";
 import { type Event, useEvent } from "@/queries/use-events";
 
 export interface EventDetailProps {
@@ -51,179 +27,54 @@ export interface EventDetailProps {
   role: RoleName;
 }
 
-function Stat(props: { label: string; value: number }) {
-  return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{props.label}</CardDescription>
-        <CardTitle className="text-2xl tabular-nums">{formatNumber(props.value)}</CardTitle>
-      </CardHeader>
-    </Card>
-  );
-}
-
+/** What the event is: the name, when it runs, and who is on the list. */
 function Header(props: { event: Event; role: RoleName }) {
   const { event } = props;
   const t = useTranslate();
   const orgHref = useOrgHref();
-  const open = useOpenEvent();
-  const close = useCloseEvent();
-  const remove = useRemoveEvent();
-  const [editing, setEditing] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const isAdmin = props.role === "owner" || props.role === "admin";
+  const hasTags = event.groups.length > 0 || event.allowWalkIns;
 
   return (
     <header className="space-y-4">
       <BackLink href={orgHref("/events")}>{t("events:title")}</BackLink>
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="font-heading text-2xl font-semibold tracking-tight">{event.title}</h1>
             <EventStatusBadge status={event.status} />
           </div>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {t("events:detail.times", {
-              range: formatRange(new Date(event.startsAt), new Date(event.endsAt)),
-              late: event.lateAfterMinutes,
-              opens: event.opensBeforeMinutes,
-            })}
+          <p className="text-muted-foreground text-sm">
+            {formatRange(new Date(event.startsAt), new Date(event.endsAt))}
           </p>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {A.map(event.groups, (group) => (
-              <Badge key={group.id} variant="outline">
-                {group.name}
-              </Badge>
+          {match(hasTags)
+            .with(false, () => null)
+            .otherwise(() => (
+              <div className="flex flex-wrap gap-1">
+                {A.map(event.groups, (group) => (
+                  <Badge key={group.id} variant="outline">
+                    {group.name}
+                  </Badge>
+                ))}
+                {match(event.allowWalkIns)
+                  .with(true, () => <Badge variant="secondary">{t("events:detail.walkIns")}</Badge>)
+                  .otherwise(() => null)}
+              </div>
             ))}
-            {match(event.allowWalkIns)
-              .with(true, () => <Badge variant="secondary">{t("events:detail.walkIns")}</Badge>)
-              .otherwise(() => null)}
-          </div>
           {match(event.description)
             .with(P.string.minLength(1), (description) => (
-              <p className="text-muted-foreground mt-2 max-w-prose text-sm">{description}</p>
+              <p className="text-muted-foreground max-w-prose text-sm">{description}</p>
             ))
             .otherwise(() => null)}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {match(event.status)
-            .with("done", () => null)
-            .otherwise(() => (
-              <>
-                <a
-                  href={orgHref(`/events/${event.id}/display`)}
-                  className={buttonVariants({ size: "sm" })}
-                >
-                  <QrCodeIcon />
-                  {t("events:detail.roomScreen")}
-                </a>
-                <a
-                  href={orgHref(`/events/${event.id}/scan`)}
-                  className={buttonVariants({ size: "sm", variant: "outline" })}
-                >
-                  <CameraIcon />
-                  {t("events:detail.scanner")}
-                </a>
-              </>
-            ))}
-          {match(event.status)
-            .with("scheduled", () => (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={open.isPending}
-                onClick={() => open.mutate(event.id)}
-              >
-                <LockOpenIcon />
-                {t("events:detail.openNow")}
-              </Button>
-            ))
-            .otherwise(() => null)}
-          {match(event.status)
-            .with("running", () => (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={close.isPending}
-                onClick={() => close.mutate(event.id)}
-              >
-                <LockIcon />
-                {t("events:detail.closeNow")}
-              </Button>
-            ))
-            .otherwise(() => null)}
-          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            <PencilSimpleIcon />
-            {t("common:actions.edit")}
-          </Button>
-          <a
-            href={`/api/events/${event.id}/records.csv`}
-            className={buttonVariants({ size: "sm", variant: "outline" })}
-          >
-            <DownloadSimpleIcon />
-            {t("events:detail.csv")}
-          </a>
-          {match(isAdmin)
-            .with(true, () => (
-              <Button size="sm" variant="outline" onClick={() => setRemoving(true)}>
-                <TrashIcon />
-                {t("common:actions.delete")}
-              </Button>
-            ))
-            .otherwise(() => null)}
-        </div>
+        <EventActions event={event} role={props.role} />
       </div>
-
-      <FormError error={open.error ?? close.error ?? remove.error} />
-
-      {match(event.registrationOpen)
-        .with(true, () => <PublicLink event={event} />)
-        .otherwise(() => null)}
-
-      {match(event.closedAt)
-        .with(P.string.minLength(1), (closedAt) => (
-          <p className="text-muted-foreground text-xs">
-            {t("events:detail.closed", { when: formatDate(new Date(closedAt), "dateTime") })}
-          </p>
-        ))
-        .otherwise(() => null)}
-
-      <EventDialog open={editing} onOpenChange={setEditing} event={event} />
-
-      <AlertDialog open={removing} onOpenChange={setRemoving}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("events:detail.deleteTitle", { title: event.title })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>{t("events:detail.deleteDescription")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("events:detail.keep")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={remove.isPending}
-              onClick={() =>
-                remove.mutate(event.id, {
-                  onSuccess: () => window.location.assign(orgHref("/events")),
-                })
-              }
-            >
-              {match(remove.isPending)
-                .with(true, () => t("events:detail.deleting"))
-                .otherwise(() => t("common:actions.delete"))}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </header>
   );
 }
 
 function EventDetailBody(props: EventDetailProps) {
-  const t = useTranslate();
   const event = useEvent(props.eventId);
 
   return match(event)
@@ -235,19 +86,19 @@ function EventDetailBody(props: EventDetailProps) {
     ))
     .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
-      <>
+      <div className="space-y-6">
         <Header event={data} role={props.role} />
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <Stat label={t("events:detail.stats.expected")} value={data.counts.expected} />
-          <Stat label={t("events:detail.stats.present")} value={data.counts.present} />
-          <Stat label={t("events:detail.stats.late")} value={data.counts.late} />
-          <Stat label={t("events:detail.stats.excused")} value={data.counts.excused} />
-          <Stat label={t("events:detail.stats.absent")} value={data.counts.absent} />
-        </div>
+        <EventGuide event={data} />
+
+        {match(data.registrationOpen)
+          .with(true, () => <PublicLink event={data} />)
+          .otherwise(() => null)}
+
+        <EventAttendance event={data} />
 
         <EventRecords event={data} />
-      </>
+      </div>
     ))
     .otherwise(() => null);
 }

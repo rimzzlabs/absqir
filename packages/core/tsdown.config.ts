@@ -20,6 +20,7 @@ export default defineConfig((options) => ({
     "src/active-path.ts",
     "src/slug.ts",
     "src/org-path.ts",
+    "src/event-clock.ts",
   ],
   format: "esm",
   platform: "neutral",

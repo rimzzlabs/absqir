@@ -177,8 +177,19 @@ export function EventRecords(props: EventRecordsProps) {
   const flagged = flaggedCount(records.data ?? []);
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-medium">{t("events:records.heading")}</h2>
+    <section aria-labelledby="records-heading" className="space-y-3">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h2 id="records-heading" className="text-sm font-medium">
+          {t("events:records.heading")}
+        </h2>
+        {match(records.data)
+          .with(P.nullish, () => null)
+          .otherwise((rows) => (
+            <span className="text-muted-foreground text-sm tabular-nums">
+              {t("common:people", { count: rows.length })}
+            </span>
+          ))}
+      </div>
 
       {/* A flag that nobody sees is a flag that does nothing. */}
       {match(flagged)
