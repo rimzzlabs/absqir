@@ -1,3 +1,4 @@
+import { readAttendance } from "@absqir/core/attendance-counts";
 import { formatNumber } from "@absqir/core/numbers";
 import type { Translate } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
@@ -54,11 +55,7 @@ export function EventAttendance(props: EventAttendanceProps) {
   const t = useTranslate();
 
   const slices = slicesOf(t, event);
-  const recorded = A.reduce(slices, 0, (sum, slice) => sum + slice.value);
-  const checkedIn = event.counts.present + event.counts.late;
-  // A walk-in lands outside the expected list, so the roster can outgrow it.
-  const total = Math.max(event.counts.expected, recorded);
-  const notYet = total - recorded;
+  const { checkedIn, recorded, total, notYet } = readAttendance(event.counts);
 
   const filled = A.filter(slices, (slice) => slice.value > 0);
 

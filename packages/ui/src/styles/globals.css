@@ -51,6 +51,21 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-shimmer: shimmer 4s ease-in-out infinite;
+}
+
+/*
+ * A slow sweep of light across a panel that reports something happening
+ * right now. Nothing else moves, so the sweep alone carries "live". The
+ * reduced-motion block below stops it.
+ */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 :root {

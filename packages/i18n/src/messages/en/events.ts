@@ -39,6 +39,12 @@ export const events = {
     deleteDescription: "Every record of this event goes with it. There is no undo.",
     keep: "Keep",
     deleting: "Deleting…",
+    closeTitle: "Close check-in now?",
+    closeDescription: "Check-in stops at once, and this event cannot open again.",
+    closeMissing_one: "One person has not checked in yet. The close marks them absent.",
+    closeMissing_other:
+      "{{count, number}} people have not checked in yet. The close marks them absent.",
+    closing: "Closing…",
     guide: {
       scheduledTitle: "Check-in is not open yet",
       scheduledBody_one:

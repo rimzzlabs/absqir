@@ -40,6 +40,12 @@ export const events = {
     deleteDescription: "Setiap catatan acara ini ikut hilang. Tidak bisa dibatalkan.",
     keep: "Biarkan",
     deleting: "Menghapus…",
+    closeTitle: "Tutup check-in sekarang?",
+    closeDescription: "Check-in berhenti saat itu juga, dan acara ini tidak bisa dibuka lagi.",
+    closeMissing_one: "Satu orang belum check-in. Penutupan mencatatnya tidak hadir.",
+    closeMissing_other:
+      "{{count, number}} orang belum check-in. Penutupan mencatat mereka tidak hadir.",
+    closing: "Menutup…",
     guide: {
       scheduledTitle: "Check-in belum dibuka",
       scheduledBody_one:

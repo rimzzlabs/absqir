@@ -21,6 +21,7 @@ export default defineConfig((options) => ({
     "src/slug.ts",
     "src/org-path.ts",
     "src/event-clock.ts",
+    "src/attendance-counts.ts",
   ],
   format: "esm",
   platform: "neutral",
