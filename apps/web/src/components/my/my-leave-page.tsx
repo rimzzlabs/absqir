@@ -2,146 +2,108 @@ import type { Locale } from "@absqir/i18n";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@absqir/ui/empty";
-import { Separator } from "@absqir/ui/separator";
 import { Skeleton } from "@absqir/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@absqir/ui/tabs";
 import { A } from "@mobily/ts-belt";
 import { NotePencilIcon, PlusIcon } from "@phosphor-icons/react";
-import { type ReactNode, useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { useState } from "react";
 import { match, P } from "ts-pattern";
+import { LeaveRow } from "@/components/leave/leave-row";
 import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
-import { MyLeaveCard } from "@/components/my/my-leave-card";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
-import { type LeaveRequest, useMyLeave } from "@/queries/use-leave";
+import { StickyToolbar } from "@/components/shared/sticky-toolbar";
+import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
+import { type LeaveRequest, type LeaveScope, useMyLeave } from "@/queries/use-leave";
 
-const GRID = "grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
+/** The same two tabs the organizer's queue has, from the reader's side. */
+type MyScope = Extract<LeaveScope, "pending" | "decided">;
 
-/** A rule with a word on it, between the two halves of the page. */
-function LabeledDivider(props: { children: ReactNode }) {
+const SCOPE = parseAsStringLiteral(["pending", "decided"] as const satisfies MyScope[]).withDefault(
+  "pending",
+);
+
+const LIST = "flex flex-col gap-2";
+
+/** The one thing a member can still do about a request nobody has answered. */
+function Withdraw(props: { id: string }) {
+  const t = useTranslate();
+  const withdraw = useWithdrawLeave();
+
   return (
-    <div className="flex items-center gap-3">
-      <Separator className="flex-1" />
-      <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-        {props.children}
-      </span>
-      <Separator className="flex-1" />
-    </div>
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={withdraw.isPending}
+        onClick={() => withdraw.mutate(props.id)}
+      >
+        {match(withdraw.isPending)
+          .with(true, () => t("my:leave.withdrawing"))
+          .otherwise(() => t("my:leave.withdraw"))}
+      </Button>
+      <FormError error={withdraw.error} />
+    </>
   );
 }
 
-function LoadMore(props: { query: ReturnType<typeof useMyLeave> }) {
+function MyLeaveList(props: { rows: readonly LeaveRequest[]; scope: MyScope; onAsk: () => void }) {
   const t = useTranslate();
 
-  if (!props.query.hasNextPage) return null;
+  if (props.rows.length === 0) {
+    return (
+      <Empty className="border-border rounded-xl border border-dashed py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <NotePencilIcon />
+          </EmptyMedia>
+          <EmptyTitle>
+            {match(props.scope)
+              .with("pending", () => t("my:leave.waitingEmptyTitle"))
+              .otherwise(() => t("my:leave.decidedEmptyTitle"))}
+          </EmptyTitle>
+          <EmptyDescription>
+            {match(props.scope)
+              .with("pending", () => t("my:leave.waitingEmpty"))
+              .otherwise(() => t("my:leave.decidedEmptyDescription"))}
+          </EmptyDescription>
+        </EmptyHeader>
+        {/* An empty queue is exactly where somebody wants to start one. */}
+        {match(props.scope)
+          .with("pending", () => (
+            <Button variant="outline" onClick={props.onAsk}>
+              <PlusIcon />
+              {t("my:leave.ask")}
+            </Button>
+          ))
+          .otherwise(() => null)}
+      </Empty>
+    );
+  }
 
   return (
-    <div className="flex justify-center">
-      <Button
-        variant="outline"
-        disabled={props.query.isFetchingNextPage}
-        onClick={() => void props.query.fetchNextPage()}
-      >
-        {match(props.query.isFetchingNextPage)
-          .with(true, () => t("common:actions.loading"))
-          .otherwise(() => t("my:leave.loadMore"))}
-      </Button>
-    </div>
-  );
-}
-
-function Grid(props: { rows: readonly LeaveRequest[] }) {
-  return (
-    <ul className={GRID}>
-      {A.map(props.rows, (request) => (
-        <MyLeaveCard key={request.id} request={request} />
+    <ul className={LIST} aria-label={t("my:leave.listLabel")}>
+      {A.map(props.rows, (row) => (
+        <LeaveRow
+          key={row.id}
+          request={row}
+          actions={match(row.status)
+            .with("pending", () => <Withdraw id={row.id} />)
+            .otherwise(() => null)}
+        />
       ))}
     </ul>
   );
 }
 
-/** The requests an organizer still has to answer. */
-function Waiting() {
-  const t = useTranslate();
-  const pending = useMyLeave({ scope: "pending" });
-  const rows = A.flatMap(pending.data?.pages ?? [], (page) => page.items);
-
-  return (
-    <section aria-labelledby="leave-waiting" className="space-y-4">
-      <h2 id="leave-waiting" className="font-heading text-lg font-semibold tracking-tight">
-        {t("my:leave.waiting")}
-      </h2>
-
-      {match(pending)
-        .with({ isPending: true }, () => (
-          <div className={GRID} aria-busy>
-            <Skeleton className="h-44 rounded-xl" />
-            <Skeleton className="h-44 rounded-xl" />
-          </div>
-        ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
-        .with({ data: P.nonNullable }, () =>
-          match(rows.length)
-            .with(0, () => (
-              <p className="text-muted-foreground text-sm">{t("my:leave.waitingEmpty")}</p>
-            ))
-            .otherwise(() => (
-              <>
-                <Grid rows={rows} />
-                <LoadMore query={pending} />
-              </>
-            )),
-        )
-        .otherwise(() => null)}
-    </section>
-  );
-}
-
-/** The requests with an answer, newest first. */
-function Decided() {
-  const t = useTranslate();
-  const decided = useMyLeave({ scope: "decided" });
-  const rows = A.flatMap(decided.data?.pages ?? [], (page) => page.items);
-
-  return (
-    <section aria-label={t("my:leave.decided")} className="space-y-4">
-      {match(decided)
-        .with({ isPending: true }, () => (
-          <div className={GRID} aria-busy>
-            <Skeleton className="h-44 rounded-xl" />
-            <Skeleton className="h-44 rounded-xl" />
-            <Skeleton className="h-44 rounded-xl" />
-          </div>
-        ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
-        .with({ data: P.nonNullable }, () =>
-          match(rows.length)
-            .with(0, () => (
-              <Empty className="border-border rounded-xl border border-dashed py-16">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <NotePencilIcon />
-                  </EmptyMedia>
-                  <EmptyTitle>{t("my:leave.decidedEmptyTitle")}</EmptyTitle>
-                  <EmptyDescription>{t("my:leave.decidedEmptyDescription")}</EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ))
-            .otherwise(() => (
-              <>
-                <Grid rows={rows} />
-                <LoadMore query={decided} />
-              </>
-            )),
-        )
-        .otherwise(() => null)}
-    </section>
-  );
-}
-
 function MyLeaveBody() {
   const t = useTranslate();
+  const [scope, setScope] = useQueryState("status", SCOPE);
   const [asking, setAsking] = useState(false);
+  const mine = useMyLeave({ scope });
+  const rows = A.flatMap(mine.data?.pages ?? [], (page) => page.items);
 
   return (
     <>
@@ -156,9 +118,45 @@ function MyLeaveBody() {
         }
       />
 
-      <Waiting />
-      <LabeledDivider>{t("my:leave.decided")}</LabeledDivider>
-      <Decided />
+      <StickyToolbar>
+        <Tabs value={scope} onValueChange={(value) => void setScope(value as MyScope)}>
+          <TabsList>
+            <TabsTrigger value="pending">{t("my:leave.waiting")}</TabsTrigger>
+            <TabsTrigger value="decided">{t("my:leave.decided")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </StickyToolbar>
+
+      {match(mine)
+        .with({ isPending: true }, () => (
+          <div className={LIST} aria-busy>
+            {A.map([0, 1, 2], (key) => (
+              <Skeleton key={key} className="h-28 rounded-xl" />
+            ))}
+          </div>
+        ))
+        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .otherwise(() => (
+          <div className="space-y-4">
+            <MyLeaveList rows={rows} scope={scope} onAsk={() => setAsking(true)} />
+
+            {match(mine.hasNextPage)
+              .with(true, () => (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    disabled={mine.isFetchingNextPage}
+                    onClick={() => void mine.fetchNextPage()}
+                  >
+                    {match(mine.isFetchingNextPage)
+                      .with(true, () => t("common:actions.loading"))
+                      .otherwise(() => t("my:leave.loadMore"))}
+                  </Button>
+                </div>
+              ))
+              .otherwise(() => null)}
+          </div>
+        ))}
 
       <AskLeaveDialog open={asking} onOpenChange={setAsking} />
     </>

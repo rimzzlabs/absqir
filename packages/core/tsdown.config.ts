@@ -18,6 +18,7 @@ export default defineConfig((options) => ({
     "src/geo.ts",
     "src/location-risk.ts",
     "src/active-path.ts",
+    "src/leave-choices.ts",
     "src/slug.ts",
     "src/org-path.ts",
     "src/event-clock.ts",
