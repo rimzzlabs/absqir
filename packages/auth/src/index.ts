@@ -3,7 +3,7 @@ import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { deleteOrganizations, soleOwnerships } from "@absqir/db/accounts";
 import { domainOpensRegistration, seedOwnerDomain } from "@absqir/db/domains";
-import { ensurePersonForUser } from "@absqir/db/people";
+import { dropPersonFromGroups, ensurePersonForUser } from "@absqir/db/people";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
@@ -299,6 +299,12 @@ export function createAuth(options: CreateAuthOptions) {
               name: user.name,
               email: user.email,
             });
+          },
+          // A person who leaves is no longer expected anywhere. The directory
+          // row stays, so a report written before keeps their name, but the
+          // group memberships go with the membership itself.
+          afterRemoveMember: async ({ organization: org, user }) => {
+            await dropPersonFromGroups(db, { organizationId: org.id, userId: user.id });
           },
           afterCreateOrganization: async ({ organization: org, user }) => {
             await ensurePersonForUser(db, {

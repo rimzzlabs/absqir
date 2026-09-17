@@ -6,6 +6,9 @@ export const groups = {
   emptyTitle: "Belum ada grup",
   emptyDescription:
     "Grup bisa berupa tim, divisi, kelas, atau angkatan. Sebuah acara mengharapkan satu grup, dan setiap orang di dalamnya yang tidak check-in dicatat tidak hadir.",
+  noDescription: "Tanpa keterangan.",
+  more: "Tindakan grup",
+  managePeople: "Orang",
   dialog: {
     editTitle: "Ubah grup",
     newTitle: "Grup baru",
@@ -17,15 +20,30 @@ export const groups = {
     descriptionHint: "Tidak wajib.",
     create: "Buat",
   },
-  sheet: {
+  members: {
+    title: "Orang di {{name}}",
     fallbackTitle: "Grup",
-    noDescription: "Tanpa keterangan.",
-    saveMembers: "Simpan anggota",
-    filter: "Saring direktori",
+    description:
+      "Centang setiap orang yang diharapkan grup ini. Hanya anggota yang bisa diharapkan hadir di sebuah acara.",
+    readOnly: "Inilah orang yang diharapkan grup ini. Admin yang mengubah daftarnya.",
+    filter: "Cari berdasarkan nama atau email",
+    selected: "{{selected}} dari {{total}} dipilih",
+    selectAll: "Pilih semua",
+    selectShown: "Pilih {{count}} yang tampil",
+    clear: "Kosongkan",
     noEmail: "tanpa email",
-    nobodyMatches: "Tidak ada yang cocok.",
-    deleteTitle: "Hapus {{name}}?",
-    deleteDescription: "Orangnya tetap ada di direktori. Hanya grupnya yang hilang.",
+    nobodyMatches: "Tidak ada yang cocok dengan {{query}}.",
+    clearFilter: "Hapus pencarian",
+    emptyTitle: "Belum ada yang bisa ditambahkan",
+    emptyDescription:
+      "Hanya akun dengan peran anggota yang bisa diharapkan hadir di sebuah acara, karena hanya anggota yang punya halaman check-in. Undang orang dulu dari halaman anggota.",
+    emptyReadOnly: "Grup ini belum mengharapkan siapa pun.",
+    save: "Simpan anggota",
+    close: "Tutup",
+  },
+  remove: {
+    title: "Hapus {{name}}?",
+    description: "Orangnya tetap ada di direktori. Hanya grupnya yang hilang.",
     keep: "Biarkan",
     deleting: "Menghapus…",
   },

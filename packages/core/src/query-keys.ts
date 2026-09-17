@@ -73,6 +73,8 @@ export const joinRequestMutationKeys = {
 export const peopleKeys = {
   all: ["people"] as const,
   list: (query = "") => [...peopleKeys.all, "list", query] as const,
+  /** The people an event can expect: members who still belong to the organization. */
+  expected: (query = "") => [...peopleKeys.all, "expected", query] as const,
 };
 
 export const peopleMutationKeys = {

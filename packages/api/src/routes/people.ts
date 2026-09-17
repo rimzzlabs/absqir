@@ -6,6 +6,7 @@ import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { match, P } from "ts-pattern";
 import { csvToRecords } from "#src/lib/csv";
+import { expectedAtEvents } from "#src/lib/directory";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
 
@@ -66,7 +67,14 @@ const listRoute = createRoute({
   path: "/people",
   tags: ["people"],
   summary: "List the directory of the active organization",
-  request: { query: z.object({ q: z.string().trim().max(120).optional() }) },
+  description:
+    "With `expected=true` the list holds only the people an event can expect: the accounts that still belong to the organization and carry the member role.",
+  request: {
+    query: z.object({
+      q: z.string().trim().max(120).optional(),
+      expected: z.literal("true").optional(),
+    }),
+  },
   responses: {
     200: {
       description: "People, by name",
@@ -368,7 +376,7 @@ app.use("/people/*", requireRole("organizer"));
 export const peopleRoutes = app
   .openapi(listRoute, async (c) => {
     const organizationId = organizationIdOf(c);
-    const { q } = c.req.valid("query");
+    const { q, expected } = c.req.valid("query");
     const needle = match(q)
       .with(P.string.minLength(1), (q) => `%${q.replaceAll(/[%_]/g, "")}%`)
       .otherwise(() => null);
@@ -387,6 +395,9 @@ export const peopleRoutes = app
                 ilike(person.identifier, needle),
               ),
             )
+            .otherwise(() => undefined),
+          match(expected)
+            .with("true", () => expectedAtEvents(c.var.db, organizationId))
             .otherwise(() => undefined),
         ),
       )

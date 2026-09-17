@@ -3,6 +3,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { A, F, pipe } from "@mobily/ts-belt";
 import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 import { match } from "ts-pattern";
+import { expectedAtEvents } from "#src/lib/directory";
 import { organizationGuard, organizationIdOf, requireRole, roleBelow } from "#src/lib/org-access";
 import type { AppEnv } from "#src/types";
 
@@ -182,7 +183,12 @@ async function findGroup(db: Database, organizationId: string, id: string) {
   return rows[0] ?? null;
 }
 
-async function membersOf(db: Database, groupId: string) {
+/**
+ * A group holds the people an event expects, so it reads back only those. A
+ * person who left the organization is dropped from their groups as they go,
+ * and this test keeps a group honest where that never ran.
+ */
+async function membersOf(db: Database, organizationId: string, groupId: string) {
   const rows = await db
     .select({
       personId: person.id,
@@ -192,7 +198,7 @@ async function membersOf(db: Database, groupId: string) {
     })
     .from(groupMember)
     .innerJoin(person, eq(person.id, groupMember.personId))
-    .where(eq(groupMember.groupId, groupId))
+    .where(and(eq(groupMember.groupId, groupId), expectedAtEvents(db, organizationId)))
     .orderBy(asc(sql`lower(${person.name})`));
 
   return A.map(rows, (row) => ({
@@ -203,7 +209,7 @@ async function membersOf(db: Database, groupId: string) {
 }
 
 async function detail(db: Database, row: GroupRow) {
-  const members = await membersOf(db, row.id);
+  const members = await membersOf(db, row.organizationId, row.id);
   return { ...toJson(row, members.length), members: [...members] };
 }
 
@@ -219,9 +225,13 @@ export const groupRoutes = app
     const organizationId = organizationIdOf(c);
 
     const rows = await c.var.db
-      .select({ row: group, memberCount: count(groupMember.personId) })
+      .select({ row: group, memberCount: count(person.id) })
       .from(group)
       .leftJoin(groupMember, eq(groupMember.groupId, group.id))
+      .leftJoin(
+        person,
+        and(eq(person.id, groupMember.personId), expectedAtEvents(c.var.db, organizationId)),
+      )
       .where(eq(group.organizationId, organizationId))
       .groupBy(group.id)
       .orderBy(asc(sql`lower(${group.name})`));
@@ -298,7 +308,7 @@ export const groupRoutes = app
 
       if (!updated) throw new Error("Update returned no row");
 
-      const members = await membersOf(c.var.db, id);
+      const members = await membersOf(c.var.db, organizationId, id);
 
       return c.json(toJson(updated, members.length), 200);
     } catch (error) {
@@ -331,7 +341,8 @@ export const groupRoutes = app
     const found = await findGroup(c.var.db, organizationId, id);
     if (!found) return c.json({ error: c.var.t("errors:notFound") }, 404);
 
-    // Only people of this organization can join; ids from elsewhere are dropped.
+    // Only a person this organization can expect at an event joins a group.
+    // An id from elsewhere, and an id whose account has left, are dropped.
     const wanted = [...new Set(personIds)];
     const valid = await match(wanted.length > 0)
       .with(
@@ -340,7 +351,13 @@ export const groupRoutes = app
           await c.var.db
             .select({ id: person.id })
             .from(person)
-            .where(and(eq(person.organizationId, organizationId), inArray(person.id, wanted))),
+            .where(
+              and(
+                eq(person.organizationId, organizationId),
+                inArray(person.id, wanted),
+                expectedAtEvents(c.var.db, organizationId),
+              ),
+            ),
       )
       .otherwise(async () => []);
 
