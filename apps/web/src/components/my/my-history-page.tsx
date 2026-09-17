@@ -133,11 +133,13 @@ function HistoryBody() {
 export interface MyHistoryPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function MyHistoryPage(props: MyHistoryPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <HistoryBody />
     </Providers>
   );

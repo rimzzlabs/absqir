@@ -16,6 +16,7 @@ import { PlusIcon, RepeatIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { type CalendarEntry, dayKey } from "@/components/calendar/calendar-entries";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 
 export interface DaySheetProps {
   /** Null keeps the sheet closed. */
@@ -28,6 +29,7 @@ export interface DaySheetProps {
 /** Everything on one day, with the room to say more than a cell can. */
 export function DaySheet(props: DaySheetProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const entries = match(props.day)
     .with(P.nullish, () => [])
     .otherwise((day) => props.entries.get(dayKey(day)) ?? []);
@@ -54,7 +56,7 @@ export function DaySheet(props: DaySheetProps) {
               .with({ kind: "event" }, (entry) => (
                 <a
                   key={entry.key}
-                  href={`/events/${entry.event.id}`}
+                  href={orgHref(`/events/${entry.event.id}`)}
                   className="border-border hover:bg-muted/40 block rounded-lg border p-3"
                 >
                   <div className="flex items-start justify-between gap-2">

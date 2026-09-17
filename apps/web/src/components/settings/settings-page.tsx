@@ -126,8 +126,9 @@ function SettingsBody(props: SettingsPageProps) {
 }
 
 export function SettingsPage(props: SettingsPageProps) {
+  // No slug: the account, which no organization owns.
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={null}>
       <SettingsBody {...props} />
     </Providers>
   );

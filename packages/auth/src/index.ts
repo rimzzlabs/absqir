@@ -1,3 +1,4 @@
+import { isReservedSlug, SLUG_RESERVED } from "@absqir/core/org-path";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import { deleteOrganizations, soleOwnerships } from "@absqir/db/accounts";
@@ -266,10 +267,22 @@ export function createAuth(options: CreateAuthOptions) {
           });
         },
         organizationHooks: {
+          // The slug is the first segment of every address the organization
+          // owns, so it sits next to the addresses absqir serves itself. A
+          // reserved one would hide a page the whole service needs.
+          beforeCreateOrganization: async ({ organization: fields }) => {
+            if (typeof fields.slug === "string" && isReservedSlug(fields.slug)) {
+              throw new APIError("BAD_REQUEST", { message: SLUG_RESERVED });
+            }
+          },
           // Better Auth takes any string as the logo. This instance stores a
           // small data URL of its own, the way an avatar is stored, so a
           // remote address or an oversized picture is refused here.
           beforeUpdateOrganization: async ({ organization: fields }) => {
+            if (typeof fields.slug === "string" && isReservedSlug(fields.slug)) {
+              throw new APIError("BAD_REQUEST", { message: SLUG_RESERVED });
+            }
+
             const logo = fields.logo;
             if (typeof logo !== "string") return;
 
@@ -466,15 +479,25 @@ export type Auth = ReturnType<typeof createAuth>;
 export type Session = Auth["$Infer"]["Session"];
 
 /** The status and message Better Auth attached, or null for any other error. */
-export function authErrorOf(error: unknown): { status: number; message: string } | null {
+export interface AuthErrorInfo {
+  status: number;
+  message: string;
+  /** The code Better Auth names the failure by, when it carries one. */
+  code: string | null;
+}
+
+export function authErrorOf(error: unknown): AuthErrorInfo | null {
   if (!(error instanceof APIError)) return null;
 
   const status = match(error.statusCode)
     .with(P.number, (statusCode) => statusCode)
     .otherwise(() => 400);
   const message = error.body?.message ?? error.message;
+  const code = match(error.body?.code)
+    .with(P.string, (code) => code)
+    .otherwise(() => null);
 
-  return { status, message };
+  return { status, message, code };
 }
 
 export { ac, isRoleName, ROLE_NAMES, type RoleName, roleAtLeast, roles } from "#src/roles";

@@ -1,4 +1,5 @@
 import { notificationBody, notificationTitle } from "@absqir/core/notification-text";
+import { orgPath } from "@absqir/core/org-path";
 import type { Database } from "@absqir/db";
 import { schema } from "@absqir/db";
 import type { NotificationChannel, NotificationType } from "@absqir/db/schema";
@@ -186,7 +187,7 @@ export async function emailNotifications(
       .from(user)
       .where(inArray(user.id, userIds)),
     db
-      .select({ id: organization.id, name: organization.name })
+      .select({ id: organization.id, name: organization.name, slug: organization.slug })
       .from(organization)
       .where(inArray(organization.id, organizationIds)),
   ]);
@@ -195,6 +196,9 @@ export async function emailNotifications(
   const localeOf = new Map(A.map(people, (row) => [row.id, row.locale ?? "en"] as const));
   const zoneOf = new Map(A.map(people, (row) => [row.id, row.timezone] as const));
   const nameOf = new Map(A.map(organizations, (row) => [row.id, row.name]));
+  // A row holds the address inside the organization, not the whole one, so
+  // a slug that changes later never leaves a stored link pointing nowhere.
+  const slugOf = new Map(A.map(organizations, (row) => [row.id, row.slug]));
 
   for (const row of worth) {
     const to = emailOf.get(row.userId);
@@ -212,13 +216,28 @@ export async function emailNotifications(
         body: notificationBody(t, row, { timezone: zoneOf.get(row.userId) ?? null, locale }),
         organizationName:
           nameOf.get(row.organizationId) ?? t("email:notification.yourOrganization"),
-        url: `${origin}${row.href ?? "/notifications"}`,
+        url: linkOf({
+          origin,
+          slug: slugOf.get(row.organizationId),
+          href: row.href ?? "/notifications",
+        }),
         action: t(`email:actions.${row.type}`),
       });
     } catch (error) {
       console.error({ message: "notification email failed", id: row.id, error });
     }
   }
+}
+
+/**
+ * The whole address an email points at. Without a slug there is no page to
+ * name, so the link lands on the root and the site takes the reader from
+ * there.
+ */
+function linkOf(params: { origin: string; slug: string | undefined; href: string }): string {
+  return match(params.slug)
+    .with(P.string.minLength(1), (slug) => `${params.origin}${orgPath(slug, params.href)}`)
+    .otherwise(() => `${params.origin}/`);
 }
 
 /**

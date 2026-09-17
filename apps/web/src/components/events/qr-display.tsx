@@ -7,18 +7,22 @@ import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
 import { FormError } from "@/components/shared/form-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useEvent } from "@/queries/use-events";
 import { useQrToken } from "@/queries/use-qr-token";
 
 export interface QrDisplayProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   eventId: string;
 }
 
 /** The room screen. Big code, few words, rotates on its own. */
 function QrScreen(props: QrDisplayProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const event = useEvent(props.eventId);
   const qr = useQrToken(props.eventId);
   const data = event.data;
@@ -28,7 +32,7 @@ function QrScreen(props: QrDisplayProps) {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-10 text-center">
-      <BackLink href={`/events/${props.eventId}`} className="absolute top-4 left-4">
+      <BackLink href={orgHref(`/events/${props.eventId}`)} className="absolute top-4 left-4">
         {t("common:actions.back")}
       </BackLink>
 
@@ -97,7 +101,7 @@ function QrScreen(props: QrDisplayProps) {
 
 export function QrDisplay(props: QrDisplayProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <QrScreen {...props} />
     </Providers>
   );

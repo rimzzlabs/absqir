@@ -18,11 +18,14 @@ import { AuthHeading } from "@/components/auth/auth-heading";
 import { ReportAction } from "@/components/check-in/report-action";
 import { Providers } from "@/components/providers";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useCheckIn } from "@/mutations/use-check-in";
 
 export interface CheckInPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   eventId: string;
   /** From the scanned URL. Null when the page was opened by hand. */
   token: string | null;
@@ -48,6 +51,7 @@ function Mark(props: { children: React.ReactNode; className: string }) {
  */
 function CheckInBody(props: CheckInPageProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const checkIn = useCheckIn();
   const { mutate } = checkIn;
 
@@ -65,10 +69,13 @@ function CheckInBody(props: CheckInPageProps) {
           title={t("checkin:scanPage.title")}
           description={t("checkin:scanPage.description")}
         />
-        <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
+        <a href={orgHref("/check-in")} className={buttonVariants({ className: "w-full" })}>
           {t("checkin:scanPage.openScanner")}
         </a>
-        <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
+        <a
+          href={orgHref("/my/events")}
+          className={buttonVariants({ variant: "ghost", className: "w-full" })}
+        >
           {t("checkin:result.myEvents")}
         </a>
       </div>
@@ -102,7 +109,7 @@ function CheckInBody(props: CheckInPageProps) {
             only honest primary action is a fresh scan. */}
         {match(checkIn.tokenExpired)
           .with(true, () => (
-            <a href="/check-in" className={buttonVariants({ className: "w-full" })}>
+            <a href={orgHref("/check-in")} className={buttonVariants({ className: "w-full" })}>
               <ScanIcon />
               {t("checkin:scanPage.scanAgain")}
             </a>
@@ -114,14 +121,17 @@ function CheckInBody(props: CheckInPageProps) {
                 {t("common:actions.tryAgain")}
               </Button>
               <a
-                href="/check-in"
+                href={orgHref("/check-in")}
                 className={buttonVariants({ variant: "outline", className: "w-full" })}
               >
                 {t("checkin:scanPage.scanMyself")}
               </a>
             </>
           ))}
-        <a href="/my/events" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
+        <a
+          href={orgHref("/my/events")}
+          className={buttonVariants({ variant: "ghost", className: "w-full" })}
+        >
           {t("checkin:result.myEvents")}
         </a>
       </div>
@@ -145,12 +155,15 @@ function CheckInBody(props: CheckInPageProps) {
         </div>
         <p className="text-muted-foreground text-sm">{t("checkin:result.saved")}</p>
         <a
-          href="/my/events"
+          href={orgHref("/my/events")}
           className={buttonVariants({ variant: "outline", className: "w-full" })}
         >
           {t("checkin:result.myEvents")}
         </a>
-        <a href="/my/history" className={buttonVariants({ variant: "ghost", className: "w-full" })}>
+        <a
+          href={orgHref("/my/history")}
+          className={buttonVariants({ variant: "ghost", className: "w-full" })}
+        >
           {t("checkin:result.myHistory")}
         </a>
       </Reveal>
@@ -181,7 +194,7 @@ function CheckInBody(props: CheckInPageProps) {
 
 export function CheckInPage(props: CheckInPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <CheckInBody {...props} />
     </Providers>
   );

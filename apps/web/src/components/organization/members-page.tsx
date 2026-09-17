@@ -16,6 +16,8 @@ import { SettingsSection } from "@/components/shared/settings-section";
 export interface MembersPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   role: RoleName;
   currentUserId: string;
 }
@@ -77,7 +79,7 @@ function MembersBody(props: MembersPageProps) {
 
 export function MembersPage(props: MembersPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <MembersBody {...props} />
     </Providers>
   );

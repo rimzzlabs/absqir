@@ -26,22 +26,5 @@ export function inviteSchema(t: Translate) {
   });
 }
 
-export function organizationSettingsSchema(t: Translate) {
-  return z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, t("common:validation.nameRequired"))
-      .max(80, t("common:validation.nameTooLong")),
-    slug: z
-      .string()
-      .trim()
-      .min(2, t("common:validation.slugTooShort"))
-      .max(40, t("common:validation.slugTooLong"))
-      .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, t("common:validation.slugChars")),
-  });
-}
-
 export type GroupValues = z.infer<ReturnType<typeof groupSchema>>;
 export type InviteValues = z.infer<ReturnType<typeof inviteSchema>>;
-export type OrganizationSettingsValues = z.infer<ReturnType<typeof organizationSettingsSchema>>;

@@ -1,4 +1,5 @@
 import { authErrorOf, isRoleName } from "@absqir/auth";
+import { isSlugTakenCode, SLUG_RESERVED } from "@absqir/core/org-path";
 import { schema } from "@absqir/db";
 import { findOrganizationForEmail, findPendingJoinRequest } from "@absqir/db/domains";
 import { isLocale, LOCALES } from "@absqir/i18n/locales";
@@ -443,7 +444,14 @@ export const onboardingRoutes = app
       if (!known) throw error;
 
       if (known.status === 403) return c.json({ error: known.message }, 403);
-      if (known.status === 400 && /slug/i.test(known.message)) {
+
+      // A slug absqir keeps, and a slug another organization holds, both
+      // leave the reader on the same field with a different thing to fix.
+      if (known.message === SLUG_RESERVED) {
+        return c.json({ error: c.var.t("errors:slugReserved") }, 409);
+      }
+
+      if (isSlugTakenCode(known.code)) {
         return c.json({ error: c.var.t("errors:slugTaken") }, 409);
       }
 

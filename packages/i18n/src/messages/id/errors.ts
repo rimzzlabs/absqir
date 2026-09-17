@@ -117,6 +117,7 @@ export const errors = {
   qrCodeExpired: "Kode itu sudah kedaluwarsa. Pindai layarnya lagi.",
   signInFirst: "Masuk dulu.",
   slugTaken: "Nama pendek itu sudah dipakai. Pilih yang lain.",
+  slugReserved: "Nama pendek itu disimpan absqir. Pilih yang lain.",
   someoneWithThatEmailIsListed: "Sudah ada orang dengan email atau nomor induk itu.",
   noRefusedCheckInToReport:
     "Tidak ada check-in yang ditolak di acara ini, jadi tidak ada yang perlu dilaporkan.",

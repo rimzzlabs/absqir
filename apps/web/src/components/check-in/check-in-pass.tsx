@@ -18,6 +18,7 @@ import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
 import { FormError } from "@/components/shared/form-error";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface CheckInPassProps {
@@ -105,6 +106,7 @@ function NextBlock(props: { event: MyEvent }) {
  */
 export function CheckInPass(props: CheckInPassProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const running = A.filter(props.events, (row) => row.status === "running");
   const next = A.getBy(props.events, (row) => row.status === "scheduled");
 
@@ -117,7 +119,10 @@ export function CheckInPass(props: CheckInPassProps) {
         </CardTitle>
         <CardDescription>{t("checkin:pass.description")}</CardDescription>
         <CardAction>
-          <a href="/my/events" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/my/events")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("checkin:pass.myEvents")}
             <CaretRightIcon />
           </a>

@@ -71,6 +71,10 @@
     "./slug": {
       "development": "./src/slug.ts",
       "default": "./dist/slug.js"
+    },
+    "./org-path": {
+      "development": "./src/org-path.ts",
+      "default": "./dist/org-path.js"
     }
   },
   "imports": {

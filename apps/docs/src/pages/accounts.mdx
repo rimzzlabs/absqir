@@ -93,20 +93,70 @@ same color, and the letters keep a contrast above 7:1 in both themes.
 A change of email or password needs a session read less than an hour ago.
 An older session is told to sign in again first.
 
-Tabs, filters and searches live in the address bar: `/events?scope=past`,
-`/organization/members?q=ada`, `/settings?tab=security`. A link carries the
-view with it, and the back button returns to the previous one.
+Tabs, filters and searches live in the address bar:
+`/acme/events?scope=past`, `/acme/organization/members?q=ada`,
+`/settings?tab=security`. A link carries the view with it, and the back
+button returns to the previous one.
+
+## The address of an organization
+
+Every organization has a short name, the slug. The slug is the first part of
+the address of every page the organization owns.
+
+```
+/acme                      the dashboard
+/acme/events               the events
+/acme/organization/members the people in it
+/acme/my/history           what one member attended
+```
+
+Your own pages keep the root, because one account holds one profile across
+every organization it belongs to: `/settings`, `/account`, `/sign-in`,
+`/onboarding`. So do the public pages: an invitation at `/invite/<id>`, the
+public face of an event at `/e/<id>`, and the check-in link a QR code opens
+at `/a/<id>`.
+
+Open `/` and absqir sends you to the organization you last used. Open the
+address of another organization you belong to and that page shows it, so two
+tabs can hold two organizations at once. The organization switcher at the
+top of the sidebar moves between them.
+
+An address under an organization you do not belong to answers 404, the same
+as one that does not exist. absqir never tells a stranger which
+organizations it holds.
+
+### Choosing a slug
+
+A slug carries lower case letters, digits, and a hyphen between them. It is
+two to forty characters long, and it never starts or ends with a hyphen.
+
+Two organizations cannot hold the same slug. The create form checks while
+you type and shows the address your pages will live at. If another
+organization already holds the name, the form says so before you submit.
+
+absqir keeps some names for itself, such as `settings`, `api` and
+`sign-in`. A page of the service sits at each one, so no organization can
+take it. The form refuses a reserved name the moment you type it.
+
+### Changing a slug
+
+An owner and an admin can change the slug in **Organization → General**.
+
+A new slug is a new address. Every saved link and every bookmark on the old
+address stops working, and a person who opens one gets a page not found.
+absqir asks you to confirm, and it names both addresses before you save.
+Tell your members before you change it.
 
 ## The organization menu
 
 The sidebar carries an **Organization** menu. An owner and an admin see
 three entries. An organizer sees **Groups** alone.
 
-| Entry            | Address                  | What it holds                        |
-| ---------------- | ------------------------ | ------------------------------------ |
-| **Organization** | `/organization`          | General, Places and Domains          |
-| **Members**      | `/organization/members`  | The people in it, and the invitations |
-| **Groups**       | `/organization/groups`   | The groups an event expects          |
+| Entry            | Address                        | What it holds                         |
+| ---------------- | ------------------------------ | ------------------------------------- |
+| **Organization** | `/<slug>/organization`         | General, Places and Domains           |
+| **Members**      | `/<slug>/organization/members` | The people in it, and the invitations |
+| **Groups**       | `/<slug>/organization/groups`  | The groups an event expects           |
 
 ### Organization
 
@@ -115,7 +165,8 @@ three entries. An organizer sees **Groups** alone.
 - The logo, the name, and the day the organization started. The logo is a
   small picture, shrunk to 128px in the browser. It shows in the workspace
   switcher at the top of the sidebar.
-- The name and the slug, saved together.
+- The name and the slug, saved together. The slug is the address of every
+  page here, so a change to it asks you to confirm first.
 - The slug and the organization ID, each with a copy button. The operator
   types the slug on the command line. Quote the ID when you report a
   problem.

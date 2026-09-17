@@ -27,6 +27,8 @@ import { type Group, useGroups } from "@/queries/use-groups";
 export interface GroupsPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   role: RoleName;
 }
 
@@ -130,7 +132,7 @@ function GroupsBody(props: GroupsPageProps) {
 
 export function GroupsPage(props: GroupsPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <GroupsBody {...props} />
     </Providers>
   );

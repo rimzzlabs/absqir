@@ -21,6 +21,8 @@ import { type Event, type EventScope, useEvents } from "@/queries/use-events";
 export interface EventsPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   role: RoleName;
 }
 
@@ -157,7 +159,7 @@ function EventsBody(props: EventsPageProps) {
 
 export function EventsPage(props: EventsPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <EventsBody {...props} />
     </Providers>
   );

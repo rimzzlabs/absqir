@@ -56,8 +56,9 @@ function OnboardingBody(props: OnboardingFlowProps) {
 }
 
 export function OnboardingFlow(props: OnboardingFlowProps) {
+  // No slug: onboarding, which runs before the first organization.
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={null}>
       <OnboardingBody {...props} />
     </Providers>
   );

@@ -23,12 +23,15 @@ import { Providers } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
 import { QueryError } from "@/components/shared/query-error";
 import { type LeaveStatus, LeaveStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import { useMyLeave } from "@/queries/use-leave";
 import { useMyEvents, useMyHistory } from "@/queries/use-my";
 
 export interface MemberHomePageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   userName: string;
   organizationName: string;
   /** The account's zone. Null follows the device. */
@@ -37,6 +40,7 @@ export interface MemberHomePageProps {
 
 function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const waitingNote = t("home:member.leaveWaiting", { count: props.pending });
   const restingNote = match(props.latest)
     .with(P.string.minLength(1), () => t("home:member.leaveLatest"))
@@ -66,7 +70,10 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
           .otherwise(() => null)}
       </CardHeader>
       <CardContent>
-        <a href="/my/leave" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <a
+          href={orgHref("/my/leave")}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
           {t("home:member.myLeave")}
           <CaretRightIcon />
         </a>
@@ -77,6 +84,7 @@ function LeaveCard(props: { pending: number; latest: LeaveStatus | null }) {
 
 function MemberHomeBody(props: MemberHomePageProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const events = useMyEvents();
   const history = useMyHistory();
   const leave = useMyLeave({ scope: "all" });
@@ -106,7 +114,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
           </>
         }
         actions={
-          <a href="/check-in" className={buttonVariants()}>
+          <a href={orgHref("/check-in")} className={buttonVariants()}>
             <ScanIcon />
             {t("home:member.checkIn")}
           </a>
@@ -147,7 +155,7 @@ function MemberHomeBody(props: MemberHomePageProps) {
 /** A member's front page: what runs now, the days ahead, and how it has gone. */
 export function MemberHomePage(props: MemberHomePageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <MemberHomeBody {...props} />
     </Providers>
   );

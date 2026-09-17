@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeHref, isActivePath } from "../src/active-path";
+import { activeHref, activeNavHref, isActivePath } from "../src/active-path";
 
 const SIDEBAR = [
   "/",
@@ -54,5 +54,49 @@ describe("activeHref", () => {
 
   it("answers null for an empty sidebar", () => {
     expect(activeHref([], "/events")).toBe(null);
+  });
+});
+
+describe("activeNavHref", () => {
+  const ORG_SIDEBAR = [
+    "/acme",
+    "/acme/events",
+    "/acme/organization",
+    "/acme/organization/members",
+    "/settings",
+  ];
+
+  it("lights the dashboard on the dashboard", () => {
+    expect(activeNavHref({ hrefs: ORG_SIDEBAR, currentPath: "/acme", home: "/acme" })).toBe(
+      "/acme",
+    );
+  });
+
+  it("lights the entry that owns a page under it", () => {
+    expect(
+      activeNavHref({ hrefs: ORG_SIDEBAR, currentPath: "/acme/events/123", home: "/acme" }),
+    ).toBe("/acme/events");
+  });
+
+  it("picks the longest entry that covers the page", () => {
+    expect(
+      activeNavHref({
+        hrefs: ORG_SIDEBAR,
+        currentPath: "/acme/organization/members",
+        home: "/acme",
+      }),
+    ).toBe("/acme/organization/members");
+  });
+
+  it("lights nothing on a page with no entry of its own", () => {
+    expect(
+      activeNavHref({ hrefs: ORG_SIDEBAR, currentPath: "/acme/notifications", home: "/acme" }),
+    ).toBeNull();
+  });
+
+  it("lights an account entry from inside an organization", () => {
+    expect(activeNavHref({ hrefs: ORG_SIDEBAR, currentPath: "/settings", home: "/acme" })).toBe(
+      "/settings",
+    );
   });
 });

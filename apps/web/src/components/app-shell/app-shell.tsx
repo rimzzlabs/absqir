@@ -48,7 +48,7 @@ const PAGE =
  */
 export function AppShell(props: AppShellProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.active?.slug ?? null}>
       <SidebarProvider defaultOpen={props.sidebarOpen ?? true}>
         <AppSidebar
           memberships={props.memberships}

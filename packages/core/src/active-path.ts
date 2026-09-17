@@ -29,3 +29,23 @@ export function activeHref(hrefs: readonly string[], currentPath: string): strin
 
   return longest;
 }
+
+export interface ActiveNavHrefParams {
+  hrefs: readonly string[];
+  currentPath: string;
+  /**
+   * The dashboard address, such as `/` or `/acme`. It is an ancestor of
+   * every page under it, so without this rule it would be the entry left
+   * lit on every page that has no entry of its own.
+   */
+  home: string;
+}
+
+/** The sidebar entry the reader is standing on, with the dashboard rule. */
+export function activeNavHref(params: ActiveNavHrefParams): string | null {
+  const found = activeHref(params.hrefs, params.currentPath);
+
+  if (found === params.home && params.currentPath !== params.home) return null;
+
+  return found;
+}

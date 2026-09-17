@@ -8,6 +8,7 @@ import { A } from "@mobily/ts-belt";
 import { match, P } from "ts-pattern";
 import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon";
 import { FormError } from "@/components/shared/form-error";
+import { useOrgHref } from "@/lib/org-path";
 import { useMarkRead } from "@/mutations/use-mark-read";
 import { type Notification, useNotifications } from "@/queries/use-notifications";
 
@@ -28,6 +29,7 @@ function pick(rows: Notification[]): Notification[] {
 }
 
 function PreviewRow(props: { notification: Notification; onRead: (id: string) => Promise<void> }) {
+  const orgHref = useOrgHref();
   const { notification } = props;
   const t = useTranslate();
   // The row keeps the key it was written from, so it reads in whatever
@@ -81,7 +83,9 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
   );
 
   if (notification.href) {
-    const href = notification.href;
+    // A row holds the address inside the organization. The slug goes in
+    // front here, so a renamed organization never breaks an old row.
+    const href = orgHref(notification.href);
 
     return (
       <li>
@@ -117,6 +121,7 @@ function PreviewRow(props: { notification: Notification; onRead: (id: string) =>
 
 export function NotificationPreview(props: NotificationPreviewProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const notifications = useNotifications("all", { enabled: props.open });
   const markRead = useMarkRead();
 
@@ -176,7 +181,7 @@ export function NotificationPreview(props: NotificationPreviewProps) {
 
       <div className="border-border border-t p-1">
         <a
-          href="/notifications"
+          href={orgHref("/notifications")}
           className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
         >
           {t("shell:notifications.all")}

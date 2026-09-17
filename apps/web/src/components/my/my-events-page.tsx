@@ -119,11 +119,13 @@ function MyEventsBody() {
 export interface MyEventsPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function MyEventsPage(props: MyEventsPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <MyEventsBody />
     </Providers>
   );

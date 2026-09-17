@@ -16,6 +16,7 @@ import {
 import { A } from "@mobily/ts-belt";
 import { MapPinIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
+import { useOrgHref } from "@/lib/org-path";
 import { useLocations } from "@/queries/use-locations";
 
 /** The select needs a value for "no place", and an empty string is not one. */
@@ -38,6 +39,7 @@ export interface PlacePickerProps {
  */
 export function PlacePicker(props: PlacePickerProps) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
   const places = useLocations();
   const rows = places.data ?? [];
   const chosen = match(props.locationId)
@@ -94,7 +96,10 @@ export function PlacePicker(props: PlacePickerProps) {
           {match(rows.length)
             .with(0, () => (
               <FieldDescription>
-                <a href="/organization?tab=places" className="underline underline-offset-4">
+                <a
+                  href={orgHref("/organization?tab=places")}
+                  className="underline underline-offset-4"
+                >
                   {t("common:placePicker.savePlaceLink")}
                 </a>{" "}
                 {t("common:placePicker.savePlaceRest")}

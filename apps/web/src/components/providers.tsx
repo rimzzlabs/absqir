@@ -8,6 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import type { ReactNode } from "react";
 import { IslandBoundary } from "@/components/shared/island-boundary";
+import { OrgSlugProvider } from "@/lib/org-path";
 import { getQueryClient } from "@/lib/query-client";
 import { useMotionPreference } from "@/lib/use-preferences";
 
@@ -18,6 +19,12 @@ export interface ProvidersProps {
    * `document` there would disagree with the one the browser hydrates with.
    */
   locale: Locale;
+  /**
+   * The organization the address names, for every link this island writes.
+   * Left out on an account page and on a public page, where no organization
+   * owns the view.
+   */
+  orgSlug?: string | null;
   children: ReactNode;
 }
 
@@ -35,15 +42,17 @@ export function Providers(props: ProvidersProps) {
 
   return (
     <NuqsAdapter>
-      <I18nProvider locale={props.locale}>
-        <QueryClientProvider client={getQueryClient()}>
-          <MotionProvider reducedMotion={REDUCED_MOTION[motion]}>
-            <TooltipProvider>
-              <IslandBoundary>{props.children}</IslandBoundary>
-            </TooltipProvider>
-          </MotionProvider>
-        </QueryClientProvider>
-      </I18nProvider>
+      <OrgSlugProvider value={props.orgSlug ?? null}>
+        <I18nProvider locale={props.locale}>
+          <QueryClientProvider client={getQueryClient()}>
+            <MotionProvider reducedMotion={REDUCED_MOTION[motion]}>
+              <TooltipProvider>
+                <IslandBoundary>{props.children}</IslandBoundary>
+              </TooltipProvider>
+            </MotionProvider>
+          </QueryClientProvider>
+        </I18nProvider>
+      </OrgSlugProvider>
     </NuqsAdapter>
   );
 }

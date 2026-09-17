@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@absqir/core": "workspace:^",
     "@absqir/db": "workspace:^",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",

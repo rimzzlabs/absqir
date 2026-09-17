@@ -1,4 +1,5 @@
-import { activeHref, isActivePath } from "@absqir/core/active-path";
+import { activeNavHref, isActivePath } from "@absqir/core/active-path";
+import { orgPath } from "@absqir/core/org-path";
 import { A } from "@mobily/ts-belt";
 import {
   BuildingsIcon,
@@ -50,12 +51,22 @@ export type NavGroupId =
   | "you";
 
 export interface NavItem {
+  /**
+   * The address inside the organization, such as `/events`. `navFor` puts
+   * the slug in front of it. An account entry carries its whole address
+   * already, because no slug belongs there.
+   */
   href: string;
   /** Named, not worded: the sidebar reads the name in the reader's language. */
   id: NavId;
   icon: Icon;
   /** Lowest role that sees the entry. */
   minimum: RoleName;
+  /**
+   * An account entry keeps its address at the root. One account holds one
+   * profile across every organization, so the settings page has no slug.
+   */
+  scope?: "account";
 }
 
 export interface NavGroup {
@@ -108,7 +119,9 @@ export const MANAGER_NAV: NavGroup[] = [
   },
   {
     id: "other",
-    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "organizer" }],
+    items: [
+      { href: "/settings", id: "settings", icon: GearIcon, minimum: "organizer", scope: "account" },
+    ],
   },
 ];
 
@@ -136,7 +149,9 @@ export const MEMBER_NAV: NavGroup[] = [
   },
   {
     id: "other",
-    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "member" }],
+    items: [
+      { href: "/settings", id: "settings", icon: GearIcon, minimum: "member", scope: "account" },
+    ],
   },
 ];
 
@@ -151,14 +166,30 @@ export const SOLO_NAV: NavGroup[] = [
   },
   {
     id: "you",
-    items: [{ href: "/settings", id: "settings", icon: GearIcon, minimum: "member" }],
+    items: [
+      { href: "/settings", id: "settings", icon: GearIcon, minimum: "member", scope: "account" },
+    ],
   },
 ];
 
 /** The public repository, linked from the sidebar footer. */
 export const GITHUB_URL = "https://github.com/rimzzlabs/absqir";
 
-export function navFor(role: RoleName): NavGroup[] {
+export interface NavForParams {
+  role: RoleName;
+  /** The organization the address names. Every entry hangs under it. */
+  slug: string;
+}
+
+/** The address an entry points at, with the slug in front where it belongs. */
+function hrefOf(item: NavItem, slug: string): string {
+  return match(item.scope)
+    .with("account", () => item.href)
+    .otherwise(() => orgPath(slug, item.href));
+}
+
+export function navFor(params: NavForParams): NavGroup[] {
+  const { role, slug } = params;
   const groups = match(roleAtLeast(role, "organizer"))
     .with(true, () => MANAGER_NAV)
     .otherwise(() => MEMBER_NAV);
@@ -166,17 +197,33 @@ export function navFor(role: RoleName): NavGroup[] {
   return groups
     .map((group) => ({
       ...group,
-      items: A.filter(group.items, (item) => roleAtLeast(role, item.minimum)),
+      items: A.map(
+        A.filter(group.items, (item) => roleAtLeast(role, item.minimum)),
+        (item) => ({ ...item, href: hrefOf(item, slug) }),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 }
 
+/** A member's one action, pointed at the organization in the address. */
+export function checkInEntry(slug: string): NavItem {
+  return { ...CHECK_IN, href: orgPath(slug, CHECK_IN.href) };
+}
+
+export interface ActiveHrefParams {
+  groups: readonly NavGroup[];
+  currentPath: string;
+  /** The dashboard of the organization, such as `/acme`. */
+  home: string;
+}
+
 /** The entry the reader is standing on, across every group in the sidebar. */
-export function activeHrefFor(groups: readonly NavGroup[], currentPath: string): string | null {
-  return activeHref(
-    A.flatMap(groups, (group) => A.map(group.items, (item) => item.href)),
-    currentPath,
-  );
+export function activeHrefFor(params: ActiveHrefParams): string | null {
+  return activeNavHref({
+    hrefs: A.flatMap(params.groups, (group) => A.map(group.items, (item) => item.href)),
+    currentPath: params.currentPath,
+    home: params.home,
+  });
 }
 
 export { isActivePath };

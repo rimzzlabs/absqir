@@ -28,6 +28,7 @@ import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
 import { LeaveStatusBadge } from "@/components/shared/status-badge";
 import { type DecideLeaveValues, decideLeaveSchema } from "@/lib/leave-schemas";
+import { useOrgHref } from "@/lib/org-path";
 import { useDecideLeave } from "@/mutations/use-decide-leave";
 import { type LeaveRequest, type LeaveScope, useLeaveQueue } from "@/queries/use-leave";
 
@@ -126,7 +127,15 @@ function DecisionDialog(props: { pending: Decision; onClose: () => void }) {
   );
 }
 
-function leaveColumns(t: Translate, onDecide: (d: Decision) => void): DataColumn<LeaveRequest>[] {
+interface LeaveColumnsParams {
+  t: Translate;
+  onDecide: (d: Decision) => void;
+  /** From `useOrgHref`, because a plain function cannot call the hook. */
+  orgHref: (path: string) => string;
+}
+
+function leaveColumns(params: LeaveColumnsParams): DataColumn<LeaveRequest>[] {
+  const { t, onDecide, orgHref } = params;
   return [
     {
       key: "person",
@@ -140,7 +149,7 @@ function leaveColumns(t: Translate, onDecide: (d: Decision) => void): DataColumn
       header: t("leave:event"),
       cell: (row) => (
         <>
-          <a href={`/events/${row.eventId}`} className="hover:underline">
+          <a href={orgHref(`/events/${row.eventId}`)} className="hover:underline">
             {row.eventTitle}
           </a>
           <p className="text-muted-foreground text-xs">
@@ -213,6 +222,7 @@ function Queue(props: {
   onDecide: (d: Decision) => void;
 }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   if (props.rows.length === 0) {
     return (
@@ -239,7 +249,7 @@ function Queue(props: {
   return (
     <DataTable
       label={t("leave:tableLabel")}
-      columns={leaveColumns(t, props.onDecide)}
+      columns={leaveColumns({ t, onDecide: props.onDecide, orgHref })}
       rows={props.rows}
       getKey={(row) => row.id}
     />
@@ -287,11 +297,13 @@ function LeaveBody() {
 export interface LeavePageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function LeavePage(props: LeavePageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <LeaveBody />
     </Providers>
   );

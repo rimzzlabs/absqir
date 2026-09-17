@@ -24,6 +24,7 @@ import {
 } from "@absqir/ui/chart";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
+import { useOrgHref } from "@/lib/org-path";
 
 const { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } = Recharts;
 
@@ -49,6 +50,7 @@ function ChartCard(props: {
   children: React.ReactNode;
 }) {
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   return (
     <Card>
@@ -56,7 +58,10 @@ function ChartCard(props: {
         <CardTitle>{props.title}</CardTitle>
         <CardDescription>{props.description}</CardDescription>
         <CardAction>
-          <a href="/reports" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <a
+            href={orgHref("/reports")}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             {t("home:charts.reports")}
             <CaretRightIcon />
           </a>

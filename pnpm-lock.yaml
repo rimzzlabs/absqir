@@ -263,6 +263,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@absqir/core':
+        specifier: workspace:^
+        version: link:../core
       '@absqir/db':
         specifier: workspace:^
         version: link:../db

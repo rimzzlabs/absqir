@@ -5,6 +5,7 @@ import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { match } from "ts-pattern";
 import { EventStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import type { Event } from "@/queries/use-events";
 
 function Counts(props: { event: Event }) {
@@ -38,6 +39,7 @@ function Counts(props: { event: Event }) {
 
 /** One event as a card. The whole card is the link. */
 export function EventCard(props: { event: Event }) {
+  const orgHref = useOrgHref();
   const { event } = props;
   const t = useTranslate();
   const startsAt = new Date(event.startsAt);
@@ -47,7 +49,7 @@ export function EventCard(props: { event: Event }) {
   return (
     <li className="min-w-0">
       <a
-        href={`/events/${event.id}`}
+        href={orgHref(`/events/${event.id}`)}
         className="bg-card text-card-foreground ring-foreground/10 hover:ring-primary/40 focus-visible:ring-ring flex h-full flex-col gap-3 rounded-xl p-4 ring-1 transition-[box-shadow] focus-visible:ring-2 focus-visible:outline-none"
       >
         <div className="flex items-center justify-between gap-3">

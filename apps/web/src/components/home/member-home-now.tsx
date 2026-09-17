@@ -8,6 +8,7 @@ import { ClockIcon, ScanIcon, TicketIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
+import { useOrgHref } from "@/lib/org-path";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface MemberHomeNowProps {
@@ -27,6 +28,7 @@ export function pickNow(events: readonly MyEvent[]): MyEvent | null {
 function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
   const { event } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
 
   if (event.record) {
     return (
@@ -46,7 +48,7 @@ function Actions(props: { event: MyEvent; onPass: (id: string) => void }) {
   if (event.status === "running") {
     return (
       <div className="flex flex-wrap gap-2">
-        <a href="/check-in" className={buttonVariants({ size: "lg" })}>
+        <a href={orgHref("/check-in")} className={buttonVariants({ size: "lg" })}>
           <ScanIcon />
           {t("home:member.checkIn")}
         </a>

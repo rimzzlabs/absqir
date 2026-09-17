@@ -132,7 +132,11 @@ export const common = {
   organizationForm: {
     name: "Nama organisasi",
     slug: "Nama pendek",
-    slugHint: "Huruf kecil, angka, dan tanda hubung. Nama ini muncul di tautan.",
+    slugHint: "Huruf kecil, angka, dan tanda hubung. Nama ini menjadi alamat halaman Anda.",
+    slugChecking: "Memeriksa nama pendek…",
+    slugFree: "Halaman Anda akan berada di {{address}}.",
+    slugTaken: "Nama pendek itu sudah dipakai. Pilih yang lain.",
+    slugReserved: "Nama pendek itu disimpan absqir. Pilih yang lain.",
   },
   leaveOrganization: {
     rowTitle: "Keluar dari {{name}}",

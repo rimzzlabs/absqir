@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toSlugDraft } from "../src/slug";
+import { isSlug, toSlug, toSlugDraft } from "../src/slug";
 
 describe("toSlugDraft", () => {
   it("turns a space into a hyphen", () => {
@@ -51,5 +51,57 @@ describe("toSlugDraft", () => {
 
   it("agrees with a slug that is already clean", () => {
     expect(toSlugDraft("yayasan-contoh-2026")).toBe("yayasan-contoh-2026");
+  });
+});
+
+describe("isSlug", () => {
+  it("accepts a finished slug", () => {
+    expect(isSlug("acme")).toBe(true);
+    expect(isSlug("acme-corp")).toBe(true);
+    expect(isSlug("a1")).toBe(true);
+  });
+
+  it("refuses a slug that is too short", () => {
+    expect(isSlug("a")).toBe(false);
+    expect(isSlug("")).toBe(false);
+  });
+
+  it("refuses a hyphen at either end", () => {
+    expect(isSlug("-acme")).toBe(false);
+    expect(isSlug("acme-")).toBe(false);
+  });
+
+  it("refuses a character the address bar cannot carry", () => {
+    expect(isSlug("Acme")).toBe(false);
+    expect(isSlug("acme corp")).toBe(false);
+    expect(isSlug("acme_corp")).toBe(false);
+  });
+
+  it("refuses a slug over forty characters", () => {
+    expect(isSlug("a".repeat(40))).toBe(true);
+    expect(isSlug("a".repeat(41))).toBe(false);
+  });
+});
+
+describe("toSlug", () => {
+  it("builds a slug from a name", () => {
+    expect(toSlug("Acme Corp")).toBe("acme-corp");
+  });
+
+  it("drops the accent and the symbol", () => {
+    expect(toSlug("Café & Co")).toBe("cafe-co");
+  });
+
+  it("leaves no hyphen at either end", () => {
+    expect(toSlug("  Acme  ")).toBe("acme");
+    expect(toSlug("Acme -")).toBe("acme");
+  });
+
+  it("cuts a long name to forty characters", () => {
+    expect(toSlug("a".repeat(60))).toHaveLength(40);
+  });
+
+  it("agrees with isSlug on a name long enough to carry one", () => {
+    expect(isSlug(toSlug("Acme Corp"))).toBe(true);
   });
 });

@@ -1,20 +1,55 @@
-import { toSlugDraft } from "@absqir/core/slug";
+import { orgPath } from "@absqir/core/org-path";
+import { toSlug, toSlugDraft } from "@absqir/core/slug";
 import { useTranslate } from "@absqir/i18n/react";
 import { Button } from "@absqir/ui/button";
 import { Form, FormField } from "@absqir/ui/form";
 import { Input } from "@absqir/ui/input";
+import { cn } from "@absqir/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useRef } from "react";
 import { type ControllerRenderProps, useForm } from "react-hook-form";
 import { match } from "ts-pattern";
 import { type OrganizationValues, organizationSchema } from "@/lib/auth-schemas";
-import { toSlug } from "@/lib/slug";
+import { type SlugState, useSlugAvailable } from "@/queries/use-slug-available";
 
 export interface OrganizationFormProps {
   submitLabel: string;
   pending: boolean;
   defaultValues?: OrganizationValues;
+  /**
+   * The slug this organization already holds. The form reads it as free, so
+   * a rename that only touches the name never says the slug is taken.
+   */
+  ownSlug?: string;
   onSubmit: (values: OrganizationValues) => void;
+}
+
+/**
+ * What the reader is told about the slug they typed, under the field. The
+ * slug is the address of the organization, so the line shows the address
+ * rather than the slug alone.
+ */
+function SlugStatus(props: { state: SlugState; slug: string }) {
+  const t = useTranslate();
+  const { state, slug } = props;
+
+  const text = match(state)
+    .with("empty", "invalid", () => t("common:organizationForm.slugHint"))
+    .with("checking", () => t("common:organizationForm.slugChecking"))
+    .with("reserved", () => t("common:organizationForm.slugReserved"))
+    .with("taken", () => t("common:organizationForm.slugTaken"))
+    .otherwise(() => t("common:organizationForm.slugFree", { address: orgPath(slug, "/") }));
+
+  const tone = match(state)
+    .with("reserved", "taken", () => "text-destructive")
+    .with("free", () => "text-muted-foreground")
+    .otherwise(() => "text-muted-foreground");
+
+  return (
+    <p aria-live="polite" className={cn("text-xs", tone)}>
+      {text}
+    </p>
+  );
 }
 
 /**
@@ -68,6 +103,12 @@ export function OrganizationForm(props: OrganizationFormProps) {
   });
 
   const slugTouched = form.formState.dirtyFields.slug === true;
+  const slug = form.watch("slug");
+  const slugState = useSlugAvailable({ slug, own: props.ownSlug });
+
+  // A slug the server will refuse never reaches it. Checking does not block:
+  // a slow answer must not hold the reader back, and the server decides.
+  const refused = slugState === "taken" || slugState === "reserved";
 
   return (
     <Form {...form}>
@@ -91,15 +132,17 @@ export function OrganizationForm(props: OrganizationFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="slug"
-          label={t("common:organizationForm.slug")}
-          description={t("common:organizationForm.slugHint")}
-          render={(field) => <SlugInput field={field} />}
-        />
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="slug"
+            label={t("common:organizationForm.slug")}
+            render={(field) => <SlugInput field={field} />}
+          />
+          <SlugStatus state={slugState} slug={slug} />
+        </div>
 
-        <Button type="submit" disabled={props.pending} className="w-full">
+        <Button type="submit" disabled={props.pending || refused} className="w-full">
           {match(props.pending)
             .with(true, () => t("common:actions.saving"))
             .otherwise(() => props.submitLabel)}

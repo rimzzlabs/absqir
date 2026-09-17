@@ -17,6 +17,8 @@ import { SettingsSection } from "@/components/shared/settings-section";
 export interface OrganizationSettingsPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
   role: RoleName;
   organization: { id: string; name: string; slug: string };
   /** The `tab` in the address, read on the server so the first paint is right. */
@@ -107,7 +109,7 @@ function OrganizationSettingsBody(props: OrganizationSettingsPageProps) {
 
 export function OrganizationSettingsPage(props: OrganizationSettingsPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <OrganizationSettingsBody {...props} />
     </Providers>
   );

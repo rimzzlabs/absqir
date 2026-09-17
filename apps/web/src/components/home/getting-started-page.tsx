@@ -291,8 +291,9 @@ function Aside() {
  * is visible from the first minute.
  */
 export function GettingStartedPage(props: GettingStartedPageProps) {
+  // No slug: an account that belongs to no organization yet.
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={null}>
       <GettingStartedBody {...props} />
     </Providers>
   );

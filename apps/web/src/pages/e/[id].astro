@@ -20,6 +20,7 @@ const t = translatorFor(Astro.locals.locale);
   <PublicEventPage
     client:load
     locale={Astro.locals.locale}
+    orgSlug={Astro.locals.activeMembership?.slug ?? null}
     eventId={id}
     signedIn={Astro.locals.user !== null}
   />

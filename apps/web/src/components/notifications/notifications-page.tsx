@@ -15,6 +15,7 @@ import { NOTIFICATION_ICONS } from "@/components/notifications/notification-icon
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { useOrgHref } from "@/lib/org-path";
 import { useMarkRead } from "@/mutations/use-mark-read";
 import {
   type Notification,
@@ -25,6 +26,7 @@ import {
 function Row(props: { notification: Notification; onRead: (id: string) => void }) {
   const { notification } = props;
   const t = useTranslate();
+  const orgHref = useOrgHref();
   // The words are made here, from the key the row kept, so a reader who
   // changed their language reads the whole list in it.
   const title = notificationTitle(t, notification);
@@ -47,7 +49,9 @@ function Row(props: { notification: Notification; onRead: (id: string) => void }
         <p className="flex items-center gap-2 font-medium">
           {match(notification.href)
             .with(P.string.minLength(1), (href) => (
-              <a href={href} className="hover:underline">
+              // The row holds the address inside the organization, so the
+              // slug goes in front here rather than in the stored row.
+              <a href={orgHref(href)} className="hover:underline">
                 {title}
               </a>
             ))
@@ -171,11 +175,13 @@ function NotificationsBody() {
 export interface NotificationsPageProps {
   /** The language this reader gets, for every island under it. */
   locale: Locale;
+  /** The organization the address names, for every link this island writes. */
+  orgSlug: string;
 }
 
 export function NotificationsPage(props: NotificationsPageProps) {
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={props.orgSlug}>
       <NotificationsBody />
     </Providers>
   );

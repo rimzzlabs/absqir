@@ -1,3 +1,4 @@
+import { orgPath } from "@absqir/core/org-path";
 import { useTranslate } from "@absqir/i18n/react";
 import { cn } from "@absqir/ui/lib/utils";
 import {
@@ -19,7 +20,7 @@ import { match, P } from "ts-pattern";
 import type { ShellMembership } from "@/components/app-shell/app-shell";
 import {
   activeHrefFor,
-  CHECK_IN,
+  checkInEntry,
   GITHUB_URL,
   isActivePath,
   type NavItem,
@@ -72,25 +73,24 @@ const COLLAPSED_CHECK_IN =
   "group-data-[collapsible=icon]:shadow-none group-data-[collapsible=icon]:active:bg-primary/20 group-data-[collapsible=icon]:active:text-primary group-data-[collapsible=icon]:data-active:bg-primary group-data-[collapsible=icon]:data-active:text-primary-foreground group-data-[collapsible=icon]:data-active:hover:bg-primary/90 group-data-[collapsible=icon]:data-active:hover:text-primary-foreground";
 
 /** A member's one action, filled in the brand color so it never hides in the list. */
-function CheckInEntry(props: { currentPath: string }) {
+function CheckInEntry(props: { item: NavItem; currentPath: string }) {
   const t = useTranslate();
+  const { item } = props;
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
-          isActive={isActivePath(CHECK_IN.href, props.currentPath)}
-          tooltip={t(`shell:nav.${CHECK_IN.id}`)}
-          render={<a href={CHECK_IN.href} />}
+          isActive={isActivePath(item.href, props.currentPath)}
+          tooltip={t(`shell:nav.${item.id}`)}
+          render={<a href={item.href} />}
           className={cn(
             "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground data-active:bg-primary/90 data-active:text-primary-foreground justify-center font-medium shadow-sm [&_svg]:size-4",
             COLLAPSED_CHECK_IN,
           )}
         >
-          <CHECK_IN.icon weight="bold" />
-          <span className="group-data-[collapsible=icon]:sr-only">
-            {t(`shell:nav.${CHECK_IN.id}`)}
-          </span>
+          <item.icon weight="bold" />
+          <span className="group-data-[collapsible=icon]:sr-only">{t(`shell:nav.${item.id}`)}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
@@ -105,9 +105,12 @@ export function AppSidebar(props: AppSidebarProps) {
   // that work, and nothing that turns the reader away.
   const groups = match(active)
     .with(P.nullish, () => SOLO_NAV)
-    .otherwise((active) => navFor(active.role));
+    .otherwise((active) => navFor({ role: active.role, slug: active.slug }));
+  const home = match(active)
+    .with(P.nullish, () => "/")
+    .otherwise((active) => orgPath(active.slug, "/"));
   const member = active !== null && !roleAtLeast(active.role, "organizer");
-  const activeHref = activeHrefFor(groups, props.currentPath);
+  const activeHref = activeHrefFor({ groups, currentPath: props.currentPath, home });
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -117,9 +120,15 @@ export function AppSidebar(props: AppSidebarProps) {
           active={props.active}
           canCreateOrganizations={props.canCreateOrganizations}
         />
-        {match(member)
-          .with(true, () => <CheckInEntry currentPath={props.currentPath} />)
-          .otherwise(() => null)}
+        {match(active)
+          .with(P.nullish, () => null)
+          .otherwise((active) =>
+            match(member)
+              .with(true, () => (
+                <CheckInEntry item={checkInEntry(active.slug)} currentPath={props.currentPath} />
+              ))
+              .otherwise(() => null),
+          )}
       </SidebarHeader>
 
       <SidebarContent>

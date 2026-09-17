@@ -92,8 +92,9 @@ function SignedIn(props: InviteAcceptProps) {
 }
 
 export function InviteAccept(props: InviteAcceptProps) {
+  // No slug: an invitation, read before the reader joins anything.
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={null}>
       {match(props.userEmail)
         .with(P.string.minLength(1), () => <SignedIn {...props} />)
         .otherwise(() => (

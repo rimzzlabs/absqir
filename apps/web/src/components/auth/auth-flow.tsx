@@ -105,8 +105,9 @@ function AuthSteps(props: AuthFlowProps) {
 }
 
 export function AuthFlow(props: AuthFlowProps) {
+  // No slug: the sign-in door, which nobody has an organization behind yet.
   return (
-    <Providers locale={props.locale}>
+    <Providers locale={props.locale} orgSlug={null}>
       <AuthSteps {...props} />
     </Providers>
   );

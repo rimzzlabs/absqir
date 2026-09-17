@@ -1,0 +1,26 @@
+---
+import { orgPath } from "@absqir/core/org-path";
+import { translatorFor } from "@absqir/i18n";
+import { MemberCheckInPage } from "@/components/check-in/member-check-in-page";
+import DashboardLayout from "@/layouts/dashboard-layout.astro";
+
+const { activeMembership } = Astro.locals;
+
+// The middleware refuses this address unless the slug names an organization
+// the reader belongs to, so the membership is always there.
+if (!activeMembership) return Astro.redirect("/", 302);
+
+const orgSlug = activeMembership.slug;
+const role = activeMembership.role;
+
+// Organizers scan people, not screens. They have the scanner on each event.
+if (role !== "member") {
+  return Astro.redirect(orgPath(orgSlug, "/events"), 302);
+}
+
+const t = translatorFor(Astro.locals.locale);
+---
+
+<DashboardLayout title={t("shell:titles.checkIn")}>
+  <MemberCheckInPage client:load locale={Astro.locals.locale} orgSlug={orgSlug} />
+</DashboardLayout>

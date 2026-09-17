@@ -9,6 +9,7 @@ import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
 import { AttendanceStatusBadge, EventStatusBadge } from "@/components/shared/status-badge";
 import { STRETCHED_LINK } from "@/components/shared/stretched-link";
+import { useOrgHref } from "@/lib/org-path";
 import type { MyEvent } from "@/queries/use-my";
 
 export interface MyEventCardProps {
@@ -59,6 +60,7 @@ function Outcome(props: MyEventCardProps) {
 
 /** One event that expects me, as a card in the grid. A click opens the event. */
 export function MyEventCard(props: MyEventCardProps) {
+  const orgHref = useOrgHref();
   const { event } = props;
   const t = useTranslate();
   const startsAt = new Date(event.startsAt);
@@ -89,7 +91,7 @@ export function MyEventCard(props: MyEventCardProps) {
 
       <div className="min-w-0">
         <a
-          href={`/events/${event.id}`}
+          href={orgHref(`/events/${event.id}`)}
           className={cn(STRETCHED_LINK, "line-clamp-2 block text-sm leading-snug font-medium")}
         >
           {event.title}

@@ -29,11 +29,16 @@ export const organization = {
     started: "Dimulai {{date}}",
     nameRow: "Nama dan nama pendek",
     nameHintEditable:
-      "Nama yang dibaca orang, dan kata pendek yang menyebut organisasi ini di tempat lain.",
+      "Nama yang dibaca orang, dan nama pendek yang menjadi alamat setiap halaman di sini.",
     nameHintReadOnly: "Hanya pemilik dan admin yang bisa mengubah ini.",
+    slugChangeTitle: "Ubah alamat organisasi ini?",
+    slugChangeDescription: "Semua halaman pindah dari {{from}} ke {{to}}.",
+    slugChangeCost:
+      "Setiap tautan dan markah yang tersimpan di alamat lama berhenti bekerja. Orang yang membukanya mendapat halaman tidak ditemukan. Beri tahu anggota Anda sebelum menyimpan.",
+    slugChangeConfirm: "Ubah alamat",
     slug: "Nama pendek",
     slugHint:
-      "Baris perintah memakai ini untuk menyebut organisasi: absqir member add --org <slug>.",
+      "Alamat setiap halaman di sini, dan nama yang dipakai baris perintah: absqir member add --org <slug>.",
     id: "ID organisasi",
     idHint: "Sebutan internal absqir untuk organisasi ini. Sertakan saat Anda melaporkan masalah.",
     glance: "Sekilas",
