@@ -45,6 +45,7 @@ import { GroupMembersDialog } from "@/components/groups/group-members-dialog";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { useRemoveGroup } from "@/mutations/use-remove-group";
 import { type Group, useGroups } from "@/queries/use-groups";
@@ -243,7 +244,7 @@ function GroupsBody(props: GroupsPageProps) {
             ))}
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={groups} />)
         .with({ data: P.select(P.nonNullable) }, (rows) => (
           <GroupList
             rows={rows}

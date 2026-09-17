@@ -5,7 +5,7 @@ import { match, P } from "ts-pattern";
 import { TokenTimer } from "@/components/events/token-timer";
 import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
 import { useEvent } from "@/queries/use-events";
@@ -76,7 +76,7 @@ function QrScreen(props: QrDisplayProps) {
         .with({ isPending: true }, () => (
           <p className="text-muted-foreground text-sm">{t("events:display.preparing")}</p>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={qr} />)
         .with({ data: P.select(P.nonNullable) }, (token) => (
           <div className="flex w-[min(80vw,60vh)] flex-col gap-3">
             <img

@@ -12,8 +12,8 @@ import { EventCard } from "@/components/events/event-card";
 import { EventDialog } from "@/components/events/event-dialog";
 import { EventsToolbar } from "@/components/events/events-toolbar";
 import { Providers } from "@/components/providers";
-import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { type Event, type EventScope, useEvents } from "@/queries/use-events";
 
@@ -126,7 +126,7 @@ function EventsBody(props: EventsPageProps) {
             ))}
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={events} />)
         .with({ data: P.nonNullable }, () => (
           <div className="space-y-4">
             <EventList rows={rows} scope={scope} filtered={filtered} />

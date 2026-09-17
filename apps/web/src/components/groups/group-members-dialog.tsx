@@ -21,6 +21,7 @@ import { UsersThreeIcon } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { initialsOf } from "@/lib/avatar";
 import { useSetGroupMembers } from "@/mutations/use-set-group-members";
 import { type GroupDetail, useGroup } from "@/queries/use-groups";
@@ -293,13 +294,13 @@ export function GroupMembersDialog(props: GroupMembersDialogProps) {
               </ResponsiveDialogBody>
             </>
           ))
-          .with({ isError: true, error: P.select() }, (error) => (
+          .with({ isError: true }, () => (
             <>
               <ResponsiveDialogHeader>
                 <ResponsiveDialogTitle>{t("groups:members.fallbackTitle")}</ResponsiveDialogTitle>
               </ResponsiveDialogHeader>
               <ResponsiveDialogBody>
-                <FormError error={error} />
+                <QueryError query={group} />
               </ResponsiveDialogBody>
             </>
           ))

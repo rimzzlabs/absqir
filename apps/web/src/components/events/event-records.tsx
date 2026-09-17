@@ -8,10 +8,10 @@ import { A } from "@mobily/ts-belt";
 import { MagnifyingGlassIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useDeferredValue } from "react";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import { EventRecordCard } from "@/components/events/event-record-card";
 import { EVERY_STATUS, EventRecordsToolbar } from "@/components/events/event-records-toolbar";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { type Event, type EventRecord, useEventRecords } from "@/queries/use-events";
 
 export interface EventRecordsProps {
@@ -112,7 +112,7 @@ export function EventRecords(props: EventRecordsProps) {
             </div>
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={records} />)
         .otherwise(() => (
           <div className="space-y-3">
             <EventRecordsToolbar

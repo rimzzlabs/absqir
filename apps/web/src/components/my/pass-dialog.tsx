@@ -8,7 +8,7 @@ import {
 } from "@absqir/ui/dialog";
 import { Skeleton } from "@absqir/ui/skeleton";
 import { match, P } from "ts-pattern";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useMyPass } from "@/queries/use-my";
 
 export interface PassDialogProps {
@@ -31,7 +31,7 @@ export function PassDialog(props: PassDialogProps) {
         </DialogHeader>
         {match(pass)
           .with({ isPending: true }, () => <Skeleton className="mx-auto size-64 rounded-xl" />)
-          .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+          .with({ isError: true }, () => <QueryError query={pass} />)
           .with({ data: P.select(P.nonNullable) }, (data) => (
             <>
               <img

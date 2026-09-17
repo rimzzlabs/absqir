@@ -8,6 +8,7 @@ import { match, P } from "ts-pattern";
 import { AuthHeading } from "@/components/auth/auth-heading";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useOrgHref } from "@/lib/org-path";
 import { useRegisterEvent } from "@/mutations/use-register-event";
 import { useWithdrawEvent } from "@/mutations/use-withdraw-event";
@@ -145,13 +146,13 @@ function PublicEventBody(props: PublicEventPageProps) {
     .with({ isPending: true }, () => (
       <p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
     ))
-    .with({ isError: true, error: P.select() }, (error) => (
+    .with({ isError: true }, () => (
       <div className="space-y-5">
         <AuthHeading
           title={t("publicEvent:brokenTitle")}
           description={t("publicEvent:brokenDescription")}
         />
-        <FormError error={error} />
+        <QueryError query={event} />
       </div>
     ))
     .with({ data: P.select(P.nonNullable) }, (data) => (

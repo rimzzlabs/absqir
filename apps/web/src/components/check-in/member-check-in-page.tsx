@@ -217,7 +217,7 @@ function MemberCheckInBody() {
             <CheckInPass
               events={rows}
               pending={events.isPending}
-              error={events.error}
+              read={events}
               onPass={setPassFor}
             />
 

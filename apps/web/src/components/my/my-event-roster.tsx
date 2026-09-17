@@ -9,8 +9,8 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { MagnifyingGlassIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { useDeferredValue, useState } from "react";
-import { match, P } from "ts-pattern";
-import { FormError } from "@/components/shared/form-error";
+import { match } from "ts-pattern";
+import { QueryError } from "@/components/shared/query-error";
 import { initialsOf } from "@/lib/avatar";
 import type { MyEventDetail } from "@/queries/use-my";
 import { useMyRoster } from "@/queries/use-my";
@@ -109,7 +109,7 @@ export function MyEventRoster(props: MyEventRosterProps) {
               ))}
             </div>
           ))
-          .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+          .with({ isError: true }, () => <QueryError query={roster} />)
           .otherwise(() => (
             <div
               aria-busy={refetching}

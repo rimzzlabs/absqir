@@ -8,12 +8,13 @@ import { A } from "@mobily/ts-belt";
 import { NotePencilIcon, PlusIcon } from "@phosphor-icons/react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useState } from "react";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import { LeaveRow } from "@/components/leave/leave-row";
 import { AskLeaveDialog } from "@/components/my/ask-leave-dialog";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { StickyToolbar } from "@/components/shared/sticky-toolbar";
 import { useWithdrawLeave } from "@/mutations/use-withdraw-leave";
 import { type LeaveRequest, type LeaveScope, useMyLeave } from "@/queries/use-leave";
@@ -139,7 +140,7 @@ function MyLeaveBody() {
             ))}
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={mine} />)
         .otherwise(() => (
           <div className="space-y-4">
             <MyLeaveList rows={rows} scope={scope} onAsk={() => setAsking(true)} />

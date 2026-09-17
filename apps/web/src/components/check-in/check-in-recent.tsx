@@ -13,7 +13,7 @@ import { Skeleton } from "@absqir/ui/skeleton";
 import { A } from "@mobily/ts-belt";
 import { CaretRightIcon, ClockCounterClockwiseIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
 import { useMyHistory } from "@/queries/use-my";
@@ -54,7 +54,7 @@ export function CheckInRecent() {
               ))}
             </div>
           ))
-          .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+          .with({ isError: true }, () => <QueryError query={history} />)
           .with({ data: P.select(P.nonNullable) }, (data) => {
             const rows = A.flatMap(data.pages, (page) => page.items);
 

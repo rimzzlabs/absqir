@@ -16,7 +16,7 @@ import { A } from "@mobily/ts-belt";
 import { CalendarBlankIcon, CaretRightIcon, ClockIcon, TicketIcon } from "@phosphor-icons/react";
 import { match, P } from "ts-pattern";
 import { opensAtOf } from "@/components/my/opens-at";
-import { FormError } from "@/components/shared/form-error";
+import { type FailedRead, QueryError } from "@/components/shared/query-error";
 import { AttendanceStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
 import type { MyEvent } from "@/queries/use-my";
@@ -24,7 +24,8 @@ import type { MyEvent } from "@/queries/use-my";
 export interface CheckInPassProps {
   events: readonly MyEvent[];
   pending: boolean;
-  error: Error | null;
+  /** The read behind the list, so a failed one carries its own retry. */
+  read: FailedRead;
   onPass: (id: string) => void;
 }
 
@@ -137,7 +138,7 @@ export function CheckInPass(props: CheckInPassProps) {
               <Skeleton className="h-16 rounded-lg" />
             </div>
           ))
-          .with({ error: P.select(P.nonNullable) }, (error) => <FormError error={error} />)
+          .with({ read: { error: P.nonNullable } }, () => <QueryError query={props.read} />)
           .otherwise(() => {
             if (running.length === 0 && !next) {
               return (

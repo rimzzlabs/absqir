@@ -5,6 +5,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@abs
 import { Skeleton } from "@absqir/ui/skeleton";
 import { match, P } from "ts-pattern";
 import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import { useOnboardingEvent } from "@/mutations/use-onboarding-event";
 import { usePublicEvent } from "@/queries/use-public-event";
 
@@ -20,7 +21,7 @@ export function OnboardingEventCard(props: OnboardingEventCardProps) {
 
   return match(event)
     .with({ isPending: true }, () => <Skeleton className="h-20 rounded-xl" />)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={event} />)
     .with({ data: P.select(P.nonNullable) }, (data) => {
       const soldOut = match(data.seatsLeft)
         .with(0, () => t("onboarding:event.soldOut"))

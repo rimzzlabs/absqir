@@ -12,7 +12,7 @@ import { EventRecords } from "@/components/events/event-records";
 import { PublicLink } from "@/components/events/public-link";
 import { Providers } from "@/components/providers";
 import { BackLink } from "@/components/shared/back-link";
-import { FormError } from "@/components/shared/form-error";
+import { QueryError } from "@/components/shared/query-error";
 import type { RoleName } from "@/components/shared/role-badge";
 import { EventStatusBadge } from "@/components/shared/status-badge";
 import { useOrgHref } from "@/lib/org-path";
@@ -79,7 +79,7 @@ function EventDetailBody(props: EventDetailProps) {
 
   return match(event)
     .with({ isPending: true }, () => <EventDetailSkeleton />)
-    .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+    .with({ isError: true }, () => <QueryError query={event} />)
     .with({ data: P.select(P.nonNullable) }, (data) => (
       <div className="space-y-6">
         <Header event={data} role={props.role} />

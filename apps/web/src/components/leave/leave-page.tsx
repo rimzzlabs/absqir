@@ -26,6 +26,7 @@ import { LeaveRow } from "@/components/leave/leave-row";
 import { Providers } from "@/components/providers";
 import { FormError } from "@/components/shared/form-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { QueryError } from "@/components/shared/query-error";
 import { StickyToolbar } from "@/components/shared/sticky-toolbar";
 import { type DecideLeaveValues, decideLeaveSchema } from "@/lib/leave-schemas";
 import { useDecideLeave } from "@/mutations/use-decide-leave";
@@ -226,7 +227,7 @@ function LeaveBody() {
             ))}
           </div>
         ))
-        .with({ isError: true, error: P.select() }, (error) => <FormError error={error} />)
+        .with({ isError: true }, () => <QueryError query={queue} />)
         .with({ data: P.select(P.nonNullable) }, (rows) => (
           <Queue rows={rows} scope={scope} onDecide={setPending} />
         ))
