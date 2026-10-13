@@ -37,16 +37,16 @@
     "@mobily/ts-belt": "4.0.0-rc.5",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "resend": "^6.26.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "resend": "^6.32.1",
     "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
     "@absqir/config": "workspace:^",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "react-email": "^6.9.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react-email": "^6.11.1",
     "tsdown": "^0.23.0"
   }
 }

@@ -35,7 +35,7 @@
     "ts-pattern": "^5.9.0"
   },
   "peerDependencies": {
-    "react": "^19.2.8"
+    "react": "^19.3.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -44,9 +44,9 @@
   },
   "devDependencies": {
     "@absqir/config": "workspace:^",
-    "@types/react": "^19.2.18",
-    "react": "^19.2.8",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
     "tsdown": "^0.23.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.3"
   }
 }
