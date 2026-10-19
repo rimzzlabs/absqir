@@ -11,16 +11,16 @@
   },
   "dependencies": {
     "mermaid": "^11.17.2",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "vite": "^8.2.2",
-    "vocs": "^2.8.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.4",
+    "vocs": "^2.10.3",
     "waku": "1.0.0-beta.8"
   },
   "devDependencies": {
     "@absqir/config": "workspace:^",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2"
   }
 }
